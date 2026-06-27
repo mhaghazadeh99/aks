@@ -1,0 +1,121 @@
+<ul class="nav">
+
+  <!-- Dashboard -->
+  <li class="{% if 'analytics_home' in segment %} active {% endif %}">
+    <a href="{% url 'analytics_home' %}">
+      <i class="tim-icons icon-chart-pie-36"></i>
+      <p>Dashboard</p>
+    </a>
+  </li>
+  <li class="{% if 'waste_list' in segment %} active {% endif %}">
+    <a href="{% url 'waste_list' %}">
+      <i class="tim-icons icon-puzzle-10"></i>
+      <p>Dynamic Tables</p>
+    </a>
+  </li>   
+
+
+  <!-- DSRS -->
+
+     <li class="{% if 'tables' in segment %} active {% endif %}">
+          <a href="{% url 'tables' %}">
+      <i class="tim-icons icon-single-copy-04"></i>
+      <p>DSRS</p>
+    </a>
+  </li>
+  <!-- <li>
+    <a data-toggle="collapse" href="#dsrsMenu">
+      <i class="tim-icons icon-single-copy-04"></i>
+      <p>
+        DSRS
+        <b class="caret"></b>
+      </p>
+    </a>
+
+    <div class="collapse" id="dsrsMenu">
+      <ul class="nav">
+
+        <li class="{% if 'add_source' in segment %} active {% endif %}">
+          <a href="{% url 'add_source' %}">
+            <span class="sidebar-mini-icon">A</span>
+            <span class="sidebar-normal">Add DSRS</span>
+          </a>
+        </li>
+
+        <li class="{% if 'source_list' in segment %} active {% endif %}">
+          <a href="{% url 'source_list' %}">
+            <span class="sidebar-mini-icon">V</span>
+            <span class="sidebar-normal">Edit DSRS</span>
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </li> -->
+
+  <!-- Contract Data -->
+  <li class="{% if 'contract_index' in segment %} active {% endif %}">
+    <a href="{% url 'contract_index' %}">
+      <i class="tim-icons icon-paper"></i>
+      <p>Contract data</p>
+    </a>
+
+
+  <!-- Tables -->
+
+  <!-- AUTH SECTION -->
+  {% if request.user.is_authenticated %}
+  <li>
+    <!-- Logout (clean sidebar-style link) -->
+    <a href="#"
+       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+      <i class="tim-icons icon-button-power"></i>
+      <p>Logout</p>
+    </a>
+
+    <form id="logout-form" method="post" action="{% url 'logout' %}" style="display:none;">
+      {% csrf_token %}
+    </form>
+
+    <!-- Change password under logout -->
+    <div style="margin-left: 18px; transform: scale(0.85); transform-origin: left;">
+      <a href="{% url 'password_change' %}">
+        <i class="tim-icons icon-lock-circle"></i>
+        <p>Change Password</p>
+      </a>
+    </div>
+  </li>
+
+  {% else %}
+  <li class="{% if 'pages' in parent %}active{% endif %}">
+    <a data-toggle="collapse" href="#pagesExamples">
+      <i class="tim-icons icon-lock-circle"></i>
+      <p>
+        Authentication
+        <b class="caret"></b>
+      </p>
+    </a>
+
+    <div class="collapse" id="pagesExamples">
+      <ul class="nav">
+
+        <li>
+          <a href="{% url 'login' %}">
+            <span class="sidebar-mini-icon">L</span>
+            <span class="sidebar-normal">Login</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="{% url 'auth_signup' %}">
+            <span class="sidebar-mini-icon">R</span>
+            <span class="sidebar-normal">Register</span>
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </li>
+  {% endif %}
+
+</ul>

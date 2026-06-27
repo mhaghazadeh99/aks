@@ -1,0 +1,73 @@
+<h2>Laboratory Queue</h2>
+
+<table class="table table-bordered">
+
+    <thead>
+
+        <tr>
+
+            <th>Sample</th>
+
+            <th>Waste</th>
+
+            <th>Stage</th>
+
+            <th>Status</th>
+
+            <th>Urgent</th>
+
+            <th>Action</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for sample in samples %}
+
+        <tr>
+
+            <td>{{ sample.sample_id }}</td>
+
+            <td>{{ sample.batch.waste_id }}</td>
+
+            <td>{{ sample.sample_stage }}</td>
+
+            <td>{{ sample.status }}</td>
+
+            <td>
+
+                {% if sample.urgent %}
+                    YES
+                {% else %}
+                    NO
+                {% endif %}
+
+            </td>
+
+            <td>
+
+                {% if sample.status == 'COLLECTED' %}
+
+                    <a class="btn btn-warning btn-sm"
+                       href="{% url 'receive_sample_lab' sample.id %}">
+                        Receive
+                    </a>
+
+                {% endif %}
+
+                <a class="btn btn-success btn-sm"
+                   href="{% url 'analysis_create' sample.id %}">
+                    Analyze
+                </a>
+
+            </td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>

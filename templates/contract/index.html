@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %} Contracts {% endblock title %}
+
+{% block content %}
+
+
+<div class="content">
+
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3>Contracts</h3>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Source Type</th>
+                    <th>Nuclide</th>
+                    <th>Serial Number</th>
+                    <th>End User</th>
+
+                    <th>Activity</th>
+                    <th>Unit</th>
+                    <th>Activity Date</th>
+
+                    <th>Status</th>
+                    <th>Status Date</th>
+
+                    <th>Payment</th>
+                    <th>Payment Date</th>
+
+                    <th>Contract Signed</th>
+                    <th>Licence</th>
+
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for c in contracts %}
+                <tr>
+                    <td>{{ c.Source_Type }}</td>
+                    <td>{{ c.nuclide }}</td>
+                    <td>{{ c.serial_number }}</td>
+                    <td>{{ c.facility }}</td>
+                    
+
+                    <td>{{ c.activity }}</td>
+                    <td>{{ c.activity_unit }}</td>
+                    <td>{{ c.activity_date }}</td>
+
+                    <td>
+                        <span class="badge bg-success">
+                            {{ c.status }}
+                        </span>
+                    </td>
+
+                    <td>{{ c.status_date }}</td>
+
+                    <!-- Payment -->
+                    <td>
+                        {% if c.payment_done %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-danger">No</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ c.payment_date }}</td>
+
+                    <!-- Contract -->
+                    <td>
+                        {% if c.contract_signed %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Licence -->
+                    <td>
+                        {% if c.licence_valid %}
+                            <span class="badge bg-success">Valid</span>
+                        {% else %}
+                            <span class="badge bg-danger">Invalid</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+                        <a href="{% url 'contract_edit' c.id %}" class="btn btn-sm btn-primary">
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="14" style="text-align:center;">
+                        No contracts found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+{% endblock %}

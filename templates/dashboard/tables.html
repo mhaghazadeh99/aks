@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tables{% endblock %}
+
+{% block content %}
+
+<div class="content">
+
+<!-- ================= HEADER TOOLBAR ================= -->
+<div class="table-header">
+
+  <!-- LEFT: search -->
+  <div class="header-group">
+    <input type="text" id="searchInput" placeholder="Search...">
+    <button>🔍</button>
+  </div>
+
+  <!-- CENTER: page size -->
+  <div class="header-group">
+    <select id="pageSize">
+      <option value="10">10</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="all">All</option>
+    </select>
+  </div>
+
+  <!-- RIGHT: actions -->
+  <div class="header-group">
+    <button class="btn-green" onclick="exportCSV()">Export CSV</button>
+    <a href="{% url 'add_source' %}" class="btn-blue">+ Add Source</a>
+  </div>
+
+</div>
+
+
+<!-- ================= FILTER BAR ================= -->
+<div class="filter-bar">
+
+  <div id="filterContainer"></div>
+
+  <button id="addFilter" class="btn-blue">Add Filter</button>
+  <button id="applyFilters" class="btn-info">Apply</button>
+
+</div>
+
+
+<!-- ================= SHOW / HIDE ================= -->
+<div class="column-bar">
+
+  <button class="btn-gray" onclick="toggleColumnPanel()">☰ Columns</button>
+
+  <div id="columnPanel" class="column-panel hidden">
+
+    <label><input type="checkbox" class="col-toggle" data-col="Source_Type" checked> Type</label>
+    <label><input type="checkbox" class="col-toggle" data-col="Sso_Code" checked> SSO</label>
+    <label><input type="checkbox" class="col-toggle" data-col="Facility" checked> Facility</label>
+    <label><input type="checkbox" class="col-toggle" data-col="Status" checked> Status</label>
+    <label><input type="checkbox" class="col-toggle" data-col="Nuclide" checked> Nuclide</label>
+
+    <!-- add more if needed -->
+  </div>
+
+</div>
+
+
+<!-- ================= TABLE ONLY SCROLLS ================= -->
+<div class="table-scroll">
+
+<table id="mainTable">
+
+<thead>
+<tr>
+  <th data-col="Source_Type">Type</th>
+  <th data-col="Sso_Code">SSO</th>
+  <th data-col="Facility">Facility</th>
+  <th data-col="Origin_Type">Origin</th>
+  <th data-col="Date_received">Received</th>
+  <th data-col="Origin_Facility">Origin Facility</th>
+  <th data-col="Location">Location</th>
+  <th data-col="Status">Status</th>
+  <th data-col="Nuclide">Nuclide</th>
+  <th data-col="Activity">Activity</th>
+  <th>Action</th>
+</tr>
+</thead>
+
+<tbody id="tableBody">
+
+{% for s in sources %}
+<tr>
+
+<td data-col="Source_Type">{{ s.Source_Type }}</td>
+<td data-col="Sso_Code">{{ s.Sso_Code }}</td>
+<td data-col="Facility">{{ s.Facility }}</td>
+<td data-col="Origin_Type">{{ s.Origin_Type }}</td>
+<td data-col="Date_received">{{ s.Date_received }}</td>
+<td data-col="Origin_Facility">{{ s.Origin_Facility }}</td>
+<td data-col="Location">{{ s.Location }}</td>
+<td data-col="Status">{{ s.Status }}</td>
+<td data-col="Nuclide">{{ s.Nuclide }}</td>
+<td data-col="Activity">{{ s.current_activity_mci_value|default:"-" }}</td>
+
+<td>
+  <a href="{% url 'edit_source' s.id %}" class="btn-yellow">Edit</a>
+  <a href="{% url 'decay_chart' s.id %}" class="btn-blue">Chart</a>
+</td>
+
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+<h2>Merge Batches</h2>
+
+<form method="post">
+  {% csrf_token %}
+
+  <input type="text" name="new_batch_id" placeholder="New Batch ID">
+
+  <br><br>
+
+  {% for b in batches %}
+    <label>
+      <input type="checkbox" name="batches" value="{{ b.id }}">
+      {{ b.waste_id }} ({{ b.volume_m3 }} m³)
+    </label>
+    <br>
+  {% endfor %}
+
+  <br>
+
+  <button type="submit">Merge</button>
+</form>

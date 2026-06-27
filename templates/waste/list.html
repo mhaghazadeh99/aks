@@ -1,0 +1,12 @@
+<h2>Waste Batches</h2>
+
+<table>
+  {% for b in batches %}
+  <tr>
+    <td>{{ b.waste_id }}</td>
+    <td>{{ b.waste_type }}</td>
+    <td>{{ b.status }}</td>
+    <td><a href="{% url 'waste_detail' b.id %}">Open</a></td>
+  </tr>
+  {% endfor %}
+</table>

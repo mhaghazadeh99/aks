@@ -1,0 +1,8 @@
+
+<h2>Analysis for {{ sample.sample_id }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save Analysis</button>
+</form>

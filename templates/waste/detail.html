@@ -1,0 +1,190 @@
+
+<h2>Waste Batch: {{ batch.waste_id }}</h2>
+
+<hr>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<table class="table table-bordered">
+
+<tr>
+    <th>Waste ID</th>
+    <td>{{ batch.waste_id }}</td>
+</tr>
+
+<tr>
+    <th>Type</th>
+    <td>{{ batch.waste_type }}</td>
+</tr>
+
+<tr>
+    <th>Class</th>
+    <td>{{ batch.waste_class }}</td>
+</tr>
+
+<tr>
+    <th>Status</th>
+    <td>{{ batch.status }}</td>
+</tr>
+
+<tr>
+    <th>Mass</th>
+    <td>{{ batch.mass_kg }}</td>
+</tr>
+
+<tr>
+    <th>Volume</th>
+    <td>{{ batch.volume_m3 }}</td>
+</tr>
+
+<tr>
+    <th>Generation</th>
+    <td>{{ batch.generation_number }}</td>
+</tr>
+
+</table>
+
+</div>
+
+<div class="col-md-6">
+
+<table class="table table-bordered">
+
+<tr>
+    <th>Alpha</th>
+    <td>{{ batch.current_alpha_bq }}</td>
+</tr>
+
+<tr>
+    <th>Beta</th>
+    <td>{{ batch.current_beta_bq }}</td>
+</tr>
+
+<tr>
+    <th>Gamma</th>
+    <td>{{ batch.current_gamma_bq }}</td>
+</tr>
+
+<tr>
+    <th>Total</th>
+    <td>{{ batch.current_total_activity_bq }}</td>
+</tr>
+
+<tr>
+    <th>Latest Analysis</th>
+    <td>{{ batch.latest_analysis_date }}</td>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+<hr>
+
+<h3>Actions</h3>
+
+<div class="mb-3">
+
+    <a href="{% url 'sample_create' batch.id %}"
+       class="btn btn-primary">
+        Create Sample
+    </a>
+
+    <a href="{% url 'split_operation' batch.id %}"
+       class="btn btn-warning">
+        Split
+    </a>
+
+    <a href="{% url 'merge_operation' %}"
+       class="btn btn-info">
+        Merge
+    </a>
+
+    <!-- Future -->
+
+    <a href="#"
+       class="btn btn-secondary">
+        Treatment
+    </a>
+
+    <a href="#"
+       class="btn btn-success">
+        Release
+    </a>
+
+    <a href="#"
+       class="btn btn-dark">
+        Solidification
+    </a>
+
+    <a href="#"
+       class="btn btn-outline-primary">
+        Traceability
+    </a>
+
+</div>
+
+<hr>
+
+<h3>Samples</h3>
+
+<table class="table table-striped">
+
+<tr>
+
+    <th>Sample ID</th>
+
+    <th>Stage</th>
+
+    <th>Status</th>
+
+    <th>Urgent</th>
+
+    <th>Analysis</th>
+
+</tr>
+
+{% for sample in batch.samples.all %}
+
+<tr>
+
+    <td>{{ sample.sample_id }}</td>
+
+    <td>{{ sample.sample_stage }}</td>
+
+    <td>{{ sample.status }}</td>
+
+    <td>{{ sample.urgent }}</td>
+
+    <td>
+
+        {% if sample.analysis %}
+
+            ✔
+
+        {% else %}
+
+            -
+
+        {% endif %}
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+    <td colspan="5">
+        No samples available.
+    </td>
+</tr>
+
+{% endfor %}
+
+</table>
+

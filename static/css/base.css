@@ -1,0 +1,376 @@
+/* =======================
+   RESET
+======================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* =======================
+   THEME VARIABLES
+======================= */
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #2563eb;
+  --sidebar: #1f2937;
+  --sidebar-text: #cbd5e1;
+}
+
+/* Dark mode */
+body.dark {
+  --bg: #0f172a;
+  --card: #111827;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --border: #1f2937;
+  --sidebar: #020617;
+  --sidebar-text: #cbd5e1;
+}
+
+/* =======================
+   LAYOUT
+======================= */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  bottom: 20px;
+
+  width: 230px;
+  background: var(--sidebar);
+  color: var(--sidebar-text);
+
+  border-radius: 12px;
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+
+  transition: width 0.2s ease;
+  overflow: hidden;
+}
+
+/* collapsed state */
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed .logo,
+.sidebar.collapsed .nav a span {
+  display: none;
+}
+
+/* header */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.logo {
+  font-weight: bold;
+}
+
+/* nav */
+.nav a {
+  display: block;
+  padding: 10px;
+  margin-bottom: 6px;
+
+  color: var(--sidebar-text);
+  text-decoration: none;
+
+  border-radius: 8px;
+}
+
+.nav a:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.nav a.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* footer */
+.sidebar-footer {
+  margin-top: auto;
+}
+
+/* main */
+.main {
+  margin-left: 270px;
+  padding: 20px;
+}
+
+.sidebar.collapsed ~ .main {
+  margin-left: 110px;
+}
+
+/* =======================
+   CONTENT CARD
+======================= */
+.content {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+/* =======================
+   TABLES
+======================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+th {
+  background: rgba(0,0,0,0.03);
+}
+
+tr:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+/* =======================
+   FORMS
+======================= */
+input, select, textarea {
+  width: 100%;
+  padding: 9px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  background: var(--card);
+  color: var(--text);
+}
+
+button {
+  background: var(--primary);
+  color: white;
+
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* =======================
+   MOBILE
+======================= */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.open {
+    left: 10px;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.toolbar-left {
+  display: flex;
+  gap: 10px;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ===== FILTERS BOX ===== */
+.filters-box {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* ===== TABLE WRAPPER (IMPORTANT FIX) ===== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+/* FIX YOUR OLD ISSUE */
+table {
+  width: max-content;   /* KEY FIX (not 100%) */
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+/* ===== BUTTONS ===== */
+.btn-blue {
+  background: #2563eb;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.btn-green {
+  background: #16a34a;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+.btn-yellow {
+  background: #f59e0b;
+  color: black;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.btn-info {
+  background: #0ea5e9;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+/* ===== PAGINATION ===== */
+.pagination {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.pagination a {
+  margin: 0 5px;
+  padding: 5px 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+/* ================= HEADER (2 ROW FLEX CONTROL) ================= */
+.table-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 10px;
+}
+
+.header-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ================= FILTER BAR ================= */
+.filter-bar {
+  margin-bottom: 10px;
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* ================= COLUMN PANEL ================= */
+.column-bar {
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.column-panel {
+  position: absolute;
+  top: 40px;
+  left: 0;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 10px;
+
+  border-radius: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  z-index: 50;
+}
+
+.hidden {
+  display: none;
+}
+
+/* ================= TABLE SCROLL ONLY HERE ================= */
+.table-scroll {
+  height: calc(100vh - 220px);  /* KEY FIX */
+  overflow: auto;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+/* sticky header */
+table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 10;
+}
+
+/* table sizing */
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}

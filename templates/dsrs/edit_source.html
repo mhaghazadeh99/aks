@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Tables {% endblock title %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="content">
+    
+    <div style="max-width:600px; margin:auto;">
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    
+    {{ form.as_p }}
+
+<h4>Existing Images</h4>
+
+<div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+    {% for img in form.instance.dsrs_images.all %}
+        <div style="position:relative; text-align:center;">
+            <img src="{{ img.image.url }}"
+                 style="width:100px; height:100px; object-fit:cover; display:block;">
+
+            <label>
+                <input type="checkbox"
+                       name="delete_images"
+                       value="{{ img.id }}">
+                Delete
+            </label>
+        </div>
+    {% endfor %}
+</div>
+
+<label>Upload new images:</label>
+<input type="file" name="dsrs_images" multiple>
+
+<button type="submit" class="btn btn-success">Update</button>
+</form>
+</div>
+</div>
+{% endblock %}

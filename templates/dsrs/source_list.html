@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Tables {% endblock title %}
+
+{% block content %}
+<div class="content">
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <!-- TITLE -->
+        <h2 class="mb-0">Source List</h2>
+                <!-- ADD NEW SOURCE BUTTON -->
+
+        <!-- RIGHT CONTROLS -->
+        <div class="d-flex align-items-center">
+
+            <!-- PAGE SIZE -->
+            <select id="pageSize" class="form-control mr-2" style="width:140px;">
+                <option value="10" {% if page_size == "10" %}selected{% endif %}>10 items</option>
+                <option value="25" {% if page_size == "25" %}selected{% endif %}>25 items</option>
+                <option value="50" {% if page_size == "50" %}selected{% endif %}>50 items</option>
+                <option value="all" {% if page_size == "all" %}selected{% endif %}>All items</option>
+            </select>
+
+            <!-- SEARCH -->
+            <input
+                type="text"
+                id="searchInput"
+                class="form-control"
+                placeholder="Search sources..."
+                style="width:250px;"
+            >
+            
+
+        </div>
+                <a href="{% url 'add_source' %}" class="btn btn-primary mr-2">
+            <i class="tim-icons icon-simple-add"></i>
+            Add New Source
+        </a>
+    </div>
+
+    <!-- TABLE -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th data-column="Source_Type">Source type</th>
+                <th data-column="Sso_Code">SSO</th>
+                <th data-column="Facility">Facility</th>
+                <th data-column="Origin_Type">Origin</th>
+                <th data-column="Date_received">Received</th>
+                <th data-column="Origin_Facility">Origin Facility</th>
+                <th data-column="Location">Location</th>
+                <th data-column="Status">Status</th>
+                <th data-column="Responsible_Person">Responsible</th>
+                <th data-column="Nuclide">Nuclide</th>
+                <th data-column="Activity">Activity</th>
+                <th data-column="Category">Category</th>
+                <th data-column="created_by">Created By</th>
+                <th data-column="created_at">Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        {% for s in sources %}
+            <tr>
+                <td data-column="Source_Type">{{ s.Source_Type }}</td>
+                <td data-column="Sso_Code">{{ s.Sso_Code }}</td>
+                <td data-column="Facility">{{ s.Facility }}</td>
+                <td data-column="Origin_Type">{{ s.Origin_Type }}</td>
+                <td data-column="Date_received">{{ s.Date_received }}</td>
+                <td data-column="Origin_Facility">{{ s.Origin_Facility }}</td>
+                <td data-column="Location">{{ s.Location }}</td>
+                <td data-column="Status">{{ s.Status }}</td>
+                <td data-column="Responsible_Person">{{ s.Responsible_Person }}</td>
+                <td data-column="Nuclide">{{ s.Nuclide }}</td>
+                <td data-column="Activity">{{ s.current_activity_mci_value }}</td>
+                <td data-column="Category">{{ s.category_value }}</td>
+                <td data-column="created_by">{{ s.created_by }}</td>
+                <td data-column="created_at">{{ s.created_at }}</td>
+
+                <td>
+                    <a href="{% url 'edit_source' s.id %}" class="btn btn-warning btn-sm">
+                        Edit
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+<!-- SEARCH SCRIPT -->
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let value = this.value.toLowerCase();
+
+    document.querySelectorAll("#tableBody tr").forEach(row => {
+        row.style.display =
+            row.innerText.toLowerCase().includes(value) ? "" : "none";
+    });
+});
+</script>
+
+<!-- PAGE SIZE SCRIPT -->
+<script>
+document.getElementById("pageSize").addEventListener("change", function () {
+    let params = new URLSearchParams(window.location.search);
+    params.set("size", this.value);
+    params.delete("page");
+    window.location.search = params.toString();
+});
+</script>
+
+</div>
+{% endblock %}

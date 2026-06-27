@@ -1,0 +1,11 @@
+<h2>Split Batch {{ batch.waste_id }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+
+  <input type="text" name="date">
+
+  <input type="text" name="parts" placeholder="Comma separated IDs">
+
+  <button type="submit">Split</button>
+</form>

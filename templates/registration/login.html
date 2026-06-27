@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% include 'includes/head.html' %}
+
+    <style>
+        body {
+            background: #0f172a;
+        }
+
+        .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 15px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 460px;
+            background: #111827;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .auth-title {
+            text-align: center;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        label {
+            color: #cbd5e1;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0b1220;
+            color: #fff;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            background: #6366f1;
+            border: none;
+            color: white;
+            font-weight: 600;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #4f46e5;
+        }
+
+        .msg {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .msg-success { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .msg-error { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+        .error-text {
+            font-size: 12px;
+            color: #ef4444;
+            margin-top: 5px;
+        }
+
+        .bottom-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .bottom-link a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="auth-wrapper">
+
+    <div class="auth-card">
+
+        <div class="auth-title">
+            Login
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="msg {% if message.tags == 'success' %}msg-success{% else %}msg-error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <!-- Non-field errors -->
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="msg msg-error">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% for field in form %}
+
+                <div style="margin-bottom: 14px;">
+
+                    <label>{{ field.label }}</label>
+
+                    {{ field }}
+
+                    {% for error in field.errors %}
+                        <div class="error-text">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+            <button type="submit" class="btn-primary">
+                Login
+            </button>
+
+        </form>
+
+        <div class="bottom-link">
+            Don’t have an account?
+            <a href="{% url 'auth_signup' %}">Create account</a>
+        </div>
+
+    </div>
+
+</div>
+
+{% include 'includes/scripts.html' %}
+
+</body>
+</html>

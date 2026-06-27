@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Tables {% endblock title %}
+{% load crispy_forms_tags %}
+{% block extrastyle %}
+
+<style>
+  .export-csv-btn {
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.export-csv-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.export-csv-btn i {
+    font-size: 14px;
+}
+
+    .page-size .export-csv-img {
+        width: 35px;
+        cursor: pointer;
+    }
+    .export-img {
+        width: 30px;
+    }
+  
+</style>
+
+{% endblock extrastyle %}
+{% block content %}
+   
+    <!-- Main Content -->
+<div class="content">
+  <div style="max-width:600px; margin:auto;">
+
+    <!-- Header row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h2 style="margin: 0;">Add New Source</h2>
+
+    <!-- Hidden file input -->
+  <input type="file" id="csvFileInput" accept=".csv" style="display: none;" />
+
+  <!-- Button -->
+  <button type="button" onclick="triggerCSVImport()" class="btn btn-success btn-sm">
+    Import CSV
+  </button>
+</div>
+<script>
+function triggerCSVImport() {
+    document.getElementById('csvFileInput').click();
+}
+
+document.getElementById('csvFileInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const text = e.target.result;
+
+        const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
+
+const headers = rows[0].split(',').map(h => h.trim());
+
+const data = rows.slice(1).map(row => {
+    const values = row.split(',');
+
+    let obj = {};
+
+    headers.forEach((header, i) => {
+        obj[header] = (values[i] !== undefined) ? values[i].trim() : "";
+    });
+
+    return obj;
+});
+
+        console.log("Parsed CSV:", data);
+
+        // 👉 Next step: send to Django
+        sendToServer(data);
+    };
+
+    reader.readAsText(file);
+});
+
+function sendToServer(data) {
+    fetch('/import-csv/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ rows: data })
+    })
+    .then(async res => {
+        const text = await res.text();  // read raw response
+
+        try {
+            const json = JSON.parse(text);
+            console.log("Response:", json);
+
+           if (json.errors.length > 0) {
+    alert(
+        "Created: " + json.created +
+        "\n\nErrors:\n" + json.errors.join("\n")
+    );
+} else {
+    alert("All rows imported successfully!");
+}
+        } catch (e) {
+            console.error("RAW RESPONSE:", text);
+            alert("Server error:\n" + text);
+        }
+    })
+    .catch(err => {
+        console.error("FETCH ERROR:", err);
+        alert("Fetch failed: " + err);
+    });
+}
+// Django CSRF helper
+function getCSRFToken() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+}
+</script>
+<div class="content">
+    <div style="max-width:600px; margin:auto;">
+<form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+   
+        <hr>
+
+        <label>Upload additional images:</label>
+        <input type="file" name="dsrs_images" multiple>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+
+    </form>
+</div>
+</div>
+</div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,50 @@
+
+<hr>
+
+<h3>Waste Information</h3>
+
+<table class="table">
+    <tr>
+        <th>Waste ID</th>
+        <td>{{ batch.waste_id }}</td>
+    </tr>
+
+    <tr>
+        <th>Type</th>
+        <td>{{ batch.waste_type }}</td>
+    </tr>
+
+    <tr>
+        <th>Mass (kg)</th>
+        <td>{{ batch.mass_kg }}</td>
+    </tr>
+
+    <tr>
+        <th>Volume (m³)</th>
+        <td>{{ batch.volume_m3 }}</td>
+    </tr>
+
+    <tr>
+        <th>Status</th>
+        <td>{{ batch.status }}</td>
+    </tr>
+</table>
+
+<hr>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit" class="btn btn-primary">
+        Create Sample
+    </button>
+
+    <a href="{% url 'waste_detail' batch.id %}"
+       class="btn btn-secondary">
+        Cancel
+    </a>
+
+</form>

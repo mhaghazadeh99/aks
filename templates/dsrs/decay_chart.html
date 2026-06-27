@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="dashboard-content">
+<div class="dsrs-chart-page">
+
+    <h2 style="margin-bottom: 5px;">
+    {{ source.Nuclide }}
+</h2>
+
+<div style="color: gray;">
+    Serial No: {{ source.serial_number }}
+</div>
+
+    <!-- USER CONTROL -->
+    <form method="GET" class="year-form">
+        <label>Show years:</label>
+        <input type="number" name="years" value="{{ years_range }}" min="1" max="200">
+        <button type="submit">Update</button>
+    </form>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <!-- CHART -->
+    <div class="chart-wrapper">
+        <canvas id="decayChart"></canvas>
+    </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const labels = {{ days|safe }};
+    const dataValues = {{ values|safe }};
+
+    if (labels.length > 0 && dataValues.length > 0) {
+
+        new Chart(document.getElementById('decayChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+               datasets: [{
+                    label: 'Activity (mCi)',
+                    data: dataValues,
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Radioactive Decay Over Time (Years)'
+                    }
+                },
+
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time (years)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Activity (mCi)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+<style>
+    .dsrs-chart-page {
+        padding: 20px;
+        margin-left: 260px;
+    }
+
+    .chart-wrapper {
+        width: 100%;
+        max-width: 900px;
+        height: 450px;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .year-form {
+        margin-bottom: 15px;
+    }
+
+    canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    .dashboard-content {
+    margin-left: 100px;   /* sidebar width */
+    padding: 20px;
+    padding-top: 80px;    /* 👈 pushes below top navbar */
+}
+</style>
+
+{% endblock %}

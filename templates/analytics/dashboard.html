@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="content">
+
+<h2>Chart Generator</h2>
+
+<!-- CHART TYPE -->
+<div class="mb-3">
+    <label class="form-label">Chart Type</label>
+    <select id="chartType" class="form-control">
+        <option value="bar">Bar Chart</option>
+        <option value="line">Line Chart</option>
+        <option value="pie">Pie Chart</option>
+        <option value="doughnut">Doughnut Chart</option>
+        <option value="polarArea">Polar Area Chart</option>
+        <option value="radar">Radar Chart</option>
+    </select>
+</div>
+
+<!-- MODEL -->
+<label>Table:</label>
+
+<select id="model"></select>
+
+<!-- DIMENSION (X AXIS) -->
+<label>Dimension (X Axis):</label>
+<select id="dimension"></select>
+
+<!-- MEASURE -->
+<label>Measure:</label>
+<select id="measure"></select>
+
+<!-- DATE GRANULARITY -->
+<label>Date Grouping:</label>
+<select id="date_granularity" disabled>
+    <option value="">None</option>
+    <option value="day">Day</option>
+    <option value="week">Week</option>
+    <option value="month">Month</option>
+    <option value="quarter">Quarter</option>
+    <option value="year">Year</option>
+</select>
+
+<!-- AGGREGATION -->
+<label>Aggregation:</label>
+<select id="aggregation">
+    <option value="count">Count</option>
+    <option value="sum">Sum</option>
+    <option value="avg">Average</option>
+    <option value="min">Minimum</option>
+    <option value="max">Maximum</option>
+</select>
+
+<button type="button" onclick="generateChart()">
+    Generate Chart
+</button>
+
+<div style="height:500px;">
+    <canvas id="chart"></canvas>
+</div>
+
+<script>
+let fieldMeta = {};
+let chart = null;
+
+const dashboardColors = [
+    '#CB52E3',
+    '#B94CD1',
+    '#A947BF',
+    '#973FAD',
+    '#85389B',
+    '#D46DEA',
+    '#DE88EF',
+    '#E7A3F4',
+    '#F1BEF8',
+    '#FAD9FD'
+];
+
+// =========================
+// LOAD MODELS
+// =========================
+fetch("/analytics/models/")
+.then(r => r.json())
+.then(data => {
+    let m = document.getElementById("model");
+
+    data.models.forEach(v => {
+        let o = document.createElement("option");
+        o.value = v;
+        o.text = v;
+        m.appendChild(o);
+    });
+
+    loadFields();
+});
+
+document.getElementById("model").addEventListener("change", loadFields);
+document.getElementById("measure").addEventListener("change", updateAggregationOptions);
+document.addEventListener("change", function (e) {
+    if (e.target && e.target.id === "dimension") {
+        updateDateOptions();
+    }
+});
+
+
+
+// =========================
+// DATE LOGIC (ROBUST VERSION)
+// =========================
+
+function isDateField(fieldName) {
+    if (!fieldMeta || !fieldMeta[fieldName]) return false;
+
+    const type = String(fieldMeta[fieldName]).toLowerCase();
+
+    return (
+        type.includes("date") ||
+        type.includes("time") ||
+        type.includes("datetime") ||
+        type.includes("timestamp")
+    );
+}
+
+function updateDateOptions() {
+    const dimensionEl = document.getElementById("dimension");
+    const granularityEl = document.getElementById("date_granularity");
+
+    const selectedField = dimensionEl.value;
+
+    console.log("Selected field:", selectedField);
+    console.log("Detected type:", fieldMeta[selectedField]);
+
+    const isDate = isDateField(selectedField);
+
+    if (isDate) {
+        granularityEl.disabled = false;
+    } else {
+        granularityEl.value = "";
+        granularityEl.disabled = true;
+    }
+}
+
+
+// =========================
+// AGGREGATION LOGIC
+// =========================
+function updateAggregationOptions() {
+
+    const measure =
+        document.getElementById("measure").value;
+
+    const aggregation =
+        document.getElementById("aggregation");
+
+    if (measure === "") {
+        aggregation.value = "count";
+
+        Array.from(aggregation.options).forEach(option => {
+            option.disabled = option.value !== "count";
+        });
+
+    } else {
+        Array.from(aggregation.options).forEach(option => {
+            option.disabled = false;
+        });
+    }
+}
+
+// =========================
+// LOAD FIELDS
+// =========================
+function loadFields() {
+    let model = document.getElementById("model").value;
+
+    fetch(`/analytics/fields/${model}/`)
+    .then(r => r.json())
+    .then(data => {
+
+        const dimensionSelect = document.getElementById("dimension");
+        const measureSelect = document.getElementById("measure");
+
+        dimensionSelect.innerHTML = "";
+        measureSelect.innerHTML = "";
+
+        fieldMeta = {};
+
+        // DIMENSIONS
+        data.fields.forEach(field => {
+
+            fieldMeta[field.name] = field.type;
+
+            const option = document.createElement("option");
+            option.value = field.name;
+            option.text = field.name;
+
+            dimensionSelect.appendChild(option);
+        });
+
+        // MEASURES
+        measureSelect.innerHTML = '<option value="">Record Count</option>';
+
+// normal numeric measures
+        data.semantic.measures.forEach(field => {
+            const option = document.createElement("option");
+            option.value = field;
+            option.text = field;
+            measureSelect.appendChild(option);
+        });
+
+        // =========================
+        // 🔥 ADD DATE FIELDS AS MEASURES
+        // =========================
+        if (data.semantic.measures_extended) {
+            data.semantic.measures_extended.forEach(field => {
+                const option = document.createElement("option");
+                option.value = field.name;
+                option.text = "📅 " + field.name;
+                option.dataset.type = "date";   // important flag
+                measureSelect.appendChild(option);
+            });
+}
+
+        // default selection
+        if (dimensionSelect.options.length > 0) {
+            dimensionSelect.selectedIndex = 0;
+        }
+
+        updateAggregationOptions();
+        updateDateOptions();
+    });
+}
+
+// =========================
+// GENERATE CHART
+// =========================
+function generateChart() {
+    const measureEl = document.getElementById("measure");
+    const selectedMeasureOption = measureEl.options[measureEl.selectedIndex];
+
+    const model =
+        document.getElementById("model").value;
+
+    const dimension =
+        document.getElementById("dimension").value;
+
+    const measure =
+        document.getElementById("measure").value;
+
+    const isDateMeasure =
+        selectedMeasureOption?.dataset?.type === "date";
+        
+    const aggregation =
+        document.getElementById("aggregation").value;
+
+    const chartType =
+        document.getElementById("chartType").value;
+
+    const date_granularity =
+        document.getElementById("date_granularity").value;
+
+    const label =
+    isDateMeasure
+        ? `Time Series (${selectedMeasureOption.value})`
+        : (measure ? `${aggregation.toUpperCase()} ${measure}` : "Record Count");
+        
+    fetch(
+    `/analytics/chart/?model=${model}` +
+    `&x=${dimension}` +
+    `&measure=${isDateMeasure ? "" : measure}` +
+    `&aggregation=${aggregation}` +
+    `&date_granularity=${date_granularity}` +
+    `&time_measure=${isDateMeasure ? measure : ""}`
+)
+    .then(r => r.json())
+    .then(data => {
+
+        if (chart) chart.destroy();
+        
+        chart = new Chart(
+            document.getElementById("chart"),
+            {
+                type: chartType,
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: label,
+
+                        data: data.values,
+
+                        backgroundColor:
+                            ["pie","doughnut","polarArea"].includes(chartType)
+                                ? dashboardColors.slice(0, data.values.length)
+                                : dashboardColors[0],
+
+                        borderColor:
+                            ["pie","doughnut","polarArea"].includes(chartType)
+                                ? dashboardColors.slice(0, data.values.length)
+                                : dashboardColors[0],
+
+                        borderWidth: 2,
+                        fill: chartType === "line",
+                        tension: 0.3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            }
+        );
+    });
+}
+function updateAggregationOptions() {
+    const measureEl = document.getElementById("measure");
+    const aggregation = document.getElementById("aggregation");
+
+    const selectedOption = measureEl.options[measureEl.selectedIndex];
+    const isDate = selectedOption?.dataset?.type === "date";
+
+    if (measureEl.value === "" || isDate) {
+        aggregation.value = "count";
+
+        Array.from(aggregation.options).forEach(option => {
+            option.disabled = option.value !== "count";
+        });
+    } else {
+        Array.from(aggregation.options).forEach(option => {
+            option.disabled = false;
+        });
+    }
+}
+</script>
+
+{% endblock %}

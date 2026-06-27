@@ -1,115 +1,304 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
 
-{% block title %} Contracts {% endblock title %}
+{% block title %}Contracts{% endblock %}
 
 {% block content %}
 
+{% block extrastyle %}
+<style>
+.col-toggle {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    flex: 0 0 auto !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+    appearance: auto !important;
+    -webkit-appearance: checkbox !important;
+}
+
+.column-panel label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.column-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.hidden {
+    display: none !important;
+}
+</style>
+{% endblock extrastyle %}
 
 <div class="content">
 
-    <!-- Header -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3>Contracts</h3>
-    </div>
+<!-- ================= HEADER TOOLBAR ================= -->
+<div class="table-header">
 
-    <!-- Table -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
+  <!-- LEFT: search -->
+  <div class="header-group">
+    <input type="text" id="searchInput" placeholder="Search...">
+    <button>🔍</button>
+  </div>
 
-            <thead class="table-light">
-                <tr>
-                    <th>Source Type</th>
-                    <th>Nuclide</th>
-                    <th>Serial Number</th>
-                    <th>End User</th>
+  <!-- COLUMN TOGGLE -->
+  <div class="column-bar">
+    <button class="btn-gray" onclick="toggleColumnPanel()">☰ Show/Hide Columns</button>
+    <div id="columnPanel" class="column-panel hidden"></div>
+  </div>
 
-                    <th>Activity</th>
-                    <th>Unit</th>
-                    <th>Activity Date</th>
+  <!-- CENTER: page size -->
+  <div class="header-group">
+  <span>Items:</span>
+  <select id="pageSize">
+    <option value="10">10</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
+    <option value="all">All</option>
+  </select>
+</div>
 
-                    <th>Status</th>
-                    <th>Status Date</th>
-
-                    <th>Payment</th>
-                    <th>Payment Date</th>
-
-                    <th>Contract Signed</th>
-                    <th>Licence</th>
-
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for c in contracts %}
-                <tr>
-                    <td>{{ c.Source_Type }}</td>
-                    <td>{{ c.nuclide }}</td>
-                    <td>{{ c.serial_number }}</td>
-                    <td>{{ c.facility }}</td>
-                    
-
-                    <td>{{ c.activity }}</td>
-                    <td>{{ c.activity_unit }}</td>
-                    <td>{{ c.activity_date }}</td>
-
-                    <td>
-                        <span class="badge bg-success">
-                            {{ c.status }}
-                        </span>
-                    </td>
-
-                    <td>{{ c.status_date }}</td>
-
-                    <!-- Payment -->
-                    <td>
-                        {% if c.payment_done %}
-                            <span class="badge bg-success">Yes</span>
-                        {% else %}
-                            <span class="badge bg-danger">No</span>
-                        {% endif %}
-                    </td>
-
-                    <td>{{ c.payment_date }}</td>
-
-                    <!-- Contract -->
-                    <td>
-                        {% if c.contract_signed %}
-                            <span class="badge bg-success">Yes</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        {% endif %}
-                    </td>
-
-                    <!-- Licence -->
-                    <td>
-                        {% if c.licence_valid %}
-                            <span class="badge bg-success">Valid</span>
-                        {% else %}
-                            <span class="badge bg-danger">Invalid</span>
-                        {% endif %}
-                    </td>
-
-                    <!-- Actions -->
-                    <td>
-                        <a href="{% url 'contract_edit' c.id %}" class="btn btn-sm btn-primary">
-                            Edit
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="14" style="text-align:center;">
-                        No contracts found
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-
-        </table>
-    </div>
+  <!-- RIGHT: actions -->
+  <div class="header-group">
+    <button class="btn-green" onclick="exportCSV()">Export CSV</button>
+  </div>
 
 </div>
+
+<!-- ================= FILTER BAR ================= -->
+<div class="filter-bar">
+
+  <div id="filterContainer"></div>
+
+  <button id="addFilter" class="btn-blue">Add Filter</button>
+  <button id="applyFilters" class="btn-info">Apply</button>
+
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="table-scroll">
+
+<table id="mainTable">
+
+<thead>
+<tr>
+  <th data-col="Source_Type">Source Type</th>
+  <th data-col="nuclide">Nuclide</th>
+  <th data-col="serial_number">Serial Number</th>
+  <th data-col="facility">End User</th>
+
+  <th data-col="activity">Activity</th>
+  <th data-col="activity_unit">Unit</th>
+  <th data-col="activity_date">Activity Date</th>
+
+  <th data-col="status">Status</th>
+  <th data-col="status_date">Status Date</th>
+
+  <th data-col="payment_done">Payment</th>
+  <th data-col="payment_date">Payment Date</th>
+
+  <th data-col="contract_signed">Contract Signed</th>
+  <th data-col="licence_valid">Licence</th>
+
+  <th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="tableBody">
+
+{% for c in contracts %}
+<tr>
+
+<td data-col="Source_Type">{{ c.Source_Type }}</td>
+<td data-col="nuclide">{{ c.nuclide }}</td>
+<td data-col="serial_number">{{ c.serial_number }}</td>
+<td data-col="facility">{{ c.facility }}</td>
+
+<td data-col="activity">{{ c.activity }}</td>
+<td data-col="activity_unit">{{ c.activity_unit }}</td>
+<td data-col="activity_date">{{ c.activity_date }}</td>
+
+<td data-col="status">
+    <span class="badge bg-success">{{ c.status }}</span>
+</td>
+
+<td data-col="status_date">{{ c.status_date }}</td>
+
+<td data-col="payment_done">
+    {% if c.payment_done %}
+        <span class="badge bg-success">Yes</span>
+    {% else %}
+        <span class="badge bg-danger">No</span>
+    {% endif %}
+</td>
+
+<td data-col="payment_date">{{ c.payment_date }}</td>
+
+<td data-col="contract_signed">
+    {% if c.contract_signed %}
+        <span class="badge bg-success">Yes</span>
+    {% else %}
+        <span class="badge bg-warning text-dark">Pending</span>
+    {% endif %}
+</td>
+
+<td data-col="licence_valid">
+    {% if c.licence_valid %}
+        <span class="badge bg-success">Valid</span>
+    {% else %}
+        <span class="badge bg-danger">Invalid</span>
+    {% endif %}
+</td>
+
+<td>
+    <a href="{% url 'contract_edit' c.id %}" class="btn-yellow">Edit</a>
+</td>
+
+</tr>
+{% empty %}
+<tr>
+    <td colspan="14" style="text-align:center;">
+        No contracts found
+    </td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(c.split('=')[1]);
+        }
+    });
+    return cookieValue;
+}
+
+// SEARCH
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let v = this.value.toLowerCase();
+    document.querySelectorAll("#tableBody tr").forEach(r => {
+        r.style.display = r.innerText.toLowerCase().includes(v) ? "" : "none";
+    });
+});
+
+// PAGE SIZE
+document.getElementById("pageSize").onchange = function () {
+    let p = new URLSearchParams(window.location.search);
+    p.set("size", this.value);
+    p.delete("page");
+    window.location.search = p.toString();
+};
+
+// EXPORT
+window.exportCSV = function () {
+    window.location.href = "/contract/export-contracts-csv/";
+};
+
+// FILTERS
+document.getElementById("addFilter").onclick = function () {
+    let row = document.createElement("div");
+    row.className = "d-flex mb-2";
+    row.innerHTML = `
+        <select class="form-control mr-2 key">
+            <option value="Source_Type">Source Type</option>
+            <option value="nuclide">Nuclide</option>
+            <option value="serial_number">Serial Number</option>
+            <option value="facility">End User</option>
+
+            <option value="activity">Activity</option>
+            <option value="activity_unit">Unit</option>
+            <option value="activity_date">Activity Date</option>
+
+            <option value="status">Status</option>
+            <option value="status_date">Status Date</option>
+
+            <option value="payment_done">Payment</option>
+            <option value="payment_date">Payment Date</option>
+
+            <option value="contract_signed">Contract Signed</option>
+            <option value="licence_valid">Licence</option>
+        </select>
+        <input class="form-control mr-2 value" placeholder="Value">
+        <button class="btn btn-danger">X</button>
+    `;
+    row.querySelector("button").onclick = () => row.remove();
+    document.getElementById("filterContainer").appendChild(row);
+};
+
+document.getElementById("applyFilters").onclick = function () {
+    let k = document.querySelectorAll(".key");
+    let v = document.querySelectorAll(".value");
+    let p = new URLSearchParams();
+
+    k.forEach((x,i)=>{
+        if(v[i].value){
+            p.append("key", x.value);
+            p.append("value", v[i].value);
+        }
+    });
+
+    window.location.href = "?" + p.toString();
+};
+
+// COLUMN TOGGLE
+const panel = document.getElementById("columnPanel");
+
+document.querySelectorAll("#mainTable thead th[data-col]").forEach(th => {
+    const col = th.dataset.col;
+
+    const label = document.createElement("label");
+    label.innerHTML = `
+        <input type="checkbox" class="col-toggle" data-col="${col}" checked>
+        ${th.innerText}
+    `;
+
+    panel.appendChild(label);
+});
+
+// SHOW/HIDE
+document.addEventListener("change", function (e) {
+    if (!e.target.classList.contains("col-toggle")) return;
+
+    const col = e.target.dataset.col;
+    const show = e.target.checked;
+
+    document.querySelectorAll(`[data-col="${col}"]`).forEach(el => {
+        el.style.display = show ? "" : "none";
+    });
+
+    fetch("/save-column/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            key: col,
+            value: show
+        })
+    });
+});
+
+function toggleColumnPanel() {
+    document.getElementById("columnPanel").classList.toggle("hidden");
+}
+</script>
+
 {% endblock %}

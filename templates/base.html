@@ -37,10 +37,17 @@
     <a href="{% url 'contract_index' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
       Contract
     </a>
- SECTION -->
+
+  <!-- AUTH SECTION -->
   {% if request.user.is_authenticated %}
-  <li>
-    <!-- Logout (clean sidebar-style link) -->
+    <a href="{% url 'logout' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
+      Logout
+    </a>
+    <a href="{% url 'password_change' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
+      Change Password
+    </a>
+  
+<!--     
     <a href="#"
        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
       <i class="tim-icons icon-button-power"></i>
@@ -51,17 +58,22 @@
       {% csrf_token %}
     </form>
 
-    <!-- Change password under logout -->
     <div style="margin-left: 18px; transform: scale(0.85); transform-origin: left;">
       <a href="{% url 'password_change' %}">
         <i class="tim-icons icon-lock-circle"></i>
         <p>Change Password</p>
       </a>
     </div>
-  </li>
+  </li> -->
 
   {% else %}
-  <li class="{% if 'pages' in parent %}active{% endif %}">
+  <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
+      Login
+    </a>
+ <a href="{% url 'auth_signup' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
+      Register
+    </a>
+  <!-- <li class="{% if 'pages' in parent %}active{% endif %}">
     <a data-toggle="collapse" href="#pagesExamples">
       <i class="tim-icons icon-lock-circle"></i>
       <p>
@@ -87,9 +99,9 @@
           </a>
         </li>
 
-      </ul>
-    </div>
-  </li>
+      </ul> -->
+    <!-- </div>
+  </li> -->
   {% endif %}
   </nav>
 

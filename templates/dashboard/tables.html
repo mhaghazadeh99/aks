@@ -16,6 +16,14 @@
     <button>🔍</button>
   </div>
 
+  <!-- COLUMN TOGGLE -->
+  <div class="column-bar">
+
+    <button class="btn-gray" onclick="toggleColumnPanel()">☰ Columns</button>
+
+    <div id="columnPanel" class="column-panel hidden"></div>
+  </div>
+
   <!-- CENTER: page size -->
   <div class="header-group">
     <select id="pageSize">
@@ -34,7 +42,6 @@
 
 </div>
 
-
 <!-- ================= FILTER BAR ================= -->
 <div class="filter-bar">
 
@@ -45,27 +52,7 @@
 
 </div>
 
-
-<!-- ================= SHOW / HIDE ================= -->
-<div class="column-bar">
-
-  <button class="btn-gray" onclick="toggleColumnPanel()">☰ Columns</button>
-
-  <div id="columnPanel" class="column-panel hidden">
-
-    <label><input type="checkbox" class="col-toggle" data-col="Source_Type" checked> Type</label>
-    <label><input type="checkbox" class="col-toggle" data-col="Sso_Code" checked> SSO</label>
-    <label><input type="checkbox" class="col-toggle" data-col="Facility" checked> Facility</label>
-    <label><input type="checkbox" class="col-toggle" data-col="Status" checked> Status</label>
-    <label><input type="checkbox" class="col-toggle" data-col="Nuclide" checked> Nuclide</label>
-
-    <!-- add more if needed -->
-  </div>
-
-</div>
-
-
-<!-- ================= TABLE ONLY SCROLLS ================= -->
+<!-- ================= TABLE ================= -->
 <div class="table-scroll">
 
 <table id="mainTable">
@@ -79,9 +66,37 @@
   <th data-col="Date_received">Received</th>
   <th data-col="Origin_Facility">Origin Facility</th>
   <th data-col="Location">Location</th>
+  <th data-col="Loc1">Loc1</th>
+  <th data-col="Loc2">Loc2</th>
+  <th data-col="Num">Num</th>
   <th data-col="Status">Status</th>
+  <th data-col="Status_Date">Status Date</th>
+  <th data-col="Responsible_Person">Responsible</th>
   <th data-col="Nuclide">Nuclide</th>
+  <th data-col="activity_input">Input</th>
+  <th data-col="activity_unit">Unit</th>
   <th data-col="Activity">Activity</th>
+  <th data-col="Category">Category</th>
+  <th data-col="Activity_reference_date">Ref Date</th>
+  <th data-col="serial_number">Serial</th>
+  <th data-col="Dose_rate_surface_uSv">Surface</th>
+  <th data-col="Dose_rate_1m_uSv">1m</th>
+  <th data-col="Dose_rate_measurement_date">Dose Date</th>
+  <th data-col="source_state">State</th>
+  <th data-col="contamination_bq_cm2">Contam</th>
+  <th data-col="Source_Physical_Form">Form</th>
+  <th data-col="Source_Manufacturer">Src Mfr</th>
+  <th data-col="Source_Model">Src Model</th>
+  <th data-col="Source_Practice">Practice</th>
+  <th data-col="Device_Manufacturer">Dev Mfr</th>
+  <th data-col="Device_Model">Dev Model</th>
+  <th data-col="Device_Serial_Number">Dev Serial</th>
+  <th data-col="Container_Type">Container</th>
+  <th data-col="Dimension">Dim</th>
+  <th data-col="Attachments">Files</th>
+  <th data-col="Comment">Comment</th>
+  <th data-col="created_by">User</th>
+  <th data-col="created_at">Created</th>
   <th>Action</th>
 </tr>
 </thead>
@@ -98,9 +113,47 @@
 <td data-col="Date_received">{{ s.Date_received }}</td>
 <td data-col="Origin_Facility">{{ s.Origin_Facility }}</td>
 <td data-col="Location">{{ s.Location }}</td>
+<td data-col="Loc1">{{ s.Loc1 }}</td>
+<td data-col="Loc2">{{ s.Loc2 }}</td>
+<td data-col="Num">{{ s.Num }}</td>
 <td data-col="Status">{{ s.Status }}</td>
+<td data-col="Status_Date">{{ s.Status_Date }}</td>
+<td data-col="Responsible_Person">{{ s.Responsible_Person }}</td>
 <td data-col="Nuclide">{{ s.Nuclide }}</td>
+<td data-col="activity_input">{{ s.activity_input }}</td>
+<td data-col="activity_unit">{{ s.activity_unit }}</td>
 <td data-col="Activity">{{ s.current_activity_mci_value|default:"-" }}</td>
+<td data-col="Category">{{ s.category_value|default:"N/A" }}</td>
+<td data-col="Activity_reference_date">{{ s.Activity_reference_date }}</td>
+<td data-col="serial_number">{{ s.serial_number }}</td>
+<td data-col="Dose_rate_surface_uSv">{{ s.Dose_rate_surface_uSv }}</td>
+<td data-col="Dose_rate_1m_uSv">{{ s.Dose_rate_1m_uSv }}</td>
+<td data-col="Dose_rate_measurement_date">{{ s.Dose_rate_measurement_date }}</td>
+<td data-col="source_state">{{ s.source_state }}</td>
+<td data-col="contamination_bq_cm2">{{ s.contamination_bq_cm2 }}</td>
+<td data-col="Source_Physical_Form">{{ s.Source_Physical_Form }}</td>
+<td data-col="Source_Manufacturer">{{ s.Source_Manufacturer }}</td>
+<td data-col="Source_Model">{{ s.Source_Model }}</td>
+<td data-col="Source_Practice">{{ s.Source_Practice }}</td>
+<td data-col="Device_Manufacturer">{{ s.Device_Manufacturer }}</td>
+<td data-col="Device_Model">{{ s.Device_Model }}</td>
+<td data-col="Device_Serial_Number">{{ s.Device_Serial_Number }}</td>
+<td data-col="Container_Type">{{ s.Container_Type }}</td>
+<td data-col="Dimension">{{ s.Dimension }}</td>
+
+<td data-col="Attachments">
+  {% if s.Attachments %}
+    <a href="{{ s.Attachments.url }}">Main</a>
+  {% endif %}
+
+  {% for img in s.dsrs_images.all %}
+    <br><a href="{{ img.image.url }}">Image {{ forloop.counter }}</a>
+  {% endfor %}
+</td>
+
+<td data-col="Comment">{{ s.Comment }}</td>
+<td data-col="created_by">{{ s.created_by }}</td>
+<td data-col="created_at">{{ s.created_at }}</td>
 
 <td>
   <a href="{% url 'edit_source' s.id %}" class="btn-yellow">Edit</a>
@@ -116,5 +169,152 @@
 </div>
 
 </div>
+
+<!-- ================= JS ================= -->
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(c.split('=')[1]);
+        }
+    });
+    return cookieValue;
+}
+
+// SEARCH
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let v = this.value.toLowerCase();
+    document.querySelectorAll("#tableBody tr").forEach(r => {
+        r.style.display = r.innerText.toLowerCase().includes(v) ? "" : "none";
+    });
+});
+
+// PAGE SIZE
+document.getElementById("pageSize").onchange = function () {
+    let p = new URLSearchParams(window.location.search);
+    p.set("size", this.value);
+    p.delete("page");
+    window.location.search = p.toString();
+};
+
+// EXPORT
+window.exportCSV = function () {
+    let params = window.location.search;
+    window.location.href = "/export-csv/" + params;
+};
+
+// FILTERS
+document.getElementById("addFilter").onclick = function () {
+    let row = document.createElement("div");
+    row.className = "d-flex mb-2";
+    row.innerHTML = `
+        <select class="form-control mr-2 key">
+            <option value="Source_Type">Source Type</option>
+            <option value="Sso_Code">SSO Code</option>
+            <option value="Facility">Facility</option>
+            <option value="Status">Status</option>
+            <option value="Nuclide">Nuclide</option>
+            <option value="source_state">State</option>
+        </select>
+        <input class="form-control mr-2 value" placeholder="Value">
+        <button class="btn btn-danger">X</button>
+    `;
+    row.querySelector("button").onclick = () => row.remove();
+    document.getElementById("filterContainer").appendChild(row);
+};
+
+document.getElementById("applyFilters").onclick = function () {
+    let k = document.querySelectorAll(".key");
+    let v = document.querySelectorAll(".value");
+    let p = new URLSearchParams();
+
+    k.forEach((x,i)=>{
+        if(v[i].value){
+            p.append("key", x.value);
+            p.append("value", v[i].value);
+        }
+    });
+
+    window.location.href = "?" + p.toString();
+};
+
+// SHOW/HIDE COLUMNS
+// ================= CREATE COLUMN CHECKBOXES =================
+
+const panel = document.getElementById("columnPanel");
+
+document.querySelectorAll("#mainTable thead th[data-col]").forEach(th => {
+
+    const col = th.dataset.col;
+
+    const label = document.createElement("label");
+
+    label.innerHTML = `
+        <input
+            type="checkbox"
+            class="col-toggle"
+            data-col="${col}"
+            checked>
+        ${th.innerText}
+    `;
+
+    panel.appendChild(label);
+
+});
+// LOAD SAVED COLUMNS
+fetch("/get-column/")
+.then(r => r.json())
+.then(data => {
+
+    data.forEach(c => {
+
+        const checkbox =
+            document.querySelector(`.col-toggle[data-col="${c.key}"]`);
+
+        if (checkbox) {
+            checkbox.checked = c.value;
+        }
+
+        document.querySelectorAll(`[data-col="${c.key}"]`).forEach(el => {
+            el.style.display = c.value ? "" : "none";
+        });
+
+    });
+
+});
+
+function toggleColumnPanel() {
+    document.getElementById("columnPanel").classList.toggle("hidden");
+}
+
+document.addEventListener("change", function (e) {
+
+    if (!e.target.classList.contains("col-toggle")) return;
+
+    const col = e.target.dataset.col;
+    const show = e.target.checked;
+
+    // SHOW / HIDE COLUMN
+    document.querySelectorAll(`[data-col="${col}"]`).forEach(el => {
+        el.style.display = show ? "" : "none";
+    });
+
+    // SAVE TO BACKEND
+    fetch("/save-column/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            key: col,
+            value: show
+        })
+    });
+
+});
+</script>
 
 {% endblock %}

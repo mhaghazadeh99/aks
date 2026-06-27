@@ -232,10 +232,13 @@ def tables_view(request):
     page = request.GET.get("page")
     page_obj = paginator.get_page(page)
 
-    return render(request, "dashboard/tables.html", {
-        "sources": page_obj,
-        "page_obj": page_obj,
-        "page_size": size,
+    return render(request, "dashboard/tables.html", context = {
+    "sources": page_obj,
+    "page_obj": page_obj,
+    "page_size": size,
+    "search": search,
+    "keys": keys,
+    "values": values,
     })
 
 

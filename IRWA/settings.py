@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'contract',
-    'dyn_dt',
+    # 'dyn_dt',
     'analytics',
     "waste",
     "laboratory",
@@ -179,8 +179,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-DYNAMIC_DATATB = {
-    # SLUG -> Import_PATH 
-    'dsrs'  : "dashboard.models.DSRS",
-    'contract':"contract.models.Contract",
-}
+# DYNAMIC_DATATB = {
+#     # SLUG -> Import_PATH 
+#     'dsrs'  : "dashboard.models.DSRS",
+#     'contract':"contract.models.Contract",
+# }

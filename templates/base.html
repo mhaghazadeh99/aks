@@ -7,6 +7,7 @@
   <title>{% block title %}My App{% endblock %}</title>
 
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block extrastyle %}  {% endblock %}
 </head>
 
 <body>
@@ -120,5 +121,7 @@
 </main>
 
 <script src="{% static 'js/base.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
 </body>
 </html>

@@ -223,7 +223,7 @@ def tables_view(request):
     size = request.GET.get("size", "25")
 
     if size == "all":
-        page_size = queryset.count()   # show everything in one page
+        page_size = max(queryset.count(), 1)   # show everything in one page
     else:
         page_size = int(size)
 

@@ -10,9 +10,12 @@ from django.http import JsonResponse, response
 import csv
 from django.http import HttpResponse
 from datetime import datetime
+from django.core.paginator import Paginator
 
 def contract_index(request):
     contracts = Contract.objects.all().order_by('-created_at')
+
+# ...your filtering code...
      # ---------- FILTER SYSTEM ----------
     keys = request.GET.getlist("key")
     values = request.GET.getlist("value")
@@ -43,11 +46,22 @@ def contract_index(request):
         contracts = contracts.filter(**{f"{k}__icontains": v})
 
     # ---------- PAGE SIZE ----------
-    size = request.GET.get("size")
-    if size and size != "all":
-        contracts = contracts[:int(size)]
+
+    size = request.GET.get("size", "25")
+
+    if size == "all":
+        page_size = contracts.count() or 1   # avoid 0 if table is empty
+    else:
+        page_size = int(size)
+
+    # ---------- PAGINATION ----------
+    paginator = Paginator(contracts, page_size)
+    page = request.GET.get("page")
+    page_obj = paginator.get_page(page)
+
     return render(request, 'contract/index.html', {
-        'contracts': contracts
+        'page_obj': page_obj,
+        "page_size": size,
     })
 
 

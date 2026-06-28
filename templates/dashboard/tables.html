@@ -6,6 +6,35 @@
 {% block content %}
 {% block extrastyle %}
 <style>
+
+.pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    margin-top:15px;
+}
+
+.pagination a,
+.pagination span{
+    padding:6px 12px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    text-decoration:none;
+}
+
+.pagination .current{
+    background:#0d6efd;
+    color:#fff;
+    border-color:#0d6efd;
+}
+
+.page-info{
+    text-align:center;
+    margin-top:10px;
+    color:#666;
+}
+
   .col-toggle {
     width: 16px !important;
     height: 16px !important;
@@ -202,7 +231,30 @@
 </div>
 
 </div>
+<div class="pagination">
 
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">Previous</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+            <span class="current">{{ num }}</span>
+        {% else %}
+            <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">Next</a>
+    {% endif %}
+
+</div>
+
+<div class="page-info">
+     {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    ({{ page_obj.paginator.count }} records)
+</div>
 <!-- ================= JS ================= -->
 <script>
 function getCookie(name) {

@@ -1,63 +1,114 @@
 {% extends "base.html" %}
 {% load static %}
+
+
+{% block extrastyle %}
+<style>
+.chart-toolbar{
+    display:flex;
+    align-items:flex-end;
+    gap:16px;
+    flex-wrap:wrap;
+    padding:15px;
+    margin-bottom:20px;
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:8px;
+}
+
+.toolbar-group{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.toolbar-group label{
+    font-size:13px;
+    font-weight:600;
+}
+
+.toolbar-group select{
+    min-width:170px;
+    height:36px;
+}
+
+.generate-btn{
+    height:36px;
+    padding:0 18px;
+    cursor:pointer;
+}
+
+.chart-container{
+    height:500px;
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:20px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-
 <div class="content">
+<div class="chart-toolbar">
 
-<h2>Chart Generator</h2>
+    <div class="toolbar-group">
+        <label for="chartType">Chart</label>
+        <select id="chartType">
+            <option value="bar">Bar Chart</option>
+            <option value="line">Line Chart</option>
+            <option value="pie">Pie Chart</option>
+            <option value="doughnut">Doughnut Chart</option>
+            <option value="polarArea">Polar Area Chart</option>
+            <option value="radar">Radar Chart</option>
+        </select>
+    </div>
 
-<!-- CHART TYPE -->
-<div class="mb-3">
-    <label class="form-label">Chart Type</label>
-    <select id="chartType" class="form-control">
-        <option value="bar">Bar Chart</option>
-        <option value="line">Line Chart</option>
-        <option value="pie">Pie Chart</option>
-        <option value="doughnut">Doughnut Chart</option>
-        <option value="polarArea">Polar Area Chart</option>
-        <option value="radar">Radar Chart</option>
-    </select>
+    <div class="toolbar-group">
+        <label for="model">Table</label>
+        <select id="model"></select>
+    </div>
+
+    <div class="toolbar-group">
+        <label for="dimension">Dimension</label>
+        <select id="dimension"></select>
+    </div>
+
+    <div class="toolbar-group">
+        <label for="measure">Measure</label>
+        <select id="measure"></select>
+    </div>
+
+    <div class="toolbar-group">
+        <label for="date_granularity">Date Grouping</label>
+        <select id="date_granularity" disabled>
+            <option value="">None</option>
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+            <option value="quarter">Quarter</option>
+            <option value="year">Year</option>
+        </select>
+    </div>
+
+    <div class="toolbar-group">
+        <label for="aggregation">Aggregation</label>
+        <select id="aggregation">
+            <option value="count">Count</option>
+            <option value="sum">Sum</option>
+            <option value="avg">Average</option>
+            <option value="min">Minimum</option>
+            <option value="max">Maximum</option>
+        </select>
+    </div>
+
+    <button type="button" class="generate-btn" onclick="generateChart()">
+        Generate Chart
+    </button>
+
 </div>
 
-<!-- MODEL -->
-<label>Table:</label>
-
-<select id="model"></select>
-
-<!-- DIMENSION (X AXIS) -->
-<label>Dimension (X Axis):</label>
-<select id="dimension"></select>
-
-<!-- MEASURE -->
-<label>Measure:</label>
-<select id="measure"></select>
-
-<!-- DATE GRANULARITY -->
-<label>Date Grouping:</label>
-<select id="date_granularity" disabled>
-    <option value="">None</option>
-    <option value="day">Day</option>
-    <option value="week">Week</option>
-    <option value="month">Month</option>
-    <option value="quarter">Quarter</option>
-    <option value="year">Year</option>
-</select>
-
-<!-- AGGREGATION -->
-<label>Aggregation:</label>
-<select id="aggregation">
-    <option value="count">Count</option>
-    <option value="sum">Sum</option>
-    <option value="avg">Average</option>
-    <option value="min">Minimum</option>
-    <option value="max">Maximum</option>
-</select>
-
-<button type="button" onclick="generateChart()">
-    Generate Chart
-</button>
-
-<div style="height:500px;">
+<div class="chart-container">
     <canvas id="chart"></canvas>
 </div>
 

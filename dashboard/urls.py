@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import * #dashboard_view, register_view,items_view,charts_view, tables_view
 from django.contrib.auth import views as auth_views
-
+from django.contrib.auth.views import LogoutView
 
 
 urlpatterns = [
@@ -19,4 +19,6 @@ urlpatterns = [
     path("export-csv/", export_csv),
     path('import-csv/', import_csv, name='import_csv'),
     path("dsrs/image/delete/<int:pk>/", delete_dsrs_image, name="delete_dsrs_image"),
+    path("dsrs/<int:pk>/history/", dsrs_history, name="dsrs_history"),
+    path("logout/", LogoutView.as_view(), name="logout"),
 ]

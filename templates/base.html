@@ -41,9 +41,10 @@
 
   <!-- AUTH SECTION -->
   {% if request.user.is_authenticated %}
-    <a href="{% url 'logout' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
-      Logout
-    </a>
+<form method="post" action="{% url 'logout' %}">
+  {% csrf_token %}
+  <button type="submit">Logout</button>
+</form>
     <a href="{% url 'password_change' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
       Change Password
     </a>
@@ -119,7 +120,7 @@
   {% block content %}{% endblock %}
 
 </main>
-
+<meta name="csrf-token" content="{{ csrf_token }}">
 <script src="{% static 'js/base.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 

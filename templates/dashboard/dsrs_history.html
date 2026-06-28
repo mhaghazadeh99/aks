@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block extrastyle %}
+<style>
+.timeline {
+    position: relative;
+    margin: 20px 0;
+    padding-left: 30px;
+    border-left: 3px solid #ddd;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -10px;
+    top: 5px;
+    width: 14px;
+    height: 14px;
+    background: #4a90e2;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.time {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.meta {
+    margin-bottom: 10px;
+}
+
+.badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.badge.green { background: #d4edda; color: #155724; }
+.badge.blue { background: #d1ecf1; color: #0c5460; }
+.badge.red { background: #f8d7da; color: #721c24; }
+
+.user {
+    font-size: 12px;
+    color: #555;
+}
+
+.details p {
+    margin: 2px 0;
+    font-size: 13px;
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="content">
+
+<h2>DSRS History: {{ dsrs.Serial_Number }}</h2>
+
+<div class="timeline">
+
+    {% for h in history %}
+
+    <div class="timeline-item">
+
+        <div class="timeline-dot"></div>
+
+        <div class="timeline-content">
+
+            <div class="time">
+                🕓 {{ h.history_date }}
+            </div>
+
+            <div class="meta">
+
+                {% if h.history_type == '+' %}
+                    <span class="badge green">CREATED</span>
+                {% elif h.history_type == '~' %}
+                    <span class="badge blue">UPDATED</span>
+                {% elif h.history_type == '-' %}
+                    <span class="badge red">DELETED</span>
+                {% endif %}
+
+                {% if h.history_user %}
+                    <span class="user">by {{ h.history_user }}</span>
+                {% endif %}
+
+            </div>
+
+            <div class="details">
+
+                <p><b>Facility:</b> {{ h.Facility }}</p>
+                <p><b>Status:</b> {{ h.Status }}</p>
+                <p><b>Source Type:</b> {{ h.Source_Type }}</p>
+                <p><b>Nuclide:</b> {{ h.Nuclide }}</p>
+                <p><b>Activity:</b> {{ h.Activity_Input }}</p>
+                <p><b>Serial:</b> {{ h.Serial_Number }}</p>
+
+            </div>
+
+        </div>
+    </div>
+
+    {% endfor %}
+
+</div>
+
+</div>
+
+{% endblock %}

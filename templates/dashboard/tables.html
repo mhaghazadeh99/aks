@@ -6,7 +6,61 @@
 {% block content %}
 {% block extrastyle %}
 <style>
+    .action-icons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
 
+/* base icon button */
+.icon-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+    font-size: 16px;
+
+    background: #f5f6f8;
+    color: #444;
+
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+/* hover effect */
+.icon-btn:hover {
+    transform: translateY(-2px);
+    background: #ffffff;
+    border-color: #ddd;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+/* individual colors */
+.icon-btn.edit:hover {
+    color: #d39e00;
+}
+
+.icon-btn.chart:hover {
+    color: #0d6efd;
+}
+
+.icon-btn.history:hover {
+    color: #6c757d;
+}
+.actions a{
+    display:inline-block;
+    padding:6px 10px;
+    margin-right:5px;
+    border-radius:4px;
+    text-decoration:none;
+    font-size:14px;
+}
 .pagination{
     display:flex;
     justify-content:center;
@@ -63,6 +117,18 @@
 }
 .hidden {
     display: none !important;
+}
+#filterContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+#filterContainer > * {
+  display: inline-flex;
+  align-items: center;
 }
 </style>
 {% endblock extrastyle %}
@@ -217,9 +283,21 @@
 <td data-col="created_by">{{ s.created_by }}</td>
 <td data-col="created_at">{{ s.created_at }}</td>
 
-<td>
-  <a href="{% url 'edit_source' s.id %}" class="btn-yellow">Edit</a>
-  <a href="{% url 'decay_chart' s.id %}" class="btn-blue">Chart</a>
+
+<td class="action-icons">
+
+  <a href="{% url 'edit_source' s.id %}" class="icon-btn edit" title="Edit">
+    ✏️
+  </a>
+
+  <a href="{% url 'decay_chart' s.id %}" class="icon-btn chart" title="Chart">
+    📊
+  </a>
+
+  <a href="{% url 'dsrs_history' s.id %}" class="icon-btn history" title="History">
+    🕓
+  </a>
+
 </td>
 
 </tr>
@@ -295,14 +373,46 @@ document.getElementById("addFilter").onclick = function () {
     let row = document.createElement("div");
     row.className = "d-flex mb-2";
     row.innerHTML = `
-        <select class="form-control mr-2 key">
-            <option value="Source_Type">Source Type</option>
-            <option value="Sso_Code">SSO Code</option>
-            <option value="Facility">Facility</option>
-            <option value="Status">Status</option>
-            <option value="Nuclide">Nuclide</option>
-            <option value="source_state">State</option>
-        </select>
+       <select class="form-control mr-2 key">
+  <option value="Source_Type">Source Type</option>
+  <option value="Sso_Code">SSO Code</option>
+  <option value="Facility">Facility</option>
+  <option value="Origin_Type">Origin</option>
+  <option value="Date_received">Received</option>
+  <option value="Origin_Facility">Origin Facility</option>
+  <option value="Location">Location</option>
+  <option value="Loc1">Loc1</option>
+  <option value="Loc2">Loc2</option>
+  <option value="Num">Num</option>
+  <option value="Status">Status</option>
+  <option value="Status_Date">Status Date</option>
+  <option value="Responsible_Person">Responsible</option>
+  <option value="Nuclide">Nuclide</option>
+  <option value="activity_input">Input</option>
+  <option value="activity_unit">Unit</option>
+  <option value="Activity">Activity</option>
+  <option value="Category">Category</option>
+  <option value="Activity_reference_date">Ref Date</option>
+  <option value="serial_number">Serial</option>
+  <option value="Dose_rate_surface_uSv">Surface</option>
+  <option value="Dose_rate_1m_uSv">1m</option>
+  <option value="Dose_rate_measurement_date">Dose Date</option>
+  <option value="source_state">State</option>
+  <option value="contamination_bq_cm2">Contam</option>
+  <option value="Source_Physical_Form">Form</option>
+  <option value="Source_Manufacturer">Src Mfr</option>
+  <option value="Source_Model">Src Model</option>
+  <option value="Source_Practice">Practice</option>
+  <option value="Device_Manufacturer">Dev Mfr</option>
+  <option value="Device_Model">Dev Model</option>
+  <option value="Device_Serial_Number">Dev Serial</option>
+  <option value="Container_Type">Container</option>
+  <option value="Dimension">Dim</option>
+  <option value="Attachments">Files</option>
+  <option value="Comment">Comment</option>
+  <option value="created_by">User</option>
+  <option value="created_at">Created</option>
+</select>
         <input class="form-control mr-2 value" placeholder="Value">
         <button class="btn btn-danger">X</button>
     `;

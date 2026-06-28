@@ -20,6 +20,16 @@ import csv
 from django.http import HttpResponse
 
 
+def dsrs_history(request, pk):
+    dsrs = get_object_or_404(DSRS, pk=pk)
+
+    history = dsrs.history.all().order_by("-history_date")
+
+    return render(request, "dashboard/dsrs_history.html", {
+        "dsrs": dsrs,
+        "history": history
+    })
+
 def group_required(user, groups):
     return user.groups.filter(name__in=groups).exists()
 
@@ -105,9 +115,9 @@ def add_source(request):
                     activity_unit="mCi",
                     activity_date=timezone.now().date(),
                 )
-
+            
             for img in request.FILES.getlist("dsrs_images"):
-                DSRSImage.objects.create(dsrs=obj, image=img)
+                DSRSImage.objects.create(dsrs=obj, file=img)
             form.save_m2m()
             return redirect("tables")
 
@@ -168,10 +178,10 @@ def edit_source(request, pk):
                     id__in=delete_ids,
                     dsrs=obj
                 ).delete()
-
+            
             images = request.FILES.getlist("dsrs_images")
             for img in images:
-                DSRSImage.objects.create(dsrs=obj, image=img)
+                DSRSImage.objects.create(dsrs=obj, file=img)
 
             return redirect("tables")
     else:

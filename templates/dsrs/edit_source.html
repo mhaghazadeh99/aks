@@ -3,7 +3,26 @@
 
 {% block title %} Tables {% endblock title %}
 {% load crispy_forms_tags %}
+{% block extrastyle %}
+<style>
+    .required label::after {
+    content: " *";
+    color: red;
+}
 
+.form-check-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.form-check-inline input[type="checkbox"] {
+    transform: scale(1.3);
+    cursor: pointer;
+}
+</style>
+{% endblock %}
 {% block content %}
 
 <div class="content">
@@ -13,22 +32,39 @@
     {% csrf_token %}
 
     
-    {{ form.as_p }}
+   {% for field in form %}
+    {% if field.name == "create_contract" %}
+
+      <div class="form-check-inline">
+         {{ field.label_tag }}
+        {{ field }} 
+           
+        </div>
+
+    {% else %}
+        <p>
+            {{ field.label_tag }}
+            {{ field }}
+        </p>
+    {% endif %}
+{% endfor %}
+        <hr>
 
 <h4>Existing Images</h4>
-
 <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
     {% for img in form.instance.dsrs_images.all %}
         <div style="position:relative; text-align:center;">
-            <img src="{{ img.image.url }}"
+            
+            <img src="{{ img.file.url }}"
                  style="width:100px; height:100px; object-fit:cover; display:block;">
 
             <label>
                 <input type="checkbox"
                        name="delete_images"
                        value="{{ img.id }}">
-                Delete
+                
             </label>
+
         </div>
     {% endfor %}
 </div>
@@ -36,7 +72,8 @@
 <label>Upload new images:</label>
 <input type="file" name="dsrs_images" multiple>
 
-<button type="submit" class="btn btn-success">Update</button>
+<button type="submit" class="btn btn-success">Update and delete selected images
+     </button>
 </form>
 </div>
 </div>

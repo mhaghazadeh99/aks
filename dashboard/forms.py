@@ -3,6 +3,9 @@ from crispy_forms.layout import Submit
 from django import forms
 from .models import DSRS
 
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Field, Submit
+
 
 
 
@@ -20,21 +23,32 @@ class DSRSForm(forms.ModelForm):
             'Status_Date': forms.DateInput(attrs={'type': 'date'}),
             'Dose_rate_measurement_date': forms.DateInput(attrs={'type': 'date'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({'class': 'form-control'})
-            
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Save DSRS'))
-        
-
-    labels = {
+        labels = {
             "activity_input_mci": "Initial Activity (mCi)",
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for name, field in self.fields.items():
+            if field.required:
+                field.label = f"{field.label} *"
+        # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     for field in self.fields.values():
+    #         field.widget.attrs.update({'class': 'form-control'})
+            
+    #     self.helper = FormHelper()
+    #     self.helper.form_method = 'post'
+        # self.helper.layout = Layout(
+        #     Field('field1'),
+        #     Field('field2'),
+        #     Submit('submit', 'Save')
+        
+        # self.helper.add_input(Submit('submit', 'Save DSRS'))
+        
+
+  
     # -------------------------
     # FIELD-LEVEL VALIDATION
     # -------------------------

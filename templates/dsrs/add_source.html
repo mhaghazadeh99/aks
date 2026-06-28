@@ -6,6 +6,10 @@
 {% block extrastyle %}
 
 <style>
+    .form-check-inline label {
+    margin: 0;
+    font-weight: 500;
+}
   .export-csv-btn {
     border-radius: 8px;
     padding: 6px 14px;
@@ -30,6 +34,21 @@
         width: 30px;
     }
   
+.required label::after {
+    content: " *";
+    color: red;
+}
+.form-check-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.form-check-inline input[type="checkbox"] {
+    transform: scale(1.3);
+    cursor: pointer;
+}
 </style>
 
 {% endblock extrastyle %}
@@ -138,12 +157,29 @@ function getCSRFToken() {
 <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        {{ form.as_p }}
-   
+    
+   {% for field in form %}
+    {% if field.name == "create_contract" %}
+
+      <div class="form-check-inline">
+         {{ field.label_tag }}
+        {{ field }} 
+           
+        </div>
+
+    {% else %}
+        <p>
+            {{ field.label_tag }}
+            {{ field }}
+        </p>
+    {% endif %}
+{% endfor %}
         <hr>
 
-        <label>Upload additional images:</label>
-        <input type="file" name="dsrs_images" multiple>
+       <div class="mb-3">
+  <label class="form-label">Upload additional images</label>
+  <input class="form-control" type="file" name="dsrs_images" multiple>
+</div>
 
         <button type="submit" class="btn btn-primary">Save</button>
 

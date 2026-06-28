@@ -7,6 +7,19 @@
 
 {% block extrastyle %}
 <style>
+
+    #filterContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+#filterContainer > * {
+  display: inline-flex;
+  align-items: center;
+}
 .pagination {
     display: flex;
     justify-content: center;
@@ -133,7 +146,9 @@
   <th data-col="payment_date">Payment Date</th>
 
   <th data-col="contract_signed">Contract Signed</th>
+   <th data-col="contract_signed">Contract Date </th>
   <th data-col="licence_valid">Licence</th>
+  <th data-col="licence_valid">Licence Date </th>
 
   <th>Actions</th>
 </tr>
@@ -176,7 +191,7 @@
         <span class="badge bg-warning text-dark">Pending</span>
     {% endif %}
 </td>
-
+<td data-col="payment_date">{{ c.contract_signed_date }}</td>
 <td data-col="licence_valid">
     {% if c.licence_valid %}
         <span class="badge bg-success">Valid</span>
@@ -184,6 +199,7 @@
         <span class="badge bg-danger">Invalid</span>
     {% endif %}
 </td>
+<td data-col="payment_date">{{ c.licence_issue_date }}</td>
 
 <td>
     <a href="{% url 'contract_edit' c.id %}" class="btn-yellow">Edit</a>

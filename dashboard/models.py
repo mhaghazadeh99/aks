@@ -131,7 +131,7 @@ class DSRS(models.Model):
     Dimension = models.CharField(max_length=20, blank=True)
 
     Attachments = models.FileField(
-        upload_to="dsrs_images/",
+        upload_to="DSRS_Doc",
         validators=[validate_attachment],
         blank=True,
         null=True

@@ -270,13 +270,15 @@
 <td data-col="Dimension">{{ s.Dimension }}</td>
 
 <td data-col="Attachments">
-  {% if s.Attachments %}
-    <a href="{{ s.Attachments.url }}">Main</a>
-  {% endif %}
+    {% if s.Attachments %}
+        <a href="{{ s.Attachments.url }}">Main</a>
+    {% endif %}
 
-  {% for img in s.dsrs_images.all %}
-    <br><a href="{{ img.image.url }}">Image {{ forloop.counter }}</a>
-  {% endfor %}
+    {% for img in s.dsrs_images.all %}
+        {% if img.file %}
+            <br><a href="{{ img.file.url }}">Image {{ forloop.counter }}</a>
+        {% endif %}
+    {% endfor %}
 </td>
 
 <td data-col="Comment">{{ s.Comment }}</td>

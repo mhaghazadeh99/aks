@@ -66,12 +66,12 @@
 
 <div class="content">
 
-<h2>DSRS History: {{ dsrs.Serial_Number }}</h2>
+<h2>DSRS History: {{ dsrs.serial_number }}</h2>
 
 <div class="timeline">
 
-    {% for h in history %}
-
+    {% for item in items %}
+    {% with h=item.record %}
     <div class="timeline-item">
 
         <div class="timeline-dot"></div>
@@ -100,19 +100,32 @@
 
             <div class="details">
 
-                <p><b>Facility:</b> {{ h.Facility }}</p>
-                <p><b>Status:</b> {{ h.Status }}</p>
-                <p><b>Source Type:</b> {{ h.Source_Type }}</p>
-                <p><b>Nuclide:</b> {{ h.Nuclide }}</p>
-                <p><b>Activity:</b> {{ h.Activity_Input }}</p>
-                <p><b>Serial:</b> {{ h.Serial_Number }}</p>
+            {% if h.history_type == '+' %}
+                <p>Record created.</p>
+
+            {% elif h.history_type == '-' %}
+                <p>Record deleted.</p>
+
+            {% elif item.delta %}
+                {% for change in item.delta.changes %}
+                    <p>
+                        <strong>{{ change.field }}</strong><br>
+                        {{ change.old|default:"(empty)" }}
+                        →
+                        <strong>{{ change.new|default:"(empty)" }}</strong>
+                    </p>
+                {% empty %}
+                    <p>No field changes.</p>
+                {% endfor %}
+            {% endif %}
 
             </div>
 
         </div>
     </div>
 
-    {% endfor %}
+    {% endwith %}
+{% endfor %}
 
 </div>
 

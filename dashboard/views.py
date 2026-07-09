@@ -23,11 +23,25 @@ from django.http import HttpResponse
 def dsrs_history(request, pk):
     dsrs = get_object_or_404(DSRS, pk=pk)
 
-    history = dsrs.history.all().order_by("-history_date")
+    history = list(dsrs.history.all().order_by("-history_date"))
+
+    items = []
+
+    for i, record in enumerate(history):
+        delta = None
+
+        # Compare with the previous version (older record)
+        if i < len(history) - 1:
+            delta = record.diff_against(history[i + 1])
+
+        items.append({
+            "record": record,
+            "delta": delta,
+        })
 
     return render(request, "dashboard/dsrs_history.html", {
         "dsrs": dsrs,
-        "history": history
+        "items": items,
     })
 
 def group_required(user, groups):
@@ -235,7 +249,10 @@ def tables_view(request):
     if size == "all":
         page_size = max(queryset.count(), 1)   # show everything in one page
     else:
-        page_size = int(size)
+        try:
+            page_size = max(1, int(size))
+        except (ValueError, TypeError):
+            page_size = 25
 
     # 📌 PAGINATION
     paginator = Paginator(queryset, page_size)

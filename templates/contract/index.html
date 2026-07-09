@@ -7,7 +7,50 @@
 
 {% block extrastyle %}
 <style>
+.pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    margin:20px 0;
+    flex-wrap:wrap;
+}
 
+.pagination a,
+.pagination span{
+    min-width:36px;
+    height:36px;
+    padding:0 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid #ddd;
+    border-radius:8px;
+    text-decoration:none;
+    color:#444;
+    background:#fff;
+    transition:.2s;
+}
+
+.pagination a:hover{
+    background:#f5f5f5;
+    border-color:#bbb;
+}
+
+.pagination .current{
+    background:#CB52E3;
+    color:#fff;
+    border-color:#CB52E3;
+    font-weight:600;
+}
+
+.pagination .dots{
+    border:none;
+    background:none;
+    min-width:auto;
+    padding:0 4px;
+    color:#888;
+}
     #filterContainer {
   display: flex;
   flex-direction: row;
@@ -222,19 +265,29 @@
 <div class="pagination">
 
     {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        <a href="?page=1{% if page_size %}&size={{ page_size }}{% endif %}">&laquo;</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">&lsaquo;</a>
     {% endif %}
 
     {% for num in page_obj.paginator.page_range %}
-        {% if page_obj.number == num %}
-            <span class="current">{{ num }}</span>
-        {% else %}
-            <a href="?page={{ num }}">{{ num }}</a>
+
+        {% if num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">{{ num }}</a>
+            {% endif %}
+
+        {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+            <span class="dots">…</span>
         {% endif %}
+
     {% endfor %}
 
     {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">&rsaquo;</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if page_size %}&size={{ page_size }}{% endif %}">&raquo;</a>
     {% endif %}
 
 </div>

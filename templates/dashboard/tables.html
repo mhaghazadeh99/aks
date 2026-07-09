@@ -154,12 +154,12 @@
   <!-- CENTER: page size -->
   <div class="header-group">
     <label for="pageSize">Items:</label>
-    <select id="pageSize">
-      <option value="10">10</option>
-      <option value="25">25</option>
-      <option value="50">50</option>
-      <option value="all">All</option>
-    </select>
+   <select name="size" onchange="this.form.submit()">
+    <option value="10" {% if page_size == 10 %}selected{% endif %}>10</option>
+    <option value="25" {% if page_size == 25 %}selected{% endif %}>25</option>
+    <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
+    <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
+</select>
   </div>
 
   <!-- RIGHT: actions -->
@@ -314,19 +314,47 @@
 <div class="pagination">
 
     {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">Previous</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
+            Previous
+        </a>
+    {% endif %}
+
+    {% if page_obj.number > 3 %}
+        <a href="?page=1{% if page_size %}&size={{ page_size }}{% endif %}">1</a>
+
+        {% if page_obj.number > 4 %}
+            <span>...</span>
+        {% endif %}
     {% endif %}
 
     {% for num in page_obj.paginator.page_range %}
-        {% if page_obj.number == num %}
-            <span class="current">{{ num }}</span>
-        {% else %}
-            <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">{{ num }}</a>
+        {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">
+                    {{ num }}
+                </a>
+            {% endif %}
         {% endif %}
     {% endfor %}
 
+    {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+
+        {% if page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
+            <span>...</span>
+        {% endif %}
+
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if page_size %}&size={{ page_size }}{% endif %}">
+            {{ page_obj.paginator.num_pages }}
+        </a>
+
+    {% endif %}
+
     {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">Next</a>
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
+            Next
+        </a>
     {% endif %}
 
 </div>

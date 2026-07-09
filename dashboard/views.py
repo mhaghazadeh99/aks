@@ -244,7 +244,7 @@ def tables_view(request):
             queryset = queryset.filter(**{f"{k}__icontains": v})
 
     # 📄 PAGE SIZE
-    size = request.GET.get("size", "25")
+    size = request.GET.get("size", "10")
 
     if size == "all":
         page_size = max(queryset.count(), 1)   # show everything in one page
@@ -252,7 +252,7 @@ def tables_view(request):
         try:
             page_size = max(1, int(size))
         except (ValueError, TypeError):
-            page_size = 25
+            page_size = 10
 
     # 📌 PAGINATION
     paginator = Paginator(queryset, page_size)

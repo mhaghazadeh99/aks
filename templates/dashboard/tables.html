@@ -152,16 +152,17 @@
   </div>
 
   <!-- CENTER: page size -->
+   <form method="get">
   <div class="header-group">
     <label for="pageSize">Items:</label>
-   <select name="size" onchange="this.form.submit()">
-    <option value="10" {% if page_size == 10 %}selected{% endif %}>10</option>
-    <option value="25" {% if page_size == 25 %}selected{% endif %}>25</option>
-    <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
-    <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
+ <select name="size" onchange="this.form.submit()">
+    <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
+    <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
+    <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
+    <option value="all" {% if page_size == "all" %}selected{% endif %}>All</option>
 </select>
   </div>
-
+   </form>
   <!-- RIGHT: actions -->
   <div class="header-group">
     <button class="btn-green" onclick="exportCSV()">Export CSV</button>

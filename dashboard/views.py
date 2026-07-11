@@ -95,7 +95,8 @@ def add_source(request):
         return HttpResponseForbidden("No access")
 
     if request.method == "POST":
-        form = DSRSForm(request.POST, request.FILES)
+        form = DSRSForm(request.POST, request.FILES, user=request.user)
+    
 
         if form.is_valid():
             obj = form.save(commit=False)
@@ -134,9 +135,9 @@ def add_source(request):
                 DSRSImage.objects.create(dsrs=obj, file=img)
             form.save_m2m()
             return redirect("tables")
-
     else:
-        form = DSRSForm()
+        form = DSRSForm(user=request.user)
+    
 
     return render(request, "dsrs/add_source.html", {"form": form})
 

@@ -28,11 +28,24 @@ class DSRSForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
         for name, field in self.fields.items():
             if field.required:
                 field.label = f"{field.label} *"
+        
+        if user:
+                srs = user.groups.filter(name="SRS Users").exists()
+                dsrs = user.groups.filter(name="DSRS Users").exists()
+
+                if srs != dsrs:   # only one group
+                    self.fields["Source_Type"].disabled = True
+
+                    if srs:
+                        self.initial["Source_Type"] = "SRS"
+                    else:
+                        self.initial["Source_Type"] = "DSRS"
         # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
     #     for field in self.fields.values():

@@ -117,19 +117,6 @@ def add_source(request):
 
             obj.save()   # IMPORTANT
 
-            if form.cleaned_data['create_contract']:
-                Contract.objects.create(
-                    dsrs=obj,
-                    Source_Type = obj.Source_Type,
-                    status=obj.Status,
-                    status_date=obj.Status_Date,
-                    facility=obj.Facility,
-                    serial_number=obj.serial_number,
-                    nuclide=str(obj.Nuclide) if obj.Nuclide else None,
-                    activity=obj.current_activity_mci_value,
-                    activity_unit="mCi",
-                    activity_date=timezone.now().date(),
-                )
             
             for img in request.FILES.getlist("dsrs_images"):
                 DSRSImage.objects.create(dsrs=obj, file=img)
@@ -173,19 +160,7 @@ def edit_source(request, pk):
         if form.is_valid():
             obj = form.save()
 
-            if form.cleaned_data['create_contract']:
-                Contract.objects.get_or_create(
-                    dsrs=obj,
-                    Source_Type = obj.Source_Type,
-                    status=obj.Status,
-                    status_date=obj.Status_Date,
-                    facility=obj.Facility,
-                    serial_number=obj.serial_number,
-                    nuclide=str(obj.Nuclide) if obj.Nuclide else None,
-                    activity=obj.current_activity_mci_value,
-                    activity_unit="mCi",
-                    activity_date=timezone.now().date(),
-                )
+            
 
             delete_ids = request.POST.getlist("delete_images")
             if delete_ids:

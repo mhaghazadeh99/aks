@@ -170,94 +170,220 @@
 <div class="table-scroll">
 
 <table id="mainTable">
-
 <thead>
 <tr>
-  <th data-col="Source_Type">Source Type</th>
-  <th data-col="nuclide">Nuclide</th>
-  <th data-col="serial_number">Serial Number</th>
-  <th data-col="facility">End User</th>
 
-  <th data-col="activity">Activity</th>
-  <th data-col="activity_unit">Unit</th>
-  <th data-col="activity_date">Activity Date</th>
+<th data-col="id">Contract ID</th>
 
-  <th data-col="status">Status</th>
-  <th data-col="status_date">Status Date</th>
+<th data-col="Source_Type">
+Source Type
+</th>
 
-  <th data-col="payment_done">Payment</th>
-  <th data-col="payment_date">Payment Date</th>
+<th data-col="sources">
+Sources
+</th>
 
-  <th data-col="contract_signed">Contract Signed</th>
-   <th data-col="contract_signed">Contract Date </th>
-  <th data-col="licence_valid">Licence</th>
-  <th data-col="licence_valid">Licence Date </th>
+<th data-col="facility">
+Facilities
+</th>
 
-  <th>Actions</th>
+<th data-col="status">
+Status
+</th>
+
+<th data-col="status_date">
+Status Date
+</th>
+
+<th data-col="payment_done">
+Payment
+</th>
+
+<th data-col="payment_date">
+Payment Date
+</th>
+
+<th data-col="contract_signed">
+Signed
+</th>
+
+<th data-col="contract_signed_date">
+Signed Date
+</th>
+
+<th data-col="licence_valid">
+Licence
+</th>
+
+<th data-col="licence_issue_date">
+Licence Date
+</th>
+
+<th>
+Actions
+</th>
+
 </tr>
 </thead>
 
 <tbody id="tableBody">
 
-{% for c in page_obj  %}
+{% for c in page_obj %}
+
 <tr>
 
-<td data-col="Source_Type">{{ c.Source_Type }}</td>
-<td data-col="nuclide">{{ c.nuclide }}</td>
-<td data-col="serial_number">{{ c.serial_number }}</td>
-<td data-col="facility">{{ c.facility }}</td>
+<td data-col="id">
+{{ c.id }}
+</td>
 
-<td data-col="activity">{{ c.activity }}</td>
-<td data-col="activity_unit">{{ c.activity_unit }}</td>
-<td data-col="activity_date">{{ c.activity_date }}</td>
+
+<td data-col="Source_Type">
+{{ c.Source_Type }}
+</td>
+
+
+<td data-col="sources">
+
+<span class="badge bg-info">
+
+{{ c.dsrs.count }}
+
+DSRS
+
+</span>
+
+</td>
+
+
+<td data-col="facility">
+
+{% for s in c.dsrs.all %}
+
+{{ s.Facility }}
+
+{% if not forloop.last %}
+,
+{% endif %}
+
+{% endfor %}
+
+</td>
+
 
 <td data-col="status">
-    <span class="badge bg-success">{{ c.status }}</span>
+
+<span class="badge bg-success">
+{{ c.status }}
+</span>
+
 </td>
 
-<td data-col="status_date">{{ c.status_date }}</td>
+
+<td data-col="status_date">
+{{ c.status_date }}
+</td>
+
 
 <td data-col="payment_done">
-    {% if c.payment_done %}
-        <span class="badge bg-success">Yes</span>
-    {% else %}
-        <span class="badge bg-danger">No</span>
-    {% endif %}
+
+{% if c.payment_done %}
+
+<span class="badge bg-success">
+Yes
+</span>
+
+{% else %}
+
+<span class="badge bg-danger">
+No
+</span>
+
+{% endif %}
+
 </td>
 
-<td data-col="payment_date">{{ c.payment_date }}</td>
+
+<td data-col="payment_date">
+{{ c.payment_date }}
+</td>
+
+
 
 <td data-col="contract_signed">
-    {% if c.contract_signed %}
-        <span class="badge bg-success">Yes</span>
-    {% else %}
-        <span class="badge bg-warning text-dark">Pending</span>
-    {% endif %}
+
+{% if c.contract_signed %}
+
+<span class="badge bg-success">
+Yes
+</span>
+
+{% else %}
+
+<span class="badge bg-warning">
+Pending
+</span>
+
+{% endif %}
+
 </td>
-<td data-col="payment_date">{{ c.contract_signed_date }}</td>
+
+
+
+<td data-col="contract_signed_date">
+{{ c.contract_signed_date }}
+</td>
+
+
+
 <td data-col="licence_valid">
-    {% if c.licence_valid %}
-        <span class="badge bg-success">Valid</span>
-    {% else %}
-        <span class="badge bg-danger">Invalid</span>
-    {% endif %}
+
+{% if c.licence_valid %}
+
+<span class="badge bg-success">
+Valid
+</span>
+
+{% else %}
+
+<span class="badge bg-danger">
+Invalid
+</span>
+
+{% endif %}
+
 </td>
-<td data-col="payment_date">{{ c.licence_issue_date }}</td>
+
+
+<td data-col="licence_issue_date">
+{{ c.licence_issue_date }}
+</td>
+
+
 
 <td>
-    <a href="{% url 'contract_edit' c.id %}" class="btn-yellow">Edit</a>
+
+<a href="{% url 'contract_edit' c.id %}"
+class="btn-yellow">
+Edit
+</a>
+
 </td>
 
+
 </tr>
+
 {% empty %}
+
 <tr>
-    <td colspan="14" style="text-align:center;">
-        No contracts found
-    </td>
+<td colspan="13">
+No contracts found
+</td>
 </tr>
+
 {% endfor %}
 
 </tbody>
+
 </table>
 
 </div>

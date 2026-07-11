@@ -155,7 +155,10 @@
    <form method="get">
   <div class="header-group">
     <label for="pageSize">Items:</label>
- <select name="size" onchange="this.form.submit()">
+ <select 
+    id="pageSize"
+    name="size"
+    onchange="this.form.submit()">
     <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
     <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
     <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
@@ -165,7 +168,11 @@
    </form>
   <!-- RIGHT: actions -->
   <div class="header-group">
+    
     <button class="btn-green" onclick="exportCSV()">Export CSV</button>
+    <button class="btn-blue" id="createContractBtn">
+        Create Contract
+    </button>
     <a href="{% url 'add_source' %}" class="btn-blue">+ Add Source</a>
   </div>
 
@@ -188,6 +195,7 @@
 
 <thead>
 <tr>
+    <th>Select</th>
   <th data-col="Source_Type">Type</th>
   <th data-col="Sso_Code">SSO</th>
   <th data-col="Facility">Facility</th>
@@ -234,7 +242,12 @@
 
 {% for s in sources %}
 <tr>
-
+<td>
+    <input 
+        type="checkbox"
+        class="contract-checkbox"
+        value="{{ s.id }}">
+</td>
 <td data-col="Source_Type">{{ s.Source_Type }}</td>
 <td data-col="Sso_Code">{{ s.Sso_Code }}</td>
 <td data-col="Facility">{{ s.Facility }}</td>
@@ -541,6 +554,65 @@ document.addEventListener("change", function (e) {
     });
 
 });
+
+// ================= CREATE CONTRACT =================
+
+document.getElementById("createContractBtn").onclick = function(){
+
+    let selected = [];
+
+    document.querySelectorAll(".contract-checkbox:checked")
+    .forEach(cb => {
+        selected.push(cb.value);
+    });
+
+
+    if(selected.length === 0){
+        alert("Please select at least one DSRS record.");
+        return;
+    }
+
+
+    fetch("{% url 'create_contract_bulk' %}", {
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken":getCookie("csrftoken")
+        },
+
+        body:JSON.stringify({
+            ids:selected
+        })
+
+    })
+
+    .then(response => response.json())
+
+    .then(data=>{
+
+        if(data.success){
+
+            alert(
+              data.message
+            );
+
+            location.reload();
+
+        }
+        else{
+
+            alert(
+              data.message
+            );
+
+        }
+
+    });
+
+
+};
 </script>
 
 {% endblock %}

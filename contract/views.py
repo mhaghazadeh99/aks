@@ -11,9 +11,10 @@ import csv
 from django.http import HttpResponse
 from datetime import datetime
 from django.core.paginator import Paginator
-
+from dashboard.models import DSRS
 def contract_index(request):
-    contracts = Contract.objects.all().order_by('-created_at')
+    contracts = Contract.objects.prefetch_related(
+    "dsrs").order_by('-created_at')
 
 # ...your filtering code...
      # ---------- FILTER SYSTEM ----------
@@ -64,21 +65,135 @@ def contract_index(request):
         "page_size": size,
     })
 
+@login_required
+def create_contract_bulk(request):
 
+    if request.method != "POST":
+        return JsonResponse({
+            "success":False,
+            "message":"Invalid request"
+        })
+
+
+    data=json.loads(request.body)
+
+    ids=data.get("ids",[])
+
+
+    if not ids:
+        return JsonResponse({
+            "success":False,
+            "message":"No sources selected"
+        })
+
+
+    sources = DSRS.objects.filter(
+        id__in=ids
+    )
+
+
+    duplicate = sources.filter(
+        contracts__isnull=False
+    )
+
+
+    if duplicate.exists():
+
+        serials=list(
+            duplicate.values_list(
+                "serial_number",
+                flat=True
+            )
+        )
+
+
+        return JsonResponse({
+            "success":False,
+            "message":
+            "Already contracted: "
+            + ", ".join(serials)
+        })
+
+
+    first=sources.first()
+
+
+    contract=Contract.objects.create(
+
+        Source_Type=first.Source_Type,
+
+        status=first.Status,
+
+        status_date=first.Status_Date,
+
+        facility=first.Facility,
+
+    )
+
+
+    contract.dsrs.set(
+        sources
+    )
+
+
+    return JsonResponse({
+
+        "success":True,
+
+        "message":
+        f"Contract created with {sources.count()} DSRS"
+
+    })
 def contract_edit(request, pk):
+
     if not request.user.groups.filter(name="Contracts Users").exists():
         return HttpResponseForbidden("No access")
-    obj = get_object_or_404(Contract, pk=pk)
+
+
+    contract = get_object_or_404(
+        Contract,
+        pk=pk
+    )
+
 
     if request.method == "POST":
-        form = ContractForm(request.POST, request.FILES, instance=obj)
-        if form.is_valid():
-            form.save()
-            return redirect("contract_index")
-    else:
-        form = ContractForm(instance=obj)
 
-    return render(request, "contract/contract_edit.html", {"form": form})
+        form = ContractForm(
+            request.POST,
+            instance=contract
+        )
+
+        if form.is_valid():
+
+            form.save()
+
+            return redirect(
+                "contract_index"
+            )
+
+        else:
+            print(form.errors)
+
+
+    else:
+
+        form = ContractForm(
+            instance=contract
+        )
+
+
+    sources = contract.dsrs.all()
+
+
+    return render(
+        request,
+        "contract/contract_edit.html",
+        {
+            "form":form,
+            "contract":contract,
+            "sources":sources,
+        }
+    )
 
 
 

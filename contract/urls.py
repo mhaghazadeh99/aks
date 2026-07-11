@@ -9,4 +9,9 @@ urlpatterns = [
     path("save-column/", views.save_column, name="save_column"),
     path("get-column/", views.get_column, name="get_column"),
     path("export-contracts-csv/", views.export_contracts_csv, name="export_contracts_csv"),
+    path(
+    "create-contract-bulk/",
+    views.create_contract_bulk,
+    name="create_contract_bulk"
+),
     ]

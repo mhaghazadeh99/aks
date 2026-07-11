@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<h3>Create Contracts</h3>
+
+<p>
+The following {{ sources.count }} source(s) will receive a contract:
+</p>
+
+<table class="table table-bordered">
+
+<thead>
+<tr>
+    <th>Serial Number</th>
+    <th>Nuclide</th>
+    <th>Facility</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for s in sources %}
+<tr>
+    <td>{{ s.serial_number }}</td>
+    <td>{{ s.Nuclide }}</td>
+    <td>{{ s.Facility }}</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form|crispy }}
+
+    <button class="btn btn-success">
+        Create Contracts
+    </button>
+
+</form>
+
+{% endblock %}

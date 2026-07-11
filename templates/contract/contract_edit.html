@@ -1,97 +1,236 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %} Tables {% endblock title %}
 {% load crispy_forms_tags %}
+
+{% block title %}Contract Edit{% endblock title %}
+
 {% block extrastyle %}
 <style>
-    .status-row{
-    display:flex;
-    align-items:center;
-    gap:30px;
-    margin:18px 0;
+
+.contract-card{
+    background:white;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 3px 12px rgba(0,0,0,.08);
+    margin-bottom:25px;
 }
 
-.status-label{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    min-width:220px;
+.contract-title{
+    font-size:22px;
     font-weight:600;
+    margin-bottom:20px;
 }
 
-.status-label input[type="checkbox"]{
-    width:22px;
-    height:22px;
-    margin:0;
+
+.sources-table th{
+    background:#f5f5f5;
 }
 
-.status-row input[type="date"]{
+
+.status-box{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    padding:12px;
+    border-radius:8px;
+    background:#fafafa;
+    margin-bottom:15px;
+}
+
+
+.status-box input[type="checkbox"]{
+    width:20px;
+    height:20px;
+}
+
+
+.status-box label{
+    font-weight:600;
+    min-width:180px;
+}
+
+
+.date-field{
     width:220px;
 }
-.form-check-input {
-    transform: scale(1.3);
-    margin-right: 8px;
-}
-.form-check-input {
-    width: 1.3rem;
-    height: 1.3rem;
+
+
+.save-btn{
+    margin-top:20px;
+    padding:10px 30px;
 }
 
-.form-check {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-}
+
 </style>
-
 {% endblock %}
+
+
+
 {% block content %}
+
 <div class="content">
-    <div style="max-width:600px; margin:auto;">
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-   {% for field in form %}
-    {% if field.name == "contract_signed" %}
-        <div class="status-row">
-            <label class="status-label">
-                {{ field }}
-                Contract signed
-            </label>
-            {{ form.contract_signed_date }}
-        </div>
 
-    {% elif field.name == "payment_done" %}
-        <div class="status-row">
-            <label class="status-label">
-                {{ field }}
-                Payment done
-            </label>
-            {{ form.payment_date }}
-        </div>
 
-    {% elif field.name == "licence_valid" %}
-        <div class="status-row">
-            <label class="status-label">
-                {{ field }}
-                Licence valid
-            </label>
-            {{ form.licence_issue_date }}
-        </div>
+<div class="contract-card">
 
-    {% elif field.name == "contract_signed_date" or field.name == "payment_date" or field.name == "licence_issue_date" %}
-        {# already rendered with their checkbox #}
 
-    {% else %}
-        <div class="mb-3">
-            {{ field|as_crispy_field }}
-        </div>
-    {% endif %}
+<div class="contract-title">
+Contract #{{ contract.id }}
+</div>
+
+
+<h5>
+Included Sources
+</h5>
+
+
+<table class="table sources-table">
+
+<thead>
+
+<tr>
+<th>Serial</th>
+<th>Nuclide</th>
+<th>Facility</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for s in sources %}
+
+<tr>
+
+<td>{{s.serial_number}}</td>
+
+<td>{{s.Nuclide}}</td>
+
+<td>{{s.Facility}}</td>
+
+<td>{{s.Status}}</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+<td colspan="4" class="text-center">
+No sources
+</td>
+</tr>
+
 {% endfor %}
-    
 
-    <button type="submit" class="btn btn-success">Update</button>
+
+</tbody>
+
+</table>
+
+
+</div>
+
+
+
+<div class="contract-card">
+
+
+<div class="contract-title">
+Contract Status
+</div>
+
+
+
+<form method="post">
+
+{% csrf_token %}
+
+
+{% for field in form %}
+
+
+{% if field.name == "contract_signed" %}
+
+<div class="status-box">
+
+{{field}}
+
+<label>
+Contract Signed
+</label>
+
+{{form.contract_signed_date}}
+
+</div>
+
+
+
+{% elif field.name == "payment_done" %}
+
+<div class="status-box">
+
+{{field}}
+
+<label>
+Payment Done
+</label>
+
+{{form.payment_date}}
+
+</div>
+
+
+
+{% elif field.name == "licence_valid" %}
+
+<div class="status-box">
+
+{{field}}
+
+<label>
+Licence Valid
+</label>
+
+{{form.licence_issue_date}}
+
+</div>
+
+
+
+{% elif field.name == "contract_signed_date" or field.name == "payment_date" or field.name == "licence_issue_date" %}
+
+
+{% else %}
+
+
+<div class="mb-3">
+
+{{field|as_crispy_field}}
+
+</div>
+
+
+{% endif %}
+
+
+{% endfor %}
+
+
+
+<button class="btn btn-success save-btn">
+Save Contract
+</button>
+
+
 </form>
+
+
 </div>
+
+
 </div>
+
+
 {% endblock %}

@@ -10,10 +10,7 @@ from crispy_forms.layout import Layout, Field, Submit
 
 
 class DSRSForm(forms.ModelForm):
-    create_contract = forms.BooleanField(
-        required=False,
-        label="Create Contract"
-    )
+    
     class Meta:
         model = DSRS
         exclude = ['created_by','created_at','initial_activity_bq']

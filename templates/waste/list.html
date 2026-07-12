@@ -1,12 +1,681 @@
-<h2>Waste Batches</h2>
+{% extends 'base.html' %}
+{% load static %}
 
-<table>
-  {% for b in batches %}
-  <tr>
-    <td>{{ b.waste_id }}</td>
-    <td>{{ b.waste_type }}</td>
-    <td>{{ b.status }}</td>
-    <td><a href="{% url 'waste_detail' b.id %}">Open</a></td>
-  </tr>
-  {% endfor %}
+{% block title %}Waste Batches{% endblock %}
+
+{% block extrastyle %}
+<style>
+
+.action-icons {
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+.icon-btn {
+    display:inline-flex;
+    justify-content:center;
+    align-items:center;
+
+    width:34px;
+    height:34px;
+
+    border-radius:8px;
+    text-decoration:none;
+    font-size:16px;
+
+    background:#f5f6f8;
+    color:#444;
+
+    border:1px solid transparent;
+    transition:all .2s ease;
+}
+
+.icon-btn:hover {
+    transform:translateY(-2px);
+    background:white;
+    border-color:#ddd;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+.icon-btn.edit:hover {
+    color:#d39e00;
+}
+
+.icon-btn.detail:hover {
+    color:#0d6efd;
+}
+
+.icon-btn.delete:hover {
+    color:#dc3545;
+}
+
+
+.pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    margin-top:15px;
+}
+
+.pagination a,
+.pagination span{
+    padding:6px 12px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    text-decoration:none;
+}
+
+.pagination .current{
+    background:#0d6efd;
+    color:white;
+}
+
+
+.page-info{
+    text-align:center;
+    margin-top:10px;
+    color:#666;
+}
+
+
+.col-toggle {
+
+    width:16px!important;
+    height:16px!important;
+
+}
+
+
+.column-panel {
+
+    display:flex;
+    flex-direction:column;
+
+}
+
+
+.column-panel label {
+
+    display:flex;
+    gap:8px;
+    align-items:center;
+
+}
+
+
+.hidden {
+    display:none!important;
+}
+
+</style>
+{% endblock extrastyle %}
+
+
+
+{% block content %}
+
+<div class="content">
+
+
+<!-- ================= TOOLBAR ================= -->
+
+<div class="table-header">
+
+
+<div class="header-group">
+
+<form method="get">
+
+<input 
+type="text"
+name="search"
+value="{{ search|default:'' }}"
+placeholder="Search waste...">
+
+<button type="submit">
+🔍
+</button>
+
+</form>
+
+</div>
+
+
+
+<div class="column-bar">
+
+<button 
+class="btn-gray"
+onclick="toggleColumnPanel()">
+
+☰ Columns
+
+</button>
+
+
+<div id="columnPanel"
+class="column-panel hidden">
+
+</div>
+
+
+</div>
+
+
+
+<form method="get">
+
+<div class="header-group">
+
+<label>
+Items:
+</label>
+
+
+<select 
+name="size"
+onchange="this.form.submit()">
+
+
+<option value="10"
+{% if page_size == "10" %}selected{% endif %}>
+10
+</option>
+
+
+<option value="25"
+{% if page_size == "25" %}selected{% endif %}>
+25
+</option>
+
+
+<option value="50"
+{% if page_size == "50" %}selected{% endif %}>
+50
+</option>
+
+
+<option value="all"
+{% if page_size == "all" %}selected{% endif %}>
+All
+</option>
+
+
+</select>
+
+</div>
+
+</form>
+
+
+
+<div class="header-group">
+
+<a href="{% url 'waste_create' %}"
+class="btn-blue">
+
++ Add Waste
+
+</a>
+
+
+</div>
+
+
+</div>
+
+
+
+
+<!-- ================= TABLE ================= -->
+
+
+<div class="table-scroll">
+
+
+<table id="mainTable">
+
+
+<thead>
+
+
+<tr>
+
+
+<th data-col="waste_id">
+Waste ID
+</th>
+
+
+<th data-col="waste_type">
+Type
+</th>
+
+
+<th data-col="waste_class">
+Class
+</th>
+
+
+<th data-col="waste_state">
+State
+</th>
+
+
+<th data-col="facility">
+Facility
+</th>
+
+
+<th data-col="origin">
+Origin
+</th>
+
+
+<th data-col="date_received">
+Received
+</th>
+
+
+<th data-col="material">
+Material
+</th>
+
+
+<th data-col="mass">
+Mass kg
+</th>
+
+
+<th data-col="volume">
+Volume m3
+</th>
+
+
+<th data-col="activity">
+Total Activity Bq
+</th>
+
+
+<th data-col="alpha">
+Alpha Bq
+</th>
+
+
+<th data-col="beta">
+Beta Bq
+</th>
+
+
+<th data-col="gamma">
+Gamma Bq
+</th>
+
+
+<th data-col="dose_surface">
+Surface Dose
+</th>
+
+
+<th data-col="dose_1m">
+1m Dose
+</th>
+
+
+<th data-col="location">
+Location
+</th>
+
+
+<th data-col="status">
+Status
+</th>
+
+
+<th data-col="created_by">
+Created By
+</th>
+
+
+<th data-col="created_at">
+Created
+</th>
+
+
+<th>
+Action
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody id="tableBody">
+
+
+
+{% for b in batches %}
+
+
+<tr>
+
+
+<td data-col="waste_id">
+{{ b.waste_id }}
+</td>
+
+
+<td data-col="waste_type">
+{{ b.get_waste_type_display }}
+</td>
+
+
+<td data-col="waste_class">
+{{ b.get_waste_class_display|default:"-" }}
+</td>
+
+
+<td data-col="waste_state">
+{{ b.get_waste_state_display }}
+</td>
+
+
+<td data-col="facility">
+{{ b.get_facility_display }}
+</td>
+
+
+<td data-col="origin">
+{{ b.get_origin_of_waste_display }}
+</td>
+
+
+<td data-col="date_received">
+{{ b.date_received }}
+</td>
+
+
+<td data-col="material">
+{{ b.material|default:"-" }}
+</td>
+
+
+<td data-col="mass">
+{{ b.mass_kg|default:"-" }}
+</td>
+
+
+<td data-col="volume">
+{{ b.volume_m3|default:"-" }}
+</td>
+
+
+<td data-col="activity">
+{{ b.current_total_activity_bq }}
+</td>
+
+
+<td data-col="alpha">
+{{ b.current_alpha_bq }}
+</td>
+
+
+<td data-col="beta">
+{{ b.current_beta_bq }}
+</td>
+
+
+<td data-col="gamma">
+{{ b.current_gamma_bq }}
+</td>
+
+
+<td data-col="dose_surface">
+{{ b.dose_rate_surface|default:"-" }}
+</td>
+
+
+<td data-col="dose_1m">
+{{ b.dose_rate_1m|default:"-" }}
+</td>
+
+
+<td data-col="location">
+{{ b.location|default:"-" }}
+</td>
+
+
+<td data-col="status">
+{{ b.get_status_display }}
+</td>
+
+
+<td data-col="created_by">
+{{ b.created_by }}
+</td>
+
+
+<td data-col="created_at">
+{{ b.created_at|date:"Y-m-d" }}
+</td>
+
+
+
+<td class="action-icons">
+
+
+<a href="{% url 'waste_detail' b.pk %}"
+class="icon-btn detail"
+title="Detail">
+
+🔎
+
+</a>
+
+
+
+<a href="{% url 'waste_edit' b.pk %}"
+class="icon-btn edit"
+title="Edit">
+
+✏️
+
+</a>
+
+
+
+<a href="{% url 'waste_delete' b.pk %}"
+class="icon-btn delete"
+title="Delete"
+onclick="return confirm('Delete this waste batch?');">
+
+🗑
+
+</a>
+
+
+
+</td>
+
+
+</tr>
+
+
+
+{% endfor %}
+
+
+
+</tbody>
+
+
 </table>
+
+
+</div>
+
+
+
+</div>
+
+
+
+<!-- ================= PAGINATION ================= -->
+
+
+{% if page_obj %}
+
+<div class="pagination">
+
+
+{% if page_obj.has_previous %}
+
+<a href="?page={{page_obj.previous_page_number}}&size={{page_size}}">
+Previous
+</a>
+
+{% endif %}
+
+
+
+{% for num in page_obj.paginator.page_range %}
+
+{% if page_obj.number == num %}
+
+<span class="current">
+{{num}}
+</span>
+
+
+{% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+
+<a href="?page={{num}}&size={{page_size}}">
+{{num}}
+</a>
+
+
+{% endif %}
+
+
+{% endfor %}
+
+
+
+{% if page_obj.has_next %}
+
+<a href="?page={{page_obj.next_page_number}}&size={{page_size}}">
+Next
+</a>
+
+{% endif %}
+
+
+
+</div>
+
+
+<div class="page-info">
+
+Page {{page_obj.number}}
+of
+{{page_obj.paginator.num_pages}}
+
+<br>
+
+({{page_obj.paginator.count}} records)
+
+</div>
+
+
+{% endif %}
+
+
+
+
+<script>
+
+
+function toggleColumnPanel(){
+
+document
+.getElementById("columnPanel")
+.classList.toggle("hidden");
+
+}
+
+
+
+const panel =
+document.getElementById("columnPanel");
+
+
+document
+.querySelectorAll("#mainTable thead th[data-col]")
+.forEach(th=>{
+
+
+let col=th.dataset.col;
+
+
+let label=document.createElement("label");
+
+
+label.innerHTML=`
+
+<input 
+type="checkbox"
+class="col-toggle"
+data-col="${col}"
+checked>
+
+${th.innerText}
+
+`;
+
+
+panel.appendChild(label);
+
+
+});
+
+
+
+document.addEventListener(
+"change",
+function(e){
+
+
+if(!e.target.classList.contains("col-toggle"))
+return;
+
+
+let col=e.target.dataset.col;
+
+let show=e.target.checked;
+
+
+
+document
+.querySelectorAll(`[data-col="${col}"]`)
+.forEach(el=>{
+
+el.style.display=
+show ? "" : "none";
+
+});
+
+
+});
+
+
+</script>
+
+
+
+{% endblock %}

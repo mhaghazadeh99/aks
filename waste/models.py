@@ -3,41 +3,12 @@ from django.db import models
 # Create your models here.
 from django.db import models
 
-from pathlib import Path
 
+from utils.fileValidator import validate_attachment
 from django.conf import settings
-from django.core.exceptions import ValidationError
+
 from django.db import models
 
-
-# =====================================================
-# Validators
-# =====================================================
-
-def validate_attachment(file):
-    max_size = 1 * 1024 * 1024  # 1 MB
-
-    if file.size > max_size:
-        raise ValidationError(
-            "File size must not exceed 1 MB."
-        )
-
-    allowed_extensions = {
-        '.pdf',
-        '.jpg',
-        '.jpeg',
-        '.png',
-        '.doc',
-        '.docx',
-        '.xlsx',
-    }
-
-    ext = Path(file.name).suffix.lower()
-
-    if ext not in allowed_extensions:
-        raise ValidationError(
-            "Unsupported file type."
-        )
 
 
 # =====================================================
@@ -276,9 +247,28 @@ class WasteBatch(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+    @property
+    def is_liquid(self):
+        return self.waste_type == WasteType.LIQUID
 
+
+    @property
+    def is_solid(self):
+        return self.waste_type == WasteType.SOLID
+
+
+    @property
+    def attachment_name(self):
+
+        if self.attachment:
+
+            return self.attachment.name.split("/")[-1]
+
+        return ""
     class Meta:
-        ordering = ['-created_at']
+        ordering = (
+            "-created_at",
+            "waste_id",)
 
     def __str__(self):
         return self.waste_id

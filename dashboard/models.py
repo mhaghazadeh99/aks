@@ -2,12 +2,13 @@ from django.db import models
 from django.utils import timezone
 import math
 from utils.physics import LN2, mci_to_bq, bq_to_mci
+from utils.fileValidator import validate_attachment
 from contract.models import Contract
 from simple_history.models import HistoricalRecords
 # Create your models here.
 
 from django.contrib.auth.models import User
-from waste.models import validate_attachment
+
 
 
 class OriginType(models.TextChoices):

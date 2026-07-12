@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 
 {% block title %}
-Add Waste Batch
+Edit Waste Batch
 {% endblock %}
 
 
@@ -57,12 +57,15 @@ Add Waste Batch
 {% block content %}
 
 
+
 <div class="content">
 
 
 
 <h3>
-Create Waste Batch
+Edit Waste Batch:
+{{batch.waste_id}}
+
 </h3>
 
 
@@ -76,6 +79,7 @@ enctype="multipart/form-data">
 
 
 
+
 <div class="form-card">
 
 
@@ -84,7 +88,7 @@ Waste Information
 </h4>
 
 
-{{ form.as_p }}
+{% crispy form %}
 
 
 </div>
@@ -102,7 +106,7 @@ Liquid Waste Details
 </h4>
 
 
-{{ liquid_form.as_p }}
+{% crispy liquid_form %}
 
 
 </div>
@@ -120,7 +124,7 @@ Conditioning Information
 </h4>
 
 
-{{ conditioning_form.as_p }}git
+{% crispy conditioning_form %}
 
 
 </div>
@@ -129,24 +133,27 @@ Conditioning Information
 
 
 
+
 <div class="form-actions">
 
 
-<button 
+<button
 type="submit"
 class="btn-blue">
 
-Save Waste
+Save Changes
 
 </button>
 
 
-<a href="{% url 'waste_list' %}"
+
+<a href="{% url 'waste_detail' batch.pk %}"
 class="btn-gray">
 
 Cancel
 
 </a>
+
 
 
 </div>
@@ -156,9 +163,7 @@ Cancel
 </form>
 
 
-
 </div>
-
 
 
 
@@ -171,11 +176,6 @@ function toggleLiquidFields(){
 
 let type =
 document.getElementById("id_waste_type");
-
-
-if(!type)
-return;
-
 
 
 let section =
@@ -205,6 +205,7 @@ document.addEventListener(
 "DOMContentLoaded",
 function(){
 
+
 toggleLiquidFields();
 
 
@@ -227,6 +228,7 @@ toggleLiquidFields
 
 
 </script>
+
 
 
 

@@ -84,6 +84,7 @@ document.getElementById('csvFileInput').addEventListener('change', function(even
 
     reader.onload = function(e) {
         const text = e.target.result;
+        console.log(text);
 
         const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
 
@@ -107,7 +108,7 @@ const data = rows.slice(1).map(row => {
         sendToServer(data);
     };
 
-    reader.readAsText(file);
+    reader.readAsText(file,"UTF-8");
 });
 
 function sendToServer(data) {

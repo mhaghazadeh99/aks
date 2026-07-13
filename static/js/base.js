@@ -1,30 +1,28 @@
-const sidebar = document.getElementById("sidebar");
-const toggleBtn = document.getElementById("toggleSidebar");
-const darkToggle = document.getElementById("darkToggle");
+document.addEventListener("DOMContentLoaded", function(){
 
-/* =======================
-   SIDEBAR COLLAPSE
-======================= */
-toggleBtn?.addEventListener("click", () => {
-  sidebar.classList.toggle("collapsed");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const toggleBtn = document.getElementById("toggleSidebar");
+
+
+    function toggleSidebar(){
+
+        sidebar.classList.toggle("open");
+        overlay.classList.toggle("show");
+
+    }
+
+
+    toggleBtn.addEventListener(
+        "click",
+        toggleSidebar
+    );
+
+
+    overlay.addEventListener(
+        "click",
+        toggleSidebar
+    );
+
+
 });
-
-/* =======================
-   DARK MODE
-======================= */
-if (localStorage.getItem("dark") === "true") {
-  document.body.classList.add("dark");
-}
-
-darkToggle?.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-
-  localStorage.setItem(
-    "dark",
-    document.body.classList.contains("dark")
-  );
-});
-
-function getCSRFToken() {
-    return document.querySelector('meta[name="csrf-token"]').content;
-}

@@ -12,112 +12,107 @@
 
 <body>
 
+
+<!-- Sidebar -->
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
 
-  <div class="sidebar-header">
-    <span class="logo">IRWA</span>
 
-    <button class="icon-btn" id="toggleSidebar">☰</button>
-  </div>
+    <div class="sidebar-header">
 
-  <nav class="nav">
+        <button class="menu-btn" id="toggleSidebar">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
 
-    <a href="{% url 'analytics_home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-      Analitics
+
+        <div class="logo">
+            IRWA
+        </div>
+
+    </div>
+
+
+
+    <nav class="nav">
+
+    
+
+    <a href="#">
+            🏠 Home
+        </a>
+
+    <a href="#">
+        ➕ ایجاد خدمت جدید
     </a>
 
-    <a href="{% url 'tables' %}" class="{% if request.resolver_match.url_name == 'table1' %}active{% endif %}">
-      DSRS
+
+    <a href="#">
+        📂 Services
     </a>
 
-    <a href="{% url 'waste_list' %}" class="{% if request.resolver_match.url_name == 'table2' %}active{% endif %}">
-      Waste
+
+    <a href="{% url 'tables' %}"
+       class="{% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
+        ☢ Sources
     </a>
 
-    <a href="{% url 'contract_index' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
-      Contract
+
+    <a href="{% url 'waste_list' %}"
+       class="{% if request.resolver_match.url_name == 'waste_list' %}active{% endif %}">
+        ♻ Waste
     </a>
 
-  <!-- AUTH SECTION -->
-  {% if request.user.is_authenticated %}
-<form method="post" action="{% url 'logout' %}">
-  {% csrf_token %}
-  <button type="submit">Logout</button>
-</form>
-    <a href="{% url 'password_change' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
-      Change Password
-    </a>
-  
-<!--     
-    <a href="#"
-       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-      <i class="tim-icons icon-button-power"></i>
-      <p>Logout</p>
+
+    <a href="{% url 'contract_index' %}"
+       class="{% if request.resolver_match.url_name == 'contract_index' %}active{% endif %}">
+        📑 Contracts
     </a>
 
-    <form id="logout-form" method="post" action="{% url 'logout' %}" style="display:none;">
-      {% csrf_token %}
+
+    <a href="{% url 'analytics_home' %}"
+       class="{% if request.resolver_match.url_name == 'analytics_home' %}active{% endif %}">
+        📊 Reports
+    </a>
+
+
+    {% if request.user.is_authenticated %}
+
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+
+        <button class="nav-btn" type="submit">
+            Logout
+        </button>
+
     </form>
 
-    <div style="margin-left: 18px; transform: scale(0.85); transform-origin: left;">
-      <a href="{% url 'password_change' %}">
-        <i class="tim-icons icon-lock-circle"></i>
-        <p>Change Password</p>
-      </a>
-    </div>
-  </li> -->
+    {% else %}
 
-  {% else %}
-  <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
-      Login
-    </a>
- <a href="{% url 'auth_signup' %}" class="{% if request.resolver_match.url_name == 'form' %}active{% endif %}">
-      Register
-    </a>
-  <!-- <li class="{% if 'pages' in parent %}active{% endif %}">
-    <a data-toggle="collapse" href="#pagesExamples">
-      <i class="tim-icons icon-lock-circle"></i>
-      <p>
-        Authentication
-        <b class="caret"></b>
-      </p>
+    <a href="{% url 'login' %}">
+        Login
     </a>
 
-    <div class="collapse" id="pagesExamples">
-      <ul class="nav">
+    {% endif %}
 
-        <li>
-          <a href="{% url 'login' %}">
-            <span class="sidebar-mini-icon">L</span>
-            <span class="sidebar-normal">Login</span>
-          </a>
-        </li>
 
-        <li>
-          <a href="{% url 'auth_signup' %}">
-            <span class="sidebar-mini-icon">R</span>
-            <span class="sidebar-normal">Register</span>
-          </a>
-        </li>
+</nav>
 
-      </ul> -->
-    <!-- </div>
-  </li> -->
-  {% endif %}
-  </nav>
-
-  <div class="sidebar-footer">
-    <button id="darkToggle">🌙 Dark</button>
-  </div>
 
 </aside>
-
 
 <!-- Main -->
 <main class="main" id="main">
 
-  {% block content %}{% endblock %}
+   
+
+    {% block content %}
+    {% endblock %}
 
 </main>
 <meta name="csrf-token" content="{{ csrf_token }}">

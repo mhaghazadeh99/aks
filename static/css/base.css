@@ -65,12 +65,13 @@ body {
     height:100vh;
     background:#fff;
     padding:20px;
-    box-shadow:5px 0 20px rgba(0,0,0,.12);
+    
     transition:.3s ease;
     z-index:1000;
 }
 
 html.ltr .sidebar{
+   box-shadow:5px 0 20px rgba(0,0,0,.12);
     left:-280px;
     right:auto;
 }
@@ -80,6 +81,7 @@ html.ltr .sidebar.open{
 }
 
 html.rtl .sidebar{
+  box-shadow:-5px 0 20px rgba(0,0,0,.12);
     right:-280px;
     left:auto;
 }
@@ -89,18 +91,7 @@ html.rtl .sidebar.open{
 }
 
 
-html.ltr .sidebar.open{
 
-left:0;
-
-}
-
-
-html.rtl .sidebar.open{
-
-right:0;
-
-}
 /* ======================
    HEADER
 ====================== */
@@ -220,12 +211,16 @@ html.rtl .logo{
     margin:0;
 }
 
-
 .nav-btn{
 
     width:100%;
 
-    text-align:left;
+    display:flex;
+    align-items:center;
+
+    gap:12px;
+
+    text-align:start;
 
     background:none;
 
@@ -236,6 +231,10 @@ html.rtl .logo{
     font-size:15px;
 
     border-radius:10px;
+
+    border:none;
+
+    cursor:pointer;
 
 }
 
@@ -691,3 +690,64 @@ html.rtl .timeline{
     margin: 2px 0;
     font-size: 13px;
 }
+
+
+/* ======================
+   LANGUAGE SWITCHER
+====================== */
+
+
+.language-switcher{
+
+    margin-top:auto;
+
+    padding-top:20px;
+
+    border-top:1px solid #e5e7eb;
+
+}
+
+
+
+.language-btn{
+
+
+    width:100%;
+
+
+    background:#f3f4f6;
+
+
+    color:#374151;
+
+
+    padding:12px;
+
+
+    border-radius:10px;
+
+
+    border:none;
+
+
+    cursor:pointer;
+
+
+    font-size:14px;
+
+
+}
+
+
+
+.language-btn:hover{
+
+
+    background:#2563eb;
+
+    color:white;
+
+
+}
+
+

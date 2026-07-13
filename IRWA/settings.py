@@ -167,7 +167,7 @@ USE_TZ = True
 
 LANGUAGES = [
 
-    ("fa", _("Persian")),
+    ("fa", _("فارسی")),
 
     ("en", _("English")),
 

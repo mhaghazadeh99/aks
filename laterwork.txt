@@ -1,0 +1,12 @@
+preferred_language = models.CharField(
+    max_length=2,
+    choices=[
+        ("fa", "Persian"),
+        ("en", "English"),
+    ],
+    default="fa",
+)
+
+Then every time the user logs in, IRWA automatically opens in their preferred language.
+
+We don't have to do that today—session storage is a good first step—but it's a nice enhancement later.

@@ -5,7 +5,11 @@ from django.contrib.auth.views import LogoutView
 
 
 urlpatterns = [
-    path('', tables_view, name='dashboard'),
+     path(
+        "",
+        home,
+        name="home"
+    ),
     path('sources/', source_list, name='source_list'),
     path('sources/add/', add_source, name='add_source'),
     path('sources/edit/<int:pk>/', edit_source, name='edit_source'),

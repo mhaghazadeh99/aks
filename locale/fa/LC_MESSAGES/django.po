@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-13 13:18+0000\n"
+"POT-Creation-Date: 2026-07-14 12:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,53 +18,91 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: IRWA/settings.py:170
+#: IRWA/settings.py:172
 msgid "فارسی"
 msgstr ""
 
-#: IRWA/settings.py:172
+#: IRWA/settings.py:174
 msgid "English"
 msgstr ""
 
-#: templates/base.html:59
+#: templates/base.html:61 templates/home.html:5
 msgid "Home"
 msgstr "خانه"
 
-#: templates/base.html:63
+#: templates/base.html:65 templates/home.html:233
 msgid "New Services"
 msgstr "شروع خدمت جدید"
 
-#: templates/base.html:68
+#: templates/base.html:70 templates/home.html:252
 msgid "Services"
 msgstr "خدمات موجود"
 
-#: templates/base.html:74
+#: templates/base.html:76 templates/home.html:154
 msgid "Sources"
 msgstr "چشمه ها"
 
-#: templates/base.html:80
+#: templates/base.html:82 templates/home.html:173
 msgid "Waste"
 msgstr "پسماندها"
 
-#: templates/base.html:86
+#: templates/base.html:88 templates/home.html:193
 msgid "Contracts"
 msgstr "امور قراردادها"
 
-#: templates/base.html:92
+#: templates/base.html:94 templates/home.html:213
 msgid "Reports"
 msgstr "گزارش"
 
-#: templates/base.html:99
+#: templates/base.html:101
 msgid "Change Password"
 msgstr "تغییر رمز"
 
-#: templates/base.html:105
+#: templates/base.html:108
 msgid "Logout"
 msgstr "خروج"
 
-#: templates/base.html:113
+#: templates/base.html:116
 msgid "Login"
 msgstr "ورود"
+
+#: templates/home.html:130
+msgid "Welcome to IRWA"
+msgstr "به سامانه پسمانداری خوش آمدید"
+
+#: templates/home.html:137
+msgid "Select a service to continue"
+msgstr "برای ادامه، به صفحه مربوطه مراجعه کنید"
+
+#: templates/home.html:158
+msgid "Manage radioactive sources"
+msgstr ""
+
+#: templates/home.html:177
+msgid "Manage radioactive waste"
+msgstr ""
+
+#: templates/home.html:197
+#, fuzzy
+#| msgid "Contracts"
+msgid "Manage contracts"
+msgstr "امور قراردادها"
+
+#: templates/home.html:217
+msgid "View reports and analytics"
+msgstr ""
+
+#: templates/home.html:237
+#, fuzzy
+#| msgid "New Services"
+msgid "Create new services"
+msgstr "شروع خدمت جدید"
+
+#: templates/home.html:256
+#, fuzzy
+#| msgid "New Services"
+msgid "View services"
+msgstr "شروع خدمت جدید"
 
 #: venv/lib/python3.12/site-packages/django/contrib/messages/apps.py:16
 msgid "Messages"

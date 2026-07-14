@@ -19,7 +19,16 @@ from django.db.models import Q
 import csv
 from django.http import HttpResponse
 
+from django.shortcuts import render
 
+
+def home(request):
+
+    return render(
+        request,
+        "home.html"
+    )
+    
 def dsrs_history(request, pk):
     dsrs = get_object_or_404(DSRS, pk=pk)
 

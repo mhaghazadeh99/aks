@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{% trans "Home" %}
+{% endblock title %}
+
+
+{% block extrastyle %}
+
+<style>
+
+.home-container{
+    padding:30px;
+}
+
+
+.home-title{
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+
+.home-subtitle{
+    color:#777;
+    margin-bottom:30px;
+}
+
+
+/* Cards */
+
+.home-grid{
+
+    display:grid;
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:25px;
+
+}
+
+
+
+.home-card{
+
+    background:white;
+
+    border-radius:16px;
+
+    padding:25px;
+
+    text-decoration:none;
+
+    color:inherit;
+
+    box-shadow:
+    0 5px 15px rgba(0,0,0,.08);
+
+    transition:.25s;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    min-height:130px;
+
+}
+
+
+
+.home-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.15);
+
+}
+
+
+
+.home-icon{
+
+    font-size:35px;
+
+    margin-bottom:15px;
+
+}
+
+
+
+.home-card h3{
+
+    margin:0;
+
+    font-size:20px;
+
+}
+
+
+
+.home-card p{
+
+    margin-top:8px;
+
+    color:#777;
+
+}
+
+
+
+</style>
+
+{% endblock extrastyle %}
+
+
+
+
+{% block content %}
+
+
+<div class="home-container">
+
+
+<h1 class="home-title">
+
+{% trans "Welcome to IRWA" %}
+
+</h1>
+
+
+<p class="home-subtitle">
+
+{% trans "Select a service to continue" %}
+
+</p>
+
+
+
+<div class="home-grid">
+
+
+
+<a href="{% url 'tables' %}" class="home-card">
+
+<div class="home-icon">
+☢
+</div>
+
+<h3>
+{% trans "Sources" %}
+</h3>
+
+<p>
+{% trans "Manage radioactive sources" %}
+</p>
+
+</a>
+
+
+
+
+<a href="{% url 'waste_list' %}" class="home-card">
+
+<div class="home-icon">
+♻
+</div>
+
+<h3>
+{% trans "Waste" %}
+</h3>
+
+<p>
+{% trans "Manage radioactive waste" %}
+</p>
+
+</a>
+
+
+
+
+
+<a href="{% url 'contract_index' %}" class="home-card">
+
+<div class="home-icon">
+📑
+</div>
+
+<h3>
+{% trans "Contracts" %}
+</h3>
+
+<p>
+{% trans "Manage contracts" %}
+</p>
+
+</a>
+
+
+
+
+
+<a href="{% url 'analytics_home' %}" class="home-card">
+
+<div class="home-icon">
+📊
+</div>
+
+<h3>
+{% trans "Reports" %}
+</h3>
+
+<p>
+{% trans "View reports and analytics" %}
+</p>
+
+</a>
+
+
+
+
+
+<a href="#" class="home-card">
+
+<div class="home-icon">
+➕
+</div>
+
+<h3>
+{% trans "New Services" %}
+</h3>
+
+<p>
+{% trans "Create new services" %}
+</p>
+
+</a>
+
+
+
+
+<a href="#" class="home-card">
+
+<div class="home-icon">
+📂
+</div>
+
+<h3>
+{% trans "Services" %}
+</h3>
+
+<p>
+{% trans "View services" %}
+</p>
+
+</a>
+
+
+
+</div>
+
+
+</div>
+
+
+{% endblock content %}

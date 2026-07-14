@@ -1,8 +1,8 @@
 from django.db import models
 from django.utils import timezone
 import math
-from utils.physics import LN2, mci_to_bq, bq_to_mci
-from utils.fileValidator import validate_attachment
+from common.utils.physics import LN2, mci_to_bq, bq_to_mci
+from common.utils.fileValidator import validate_attachment
 from contract.models import Contract
 from simple_history.models import HistoricalRecords
 # Create your models here.
@@ -67,7 +67,7 @@ class DSRS(models.Model):
     Date_received = models.DateField(blank=True, null=True)
     Origin_Facility = models.CharField(max_length=250,blank=True, null=True)
 
-    Location = models.CharField(max_length=20)
+    Location = models.CharField(max_length=20,blank=True, null=True)
 
     @property
     def Loc1(self):
@@ -81,8 +81,8 @@ class DSRS(models.Model):
     def Num(self):
         return self.Location[7:]
 
-    Status = models.CharField(max_length=15, choices=STATUS.choices)
-    Status_Date = models.DateField()
+    Status = models.CharField(max_length=15, choices=STATUS.choices,blank=True, null=True)
+    Status_Date = models.DateField(blank=True, null=True)
 
     Responsible_Person = models.CharField(max_length=50,null=True, blank=True)
 
@@ -99,7 +99,7 @@ class DSRS(models.Model):
             ('mCi', 'mCi'),
             ('uCi', 'µCi'),
         ],
-        default='Bq'
+        default='Bq',blank=True, null=True
     )
 
     # Stored value (normalized)
@@ -129,7 +129,7 @@ class DSRS(models.Model):
 
     Container_Type = models.CharField(max_length=25, blank=True, null=True)
 
-    Dimension = models.CharField(max_length=20, blank=True)
+    Dimension = models.CharField(max_length=20, blank=True, null=True)
 
     Attachments = models.FileField(
         upload_to="DSRS_Doc",

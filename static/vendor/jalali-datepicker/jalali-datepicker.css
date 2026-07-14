@@ -1,0 +1,159 @@
+body {
+  font-family: Arial, sans-serif;
+  font-weight: bolder;
+  direction: rtl;
+  background-color: black;
+}
+
+.datepicker {
+  width: 200px;
+  padding: 10px;
+  margin: 20px auto;
+  text-align: center;
+  display: flex;
+  cursor: pointer;
+  transition: all 0.5s;
+  border-radius: 10px;
+}
+
+.datepicker:focus {
+  scale: 1.1;
+}
+
+.calendar-container {
+  display: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.calendar {
+  width: 500px;
+  min-height: 400px;
+  text-align: center;
+}
+
+.calendar-header {
+  min-height: 40px;
+  background-color: #f0f0f0;
+  padding: 10px;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: space-between;
+}
+#next-calendar-title {
+  margin: auto;
+}
+#prev-month,
+#next-month {
+  background-color: #ddd;
+  border: none;
+  padding: 10px 30px;
+  cursor: pointer;
+  transition: all 0.5s;
+  border-radius: 7px;
+}
+
+#prev-month:hover,
+#next-month:hover,
+#change-calender-date:hover {
+  background-color: #000000;
+  color: white;
+}
+
+#prev-month:focus,
+#next-month:focus,
+#change-calender-date:focus {
+  background-color: #000000;
+  color: white;
+  scale: 1.1;
+}
+
+.calendar-body {
+  padding: 10px;
+}
+
+.calendar-body div {
+  display: inline-block;
+  width: 62.1px;
+  height: 40px;
+  line-height: 40px;
+  margin: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-body div:hover {
+  background-color: #000000;
+  color: white;
+  scale: 1.09;
+}
+
+.calendar-body .day {
+  border: 1px solid #ddd;
+}
+
+#month-select {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 10px 15px;
+}
+#change-calender-date {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: #ddd;
+  border: none;
+  padding: 10px 30px;
+  cursor: pointer;
+  transition: all 0.5s;
+  border-radius: 7px;
+}
+select option {
+  font-size: 1.4em;
+}
+
+.current-day {
+  background-color: #222121;
+  color: #ffffff;
+  transform: scale(0.9);
+}
+
+.en .current-day {
+  background-color: #1a2f8f;
+  color: #ffffff;
+  transform: scale(0.9);
+}
+
+.MDJAminDiv {
+  z-index: 4444;
+  position: fixed;
+  bottom: 5%;
+  left: 2%;
+}
+
+.MDJAmin {
+  text-decoration: none;
+  border-bottom: 1px dashed rgb(204, 204, 204);
+  border-top: 1px dashed rgb(204, 204, 204);
+  /* border-bottom: 1px dashed rgb(44, 44, 44); */
+  /* border-top: 1px dashed rgb(44, 44, 44); */
+  padding: 4px 0;
+  /* color: rgba(44, 44, 44, 0.525); */
+  color: rgba(204, 204, 204, 0.414);
+  font-family: monospace;
+  font-style: italic;
+  font-size: 1em;
+  transition: all 0.5s;
+}
+
+.MDJAmin:hover {
+  /* color: #000000; */
+  color: white;
+}

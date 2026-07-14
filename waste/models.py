@@ -4,7 +4,7 @@ from django.db import models
 from django.db import models
 
 
-from utils.fileValidator import validate_attachment
+from common.utils.fileValidator import validate_attachment
 from django.conf import settings
 
 from django.db import models

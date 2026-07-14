@@ -26,3 +26,19 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 });
+
+const languageButton =
+document.getElementById("languageButton");
+
+const languageMenu =
+document.getElementById("languageMenu");
+
+if(languageButton){
+
+languageButton.onclick=function(){
+
+languageMenu.classList.toggle("show");
+
+};
+
+}

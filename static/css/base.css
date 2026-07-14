@@ -695,59 +695,60 @@ html.rtl .timeline{
 /* ======================
    LANGUAGE SWITCHER
 ====================== */
+.language-box{
 
+margin-top:auto;
 
-.language-switcher{
-
-    margin-top:auto;
-
-    padding-top:20px;
-
-    border-top:1px solid #e5e7eb;
+position:relative;
 
 }
 
+.language-current{
 
-
-.language-btn{
-
-
-    width:100%;
-
-
-    background:#f3f4f6;
-
-
-    color:#374151;
-
-
-    padding:12px;
-
-
-    border-radius:10px;
-
-
-    border:none;
-
-
-    cursor:pointer;
-
-
-    font-size:14px;
-
+width:100%;
 
 }
 
+.language-menu{
 
+display:none;
 
-.language-btn:hover{
+position:absolute;
 
+bottom:110%;
 
-    background:#2563eb;
+left:0;
 
-    color:white;
+right:0;
 
+background:white;
+
+border-radius:12px;
+
+box-shadow:0 8px 25px rgba(0,0,0,.15);
+
+overflow:hidden;
 
 }
 
+.language-menu.show{
 
+display:block;
+
+}
+
+.language-menu button{
+
+width:100%;
+
+padding:12px;
+
+background:white;
+
+color:#333;
+
+border:none;
+
+text-align:left;
+
+}

@@ -121,53 +121,66 @@
     {% load i18n %}
 
 
-<div class="language-switcher">
+<div class="language-box">
 
+<button
+class="language-current"
+id="languageButton">
 
-<form action="{% url 'set_language' %}" method="post">
+🌐
+{% get_current_language as LANGUAGE_CODE %}
 
-{% csrf_token %}
+{% if LANGUAGE_CODE == "fa" %}
 
-<input 
-type="hidden" 
-name="next" 
-value="{{ request.path }}">
-
-
-
-{% if CURRENT_LANGUAGE == "fa" %}
-
-
-<button 
-type="submit"
-name="language"
-value="en"
-class="language-btn">
-
-🌐 English
-
-</button>
-
+فارسی
 
 {% else %}
 
+English
 
-<button 
-type="submit"
-name="language"
-value="fa"
-class="language-btn">
+{% endif %}
 
-🌐 فارسی
+▼
 
 </button>
 
 
-{% endif %}
+<div
+class="language-menu"
+id="languageMenu">
 
+<form
+action="{% url 'set_language' %}"
+method="post">
+
+{% csrf_token %}
+
+<input
+type="hidden"
+name="next"
+value="{{ request.path }}">
+
+
+<button
+name="language"
+value="fa">
+
+فارسی
+
+</button>
+
+
+<button
+name="language"
+value="en">
+
+English
+
+</button>
 
 </form>
 
+</div>
 
 </div>
 
@@ -187,6 +200,16 @@ class="language-btn">
 </main>
 <meta name="csrf-token" content="{{ csrf_token }}">
 <script src="{% static 'js/base.js' %}"></script>
+<link rel="stylesheet"
+      href="{% static 'vendor/jalali-datepicker/jalali-datepicker.css' %}">
+
+<script src="{% static 'vendor/jalali-datepicker/jalaali.js' %}"></script>
+
+<script src="{% static 'vendor/jalali-datepicker/jalali-datepicker.js' %}"></script>
+
+<script src="{% static 'js/localization.js' %}"></script>
+
+
 {% block extrascript %}
 {% endblock %}
 

@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "waste",
     "laboratory",
     "operations",
+    'common',
+   
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

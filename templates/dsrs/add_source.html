@@ -153,41 +153,41 @@ function getCSRFToken() {
         ?.split('=')[1];
 }
 </script>
-<div class="content">
-    <div style="max-width:600px; margin:auto;">
-<form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
 
-    
-   {% for field in form %}
-    {% if field.name == "create_contract" %}
 
-      <div class="form-check-inline">
-         {{ field.label_tag }}
-        {{ field }} 
-           
-        </div>
+        <form method="post" enctype="multipart/form-data">
 
-    {% else %}
-        <p>
-            {{ field.label_tag }}
-            {{ field }}
-        </p>
-    {% endif %}
-{% endfor %}
-        <hr>
+{% csrf_token %}
 
-       <div class="mb-3">
-  <label class="form-label">Upload additional images</label>
-  <input class="form-control" type="file" name="dsrs_images" multiple>
+
+{% crispy form %}
+
+
+<div class="mb-3">
+
+<label class="form-label">
+Upload additional images
+</label>
+
+
+<input 
+class="form-control"
+type="file"
+name="dsrs_images"
+multiple>
+
+
 </div>
 
-        <button type="submit" class="btn btn-primary">Save</button>
 
-    </form>
+
+
+
+</form>
+
 </div>
 </div>
 </div>
-</div>
+
 
 {% endblock %}

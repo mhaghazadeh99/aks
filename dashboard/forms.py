@@ -48,10 +48,8 @@ class DSRSForm(forms.ModelForm):
 
 
         labels = {
-
-            "activity_input_mci":
-            "Initial Activity (mCi)",
-
+        "activity_input":
+        "Initial Activity",
         }
 
 
@@ -82,12 +80,13 @@ class DSRSForm(forms.ModelForm):
 
             Div(
                 Field("Source_Type"),
-                Field("Serial_Number"),
+                Field("serial_number"),
                 Field("Nuclide"),
                 css_class="row"
             ),
 
-            Field("activity_input_mci"),
+            Field("activity_input"),
+            Field("activity_unit"),
 
             Field("Date_received"),
 
@@ -98,7 +97,6 @@ class DSRSForm(forms.ModelForm):
             Field("Status_Date"),
 
             Field("Dose_rate_measurement_date"),
-
 
             Field("Responsible_Person"),
 
@@ -111,7 +109,6 @@ class DSRSForm(forms.ModelForm):
             )
 
         )
-
 
 
         # Group logic

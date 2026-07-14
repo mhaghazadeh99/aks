@@ -95,6 +95,8 @@ def add_source(request):
         return HttpResponseForbidden("No access")
 
     if request.method == "POST":
+        print("POST DATA:")
+        print(request.POST)
         form = DSRSForm(request.POST, request.FILES, user=request.user)
     
 

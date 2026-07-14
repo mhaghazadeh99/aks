@@ -62,7 +62,7 @@ class DSRS(models.Model):
     Source_Type = models.CharField( max_length=10, choices=SOURCE_TYPE.choices, default="DSRS")
     Sso_Code = models.CharField(max_length=12,null=True, blank=True)
     Facility = models.CharField(max_length=100, blank=True, null=True)
-    Origin_Type = models.CharField(max_length=20, choices=OriginType.choices)
+    Origin_Type = models.CharField(max_length=20, choices=OriginType.choices,null=True, blank=True)
 
     Date_received = models.DateField(blank=True, null=True)
     Origin_Facility = models.CharField(max_length=250,blank=True, null=True)

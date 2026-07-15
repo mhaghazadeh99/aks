@@ -5,9 +5,7 @@
 
 
 {% block title %}
-
 {% trans "Add Facility" %}
-
 {% endblock %}
 
 
@@ -23,16 +21,25 @@
 <div class="form-header">
 
 <h2>
-
 {% trans "Add Facility" %}
-
 </h2>
 
+
 <p>
-
 {% trans "Create a new facility record" %}
-
 </p>
+
+
+<div class="form-actions mt-3">
+
+<a href="{% url 'facility_import' %}"
+   class="btn btn-secondary">
+
+{% trans "Import CSV" %}
+
+</a>
+
+</div>
 
 
 </div>

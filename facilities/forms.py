@@ -31,7 +31,7 @@ class FacilityForm(forms.ModelForm):
             "postal_code",
             "national_id",
             "economic_code",
-            "is_active",
+            
         ]
 
 
@@ -124,7 +124,7 @@ class FacilityForm(forms.ModelForm):
 
 
 
-            Field("is_active"),
+            
 
 
 
@@ -132,27 +132,27 @@ class FacilityForm(forms.ModelForm):
             HTML(
                 """
                 <div class="form-actions mt-4">
-
-                    <button 
-                    type="submit"
-                    class="btn btn-primary">
-
-                    Save
-
-                    </button>
-
-
                     <a 
                     href="/facilities/"
                     class="btn btn-secondary">
-
-                    Cancel
-
+                    {cancel}
                     </a>
-
                 </div>
-                """
-            )
+                """.format(
+                    cancel=_("Cancel")
+                )
+            ),
+
+            Submit(
+                "submit",
+                _("Save"),
+                css_class="btn btn-primary mt-4"
+            ),)
 
 
-        )
+
+class FacilityImportForm(forms.Form):
+
+    csv_file = forms.FileField(
+        label=_("CSV File")
+    )

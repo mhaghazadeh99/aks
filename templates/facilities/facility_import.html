@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+
+
+{% block title %}
+
+{% trans "Import CSV" %}
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+
+<div class="form-card">
+
+
+<div class="form-header">
+
+<h2>
+{% trans "Import Facilities" %}
+</h2>
+
+
+<p>
+{% trans "Upload a CSV file containing facility records." %}
+</p>
+
+
+</div>
+
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="file" name="csv_file" accept=".csv">
+
+    <button type="submit" class="btn btn-primary">
+        {% trans "Import CSV" %}
+    </button>
+</form>
+
+
+
+
+</div>
+
+
+{% endblock %}

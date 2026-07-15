@@ -27,5 +27,10 @@ urlpatterns = [
         facility_delete,
         name="facility_delete"
     ),
+    path(
+    "import/",
+    facility_import,
+    name="facility_import"
+),
 
 ]

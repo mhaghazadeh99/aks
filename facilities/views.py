@@ -4,22 +4,38 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.shortcuts import redirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
-from .forms import FacilityForm
+from .forms import FacilityForm, FacilityImportForm
 from .models import Facility
+import csv
 
 
 def facility_list(request):
 
     search = request.GET.get("search", "")
 
-    page_size = int(
-        request.GET.get("page_size", 10)
-    )
+
+    try:
+        page_size = int(
+            request.GET.get(
+                "page_size",
+                10
+            )
+        )
+
+    except ValueError:
+        page_size = 10
+
+
 
     queryset = Facility.objects.all()
+
+
+
+    # =========================
+    # Global Search
+    # =========================
 
     if search:
 
@@ -29,20 +45,74 @@ def facility_list(request):
 
             Q(responsible_person__icontains=search) |
 
-            Q(telephone__icontains=search)
+            Q(telephone__icontains=search) |
+
+            Q(email__icontains=search) |
+
+            Q(address1__icontains=search) |
+
+            Q(address2__icontains=search) |
+
+            Q(postal_code__icontains=search) |
+
+            Q(national_id__icontains=search) |
+
+            Q(economic_code__icontains=search)
 
         )
+
+
+
+    # =========================
+    # Advanced Filters
+    # =========================
+
+    filter_fields = [
+
+        "name",
+        "responsible_person",
+        "telephone",
+        "email",
+        "postal_code",
+        "national_id",
+        "economic_code",
+
+    ]
+
+
+
+
+
+    
+
+    queryset = queryset.order_by(
+        "name"
+    )
+
+
 
     paginator = Paginator(
         queryset,
         page_size
     )
 
-    page = request.GET.get("page")
 
-    facilities = paginator.get_page(page)
+    facilities = paginator.get_page(
+        request.GET.get("page")
+    )
+
+
+
+    params = request.GET.copy()
+
+    params.pop(
+        "page",
+        None
+    )
+
 
     context = {
+
 
         "facilities": facilities,
 
@@ -50,13 +120,23 @@ def facility_list(request):
 
         "page_size": page_size,
 
+
+        "query_string":
+            params.urlencode(),
+
+
+        
+
     }
+
+
 
     return render(
         request,
         "facilities/facility_list.html",
         context
     )
+
 
 
 def facility_create(request):
@@ -161,5 +241,110 @@ def facility_delete(request, pk):
         "facilities/facility_delete.html",
         {
             "facility": facility
+        }
+    )
+
+
+
+
+
+
+
+
+def facility_import(request):
+
+    if request.method == "POST":
+
+        form = FacilityImportForm(request.POST, request.FILES)
+        
+
+        if form.is_valid():
+            print("IMPORT VIEW STARTED")
+            
+            csv_file = form.cleaned_data["csv_file"]
+
+            decoded_file = csv_file.read().decode("utf-8-sig").splitlines()
+
+            reader = csv.DictReader(decoded_file)
+            
+
+
+            count = 0
+
+            for row in reader:
+                if None in row.values():
+                    messages.error(
+                        request,
+                        f"Invalid CSV format near row: {row}"
+                    )
+                    continue
+                Facility.objects.create(
+
+                    name=row.get("name"),
+
+                    responsible_person=row.get(
+                        "responsible_person"
+                    ),
+
+                    telephone=row.get(
+                        "telephone"
+                    ),
+
+                    email=row.get(
+                        "email"
+                    ),
+
+                    address1=row.get(
+                        "address1"
+                    ),
+
+                    address2=row.get(
+                        "address2"
+                    ),
+
+                    postal_code=row.get(
+                        "postal_code"
+                    ),
+
+                    national_id=row.get(
+                        "national_id"
+                    ),
+
+                    economic_code=row.get(
+                        "economic_code"
+                    ),
+
+                    
+
+                )
+
+                count += 1
+
+
+            messages.success(
+                request,
+                _(
+                    "%(count)s facilities imported successfully."
+                ) % {
+                    "count": count
+                }
+            )
+
+
+            return redirect(
+                "facility_list"
+            )
+
+
+    else:
+
+        form = FacilityImportForm()
+
+
+    return render(
+        request,
+        "facilities/facility_import.html",
+        {
+            "form": form
         }
     )

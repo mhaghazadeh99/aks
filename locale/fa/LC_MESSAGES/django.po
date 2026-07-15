@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
+
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -18,6 +18,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+msgid "Import CSV"
+msgstr "ورود از فایل CSV"
+
+msgid "CSV File"
+msgstr "فایل CSV"
+
 #: IRWA/settings.py:173
 msgid "فارسی"
 msgstr ""
@@ -28,11 +34,11 @@ msgstr ""
 
 #: facilities/models.py:11
 msgid "Facility Name"
-msgstr ""
+msgstr "نام مرکز"
 
 #: facilities/models.py:16 templates/facilities/facility_list.html:296
 msgid "Responsible Person"
-msgstr "مسئول مرکز"
+msgstr "مسئول"
 
 #: facilities/models.py:21 templates/facilities/facility_list.html:301
 msgid "Telephone"
@@ -44,11 +50,11 @@ msgstr "ایمیل"
 
 #: facilities/models.py:31
 msgid "Address Line 1"
-msgstr ""
+msgstr "آدرس اول"
 
 #: facilities/models.py:36
 msgid "Address Line 2"
-msgstr ""
+msgstr "آدرس دوم"
 
 #: facilities/models.py:42 templates/facilities/facility_list.html:316
 msgid "Postal Code"
@@ -68,7 +74,7 @@ msgstr "فعال"
 
 #: facilities/models.py:74
 msgid "Facility"
-msgstr ""
+msgstr "مرکز"
 
 #: facilities/models.py:75 templates/base.html:79
 #: templates/facilities/facility_list.html:7
@@ -91,11 +97,11 @@ msgstr "مرکز حذف شد."
 #: templates/ reference/radionuclide_list.html:5
 #: reference/radionuclide_list.html:12
 msgid "Radionuclides"
-msgstr ""
+msgstr "نوکلئیدها"
 
 #: templates/ reference/radionuclide_list.html:14
 msgid "This page will contain the radionuclide database."
-msgstr ""
+msgstr "این صفحه شامل اطلاعات رادییونوکلویدها میباشد."
 
 #: templates/base.html:59 templates/home.html:5
 msgid "Home"
@@ -117,7 +123,7 @@ msgstr "پسماندها"
 
 #: templates/base.html:84
 msgid "Reference Data"
-msgstr ""
+msgstr "داده های مرجع"
 
 #: templates/base.html:89 templates/home.html:170
 msgid "Contracts"
@@ -125,7 +131,7 @@ msgstr "امور قراردادها"
 
 #: templates/base.html:93
 msgid "Laboratory"
-msgstr ""
+msgstr "آزمایشگاه"
 
 #: templates/base.html:98 templates/home.html:188
 msgid "Reports"
@@ -147,16 +153,16 @@ msgstr "ورود"
 #: templates/facilities/facility_create.html:27
 #: templates/facilities/facility_list.html:258
 msgid "Add Facility"
-msgstr ""
+msgstr "افزودن مرکز"
 
 #: templates/facilities/facility_create.html:33
 msgid "Create a new facility record"
-msgstr ""
+msgstr "ثبت مرکز جدید"
 
 #: templates/facilities/facility_delete.html:10
 #: templates/facilities/facility_delete.html:26
 msgid "Delete Facility"
-msgstr ""
+msgstr "حذف مرکز"
 
 #: templates/facilities/facility_delete.html:34
 #, python-format
@@ -166,81 +172,85 @@ msgid ""
 "Are you sure you want to delete \"%(facility)s\"?\n"
 "\n"
 msgstr ""
+"\n"
+"\n"
+" از حذف «%(facility)s» مطمئن هستید؟\n"
+"\n"
 
 #: templates/facilities/facility_delete.html:56
 #: templates/facilities/facility_list.html:519
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:499
 msgid "Delete"
-msgstr ""
+msgstr "حذف"
 
 #: templates/facilities/facility_delete.html:70
 msgid "Cancel"
-msgstr ""
+msgstr "انصراف"
 
 #: templates/facilities/facility_list.html:159
 msgid "Search..."
-msgstr ""
+msgstr "جستجو..."
 
 #: templates/facilities/facility_list.html:185
 msgid "Items"
-msgstr ""
+msgstr "آیتمها"
 
 #: templates/facilities/facility_list.html:291
 msgid "Name"
-msgstr ""
+msgstr "نام مرکز"
 
 #: templates/facilities/facility_list.html:311
 msgid "Address"
-msgstr ""
+msgstr "آدرس"
 
 #: templates/facilities/facility_list.html:331
 msgid "Status"
-msgstr ""
+msgstr "وضعیت"
 
 #: templates/facilities/facility_list.html:336
 msgid "Created"
-msgstr ""
+msgstr "تاریخ ثبت"
 
 #: templates/facilities/facility_list.html:341
 msgid "Actions"
-msgstr ""
+msgstr "اقدامات"
 
 #: templates/facilities/facility_list.html:467
 msgid "Inactive"
-msgstr ""
+msgstr "غیرفعال"
 
 #: templates/facilities/facility_list.html:502
 msgid "Edit"
-msgstr ""
+msgstr "ویرایش"
 
 #: templates/facilities/facility_list.html:546
 msgid "No facilities found."
-msgstr ""
+msgstr "مرکزی وجود ندارد."
 
 #: templates/facilities/facility_list.html:584
 msgid "Previous"
-msgstr ""
+msgstr "قبلی"
 
 #: templates/facilities/facility_list.html:636
 msgid "Next"
-msgstr ""
+msgstr "بعدی"
 
 #: templates/facilities/facility_list.html:658
 msgid "of"
-msgstr ""
+msgstr "از"
 
 #: templates/facilities/facility_list.html:667
 msgid "records"
-msgstr ""
+msgstr "مراکز"
 
 #: templates/facilities/facility_update.html:10
 #: templates/facilities/facility_update.html:28
 msgid "Edit Facility"
-msgstr ""
+msgstr "ویرایش"
 
 #: templates/facilities/facility_update.html:35
 msgid "Update facility information"
-msgstr ""
+msgstr "به روزرسانی اطلاعات مرکز"
 
 #: templates/home.html:130
 msgid "Welcome to IRWA"
@@ -251,40 +261,40 @@ msgid "Select a service to continue"
 msgstr "برای ادامه، به صفحه مربوطه مراجعه کنید"
 
 #: templates/home.html:156
-#, fuzzy
-#| msgid "New Services"
+
+
 msgid "Create and manage operational services"
 msgstr "شروع خدمت جدید"
 
 #: templates/home.html:174
-#, fuzzy
-#| msgid "Contracts"
+
+
 msgid "Manage contracts"
 msgstr "امور قراردادها"
 
 #: templates/home.html:192
 msgid "Reports and analytics"
-msgstr ""
+msgstr "گزارش"
 
 #: templates/operations/operations_home.html:110
-#, fuzzy
-#| msgid "Select a service to continue"
+
+
 msgid "Select an operation to continue."
 msgstr "برای ادامه یک عملیات انتخاب کنید"
 
 #: templates/operations/operations_home.html:128
 msgid "View and manage customer facilities."
-msgstr ""
+msgstr "مشاهده و ویرایش مراکز"
 
 #: templates/operations/operations_home.html:142
-#, fuzzy
-#| msgid "Services"
+
+
 msgid "Service Requests"
 msgstr "خدمات موجود"
 
 #: templates/operations/operations_home.html:146
 msgid "View and manage all service requests."
-msgstr ""
+msgstr "مشاهده و ویرایش خدمات"
 
 #: templates/operations/operations_home.html:160
 msgid "Receive Waste"
@@ -303,8 +313,8 @@ msgid "Register received radioactive sources."
 msgstr "ثبت دریافت چشمه"
 
 #: templates/operations/operations_home.html:196
-#, fuzzy
-#| msgid "Sources"
+
+
 msgid "Sell Source"
 msgstr "فروش چشمه ها"
 
@@ -1564,7 +1574,7 @@ msgstr ""
 #~ msgid "New Services"
 #~ msgstr "شروع خدمت جدید"
 
-#, fuzzy
+
 #~| msgid "New Services"
 #~ msgid "View services"
 #~ msgstr "شروع خدمت جدید"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-14 12:42+0000\n"
+"POT-Creation-Date: 2026-07-15 06:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,53 +18,229 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: IRWA/settings.py:172
+#: IRWA/settings.py:173
 msgid "فارسی"
 msgstr ""
 
-#: IRWA/settings.py:174
+#: IRWA/settings.py:175
 msgid "English"
 msgstr ""
 
-#: templates/base.html:61 templates/home.html:5
+#: facilities/models.py:11
+msgid "Facility Name"
+msgstr ""
+
+#: facilities/models.py:16 templates/facilities/facility_list.html:296
+msgid "Responsible Person"
+msgstr "مسئول مرکز"
+
+#: facilities/models.py:21 templates/facilities/facility_list.html:301
+msgid "Telephone"
+msgstr "تلفن"
+
+#: facilities/models.py:26 templates/facilities/facility_list.html:306
+msgid "Email"
+msgstr "ایمیل"
+
+#: facilities/models.py:31
+msgid "Address Line 1"
+msgstr ""
+
+#: facilities/models.py:36
+msgid "Address Line 2"
+msgstr ""
+
+#: facilities/models.py:42 templates/facilities/facility_list.html:316
+msgid "Postal Code"
+msgstr "کد پستی"
+
+#: facilities/models.py:48 templates/facilities/facility_list.html:321
+msgid "National ID"
+msgstr "شناسه ملی"
+
+#: facilities/models.py:54 templates/facilities/facility_list.html:326
+msgid "Economic Code"
+msgstr "کد اقتصادی"
+
+#: facilities/models.py:60 templates/facilities/facility_list.html:458
+msgid "Active"
+msgstr "فعال"
+
+#: facilities/models.py:74
+msgid "Facility"
+msgstr ""
+
+#: facilities/models.py:75 templates/base.html:79
+#: templates/facilities/facility_list.html:7
+#: templates/operations/operations_home.html:124
+msgid "Facilities"
+msgstr "مراکز"
+
+#: facilities/views.py:76
+msgid "Facility created successfully."
+msgstr "مرکز با موفقیت ایجاد شد."
+
+#: facilities/views.py:116
+msgid "Facility updated successfully."
+msgstr "اطلاعات مرکز با موفقیت بروزرسانی شد."
+
+#: facilities/views.py:152
+msgid "Facility deleted."
+msgstr "مرکز حذف شد."
+
+#: templates/ reference/radionuclide_list.html:5
+#: reference/radionuclide_list.html:12
+msgid "Radionuclides"
+msgstr ""
+
+#: templates/ reference/radionuclide_list.html:14
+msgid "This page will contain the radionuclide database."
+msgstr ""
+
+#: templates/base.html:59 templates/home.html:5
 msgid "Home"
 msgstr "خانه"
 
-#: templates/base.html:65 templates/home.html:233
-msgid "New Services"
-msgstr "شروع خدمت جدید"
+#: templates/base.html:64 templates/home.html:152
+#: templates/operations/operations_home.html:5
+#: templates/operations/operations_home.html:104
+msgid "Operations"
+msgstr "عملیات"
 
-#: templates/base.html:70 templates/home.html:252
-msgid "Services"
-msgstr "خدمات موجود"
-
-#: templates/base.html:76 templates/home.html:154
+#: templates/base.html:69
 msgid "Sources"
 msgstr "چشمه ها"
 
-#: templates/base.html:82 templates/home.html:173
+#: templates/base.html:74
 msgid "Waste"
 msgstr "پسماندها"
 
-#: templates/base.html:88 templates/home.html:193
+#: templates/base.html:84
+msgid "Reference Data"
+msgstr ""
+
+#: templates/base.html:89 templates/home.html:170
 msgid "Contracts"
 msgstr "امور قراردادها"
 
-#: templates/base.html:94 templates/home.html:213
+#: templates/base.html:93
+msgid "Laboratory"
+msgstr ""
+
+#: templates/base.html:98 templates/home.html:188
 msgid "Reports"
 msgstr "گزارش"
 
-#: templates/base.html:101
+#: templates/base.html:105
 msgid "Change Password"
 msgstr "تغییر رمز"
 
-#: templates/base.html:108
+#: templates/base.html:112
 msgid "Logout"
 msgstr "خروج"
 
-#: templates/base.html:116
+#: templates/base.html:120
 msgid "Login"
 msgstr "ورود"
+
+#: templates/facilities/facility_create.html:9
+#: templates/facilities/facility_create.html:27
+#: templates/facilities/facility_list.html:258
+msgid "Add Facility"
+msgstr ""
+
+#: templates/facilities/facility_create.html:33
+msgid "Create a new facility record"
+msgstr ""
+
+#: templates/facilities/facility_delete.html:10
+#: templates/facilities/facility_delete.html:26
+msgid "Delete Facility"
+msgstr ""
+
+#: templates/facilities/facility_delete.html:34
+#, python-format
+msgid ""
+"\n"
+"\n"
+"Are you sure you want to delete \"%(facility)s\"?\n"
+"\n"
+msgstr ""
+
+#: templates/facilities/facility_delete.html:56
+#: templates/facilities/facility_list.html:519
+#: venv/lib/python3.12/site-packages/django/forms/formsets.py:499
+msgid "Delete"
+msgstr ""
+
+#: templates/facilities/facility_delete.html:70
+msgid "Cancel"
+msgstr ""
+
+#: templates/facilities/facility_list.html:159
+msgid "Search..."
+msgstr ""
+
+#: templates/facilities/facility_list.html:185
+msgid "Items"
+msgstr ""
+
+#: templates/facilities/facility_list.html:291
+msgid "Name"
+msgstr ""
+
+#: templates/facilities/facility_list.html:311
+msgid "Address"
+msgstr ""
+
+#: templates/facilities/facility_list.html:331
+msgid "Status"
+msgstr ""
+
+#: templates/facilities/facility_list.html:336
+msgid "Created"
+msgstr ""
+
+#: templates/facilities/facility_list.html:341
+msgid "Actions"
+msgstr ""
+
+#: templates/facilities/facility_list.html:467
+msgid "Inactive"
+msgstr ""
+
+#: templates/facilities/facility_list.html:502
+msgid "Edit"
+msgstr ""
+
+#: templates/facilities/facility_list.html:546
+msgid "No facilities found."
+msgstr ""
+
+#: templates/facilities/facility_list.html:584
+msgid "Previous"
+msgstr ""
+
+#: templates/facilities/facility_list.html:636
+msgid "Next"
+msgstr ""
+
+#: templates/facilities/facility_list.html:658
+msgid "of"
+msgstr ""
+
+#: templates/facilities/facility_list.html:667
+msgid "records"
+msgstr ""
+
+#: templates/facilities/facility_update.html:10
+#: templates/facilities/facility_update.html:28
+msgid "Edit Facility"
+msgstr ""
+
+#: templates/facilities/facility_update.html:35
+msgid "Update facility information"
+msgstr ""
 
 #: templates/home.html:130
 msgid "Welcome to IRWA"
@@ -74,35 +250,75 @@ msgstr "به سامانه پسمانداری خوش آمدید"
 msgid "Select a service to continue"
 msgstr "برای ادامه، به صفحه مربوطه مراجعه کنید"
 
-#: templates/home.html:158
-msgid "Manage radioactive sources"
-msgstr ""
+#: templates/home.html:156
+#, fuzzy
+#| msgid "New Services"
+msgid "Create and manage operational services"
+msgstr "شروع خدمت جدید"
 
-#: templates/home.html:177
-msgid "Manage radioactive waste"
-msgstr ""
-
-#: templates/home.html:197
+#: templates/home.html:174
 #, fuzzy
 #| msgid "Contracts"
 msgid "Manage contracts"
 msgstr "امور قراردادها"
 
-#: templates/home.html:217
-msgid "View reports and analytics"
+#: templates/home.html:192
+msgid "Reports and analytics"
 msgstr ""
 
-#: templates/home.html:237
+#: templates/operations/operations_home.html:110
 #, fuzzy
-#| msgid "New Services"
-msgid "Create new services"
-msgstr "شروع خدمت جدید"
+#| msgid "Select a service to continue"
+msgid "Select an operation to continue."
+msgstr "برای ادامه یک عملیات انتخاب کنید"
 
-#: templates/home.html:256
+#: templates/operations/operations_home.html:128
+msgid "View and manage customer facilities."
+msgstr ""
+
+#: templates/operations/operations_home.html:142
 #, fuzzy
-#| msgid "New Services"
-msgid "View services"
-msgstr "شروع خدمت جدید"
+#| msgid "Services"
+msgid "Service Requests"
+msgstr "خدمات موجود"
+
+#: templates/operations/operations_home.html:146
+msgid "View and manage all service requests."
+msgstr ""
+
+#: templates/operations/operations_home.html:160
+msgid "Receive Waste"
+msgstr "دریافت پسماند"
+
+#: templates/operations/operations_home.html:164
+msgid "Register incoming radioactive waste."
+msgstr "ثبت دریافت پسماند"
+
+#: templates/operations/operations_home.html:178
+msgid "Receive Source"
+msgstr "دریافت چشمه"
+
+#: templates/operations/operations_home.html:182
+msgid "Register received radioactive sources."
+msgstr "ثبت دریافت چشمه"
+
+#: templates/operations/operations_home.html:196
+#, fuzzy
+#| msgid "Sources"
+msgid "Sell Source"
+msgstr "فروش چشمه ها"
+
+#: templates/operations/operations_home.html:200
+msgid "Register the sale or transfer of a radioactive source."
+msgstr "ثبت فروش یا انتقال چشمه"
+
+#: templates/operations/operations_home.html:214
+msgid "Issue Source License"
+msgstr "صدور مجوز"
+
+#: templates/operations/operations_home.html:218
+msgid "Issue a license for a new radioactive source."
+msgstr "صدور مجوز جدید"
 
 #: venv/lib/python3.12/site-packages/django/contrib/messages/apps.py:16
 msgid "Messages"
@@ -693,10 +909,6 @@ msgstr[1] ""
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:484
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:491
 msgid "Order"
-msgstr ""
-
-#: venv/lib/python3.12/site-packages/django/forms/formsets.py:499
-msgid "Delete"
 msgstr ""
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:925
@@ -1348,3 +1560,11 @@ msgstr ""
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:236
 msgid "Connect, get help, or contribute"
 msgstr ""
+
+#~ msgid "New Services"
+#~ msgstr "شروع خدمت جدید"
+
+#, fuzzy
+#~| msgid "New Services"
+#~ msgid "View services"
+#~ msgstr "شروع خدمت جدید"

@@ -47,6 +47,8 @@ urlpatterns = [
         'operations/',
         include('operations.urls')
     ),
+    path("facilities/", include("facilities.urls")),
+path("reference/", include("reference.urls")),
     
 ]
 

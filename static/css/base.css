@@ -752,3 +752,39 @@ border:none;
 text-align:left;
 
 }
+
+.form-card {
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:15px;
+
+    box-shadow:
+    0 4px 20px rgba(0,0,0,.08);
+
+}
+
+
+.form-header {
+
+    margin-bottom:25px;
+
+}
+
+
+.form-header h2 {
+
+    margin-bottom:5px;
+
+}
+
+
+.form-actions {
+
+    display:flex;
+
+    gap:10px;
+
+}

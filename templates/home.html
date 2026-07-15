@@ -142,44 +142,21 @@
 
 <div class="home-grid">
 
-
-
-<a href="{% url 'tables' %}" class="home-card">
+<a href="{% url 'operations_home' %}" class="home-card">
 
 <div class="home-icon">
-☢
+📋
 </div>
 
 <h3>
-{% trans "Sources" %}
+{% trans "Operations" %}
 </h3>
 
 <p>
-{% trans "Manage radioactive sources" %}
+{% trans "Create and manage operational services" %}
 </p>
 
 </a>
-
-
-
-
-<a href="{% url 'waste_list' %}" class="home-card">
-
-<div class="home-icon">
-♻
-</div>
-
-<h3>
-{% trans "Waste" %}
-</h3>
-
-<p>
-{% trans "Manage radioactive waste" %}
-</p>
-
-</a>
-
-
 
 
 
@@ -201,8 +178,6 @@
 
 
 
-
-
 <a href="{% url 'analytics_home' %}" class="home-card">
 
 <div class="home-icon">
@@ -214,51 +189,10 @@
 </h3>
 
 <p>
-{% trans "View reports and analytics" %}
+{% trans "Reports and analytics" %}
 </p>
 
 </a>
-
-
-
-
-
-<a href="#" class="home-card">
-
-<div class="home-icon">
-➕
-</div>
-
-<h3>
-{% trans "New Services" %}
-</h3>
-
-<p>
-{% trans "Create new services" %}
-</p>
-
-</a>
-
-
-
-
-<a href="#" class="home-card">
-
-<div class="home-icon">
-📂
-</div>
-
-<h3>
-{% trans "Services" %}
-</h3>
-
-<p>
-{% trans "View services" %}
-</p>
-
-</a>
-
-
 
 </div>
 

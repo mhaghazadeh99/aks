@@ -52,47 +52,51 @@
 
 
 
-    <nav class="nav">
+   <nav class="nav">
 
-    
-
-    <a href="{% url 'home' %}"
+<a href="{% url 'home' %}"
    class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-        🏠 {% trans "Home" %}
+    🏠 {% trans "Home" %}
 </a>
 
-    <a href="#">
-        ➕ {% trans "New Services" %}
-    </a>
+<a href="{% url 'operations_home' %}"
+   class="{% if request.resolver_match.url_name == 'operations_home' %}active{% endif %}">
+    📋 {% trans "Operations" %}
+</a>
 
+<a href="{% url 'tables' %}"
+   class="{% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
+    ☢ {% trans "Sources" %}
+</a>
 
-    <a href="#">
-        📂 {% trans "Services" %}
-    </a>
+<a href="{% url 'waste_list' %}"
+   class="{% if request.resolver_match.url_name == 'waste_list' %}active{% endif %}">
+    ♻ {% trans "Waste" %}
+</a>
 
+<a href="{% url 'facility_list' %}"
+   class="{% if request.resolver_match.url_name == 'facility_list' %}active{% endif %}">
+    🏢 {% trans "Facilities" %}
+</a>
 
-    <a href="{% url 'tables' %}"
-       class="{% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
-        ☢ {% trans "Sources" %}
-    </a>
+<a href="{% url 'radionuclide_list' %}"
+   class="{% if request.resolver_match.url_name == 'radionuclide_list' %}active{% endif %}">
+    ☢ {% trans "Reference Data" %}
+</a>
 
+<a href="{% url 'contract_index' %}"
+   class="{% if request.resolver_match.url_name == 'contract_index' %}active{% endif %}">
+    📑 {% trans "Contracts" %}
+</a>
 
-    <a href="{% url 'waste_list' %}"
-       class="{% if request.resolver_match.url_name == 'waste_list' %}active{% endif %}">
-        ♻ {% trans "Waste" %}
-    </a>
+<a href="#">
+    🧪 {% trans "Laboratory" %}
+</a>
 
-
-    <a href="{% url 'contract_index' %}"
-       class="{% if request.resolver_match.url_name == 'contract_index' %}active{% endif %}">
-        📑 {% trans "Contracts" %}
-    </a>
-
-
-    <a href="{% url 'analytics_home' %}"
-       class="{% if request.resolver_match.url_name == 'analytics_home' %}active{% endif %}">
-        📊 {% trans "Reports" %}
-    </a>
+<a href="{% url 'analytics_home' %}"
+   class="{% if request.resolver_match.url_name == 'analytics_home' %}active{% endif %}">
+    📊 {% trans "Reports" %}
+</a>
 
 
     {% if request.user.is_authenticated %}

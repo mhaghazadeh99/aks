@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+
+
+{% block title %}
+
+{% trans "Edit Facility" %}
+
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+
+<div class="form-card">
+
+
+<div class="form-header">
+
+<h2>
+
+{% trans "Edit Facility" %}
+
+</h2>
+
+
+<p>
+
+{% trans "Update facility information" %}
+
+</p>
+
+
+</div>
+
+
+
+
+
+<form method="post">
+
+{% csrf_token %}
+
+
+{% crispy form %}
+
+
+</form>
+
+
+
+</div>
+
+
+
+{% endblock %}

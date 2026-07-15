@@ -1,0 +1,680 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+
+{% block title %}
+{% translate "Facilities" %}
+{% endblock %}
+
+
+
+{% block content %}
+
+
+{% block extrastyle %}
+
+<style>
+
+
+.action-icons {
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+
+.icon-btn {
+
+    display:inline-flex;
+    justify-content:center;
+    align-items:center;
+
+    width:34px;
+    height:34px;
+
+    border-radius:8px;
+
+    text-decoration:none;
+    font-size:16px;
+
+    background:#f5f6f8;
+    color:#444;
+
+    transition:.2s;
+
+}
+
+
+.icon-btn:hover {
+
+    transform:translateY(-2px);
+
+    background:#fff;
+
+    box-shadow:
+    0 3px 10px rgba(0,0,0,.08);
+
+}
+
+
+.icon-btn.edit:hover {
+
+    color:#d39e00;
+
+}
+
+
+.icon-btn.delete:hover {
+
+    color:#dc3545;
+
+}
+
+
+
+.pagination {
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    gap:6px;
+
+    margin-top:20px;
+
+}
+
+
+
+.pagination a,
+.pagination span {
+
+    padding:6px 12px;
+
+    border:1px solid #ccc;
+
+    border-radius:5px;
+
+    text-decoration:none;
+
+}
+
+
+
+.pagination .current {
+
+    background:#0d6efd;
+
+    color:white;
+
+}
+
+
+
+.page-info {
+
+    text-align:center;
+
+    margin-top:10px;
+
+    color:#666;
+
+}
+
+
+
+</style>
+
+
+{% endblock extrastyle %}
+
+
+
+
+<div class="content">
+
+
+
+<!-- ================= HEADER ================= -->
+
+
+<div class="table-header">
+
+
+<div class="header-group">
+
+
+<form method="get">
+
+
+<input
+
+type="text"
+
+name="search"
+
+value="{{ search }}"
+
+placeholder="{% translate 'Search...' %}"
+
+>
+
+
+<button type="submit">
+
+🔍
+
+</button>
+
+
+</form>
+
+
+</div>
+
+
+
+
+
+<div class="header-group">
+
+
+<label>
+
+{% translate "Items" %}
+
+</label>
+
+
+
+<form method="get">
+
+
+<input type="hidden"
+name="search"
+value="{{ search }}">
+
+
+<select
+
+name="page_size"
+
+onchange="this.form.submit()"
+
+>
+
+
+<option value="10"
+{% if page_size == 10 %}
+selected
+{% endif %}
+>
+10
+</option>
+
+
+
+<option value="25"
+{% if page_size == 25 %}
+selected
+{% endif %}
+>
+25
+</option>
+
+
+
+<option value="50"
+{% if page_size == 50 %}
+selected
+{% endif %}
+>
+50
+</option>
+
+
+</select>
+
+
+</form>
+
+
+</div>
+
+
+
+
+
+<div class="header-group">
+
+
+<a href="{% url 'facility_create' %}"
+
+class="btn-blue">
+
++
+
+{% translate "Add Facility" %}
+
+</a>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<!-- ================= TABLE ================= -->
+
+
+<div class="table-scroll">
+
+
+<table id="mainTable">
+
+
+<thead>
+
+
+<tr>
+
+
+<th>
+{% translate "Name" %}
+</th>
+
+
+<th>
+{% translate "Responsible Person" %}
+</th>
+
+
+<th>
+{% translate "Telephone" %}
+</th>
+
+
+<th>
+{% translate "Email" %}
+</th>
+
+
+<th>
+{% translate "Address" %}
+</th>
+
+
+<th>
+{% translate "Postal Code" %}
+</th>
+
+
+<th>
+{% translate "National ID" %}
+</th>
+
+
+<th>
+{% translate "Economic Code" %}
+</th>
+
+
+<th>
+{% translate "Status" %}
+</th>
+
+
+<th>
+{% translate "Created" %}
+</th>
+
+
+<th>
+{% translate "Actions" %}
+</th>
+
+
+
+</tr>
+
+
+</thead>
+
+
+
+
+
+
+<tbody>
+
+
+
+{% for facility in facilities %}
+
+
+<tr>
+
+
+
+<td>
+
+{{ facility.name }}
+
+</td>
+
+
+
+
+<td>
+
+{{ facility.responsible_person }}
+
+</td>
+
+
+
+
+<td>
+
+{{ facility.telephone }}
+
+</td>
+
+
+
+
+<td>
+
+{{ facility.email|default:"-" }}
+
+</td>
+
+
+
+
+<td>
+
+{{ facility.address1 }}
+
+{% if facility.address2 %}
+
+<br>
+
+{{ facility.address2 }}
+
+{% endif %}
+
+</td>
+
+
+
+
+
+<td>
+
+{{ facility.postal_code|default:"-" }}
+
+</td>
+
+
+
+
+
+<td>
+
+{{ facility.national_id|default:"-" }}
+
+</td>
+
+
+
+
+
+<td>
+
+{{ facility.economic_code|default:"-" }}
+
+</td>
+
+
+
+
+
+<td>
+
+
+{% if facility.is_active %}
+
+<span class="badge bg-success">
+
+{% translate "Active" %}
+
+</span>
+
+
+{% else %}
+
+<span class="badge bg-secondary">
+
+{% translate "Inactive" %}
+
+</span>
+
+
+{% endif %}
+
+
+</td>
+
+
+
+
+
+<td>
+
+{{ facility.created_at|date:"Y-m-d" }}
+
+</td>
+
+
+
+
+
+
+
+<td class="action-icons">
+
+
+<a
+
+href="{% url 'facility_update' facility.id %}"
+
+class="icon-btn edit"
+
+title="{% translate 'Edit' %}"
+
+>
+
+✏️
+
+</a>
+
+
+
+
+<a
+
+href="{% url 'facility_delete' facility.id %}"
+
+class="icon-btn delete"
+
+title="{% translate 'Delete' %}"
+
+>
+
+🗑️
+
+</a>
+
+
+
+</td>
+
+
+
+
+</tr>
+
+
+
+{% empty %}
+
+
+<tr>
+
+
+<td colspan="11">
+
+{% translate "No facilities found." %}
+
+</td>
+
+
+</tr>
+
+
+{% endfor %}
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+
+
+
+
+<!-- ================= PAGINATION ================= -->
+
+
+<div class="pagination">
+
+
+
+{% if facilities.has_previous %}
+
+
+<a href="?page={{ facilities.previous_page_number }}&page_size={{ page_size }}&search={{ search }}">
+
+{% translate "Previous" %}
+
+</a>
+
+
+{% endif %}
+
+
+
+
+
+
+{% for num in facilities.paginator.page_range %}
+
+
+{% if facilities.number == num %}
+
+
+<span class="current">
+
+{{ num }}
+
+</span>
+
+
+
+{% elif num > facilities.number|add:"-3" and num < facilities.number|add:"3" %}
+
+
+<a href="?page={{ num }}&page_size={{ page_size }}&search={{ search }}">
+
+{{ num }}
+
+</a>
+
+
+{% endif %}
+
+
+
+{% endfor %}
+
+
+
+
+
+{% if facilities.has_next %}
+
+
+<a href="?page={{ facilities.next_page_number }}&page_size={{ page_size }}&search={{ search }}">
+
+
+{% translate "Next" %}
+
+
+</a>
+
+
+{% endif %}
+
+
+
+
+</div>
+
+
+
+
+
+<div class="page-info">
+
+
+{{ facilities.number }}
+
+{% translate "of" %}
+
+{{ facilities.paginator.num_pages }}
+
+
+(
+
+{{ facilities.paginator.count }}
+
+{% translate "records" %}
+
+)
+
+
+</div>
+
+
+
+</div>
+
+
+
+{% endblock %}

@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     "laboratory",
     "operations",
     'common',
-   
+    "facilities",
+    "reference",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+
+
+
+{% block title %}
+
+{% trans "Delete Facility" %}
+
+{% endblock %}
+
+
+
+
+{% block content %}
+
+
+
+<div class="form-card">
+
+
+<h2>
+
+{% trans "Delete Facility" %}
+
+</h2>
+
+
+
+<p>
+
+{% blocktrans %}
+
+Are you sure you want to delete "{{ facility }}"?
+
+{% endblocktrans %}
+
+</p>
+
+
+
+
+<form method="post">
+
+
+{% csrf_token %}
+
+
+
+<button 
+type="submit"
+class="btn btn-danger">
+
+{% trans "Delete" %}
+
+</button>
+
+
+
+
+<a 
+
+href="{% url 'facility_list' %}"
+
+class="btn btn-secondary">
+
+
+{% trans "Cancel" %}
+
+
+</a>
+
+
+
+</form>
+
+
+</div>
+
+
+
+{% endblock %}

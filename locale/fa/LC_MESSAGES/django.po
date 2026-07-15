@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-15 06:30+0000\n"
+"POT-Creation-Date: 2026-07-15 13:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,12 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "Import CSV"
-msgstr "ورود از فایل CSV"
-
-msgid "CSV File"
-msgstr "فایل CSV"
-
 #: IRWA/settings.py:173
 msgid "فارسی"
 msgstr ""
@@ -32,19 +25,31 @@ msgstr ""
 msgid "English"
 msgstr ""
 
+#: facilities/forms.py:142 templates/facilities/facility_delete.html:70
+msgid "Cancel"
+msgstr "انصراف"
+
+#: facilities/forms.py:148
+msgid "Save"
+msgstr "ذخیره"
+
+#: facilities/forms.py:157
+msgid "CSV File"
+msgstr "فایل CSV"
+
 #: facilities/models.py:11
 msgid "Facility Name"
 msgstr "نام مرکز"
 
-#: facilities/models.py:16 templates/facilities/facility_list.html:296
+#: facilities/models.py:16 templates/facilities/facility_list.html:255
 msgid "Responsible Person"
 msgstr "مسئول"
 
-#: facilities/models.py:21 templates/facilities/facility_list.html:301
+#: facilities/models.py:21 templates/facilities/facility_list.html:260
 msgid "Telephone"
 msgstr "تلفن"
 
-#: facilities/models.py:26 templates/facilities/facility_list.html:306
+#: facilities/models.py:26 templates/facilities/facility_list.html:265
 msgid "Email"
 msgstr "ایمیل"
 
@@ -56,43 +61,45 @@ msgstr "آدرس اول"
 msgid "Address Line 2"
 msgstr "آدرس دوم"
 
-#: facilities/models.py:42 templates/facilities/facility_list.html:316
+#: facilities/models.py:42 templates/facilities/facility_list.html:275
 msgid "Postal Code"
 msgstr "کد پستی"
 
-#: facilities/models.py:48 templates/facilities/facility_list.html:321
+#: facilities/models.py:48 templates/facilities/facility_list.html:280
 msgid "National ID"
 msgstr "شناسه ملی"
 
-#: facilities/models.py:54 templates/facilities/facility_list.html:326
+#: facilities/models.py:54 templates/facilities/facility_list.html:285
 msgid "Economic Code"
 msgstr "کد اقتصادی"
 
-#: facilities/models.py:60 templates/facilities/facility_list.html:458
-msgid "Active"
-msgstr "فعال"
-
-#: facilities/models.py:74
+#: facilities/models.py:70
 msgid "Facility"
 msgstr "مرکز"
 
-#: facilities/models.py:75 templates/base.html:79
+#: facilities/models.py:71 templates/base.html:79
 #: templates/facilities/facility_list.html:7
 #: templates/operations/operations_home.html:124
 msgid "Facilities"
 msgstr "مراکز"
 
-#: facilities/views.py:76
+#: facilities/views.py:156
 msgid "Facility created successfully."
 msgstr "مرکز با موفقیت ایجاد شد."
 
-#: facilities/views.py:116
+#: facilities/views.py:196
 msgid "Facility updated successfully."
 msgstr "اطلاعات مرکز با موفقیت بروزرسانی شد."
 
-#: facilities/views.py:152
+#: facilities/views.py:232
 msgid "Facility deleted."
 msgstr "مرکز حذف شد."
+
+#: facilities/views.py:327
+#, fuzzy, python-format
+#| msgid "Facility created successfully."
+msgid "%(count)s facilities imported successfully."
+msgstr "مرکز با موفقیت ایجاد شد."
 
 #: templates/ reference/radionuclide_list.html:5
 #: reference/radionuclide_list.html:12
@@ -149,15 +156,21 @@ msgstr "خروج"
 msgid "Login"
 msgstr "ورود"
 
-#: templates/facilities/facility_create.html:9
-#: templates/facilities/facility_create.html:27
-#: templates/facilities/facility_list.html:258
+#: templates/facilities/facility_create.html:8
+#: templates/facilities/facility_create.html:24
+#: templates/facilities/facility_list.html:217
 msgid "Add Facility"
 msgstr "افزودن مرکز"
 
-#: templates/facilities/facility_create.html:33
+#: templates/facilities/facility_create.html:29
 msgid "Create a new facility record"
 msgstr "ثبت مرکز جدید"
+
+#: templates/facilities/facility_create.html:38
+#: templates/facilities/facility_import.html:10
+#: templates/facilities/facility_import.html:45
+msgid "Import CSV"
+msgstr "ورود از فایل CSV"
 
 #: templates/facilities/facility_delete.html:10
 #: templates/facilities/facility_delete.html:26
@@ -178,70 +191,49 @@ msgstr ""
 "\n"
 
 #: templates/facilities/facility_delete.html:56
-#: templates/facilities/facility_list.html:519
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:499
 msgid "Delete"
 msgstr "حذف"
 
-#: templates/facilities/facility_delete.html:70
-msgid "Cancel"
-msgstr "انصراف"
+#: templates/facilities/facility_import.html:27
+#, fuzzy
+#| msgid "Facilities"
+msgid "Import Facilities"
+msgstr "مراکز"
 
-#: templates/facilities/facility_list.html:159
+#: templates/facilities/facility_import.html:32
+msgid "Upload a CSV file containing facility records."
+msgstr " فایل CSV حاوی سوابق مراکز را بارگذاری کنید."
+
+#: templates/facilities/facility_list.html:114
 msgid "Search..."
 msgstr "جستجو..."
 
-#: templates/facilities/facility_list.html:185
-msgid "Items"
-msgstr "آیتمها"
+#: templates/facilities/facility_list.html:129
+#, fuzzy
+#| msgid "Search..."
+msgid "Search"
+msgstr "جستجو..."
 
-#: templates/facilities/facility_list.html:291
+#: templates/facilities/facility_list.html:154
+msgid "Items"
+msgstr "تعداد آیتم در صفحه"
+
+#: templates/facilities/facility_list.html:250
 msgid "Name"
 msgstr "نام مرکز"
 
-#: templates/facilities/facility_list.html:311
+#: templates/facilities/facility_list.html:270
 msgid "Address"
 msgstr "آدرس"
 
-#: templates/facilities/facility_list.html:331
-msgid "Status"
-msgstr "وضعیت"
-
-#: templates/facilities/facility_list.html:336
-msgid "Created"
-msgstr "تاریخ ثبت"
-
-#: templates/facilities/facility_list.html:341
+#: templates/facilities/facility_list.html:293
 msgid "Actions"
 msgstr "اقدامات"
 
-#: templates/facilities/facility_list.html:467
-msgid "Inactive"
-msgstr "غیرفعال"
-
-#: templates/facilities/facility_list.html:502
-msgid "Edit"
-msgstr "ویرایش"
-
-#: templates/facilities/facility_list.html:546
+#: templates/facilities/facility_list.html:429
 msgid "No facilities found."
 msgstr "مرکزی وجود ندارد."
-
-#: templates/facilities/facility_list.html:584
-msgid "Previous"
-msgstr "قبلی"
-
-#: templates/facilities/facility_list.html:636
-msgid "Next"
-msgstr "بعدی"
-
-#: templates/facilities/facility_list.html:658
-msgid "of"
-msgstr "از"
-
-#: templates/facilities/facility_list.html:667
-msgid "records"
-msgstr "مراکز"
 
 #: templates/facilities/facility_update.html:10
 #: templates/facilities/facility_update.html:28
@@ -261,14 +253,10 @@ msgid "Select a service to continue"
 msgstr "برای ادامه، به صفحه مربوطه مراجعه کنید"
 
 #: templates/home.html:156
-
-
 msgid "Create and manage operational services"
 msgstr "شروع خدمت جدید"
 
 #: templates/home.html:174
-
-
 msgid "Manage contracts"
 msgstr "امور قراردادها"
 
@@ -277,8 +265,6 @@ msgid "Reports and analytics"
 msgstr "گزارش"
 
 #: templates/operations/operations_home.html:110
-
-
 msgid "Select an operation to continue."
 msgstr "برای ادامه یک عملیات انتخاب کنید"
 
@@ -287,8 +273,6 @@ msgid "View and manage customer facilities."
 msgstr "مشاهده و ویرایش مراکز"
 
 #: templates/operations/operations_home.html:142
-
-
 msgid "Service Requests"
 msgstr "خدمات موجود"
 
@@ -313,8 +297,6 @@ msgid "Register received radioactive sources."
 msgstr "ثبت دریافت چشمه"
 
 #: templates/operations/operations_home.html:196
-
-
 msgid "Sell Source"
 msgstr "فروش چشمه ها"
 
@@ -1571,9 +1553,35 @@ msgstr ""
 msgid "Connect, get help, or contribute"
 msgstr ""
 
+#~ msgid "Active"
+#~ msgstr "فعال"
+
+#~ msgid "Status"
+#~ msgstr "وضعیت"
+
+#~ msgid "Created"
+#~ msgstr "تاریخ ثبت"
+
+#~ msgid "Inactive"
+#~ msgstr "غیرفعال"
+
+#~ msgid "Edit"
+#~ msgstr "ویرایش"
+
+#~ msgid "Previous"
+#~ msgstr "قبلی"
+
+#~ msgid "Next"
+#~ msgstr "بعدی"
+
+#~ msgid "of"
+#~ msgstr "از"
+
+#~ msgid "records"
+#~ msgstr "مراکز"
+
 #~ msgid "New Services"
 #~ msgstr "شروع خدمت جدید"
-
 
 #~| msgid "New Services"
 #~ msgid "View services"

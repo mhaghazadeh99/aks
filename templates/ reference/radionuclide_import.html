@@ -1,0 +1,38 @@
+<!-- reference/radionuclide_import.html -->
+
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block content %}
+
+<h2>{% trans "Import Radionuclides" %}</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form|crispy }}
+</form>
+
+{% if report %}
+<hr>
+
+<h3>{% trans "Import Report" %}</h3>
+
+<ul>
+    <li>{% trans "Created" %}: {{ report.created }}</li>
+    <li>{% trans "Updated" %}: {{ report.updated }}</li>
+    <li>{% trans "Skipped" %}: {{ report.skipped }}</li>
+</ul>
+
+{% if report.errors %}
+<h4 style="color:red;">{% trans "Errors" %}</h4>
+<ul>
+    {% for error in report.errors %}
+        <li>{{ error }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

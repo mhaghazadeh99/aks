@@ -8,11 +8,33 @@
 {% block content %}
 
 <div class="page-header">
+    <h2>{% trans "Radionuclides" %}</h2>
 
-<h2>{% trans "Radionuclides" %}</h2>
-
-<p>{% trans "This page will contain the radionuclide database." %}</p>
-
+    <a href="{% url 'radionuclide_add' %}" class="btn btn-primary">Add</a>
+    <a href="{% url 'radionuclide_import_csv' %}" class="btn btn-secondary">Import CSV</a>
 </div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Half-life (s)</th>
+            <th>D-value (Bq)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for n in nuclides %}
+        <tr>
+            <td>{{ n.name }}</td>
+            <td>{{ n.half_life }}</td>
+            <td>{{ n.d_value_bq }}</td>
+            <td>
+                <a href="{% url 'radionuclide_edit' n.id %}">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 {% endblock %}

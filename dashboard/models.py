@@ -5,6 +5,7 @@ from common.utils.physics import LN2, mci_to_bq, bq_to_mci
 from common.utils.fileValidator import validate_attachment
 from contract.models import Contract
 from simple_history.models import HistoricalRecords
+from reference.models import Nuclides
 # Create your models here.
 
 from django.contrib.auth.models import User
@@ -37,18 +38,6 @@ class SourceForm(models.TextChoices):
     LIQUID = "Liquid", "Liquid"
 
 
-# ---- NUCLIDE ----
-class Nuclides(models.Model):
-    name = models.CharField(max_length=8)
-
-    # store in seconds
-    half_life = models.FloatField()
-
-    # D-value MUST be in Bq
-    d_value_bq = models.FloatField()
-
-    def __str__(self):
-        return self.name
 
 # -----------------------------
 # NEW: Source type for filtering

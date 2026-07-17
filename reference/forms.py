@@ -7,6 +7,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.utils.translation import gettext_lazy as _
 
+# reference/forms.py
 
 class NuclideForm(forms.ModelForm):
     class Meta:

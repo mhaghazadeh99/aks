@@ -6,13 +6,22 @@ from django.contrib import messages
 
 from .utils import parse_float, parse_int, parse_bool
 
+from django.core.paginator import Paginator
+
 def radionuclide_list(request):
-    nuclides = Nuclides.objects.all()
+    qs = Nuclides.objects.all().order_by("name")
+
+    paginator = Paginator(qs, 25)  # 25 per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     return render(request, "reference/radionuclide_list.html", {
-        "nuclides": nuclides
+        "nuclides": page_obj
     })
 
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .forms import NuclideForm
 
 def radionuclide_add(request):
     form = NuclideForm(request.POST or None)
@@ -25,14 +34,20 @@ def radionuclide_add(request):
 
 
 def radionuclide_edit(request, pk):
-    nuclide = get_object_or_404(Nuclides, pk=pk)
-    form = NuclideForm(request.POST or None, instance=nuclide)
+    obj = get_object_or_404(Nuclides, pk=pk)
+    form = NuclideForm(request.POST or None, instance=obj)
 
     if form.is_valid():
         form.save()
         return redirect("radionuclide_list")
 
     return render(request, "reference/radionuclide_form.html", {"form": form})
+
+
+def radionuclide_delete(request, pk):
+    obj = get_object_or_404(Nuclides, pk=pk)
+    obj.delete()
+    return redirect("radionuclide_list")
 
 
 

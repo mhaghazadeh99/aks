@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Radionuclides" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h2>{% trans "Radionuclides" %}</h2>
+
+    <a href="{% url 'radionuclide_import' %}" class="btn btn-primary">
+        {% trans "Import CSV" %}
+    </a>
+
+    <a href="{% url 'radionuclide_add' %}" class="btn btn-success">
+        {% trans "Add New" %}
+    </a>
+</div>
+
+<div class="table-responsive">
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>{% trans "Nuclide" %}</th>
+            <th>{% trans "Half-life (s)" %}</th>
+            <th>{% trans "D-value (Bq)" %}</th>
+            <th>{% trans "Decay Mode" %}</th>
+            <th>{% trans "Gamma (MeV)" %}</th>
+            <th>{% trans "IAEA Cat" %}</th>
+            <th>{% trans "Actions" %}</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for obj in nuclides %}
+        <tr>
+            <td>{{ obj.name }}</td>
+            <td>{{ obj.half_life }}</td>
+            <td>{{ obj.d_value_bq }}</td>
+            <td>{{ obj.decay_mode }}</td>
+            <td>{{ obj.gamma_energy_mev }}</td>
+            <td>{{ obj.iaea_category }}</td>
+
+            <td>
+                <div class="action-icons">
+                    <a href="{% url 'radionuclide_edit' obj.id %}" class="icon-btn edit">
+                        ✏️
+                    </a>
+                    <a href="{% url 'radionuclide_delete' obj.id %}" class="icon-btn history">
+                        🗑️
+                    </a>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">{% trans "No data available" %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    {% if nuclides.has_previous %}
+        <a href="?page={{ nuclides.previous_page_number }}">«</a>
+    {% endif %}
+
+    <span class="current">
+        {{ nuclides.number }} / {{ nuclides.paginator.num_pages }}
+    </span>
+
+    {% if nuclides.has_next %}
+        <a href="?page={{ nuclides.next_page_number }}">»</a>
+    {% endif %}
+</div>
+
+{% endblock %}

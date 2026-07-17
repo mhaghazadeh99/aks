@@ -86,8 +86,8 @@ DEBUG = True
 
 ROOT_URLCONF = 'IRWA.urls'
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = 'login'
 
 HOME_TEMPLATES = os.path.join(BASE_DIR, 'templates')
 TEMPLATES = [

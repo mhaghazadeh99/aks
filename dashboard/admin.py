@@ -7,7 +7,7 @@ from .models import *
 
 # admin.py
 
-admin.site.register(Nuclides)
+
 # admin.site.register(HideShowFilter)
 # admin.site.register(ModelFilter)
 

@@ -130,14 +130,27 @@ No documents uploaded.
 
 
 
-<a 
+<!-- <a 
 href="{% url 'operation_ocr' operation.pk %}"
 class="btn btn-success">
 
-Continue to OCR
+Continue
 
-</a>
+</a> -->
+<form
+    method="post"
+    action="{% url 'operation_ocr' operation.pk %}"
+>
+    {% csrf_token %}
 
+    <button
+        class="btn btn-primary">
+
+        Continue
+
+    </button>
+
+</form>
 
 </div>
 

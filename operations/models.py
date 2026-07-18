@@ -387,6 +387,45 @@ class OperationAttachment(models.Model):
         return self.get_attachment_type_display()
 
 
+
+class OperationOCR(models.Model):
+
+    operation = models.OneToOneField(
+        Operation,
+        related_name="ocr",
+        on_delete=models.CASCADE,
+    )
+
+    raw_text = models.TextField(
+        blank=True,
+    )
+
+    extracted_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    confidence = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    reviewed = models.BooleanField(
+        default=False,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = _("Operation OCR")
+        verbose_name_plural = _("Operation OCR")
 # ============================================================
 # Operation Signature
 # ============================================================

@@ -26,11 +26,11 @@ path(
     name="operation_documents"
 ),
 
-# path(
-#     "<int:pk>/ocr/",
-#     views.operation_ocr,
-#     name="operation_ocr"
-# ),
+path(
+    "<int:pk>/ocr/",
+    views.operation_ocr,
+    name="operation_ocr"
+),
 
 # path(
 #     "<int:pk>/review/",

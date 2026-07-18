@@ -8,3 +8,6 @@ crispy-bootstrap5==2026.3
 
 Babel
 persiantools
+PaddleOCR
+PIL
+pdf2image

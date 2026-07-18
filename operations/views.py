@@ -1,5 +1,8 @@
 # operations/views.py
+from .models import OperationOCR
 
+from .services.parser import parse_text
+from .services.ocr import run_attachment_ocr
 from django.shortcuts import render, redirect
 
 from django.contrib import messages
@@ -12,11 +15,12 @@ from django.shortcuts import get_object_or_404
 
 from .forms import OperationAttachmentUploadForm
 from .constants import REQUIRED_DOCUMENTS
+
 from .models import (
     Operation,
     OperationAttachment,
+    OperationStatus,
 )
-
 from .forms import OperationForm
 
 
@@ -184,4 +188,72 @@ def operation_documents(request, pk):
                 operation.attachments.all(),
 
         }
+    )
+
+
+@login_required
+def operation_ocr(request, pk):
+
+    operation = get_object_or_404(
+        Operation,
+        pk=pk
+    )
+
+    if request.method != "POST":
+        return redirect(
+            "operation_documents",
+            pk=pk
+        )
+
+    attachments = operation.attachments.all()
+
+    operation.status = OperationStatus.OCR_RUNNING
+    operation.save(update_fields=["status"])
+
+    full_text = ""
+
+    confidence_scores = []
+
+    for attachment in attachments:
+
+        text, conf = run_attachment_ocr(
+            attachment
+        )
+
+        if text:
+            full_text += "\n" + text
+
+        confidence_scores.append(conf)
+
+    parsed = parse_text(full_text)
+
+    ocr, created = OperationOCR.objects.get_or_create(
+        operation=operation
+    )
+
+    ocr.raw_text = full_text
+    ocr.extracted_data = parsed
+
+    if confidence_scores:
+        ocr.confidence = (
+            sum(confidence_scores) /
+            len(confidence_scores)
+        ) * 100
+
+    ocr.save()
+
+    operation.status = (
+        OperationStatus.WAITING_REVIEW
+    )
+
+    operation.save(update_fields=["status"])
+
+    messages.success(
+        request,
+        _("OCR completed successfully.")
+    )
+
+    return redirect(
+        "operation_review",
+        pk=operation.pk
     )

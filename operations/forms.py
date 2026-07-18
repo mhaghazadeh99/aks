@@ -313,3 +313,24 @@ OperationSignatureFormSet = inlineformset_factory(
     extra=1,
 
     can_delete=True,)
+
+
+
+from .models import OperationOCR
+
+
+class OperationOCRForm(forms.ModelForm):
+
+    class Meta:
+
+        model = OperationOCR
+
+        fields = [
+            "extracted_data",
+        ]
+
+        widgets = {
+
+            "extracted_data": forms.HiddenInput()
+
+        }

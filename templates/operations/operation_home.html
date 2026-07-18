@@ -132,18 +132,18 @@
 
 
 
-<a href="#" class="operation-card">
+<a href="{% url 'operation_create' %}" class="operation-card">
 
 <div class="operation-icon">
-📂
+➕
 </div>
 
 <h3>
-{% trans "Service Requests" %}
+{% trans "New Operation" %}
 </h3>
 
 <p>
-{% trans "View and manage all service requests." %}
+{% trans "Create a new radioactive source or waste operation." %}
 </p>
 
 </a>
@@ -161,7 +161,7 @@
 </h3>
 
 <p>
-{% trans "Register incoming radioactive waste." %}
+{% trans "View received Waste." %}
 </p>
 
 </a>
@@ -179,7 +179,7 @@
 </h3>
 
 <p>
-{% trans "Register received radioactive sources." %}
+{% trans "View received sources." %}
 </p>
 
 </a>
@@ -197,7 +197,7 @@
 </h3>
 
 <p>
-{% trans "Register the sale or transfer of a radioactive source." %}
+{% trans "View sold sources." %}
 </p>
 
 </a>
@@ -215,7 +215,7 @@
 </h3>
 
 <p>
-{% trans "Issue a license for a new radioactive source." %}
+{% trans "View issued license for radioactive sources." %}
 </p>
 
 </a>

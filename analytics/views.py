@@ -141,5 +141,5 @@ def time_chart(request):
     })
 
 
-def dashboard(request):
-    return render(request, "analytics/dashboard.html")
+def analytics_home(request):
+    return render(request, "analytics/analytics_home.html")

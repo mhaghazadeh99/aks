@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.dashboard, name="analytics_home"),
+    path("", views.analytics_home, name="analytics_home"),
 
     # APIs
     path("models/", views.models),

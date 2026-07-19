@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from dashboard.models import ActivityUnit   # or wherever your ActivityUnit choices are
 from facilities.models import Facility
 
 from reference.models import Nuclides
@@ -167,48 +168,76 @@ class LicenseAttachment(models.Model):
 
 
 
-class LicenseDSRS(models.Model):
+
+
+
+class LicenseSource(models.Model):
 
     license = models.ForeignKey(
         LicenseRequest,
         on_delete=models.CASCADE,
-        related_name="license_dsrss",
+        related_name="sources",
+        verbose_name=_("License"),
     )
 
     nuclide = models.ForeignKey(
         Nuclides,
         on_delete=models.PROTECT,
+        verbose_name=_("Nuclide"),
     )
 
     serial_number = models.CharField(
-        max_length=100,
+        _("Serial Number"),
+        max_length=150,
         blank=True,
-        null=True,
     )
 
     activity = models.DecimalField(
-        max_digits=14,
-        decimal_places=4,
-        blank=True,
+        _("Activity"),
+        max_digits=15,
+        decimal_places=3,
         null=True,
+        blank=True,
+    )
+
+    activity_unit = models.CharField(
+        _("Activity Unit"),
+        max_length=20,
+        choices=ActivityUnit.choices,
+        default=ActivityUnit.mCi,
     )
 
     activity_date = models.DateField(
-        blank=True,
+        _("Activity Date"),
         null=True,
+        blank=True,
     )
 
-    dsrs = models.ForeignKey(
-        "dashboard.DSRS",
-        on_delete=models.SET_NULL,
+    notes = models.TextField(
+        _("Notes"),
         blank=True,
+    )
+
+    created_dsrs = models.ForeignKey(
+        "dashboard.DSRS",
         null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="license_sources",
     )
 
     class Meta:
 
-        ordering = ["serial_number"]
+        ordering = [
+
+            "id",
+
+        ]
+
+        verbose_name = _("Requested Source")
+
+        verbose_name_plural = _("Requested Sources")
 
     def __str__(self):
 
-        return f"{self.nuclide} - {self.serial_number}"
+        return f"{self.nuclide}"

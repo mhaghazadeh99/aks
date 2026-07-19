@@ -1,410 +1,509 @@
 {% extends "base.html" %}
 
 {% load i18n %}
+{% load crispy_forms_tags %}
 
 {% block title %}
-
 {% trans "New License Request" %}
-
 {% endblock %}
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container-fluid py-4">
 
-<div class="card shadow">
+    <div class="row justify-content-center">
 
-<div class="card-header">
+        <div class="col-xl-10">
 
-<h3>
+            <div class="card shadow-sm">
 
-{% trans "New License Request" %}
+                <div class="card-header">
 
-</h3>
+                    <h3 class="mb-0">
 
-</div>
+                        {% trans "New License Request" %}
 
-<div class="card-body">
+                    </h3>
 
-<form
+                </div>
 
-method="post"
+                <div class="card-body">
 
-enctype="multipart/form-data"
+                    <form
+                        method="post"
+                        enctype="multipart/form-data"
+                    >
 
->
+                        {% csrf_token %}
 
-{% csrf_token %}
+                        <!-- ===================================================== -->
+                        <!-- 1 GENERAL INFORMATION -->
+                        <!-- ===================================================== -->
 
-<!-- ===================================================== -->
-<!-- GENERAL INFORMATION -->
-<!-- ===================================================== -->
+                        <div class="card mb-4">
 
-<h5 class="mb-3">
+                            <div class="card-header">
 
-① {% trans "General Information" %}
+                                <h5 class="mb-0">
 
-</h5>
+                                    ① {% trans "General Information" %}
 
-<div class="row">
+                                </h5>
 
-<div class="col-md-6">
+                            </div>
 
-{{ form.letter_number.label_tag }}
+                            <div class="card-body">
 
-{{ form.letter_number }}
+                                {% crispy request_form %}
 
-</div>
+                            </div>
 
-<div class="col-md-6">
+                        </div>
 
-{{ form.letter_date.label_tag }}
 
-{{ form.letter_date }}
+                        <!-- ===================================================== -->
+                        <!-- 2 ATTACHMENTS -->
+                        <!-- ===================================================== -->
 
-</div>
+                        <div class="card mb-4">
 
-</div>
+                            <div class="card-header">
 
-<hr>
+                                <h5 class="mb-0">
 
-<!-- ===================================================== -->
-<!-- ATTACHMENTS -->
-<!-- ===================================================== -->
+                                    ② {% trans "Attachments" %}
 
-<h5>
+                                </h5>
 
-② {% trans "Attachments" %}
+                            </div>
 
-</h5>
+                            <div class="card-body">
 
-<div class="row">
+                                {% crispy attachment_form %}
 
-<div class="col-md-6">
+                            </div>
 
-{{ attachment_form.letter.label_tag }}
+                        </div>
 
-{{ attachment_form.letter }}
 
-</div>
+                        <!-- ===================================================== -->
+                        <!-- 3 FACILITY -->
+                        <!-- ===================================================== -->
 
-<div class="col-md-6">
+                        <div class="card mb-4">
 
-{{ attachment_form.commitment.label_tag }}
+                            <div class="card-header">
 
-{{ attachment_form.commitment }}
+                                <h5 class="mb-0">
 
-</div>
+                                    ③ {% trans "Facility" %}
 
-</div>
+                                </h5>
 
-<br>
+                            </div>
 
-<div class="row">
+                            <div class="card-body">
 
-<div class="col-md-6">
+                                <div class="row align-items-end">
 
-{{ attachment_form.permit.label_tag }}
+                                    <div class="col-lg-8">
 
-{{ attachment_form.permit }}
+                                        {{ request_form.facility|as_crispy_field }}
 
-</div>
+                                    </div>
 
-<div class="col-md-6">
+                                    <div class="col-lg-4">
 
-{{ attachment_form.inquiry.label_tag }}
+                                        <a
+                                            id="editFacilityBtn"
+                                            class="btn btn-warning w-100"
+                                            target="_self"
+                                            href="#"
+                                        >
 
-{{ attachment_form.inquiry }}
+                                            {% trans "Edit Selected Facility" %}
 
-</div>
+                                        </a>
 
-</div>
+                                    </div>
 
-<br>
+                                </div>
 
-<div class="row">
+                            </div>
 
-<div class="col-md-6">
+                        </div>
 
-{{ attachment_form.other.label_tag }}
 
-{{ attachment_form.other }}
+                        <!-- ===================================================== -->
+                        <!-- 4 REQUESTED SOURCES -->
+                        <!-- ===================================================== -->
 
-</div>
+                        <div class="card mb-4">
 
-</div>
+                            <div class="card-header">
 
-<hr>
+                                <h5 class="mb-0">
 
-<!-- ===================================================== -->
-<!-- FACILITY -->
-<!-- ===================================================== -->
+                                    ④ {% trans "Requested Sources" %}
 
-<h5>
+                                </h5>
 
-③ {% trans "Facility" %}
+                            </div>
 
-</h5>
+                            <div class="card-body">
 
-<div class="row">
+                                <div class="row align-items-end">
 
-<div class="col-md-8">
+                                    <div class="col-lg-5">
 
-{{ form.facility.label_tag }}
+                                        {{ source_form.nuclide|as_crispy_field }}
 
-{{ form.facility }}
+                                    </div>
 
-</div>
+                                    <div class="col-lg-3">
 
-<div class="col-md-4">
+                                        {{ source_form.quantity|as_crispy_field }}
 
-<br>
+                                    </div>
 
-<a
+                                    <div class="col-lg-2">
 
-id="editFacilityBtn"
+                                        <button
+                                            type="button"
+                                            class="btn btn-success w-100"
+                                            onclick="addSources();"
+                                        >
 
-class="btn btn-warning"
+                                            {% trans "Add" %}
 
-target="_blank"
+                                        </button>
 
->
+                                    </div>
 
-{% trans "Edit Facility" %}
+                                </div>
 
-</a>
+                                <div class="table-responsive mt-4">
 
-</div>
+                                    <table class="table table-bordered table-hover align-middle">
 
-</div>
+                                        <thead class="table-light">
 
-<hr>
+                                            <tr>
 
-<!-- ===================================================== -->
-<!-- NUCLIDES -->
-<!-- ===================================================== -->
+                                                <th style="width:70px">
 
-<h5>
+                                                    #
 
-④ {% trans "Nuclides" %}
+                                                </th>
 
-</h5>
+                                                <th>
 
-<div class="row mb-3">
+                                                    {% trans "Nuclide" %}
 
-<div class="col-md-8">
+                                                </th>
 
-{{ nuclide_form.nuclide }}
+                                                <th style="width:150px">
 
-</div>
+                                                    {% trans "Remove" %}
 
-<div class="col-md-4">
+                                                </th>
 
-<button
+                                            </tr>
 
-type="button"
+                                        </thead>
 
-class="btn btn-success"
+                                        <tbody id="sourceTable">
 
-onclick="addNuclide()"
+                                        </tbody>
 
->
+                                    </table>
 
-{% trans "Add" %}
+                                </div>
 
-</button>
+                                <div id="hiddenSources">
 
-</div>
+                                </div>
 
-</div>
+                            </div>
 
-<table class="table table-bordered">
+                        </div>
 
-<thead>
 
-<tr>
+                        <!-- ===================================================== -->
+                        <!-- BUTTONS -->
+                        <!-- ===================================================== -->
 
-<th>
+                        <div class="d-flex justify-content-end gap-2">
 
-{% trans "Nuclide" %}
+                            <a
+                                href="{% url 'license_list' %}"
+                                class="btn btn-secondary"
+                            >
 
-</th>
+                                {% trans "Cancel" %}
 
-<th width="120">
+                            </a>
 
-{% trans "Remove" %}
+                            <button
+                                class="btn btn-warning"
+                                type="submit"
+                                name="draft"
+                            >
 
-</th>
+                                {% trans "Save Draft" %}
 
-</tr>
+                            </button>
 
-</thead>
+                            <button
+                                class="btn btn-primary"
+                                type="submit"
+                            >
 
-<tbody id="nuclideTable">
+                                {% trans "Save & Continue" %}
 
-</tbody>
+                            </button>
 
-</table>
+                        </div>
 
-<div id="hiddenNuclides"></div>
+                    </form>
 
-<hr>
+                </div>
 
-<!-- ===================================================== -->
-<!-- BUTTONS -->
-<!-- ===================================================== -->
+            </div>
 
-<div class="text-end">
+        </div>
 
-<a
-
-href="{% url 'license_list' %}"
-
-class="btn btn-secondary"
-
->
-
-{% trans "Cancel" %}
-
-</a>
-
-<button
-
-type="submit"
-
-name="draft"
-
-class="btn btn-warning"
-
->
-
-{% trans "Save Draft" %}
-
-</button>
-
-<button
-
-type="submit"
-
-class="btn btn-primary"
-
->
-
-{% trans "Save & Continue" %}
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
+    </div>
 
 </div>
 
 <script>
 
-function addNuclide(){
+let sourceCounter = 0;
+
+function addSources(){
 
     const select =
         document.getElementById("id_nuclide");
 
-    if(!select.value)
-        return;
-
-    if(document.getElementById(
-        "row_"+select.value))
-        return;
-
-    let tbody =
-        document.getElementById(
-            "nuclideTable"
+    const qty =
+        parseInt(
+            document.getElementById("id_quantity").value
         );
 
-    let row =
-        document.createElement("tr");
+    if(!select.value){
 
-    row.id =
-        "row_"+select.value;
-
-    row.innerHTML =
-
-    `<td>${select.options[select.selectedIndex].text}</td>
-
-    <td>
-
-    <button
-
-    type="button"
-
-    class="btn btn-danger btn-sm"
-
-    onclick="removeNuclide('${select.value}')"
-
-    >
-
-    ✖
-
-    </button>
-
-    </td>`;
-
-    tbody.appendChild(row);
-
-    let hidden =
-        document.createElement("input");
-
-    hidden.type="hidden";
-
-    hidden.name="nuclides";
-
-    hidden.value=select.value;
-
-    hidden.id="hidden_"+select.value;
-
-    document
-        .getElementById(
-            "hiddenNuclides"
-        )
-        .appendChild(hidden);
-
-}
-
-function removeNuclide(id){
-
-    document
-        .getElementById(
-            "row_"+id
-        )
-        .remove();
-
-    document
-        .getElementById(
-            "hidden_"+id
-        )
-        .remove();
-
-}
-
-document.getElementById("id_facility").addEventListener(
-
-"change",
-
-function(){
-
-    let id=this.value;
-
-    if(id){
-
-        document.getElementById("editFacilityBtn").href=
-
-        "/facilities/"+id+"/edit/";
+        return;
 
     }
 
-});
+    for(let i=0;i<qty;i++){
+
+        sourceCounter++;
+
+        const uid =
+            "src_"+sourceCounter;
+
+        const row =
+            document.createElement("tr");
+
+        row.id = uid;
+
+        row.innerHTML = `
+            <td>${sourceCounter}</td>
+            <td>${select.options[select.selectedIndex].text}</td>
+            <td>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-danger"
+                    onclick="removeSource('${uid}')"
+                >
+                    ✖
+                </button>
+            </td>
+        `;
+
+        document
+            .getElementById("sourceTable")
+            .appendChild(row);
+
+        const hidden =
+            document.createElement("input");
+
+        hidden.type="hidden";
+
+        hidden.name="sources";
+
+        hidden.value=select.value;
+
+        hidden.id="hidden_"+uid;
+
+        document
+            .getElementById("hiddenSources")
+            .appendChild(hidden);
+
+    }
+
+}
+function removeSource(uid){
+
+    const row =
+        document.getElementById(uid);
+
+    if(row){
+
+        row.remove();
+
+    }
+
+    const hidden =
+        document.getElementById("hidden_"+uid);
+
+    if(hidden){
+
+        hidden.remove();
+
+    }
+
+}
+
+
+
+const facilitySelect =
+    document.getElementById("id_facility");
+
+const editFacilityBtn =
+    document.getElementById("editFacilityBtn");
+
+
+
+function updateFacilityLink(){
+
+    if(!facilitySelect){
+
+        return;
+
+    }
+
+    const id =
+        facilitySelect.value;
+
+    if(!id){
+
+        editFacilityBtn.href="#";
+
+        editFacilityBtn.classList.add(
+            "disabled"
+        );
+
+        return;
+
+    }
+
+    editFacilityBtn.classList.remove(
+        "disabled"
+    );
+
+    const next =
+        encodeURIComponent(
+
+            window.location.pathname +
+            window.location.search
+
+        );
+
+    editFacilityBtn.href =
+
+        `/facilities/${id}/edit/?next=${next}`;
+
+}
+
+
+
+if(facilitySelect){
+
+    facilitySelect.addEventListener(
+
+        "change",
+
+        updateFacilityLink
+
+    );
+
+    updateFacilityLink();
+
+}
+
+
+
+/*
+---------------------------------------------------
+Restore selected sources after validation errors
+---------------------------------------------------
+*/
+
+{% if selected_sources %}
+
+window.addEventListener(
+
+    "load",
+
+    function(){
+
+        const select =
+            document.getElementById(
+                "id_nuclide"
+            );
+
+        {% for source in selected_sources %}
+
+        select.value="{{ source }}";
+
+        document.getElementById(
+            "id_quantity"
+        ).value=1;
+
+        addSources();
+
+        {% endfor %}
+
+    }
+
+);
+
+{% endif %}
+
+
+
+/*
+---------------------------------------------------
+Localization / Jalali
+
+Only initialize if your localization.js
+doesn't already do it automatically.
+---------------------------------------------------
+*/
+
+window.addEventListener(
+
+    "load",
+
+    function(){
+
+        if(
+
+            typeof initializeLocalization
+            === "function"
+
+        ){
+
+            initializeLocalization();
+
+        }
+
+    }
+
+);
 
 </script>
 

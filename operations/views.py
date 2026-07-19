@@ -19,7 +19,7 @@ from .forms import (
 
     LicenseAttachmentForm,
 
-    LicenseNuclideForm,)
+    LicenseSourceForm,)
 
 from .models import (
 
@@ -29,7 +29,7 @@ from .models import (
 
     LicenseAttachmentType,
 
-    LicenseDSRS,)
+    LicenseSource,)
 # ============================================================
 # Operation Home
 # ============================================================
@@ -72,9 +72,12 @@ def license_list(request):
         )
 
         .prefetch_related(
-            "license_dsrss__nuclide",
+
+            "sources__nuclide",
+
             "attachments",
-        )
+
+            )
 
         .order_by(
             "-created_at",
@@ -100,6 +103,14 @@ def license_list(request):
 
             Q(
                 contract_number__icontains=search
+            )
+            |
+            Q(
+                sources__serial_number__icontains=search
+            )
+            |
+            Q(
+                sources__nuclide__name__icontains=search
             )
 
         )
@@ -160,7 +171,7 @@ def license_create(request):
             request.FILES,
         )
 
-        nuclide_form = LicenseNuclideForm(
+        source_form = LicenseSourceForm(
 
             request.POST,
         )
@@ -175,7 +186,7 @@ def license_create(request):
 
             and
 
-            nuclide_form.is_valid()
+            source_form.is_valid()
 
         ):
 
@@ -223,16 +234,14 @@ def license_create(request):
                         uploaded_by=request.user,
 
                     )
-            selected_nuclides = request.POST.getlist("nuclides")
-            for nuclide_id in selected_nuclides:
+            selected_sources = request.POST.getlist("sources")
+            for nuclide_id in selected_sources:
 
-                LicenseDSRS.objects.create(
+                LicenseSource.objects.create(
 
                     license=license_request,
 
-                    nuclide_id=nuclide_id,
-
-                )
+                    nuclide_id=nuclide_id,)
 
             messages.success(
 
@@ -256,25 +265,17 @@ def license_create(request):
 
         attachment_form = LicenseAttachmentForm()
 
-        nuclide_form = LicenseNuclideForm()
+        source_form = LicenseSourceForm()
 
     return render(
-
-        request,
-
-        "operations/license_create.html",
-
-        {
-
-            "form": form,
-
-            "attachment_form": attachment_form,
-
-            "nuclide_form": nuclide_form,
-
-        },
-
-    )
+            request,
+            "operations/license_create.html",
+            {
+                "request_form": form,
+                "attachment_form": attachment_form,
+                "source_form": source_form,
+            },
+        )
 
 
 def license_detail(

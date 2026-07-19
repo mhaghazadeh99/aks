@@ -348,13 +348,14 @@
 
     <td>
 
-        {% for dsrs in license.license_dsrss.all %}
+        {% for source in license.sources.all %}
 
             <div>
 
                 <strong>
 
-                    {{ dsrs.nuclide }}
+                    {{ source.nuclide }}
+
 
                 </strong>
 
@@ -362,11 +363,11 @@
 
                 SN:
 
-                {{ dsrs.serial_number|default:"-" }}
+                {{ source.serial_number|default:"-" }}
 
                 <br>
 
-                {{ dsrs.activity|default:"-" }}
+                {{ source.activity|default:"-" }}
 
             </div>
 

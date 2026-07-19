@@ -38,13 +38,22 @@ class SourceForm(models.TextChoices):
     LIQUID = "Liquid", "Liquid"
 
 
-
+class SOURCE_TYPE(models.TextChoices):
+    SEALED = "Solid", "Solid"
+    LIQUID = "Liquid", "Liquid"
 # -----------------------------
 # NEW: Source type for filtering
 # -----------------------------
-class SOURCE_TYPE(models.TextChoices):
-    SRS = "SRS", "SRS"
-    DSRS = "DSRS", "DSRS"
+class ActivityUnit(models.TextChoices):
+    
+    Bq = 'Bq', 'Bq'
+    kBq = 'kBq', 'kBq'
+    MBq = 'MBq', 'MBq'
+    GBq = 'GBq', 'GBq'
+    Ci    = 'Ci', 'Ci'
+    mCi = 'mCi', 'mCi'
+    µCi    ='µCi', 'µCi'
+        
 
 # ---- MAIN MODEL ----
 class DSRS(models.Model):
@@ -79,15 +88,7 @@ class DSRS(models.Model):
     activity_input = models.FloatField(null=True, blank=True)
     activity_unit = models.CharField(
         max_length=10,
-        choices=[
-            ('Bq', 'Bq'),
-            ('kBq', 'kBq'),
-            ('MBq', 'MBq'),
-            ('GBq', 'GBq'),
-            ('Ci', 'Ci'),
-            ('mCi', 'mCi'),
-            ('uCi', 'µCi'),
-        ],
+        choices=ActivityUnit.choices,
         default='Bq',blank=True, null=True
     )
 

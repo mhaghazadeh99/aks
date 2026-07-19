@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+
+{% trans "New License Request" %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="card shadow">
+
+<div class="card-header">
+
+<h3>
+
+{% trans "New License Request" %}
+
+</h3>
+
+</div>
+
+<div class="card-body">
+
+<form
+
+method="post"
+
+enctype="multipart/form-data"
+
+>
+
+{% csrf_token %}
+
+<!-- ===================================================== -->
+<!-- GENERAL INFORMATION -->
+<!-- ===================================================== -->
+
+<h5 class="mb-3">
+
+① {% trans "General Information" %}
+
+</h5>
+
+<div class="row">
+
+<div class="col-md-6">
+
+{{ form.letter_number.label_tag }}
+
+{{ form.letter_number }}
+
+</div>
+
+<div class="col-md-6">
+
+{{ form.letter_date.label_tag }}
+
+{{ form.letter_date }}
+
+</div>
+
+</div>
+
+<hr>
+
+<!-- ===================================================== -->
+<!-- ATTACHMENTS -->
+<!-- ===================================================== -->
+
+<h5>
+
+② {% trans "Attachments" %}
+
+</h5>
+
+<div class="row">
+
+<div class="col-md-6">
+
+{{ attachment_form.letter.label_tag }}
+
+{{ attachment_form.letter }}
+
+</div>
+
+<div class="col-md-6">
+
+{{ attachment_form.commitment.label_tag }}
+
+{{ attachment_form.commitment }}
+
+</div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+<div class="col-md-6">
+
+{{ attachment_form.permit.label_tag }}
+
+{{ attachment_form.permit }}
+
+</div>
+
+<div class="col-md-6">
+
+{{ attachment_form.inquiry.label_tag }}
+
+{{ attachment_form.inquiry }}
+
+</div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+<div class="col-md-6">
+
+{{ attachment_form.other.label_tag }}
+
+{{ attachment_form.other }}
+
+</div>
+
+</div>
+
+<hr>
+
+<!-- ===================================================== -->
+<!-- FACILITY -->
+<!-- ===================================================== -->
+
+<h5>
+
+③ {% trans "Facility" %}
+
+</h5>
+
+<div class="row">
+
+<div class="col-md-8">
+
+{{ form.facility.label_tag }}
+
+{{ form.facility }}
+
+</div>
+
+<div class="col-md-4">
+
+<br>
+
+<a
+
+id="editFacilityBtn"
+
+class="btn btn-warning"
+
+target="_blank"
+
+>
+
+{% trans "Edit Facility" %}
+
+</a>
+
+</div>
+
+</div>
+
+<hr>
+
+<!-- ===================================================== -->
+<!-- NUCLIDES -->
+<!-- ===================================================== -->
+
+<h5>
+
+④ {% trans "Nuclides" %}
+
+</h5>
+
+<div class="row mb-3">
+
+<div class="col-md-8">
+
+{{ nuclide_form.nuclide }}
+
+</div>
+
+<div class="col-md-4">
+
+<button
+
+type="button"
+
+class="btn btn-success"
+
+onclick="addNuclide()"
+
+>
+
+{% trans "Add" %}
+
+</button>
+
+</div>
+
+</div>
+
+<table class="table table-bordered">
+
+<thead>
+
+<tr>
+
+<th>
+
+{% trans "Nuclide" %}
+
+</th>
+
+<th width="120">
+
+{% trans "Remove" %}
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="nuclideTable">
+
+</tbody>
+
+</table>
+
+<div id="hiddenNuclides"></div>
+
+<hr>
+
+<!-- ===================================================== -->
+<!-- BUTTONS -->
+<!-- ===================================================== -->
+
+<div class="text-end">
+
+<a
+
+href="{% url 'license_list' %}"
+
+class="btn btn-secondary"
+
+>
+
+{% trans "Cancel" %}
+
+</a>
+
+<button
+
+type="submit"
+
+name="draft"
+
+class="btn btn-warning"
+
+>
+
+{% trans "Save Draft" %}
+
+</button>
+
+<button
+
+type="submit"
+
+class="btn btn-primary"
+
+>
+
+{% trans "Save & Continue" %}
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function addNuclide(){
+
+    const select =
+        document.getElementById("id_nuclide");
+
+    if(!select.value)
+        return;
+
+    if(document.getElementById(
+        "row_"+select.value))
+        return;
+
+    let tbody =
+        document.getElementById(
+            "nuclideTable"
+        );
+
+    let row =
+        document.createElement("tr");
+
+    row.id =
+        "row_"+select.value;
+
+    row.innerHTML =
+
+    `<td>${select.options[select.selectedIndex].text}</td>
+
+    <td>
+
+    <button
+
+    type="button"
+
+    class="btn btn-danger btn-sm"
+
+    onclick="removeNuclide('${select.value}')"
+
+    >
+
+    ✖
+
+    </button>
+
+    </td>`;
+
+    tbody.appendChild(row);
+
+    let hidden =
+        document.createElement("input");
+
+    hidden.type="hidden";
+
+    hidden.name="nuclides";
+
+    hidden.value=select.value;
+
+    hidden.id="hidden_"+select.value;
+
+    document
+        .getElementById(
+            "hiddenNuclides"
+        )
+        .appendChild(hidden);
+
+}
+
+function removeNuclide(id){
+
+    document
+        .getElementById(
+            "row_"+id
+        )
+        .remove();
+
+    document
+        .getElementById(
+            "hidden_"+id
+        )
+        .remove();
+
+}
+
+document.getElementById("id_facility").addEventListener(
+
+"change",
+
+function(){
+
+    let id=this.value;
+
+    if(id){
+
+        document.getElementById("editFacilityBtn").href=
+
+        "/facilities/"+id+"/edit/";
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

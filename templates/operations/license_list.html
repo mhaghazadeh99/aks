@@ -1,0 +1,823 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Tables" %}{% endblock %}
+
+{% block content %}
+{% block extrastyle %}
+<style>
+    .action-icons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* base icon button */
+.icon-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+    font-size: 16px;
+
+    background: #f5f6f8;
+    color: #444;
+
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+/* hover effect */
+.icon-btn:hover {
+    transform: translateY(-2px);
+    background: #ffffff;
+    border-color: #ddd;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+/* individual colors */
+.icon-btn.edit:hover {
+    color: #d39e00;
+}
+
+.icon-btn.chart:hover {
+    color: #0d6efd;
+}
+
+.icon-btn.history:hover {
+    color: #6c757d;
+}
+.actions a{
+    display:inline-block;
+    padding:6px 10px;
+    margin-right:5px;
+    border-radius:4px;
+    text-decoration:none;
+    font-size:14px;
+}
+.pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    margin-top:15px;
+}
+
+.pagination a,
+.pagination span{
+    padding:6px 12px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    text-decoration:none;
+}
+
+.pagination .current{
+    background:#0d6efd;
+    color:#fff;
+    border-color:#0d6efd;
+}
+
+.page-info{
+    text-align:center;
+    margin-top:10px;
+    color:#666;
+}
+
+  .col-toggle {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    flex: 0 0 auto !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+    appearance: auto !important;
+    -webkit-appearance: checkbox !important;
+}
+
+.column-panel label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.column-panel {
+    display: flex;
+    flex-direction: column;
+
+
+}
+.hidden {
+    display: none !important;
+}
+#filterContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+#filterContainer > * {
+  display: inline-flex;
+  align-items: center;
+}
+</style>
+{% endblock extrastyle %}
+<div class="content">
+
+<!-- ================= HEADER TOOLBAR ================= -->
+<div class="table-header">
+
+    <!-- Search -->
+    <div class="header-group">
+
+        <form method="get">
+
+            <input
+                type="text"
+                name="search"
+                placeholder="{% trans 'Search...' %}"
+                value="{{ search }}"
+            >
+
+            <button type="submit">
+                🔍
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- Page Size -->
+
+    <div class="header-group">
+
+        <form method="get">
+
+            <input
+                type="hidden"
+                name="search"
+                value="{{ search }}"
+            >
+
+            <label>
+                {% trans "Items" %}
+            </label>
+
+            <select
+
+                name="page_size"
+
+                onchange="this.form.submit()"
+
+            >
+
+                <option value="10"
+                    {% if page_size == 10 %}
+                        selected
+                    {% endif %}
+                >
+                    10
+                </option>
+
+                <option value="25"
+                    {% if page_size == 25 %}
+                        selected
+                    {% endif %}
+                >
+                    25
+                </option>
+
+                <option value="50"
+                    {% if page_size == 50 %}
+                        selected
+                    {% endif %}
+                >
+                    50
+                </option>
+
+            </select>
+
+        </form>
+
+    </div>
+
+
+    <!-- Buttons -->
+
+    <div class="header-group">
+
+        <a
+
+            href="{% url 'license_export_csv' %}"
+
+            class="btn-green"
+
+        >
+
+           {% trans "Export CSV" %}
+
+        </a>
+
+
+        <a
+
+            href="{% url 'license_import_csv' %}"
+
+            class="btn-info"
+
+        >
+
+            {% trans "Import CSV" %}
+
+        </a>
+
+
+        <a
+
+            href="{% url 'license_create' %}"
+
+            class="btn-blue"
+
+        >
+
+            {% trans "+ Start New License" %}
+
+        </a>
+
+    </div>
+
+</div>
+<!-- ================= FILTER BAR ================= -->
+<!-- <div class="filter-bar">
+
+  <div id="filterContainer"></div>
+
+  <button id="addFilter" class="btn-blue">Add Filter</button>
+  <button id="applyFilters" class="btn-info">Apply</button>
+
+</div> -->
+
+<!-- ================= TABLE ================= -->
+<div class="table-scroll">
+
+<table id="mainTable">
+
+<thead>
+
+<tr>
+
+    <th>{% trans "Facility" %}</th>
+
+<th>{% trans "Letter Number" %}</th>
+
+<th>{% trans "Letter Date" %}</th>
+
+<th>{% trans "Cost" %}</th>
+
+<th>{% trans "Contract Date" %}</th>
+
+<th>{% trans "Contract Number" %}</th>
+
+<th>{% trans "DSRSs" %}</th>
+
+<th>{% trans "Letter" %}</th>
+
+<th>{% trans "Contract" %}</th>
+
+<th>{% trans "Status" %}</th>
+
+<th>{% trans "Action" %}</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for license in page_obj %}
+
+<tr>
+
+    <td>
+
+        {{ license.facility.name }}
+
+    </td>
+
+    <td>
+
+        {{ license.letter_number|default:"-" }}
+
+    </td>
+
+    <td>
+
+        {{ license.letter_date|default:"-" }}
+
+    </td>
+
+    <td>
+
+        {{ license.contract_cost|default:"-" }}
+
+    </td>
+
+    <td>
+
+        {{ license.contract_date|default:"-" }}
+
+    </td>
+
+    <td>
+
+        {{ license.contract_number|default:"-" }}
+
+    </td>
+
+    <td>
+
+        {% for dsrs in license.license_dsrss.all %}
+
+            <div>
+
+                <strong>
+
+                    {{ dsrs.nuclide }}
+
+                </strong>
+
+                <br>
+
+                SN:
+
+                {{ dsrs.serial_number|default:"-" }}
+
+                <br>
+
+                {{ dsrs.activity|default:"-" }}
+
+            </div>
+
+            {% if not forloop.last %}
+                <hr>
+            {% endif %}
+
+        {% empty %}
+
+            -
+
+        {% endfor %}
+
+    </td>
+
+    <td>
+
+        {% for file in license.attachments.all %}
+
+            {% if file.attachment_type == "LETTER" %}
+
+                <a
+
+                    href="{{ file.file.url }}"
+
+                    target="_blank"
+
+                >
+
+                    {% trans "View" %}
+
+                </a>
+
+            {% endif %}
+
+        {% empty %}
+
+            -
+
+        {% endfor %}
+
+    </td>
+
+    <td>
+
+        {% for file in license.attachments.all %}
+
+            {% if file.attachment_type == "CONTRACT" %}
+
+                <a
+
+                    href="{{ file.file.url }}"
+
+                    target="_blank"
+
+                >
+
+                    title="{% trans 'View' %}"
+
+                </a>
+
+            {% endif %}
+
+        {% empty %}
+
+            -
+
+        {% endfor %}
+
+    </td>
+
+    <td>
+
+        {{ license.get_status_display }}
+
+    </td>
+
+    <td>
+
+        <div class="action-icons">
+
+            <a
+
+                href="{% url 'license_detail' license.pk %}"
+
+                class="icon-btn"
+
+                title="{% trans 'View' %}"
+
+            >
+
+                👁
+
+            </a>
+
+            <a
+
+                href="{% url 'license_continue' license.pk %}"
+
+                class="icon-btn"
+
+                title="{% trans 'Continue' %}"
+
+            >
+
+                ▶
+
+            </a>
+
+            <a
+
+                href="{% url 'license_update' license.pk %}"
+
+                class="icon-btn edit"
+
+                title="{% trans 'Edit' %}"
+
+            >
+
+                ✏️
+
+            </a>
+
+            <a
+
+                href="{% url 'license_delete' license.pk %}"
+
+                class="icon-btn"
+
+                title="{% trans 'Delete' %}"
+
+            >
+
+                🗑
+
+            </a>
+
+        </div>
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+    <td colspan="11" class="text-center">
+
+        {% trans "No license requests found." %}
+
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+</div>
+<div class="pagination">
+
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
+            {% trans "Previous" %}
+        </a>
+    {% endif %}
+
+    {% if page_obj.number > 3 %}
+        <a href="?page=1{% if page_size %}&size={{ page_size }}{% endif %}">1</a>
+
+        {% if page_obj.number > 4 %}
+            <span>...</span>
+        {% endif %}
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">
+                    {{ num }}
+                </a>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+
+        {% if page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
+            <span>...</span>
+        {% endif %}
+
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if page_size %}&size={{ page_size }}{% endif %}">
+            {{ page_obj.paginator.num_pages }}
+        </a>
+
+    {% endif %}
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
+            {% trans "Next" %}
+        </a>
+    {% endif %}
+
+</div>
+
+<div class="page-info">
+     {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+    ({{ page_obj.paginator.count }} {% trans "records" %})
+</div>
+<!-- ================= JS ================= -->
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(c.split('=')[1]);
+        }
+    });
+    return cookieValue;
+}
+
+// SEARCH
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let v = this.value.toLowerCase();
+    document.querySelectorAll("#tableBody tr").forEach(r => {
+        r.style.display = r.innerText.toLowerCase().includes(v) ? "" : "none";
+    });
+});
+
+// PAGE SIZE
+document.getElementById("pageSize").onchange = function () {
+    let p = new URLSearchParams(window.location.search);
+    p.set("size", this.value);
+    p.delete("page");
+    window.location.search = p.toString();
+};
+
+// EXPORT
+window.exportCSV = function () {
+    let params = window.location.search;
+    window.location.href = "/export-csv/" + params;
+};
+
+// FILTERS
+document.getElementById("addFilter").onclick = function () {
+    let row = document.createElement("div");
+    row.className = "d-flex mb-2";
+    row.innerHTML = `
+       <select class="form-control mr-2 key">
+  <option value="Source_Type">Source Type</option>
+  <option value="Sso_Code">SSO Code</option>
+  <option value="Facility">Facility</option>
+  <option value="Origin_Type">Origin</option>
+  <option value="Date_received">Received</option>
+  <option value="Origin_Facility">Origin Facility</option>
+  <option value="Location">Location</option>
+  <option value="Loc1">Loc1</option>
+  <option value="Loc2">Loc2</option>
+  <option value="Num">Num</option>
+  <option value="Status">Status</option>
+  <option value="Status_Date">Status Date</option>
+  <option value="Responsible_Person">Responsible</option>
+  <option value="Nuclide">Nuclide</option>
+  <option value="activity_input">Input</option>
+  <option value="activity_unit">Unit</option>
+  <option value="Activity">Activity</option>
+  <option value="Category">Category</option>
+  <option value="Activity_reference_date">Ref Date</option>
+  <option value="serial_number">Serial</option>
+  <option value="Dose_rate_surface_uSv">Surface</option>
+  <option value="Dose_rate_1m_uSv">1m</option>
+  <option value="Dose_rate_measurement_date">Dose Date</option>
+  <option value="source_state">State</option>
+  <option value="contamination_bq_cm2">Contam</option>
+  <option value="Source_Physical_Form">Form</option>
+  <option value="Source_Manufacturer">Src Mfr</option>
+  <option value="Source_Model">Src Model</option>
+  <option value="Source_Practice">Practice</option>
+  <option value="Device_Manufacturer">Dev Mfr</option>
+  <option value="Device_Model">Dev Model</option>
+  <option value="Device_Serial_Number">Dev Serial</option>
+  <option value="Container_Type">Container</option>
+  <option value="Dimension">Dim</option>
+  <option value="Attachments">Files</option>
+  <option value="Comment">Comment</option>
+  <option value="created_by">User</option>
+  <option value="created_at">Created</option>
+</select>
+        <input class="form-control mr-2 value" placeholder="Value">
+        <button class="btn btn-danger">X</button>
+    `;
+    row.querySelector("button").onclick = () => row.remove();
+    document.getElementById("filterContainer").appendChild(row);
+};
+
+document.getElementById("applyFilters").onclick = function () {
+    let k = document.querySelectorAll(".key");
+    let v = document.querySelectorAll(".value");
+    let p = new URLSearchParams();
+
+    k.forEach((x,i)=>{
+        if(v[i].value){
+            p.append("key", x.value);
+            p.append("value", v[i].value);
+        }
+    });
+
+    window.location.href = "?" + p.toString();
+};
+
+// SHOW/HIDE COLUMNS
+// ================= CREATE COLUMN CHECKBOXES =================
+
+const panel = document.getElementById("columnPanel");
+
+document.querySelectorAll("#mainTable thead th[data-col]").forEach(th => {
+
+    const col = th.dataset.col;
+
+    const label = document.createElement("label");
+
+    label.innerHTML = `
+        <input
+            type="checkbox"
+            class="col-toggle"
+            data-col="${col}"
+            checked>
+        ${th.innerText}
+    `;
+
+    panel.appendChild(label);
+
+});
+// LOAD SAVED COLUMNS
+fetch("/get-column/")
+.then(r => r.json())
+.then(data => {
+
+    data.forEach(c => {
+
+        const checkbox =
+            document.querySelector(`.col-toggle[data-col="${c.key}"]`);
+
+        if (checkbox) {
+            checkbox.checked = c.value;
+        }
+
+        document.querySelectorAll(`[data-col="${c.key}"]`).forEach(el => {
+            el.style.display = c.value ? "" : "none";
+        });
+
+    });
+
+});
+
+function toggleColumnPanel() {
+    document.getElementById("columnPanel").classList.toggle("hidden");
+}
+
+document.addEventListener("change", function (e) {
+
+    if (!e.target.classList.contains("col-toggle")) return;
+
+    const col = e.target.dataset.col;
+    const show = e.target.checked;
+
+    // SHOW / HIDE COLUMN
+    document.querySelectorAll(`[data-col="${col}"]`).forEach(el => {
+        el.style.display = show ? "" : "none";
+    });
+
+    // SAVE TO BACKEND
+    fetch("/save-column/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            key: col,
+            value: show
+        })
+    });
+
+});
+
+// ================= CREATE CONTRACT =================
+
+document.getElementById("createContractBtn").onclick = function(){
+
+    let selected = [];
+
+    document.querySelectorAll(".contract-checkbox:checked")
+    .forEach(cb => {
+        selected.push(cb.value);
+    });
+
+
+    if(selected.length === 0){
+        alert("Please select at least one DSRS record.");
+        return;
+    }
+
+
+    fetch("{% url 'create_contract_bulk' %}", {
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken":getCookie("csrftoken")
+        },
+
+        body:JSON.stringify({
+            ids:selected
+        })
+
+    })
+
+    .then(response => response.json())
+
+    .then(data=>{
+
+        if(data.success){
+
+            alert(
+              data.message
+            );
+
+            location.reload();
+
+        }
+        else{
+
+            alert(
+              data.message
+            );
+
+        }
+
+    });
+
+
+};
+</script>
+
+{% endblock %}

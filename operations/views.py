@@ -1,8 +1,3 @@
-# operations/views.py
-from .models import OperationOCR
-
-from .services.parser import parse_text
-from .services.ocr import run_attachment_ocr
 from django.shortcuts import render, redirect
 
 from django.contrib import messages
@@ -10,39 +5,36 @@ from django.contrib import messages
 from django.db import transaction
 
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
 
-from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator
 
-from .forms import OperationAttachmentUploadForm
-from .constants import REQUIRED_DOCUMENTS
+from django.contrib import messages
+
+from django.shortcuts import redirect
+
+from .forms import (
+
+    LicenseRequestForm,
+
+    LicenseAttachmentForm,
+
+    LicenseNuclideForm,)
 
 from .models import (
-    Operation,
-    OperationAttachment,
-    OperationStatus,
-)
-from .forms import OperationForm
 
+    LicenseRequest,
 
+    LicenseAttachment,
 
+    LicenseAttachmentType,
+
+    LicenseDSRS,)
 # ============================================================
 # Operation Home
 # ============================================================
 
 def operation_home(request):
-
-    operations = Operation.objects.select_related(
-        "facility",
-        "created_by",
-    ).all()
-
-
-    context = {
-
-        "operations": operations,
-
-    }
-
 
     return render(
 
@@ -50,210 +42,294 @@ def operation_home(request):
 
         "operations/operation_home.html",
 
+        
+
+    )
+
+
+
+
+
+
+def license_list(request):
+
+    search = request.GET.get(
+        "search",
+        "",
+    )
+
+    page_size = request.GET.get(
+        "page_size",
+        "10",
+    )
+
+    queryset = (
+
+        LicenseRequest.objects
+
+        .select_related(
+            "facility",
+        )
+
+        .prefetch_related(
+            "license_dsrss__nuclide",
+            "attachments",
+        )
+
+        .order_by(
+            "-created_at",
+        )
+
+    )
+
+    if search:
+
+        queryset = queryset.filter(
+
+            Q(
+                facility__name__icontains=search
+            )
+
+            |
+
+            Q(
+                letter_number__icontains=search
+            )
+
+            |
+
+            Q(
+                contract_number__icontains=search
+            )
+
+        )
+
+    paginator = Paginator(
+
+        queryset,
+
+        int(page_size),
+
+    )
+
+    page_number = request.GET.get(
+        "page",
+    )
+
+    page_obj = paginator.get_page(
+        page_number,
+    )
+
+    context = {
+
+        "page_obj": page_obj,
+
+        "search": search,
+
+        "page_size": int(page_size),
+
+    }
+
+    return render(
+
+        request,
+
+        "operations/license_list.html",
+
         context,
 
     )
 
 
+from django.http import HttpResponse
 
-# ============================================================
-# Create Operation
-# ============================================================
 
-from django.contrib.auth.decorators import login_required
-
-@login_required
-@transaction.atomic
-def operation_create(request):
+def license_create(request):
 
     if request.method == "POST":
 
-        form = OperationForm(
-            request.POST
-        )
+        form = LicenseRequestForm(
 
-
-        if form.is_valid():
-
-            operation = form.save(
-                commit=False
-            )
-
-            operation.created_by = request.user
-
-            operation.save()
-
-
-            messages.success(
-                request,
-                _("Operation created successfully.")
-            )
-
-
-            return redirect(
-                f"/facilities/{operation.facility.pk}/edit/?next=/operations/{operation.pk}/documents/"
-            )
-
-
-    else:
-
-        form = OperationForm()
-
-
-    return render(
-        request,
-        "operations/operation_create.html",
-        {
-            "form":form
-        }
-    )
-
-
-@login_required
-def operation_documents(request, pk):
-
-
-    operation = get_object_or_404(
-        Operation,
-        pk=pk
-    )
-
-
-    required_documents = REQUIRED_DOCUMENTS[
-        operation.operation_type
-    ]
-
-
-    if request.method == "POST":
-
-
-        form = OperationAttachmentUploadForm(
             request.POST,
-            request.FILES
         )
 
+        attachment_form = LicenseAttachmentForm(
 
-        if form.is_valid():
+            request.POST,
 
+            request.FILES,
+        )
 
-            attachment = form.save(
-                commit=False
+        nuclide_form = LicenseNuclideForm(
+
+            request.POST,
+        )
+
+        if (
+
+            form.is_valid()
+
+            and
+
+            attachment_form.is_valid()
+
+            and
+
+            nuclide_form.is_valid()
+
+        ):
+
+            license_request = form.save(
+                commit=False,
             )
 
-
-            attachment.operation = operation
-
-            attachment.uploaded_by = request.user
-
-
-            attachment.original_filename = (
-                attachment.file.name
+            license_request.created_by = (
+                request.user
             )
 
+            license_request.save()
 
-            attachment.save()
+            files = {
 
+                LicenseAttachmentType.LETTER:
+                    attachment_form.cleaned_data["letter"],
+
+                LicenseAttachmentType.COMMITMENT:
+                    attachment_form.cleaned_data["commitment"],
+
+                LicenseAttachmentType.PERMIT:
+                    attachment_form.cleaned_data["permit"],
+
+                LicenseAttachmentType.INQUIRY:
+                    attachment_form.cleaned_data["inquiry"],
+
+                LicenseAttachmentType.OTHER:
+                    attachment_form.cleaned_data["other"],
+
+            }
+
+            for attachment_type, uploaded_file in files.items():
+
+                if uploaded_file:
+
+                    LicenseAttachment.objects.create(
+
+                        license=license_request,
+
+                        attachment_type=attachment_type,
+
+                        file=uploaded_file,
+
+                        uploaded_by=request.user,
+
+                    )
+            selected_nuclides = request.POST.getlist("nuclides")
+            for nuclide_id in selected_nuclides:
+
+                LicenseDSRS.objects.create(
+
+                    license=license_request,
+
+                    nuclide_id=nuclide_id,
+
+                )
 
             messages.success(
-                request,
-                _("Document uploaded.")
-            )
 
+                request,
+
+                _("License request created successfully."),
+
+            )
 
             return redirect(
-                "operation_documents",
-                pk=pk
-            )
 
+                "license_specification",
+
+                license_request.pk,
+
+            )
 
     else:
 
-        form = OperationAttachmentUploadForm()
+        form = LicenseRequestForm()
 
+        attachment_form = LicenseAttachmentForm()
 
+        nuclide_form = LicenseNuclideForm()
 
     return render(
+
         request,
-        "operations/operation_documents.html",
+
+        "operations/license_create.html",
+
         {
 
-            "operation":operation,
+            "form": form,
 
-            "required_documents":
-                required_documents,
+            "attachment_form": attachment_form,
 
-            "form":form,
+            "nuclide_form": nuclide_form,
 
-            "attachments":
-                operation.attachments.all(),
+        },
 
-        }
     )
 
 
-@login_required
-def operation_ocr(request, pk):
+def license_detail(
+    request,
+    pk,
+    ):
 
-    operation = get_object_or_404(
-        Operation,
-        pk=pk
+    return HttpResponse(
+        f"License {pk}"
     )
 
-    if request.method != "POST":
-        return redirect(
-            "operation_documents",
-            pk=pk
-        )
 
-    attachments = operation.attachments.all()
+def license_continue(
+    request,
+    pk,
+    ):
 
-    operation.status = OperationStatus.OCR_RUNNING
-    operation.save(update_fields=["status"])
-
-    full_text = ""
-
-    confidence_scores = []
-
-    for attachment in attachments:
-
-        text, conf = run_attachment_ocr(
-            attachment
-        )
-
-        if text:
-            full_text += "\n" + text
-
-        confidence_scores.append(conf)
-
-    parsed = parse_text(full_text)
-
-    ocr, created = OperationOCR.objects.get_or_create(
-        operation=operation
+    return HttpResponse(
+        f"Continue {pk}"
     )
 
-    ocr.raw_text = full_text
-    ocr.extracted_data = parsed
 
-    if confidence_scores:
-        ocr.confidence = (
-            sum(confidence_scores) /
-            len(confidence_scores)
-        ) * 100
+def license_update(
+    request,
+    pk,
+    ):
 
-    ocr.save()
-
-    operation.status = (
-        OperationStatus.WAITING_REVIEW
+    return HttpResponse(
+        f"Update {pk}"
     )
 
-    operation.save(update_fields=["status"])
 
-    messages.success(
-        request,
-        _("OCR completed successfully.")
+def license_delete(
+    request,
+    pk,
+    ):
+
+    return HttpResponse(
+        f"Delete {pk}"
     )
 
-    return redirect(
-        "operation_review",
-        pk=operation.pk
+
+def license_import_csv(
+    request,
+    ):
+
+    return HttpResponse(
+        "Import CSV"
+    )
+
+
+def license_export_csv(
+    request,
+    ):
+
+    return HttpResponse(
+        "Export CSV"
     )

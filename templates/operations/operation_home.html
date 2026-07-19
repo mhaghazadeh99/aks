@@ -132,22 +132,6 @@
 
 
 
-<a href="{% url 'operation_create' %}" class="operation-card">
-
-<div class="operation-icon">
-➕
-</div>
-
-<h3>
-{% trans "New Operation" %}
-</h3>
-
-<p>
-{% trans "Create a new radioactive source or waste operation." %}
-</p>
-
-</a>
-
 
 
 <a href="#" class="operation-card">
@@ -203,8 +187,7 @@
 </a>
 
 
-
-<a href="#" class="operation-card">
+<a href="{% url 'license_list' %}" class="operation-card">
 
 <div class="operation-icon">
 📜
@@ -215,7 +198,7 @@
 </h3>
 
 <p>
-{% trans "View issued license for radioactive sources." %}
+{% trans "View issued license for radioactive sources and add new ones." %}
 </p>
 
 </a>

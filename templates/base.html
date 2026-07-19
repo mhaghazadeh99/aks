@@ -59,10 +59,6 @@
     🏠 {% trans "Home" %}
 </a>
 
-<!-- <a href="{% url 'home' %}"
-   class="{% if request.resolver_match.url_name == 'operation_home' %}active{% endif %}">
-    📋 {% trans "Operations" %}
-</a> -->
 
 <a href="{% url 'tables' %}"
    class="{% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
@@ -73,11 +69,7 @@
    class="{% if request.resolver_match.url_name == 'waste_list' %}active{% endif %}">
     ♻ {% trans "Waste" %}
 </a>
-<!-- 
-<a href="{% url 'facility_list' %}"
-   class="{% if request.resolver_match.url_name == 'facility_list' %}active{% endif %}">
-    🏢 {% trans "Facilities" %}
-</a> -->
+
 
 <a href="{% url 'radionuclide_list' %}"
    class="{% if request.resolver_match.url_name == 'radionuclide_list' %}active{% endif %}">

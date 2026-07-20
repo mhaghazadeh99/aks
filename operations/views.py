@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect,get_object_or_404
-
+from django.utils import timezone
 from django.contrib import messages
 
 from django.db import transaction
@@ -32,7 +32,7 @@ from .models import (
 
     LicenseAttachmentType,
 
-    LicenseSource,LicenseStatus,)
+    LicenseSource,LicenseStatus,LicenseApproval)
 # ============================================================
 # Operation Home
 # ============================================================
@@ -379,6 +379,10 @@ def license_specification(request, pk):
                 _("Specification saved successfully."),
 
             )
+            # return redirect(
+            #         "license_detail",
+            #         pk=license_request.pk,
+            #     )
             return redirect(
                 "license_sign",
                 pk=license_request.pk,
@@ -456,7 +460,6 @@ def license_detail(request, pk):
 
 
 
-@login_required
 def license_continue(request, pk):
 
     license_request = get_object_or_404(
@@ -481,19 +484,35 @@ def license_continue(request, pk):
         )
 
     # Waiting for signatures
-    if license_request.status in [
-
-        LicenseStatus.WAITING_CREATOR,
-
-        LicenseStatus.WAITING_MANAGER,
-
-        LicenseStatus.WAITING_DEPUTY,
-
-    ]:
+    if license_request.status == LicenseStatus.WAITING_CREATOR:
 
         return redirect(
             "license_sign",
             pk=license_request.pk,
+        )
+
+
+    if license_request.status == LicenseStatus.WAITING_MANAGER:
+
+        return render(
+            request,
+            "operations/waiting.html",
+            {
+                "license": license_request,
+                "message": "Waiting for manager approval",
+            }
+        )
+
+
+    if license_request.status == LicenseStatus.WAITING_DEPUTY:
+
+        return render(
+            request,
+            "operations/waiting.html",
+            {
+                "license": license_request,
+                "message": "Waiting for deputy approval",
+            }
         )
 
     # Contracts
@@ -655,4 +674,79 @@ def license_export_csv(
 
     return HttpResponse(
         "Export CSV"
+    )
+
+
+
+
+def license_sign(request, pk):
+
+    license_request = get_object_or_404(
+        LicenseRequest,
+        pk=pk,
+    )
+
+
+    # Creator can only sign in this stage
+    if license_request.status != LicenseStatus.WAITING_CREATOR:
+        return redirect(
+            "license_continue",
+            pk=pk,
+        )
+
+
+    specification = get_object_or_404(
+        LicenseAttachment,
+        license=license_request,
+        attachment_type=LicenseAttachmentType.SPECIFICATION,
+    )
+
+
+    creator_approval = get_object_or_404(
+        LicenseApproval,
+        license=license_request,
+        step=LicenseApproval.ApprovalStep.CREATOR,
+    )
+
+
+    if request.method == "POST":
+
+        creator_approval.status = (
+            LicenseApproval.ApprovalStatus.APPROVED
+        )
+
+        creator_approval.approver = request.user
+
+        creator_approval.approved_at = timezone.now()
+
+        creator_approval.save()
+
+
+        license_request.status = (
+            LicenseStatus.WAITING_MANAGER
+        )
+
+        license_request.save()
+
+
+        return redirect(
+            "license_continue",
+            pk=pk,
+        )
+
+
+    history = LicenseApproval.objects.filter(
+        license=license_request
+    )
+
+
+    return render(
+        request,
+        "operations/license_sign.html",
+        {
+            "license": license_request,
+            "specification": specification,
+            "approval": creator_approval,
+            "history": history,
+        }
     )

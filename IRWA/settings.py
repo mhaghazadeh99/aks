@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'common',
     "facilities",
     "reference",
+     "accounts.apps.AccountsConfig",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

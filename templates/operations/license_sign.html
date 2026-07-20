@@ -1,0 +1,124 @@
+<h2>
+Specification Form Signing
+</h2>
+
+
+<hr>
+
+
+<h3>
+Document
+</h3>
+
+<a href="{{ specification.file.url }}"
+target="_blank">
+
+Open Specification Form
+
+</a>
+
+
+
+<hr>
+
+
+<h3>
+Status
+</h3>
+
+<p>
+{{ license.get_status_display }}
+</p>
+
+
+
+<hr>
+
+
+<h3>
+Current Approver
+</h3>
+
+<p>
+
+{{ approval.approver }}
+
+</p>
+
+
+
+<hr>
+
+
+<h3>
+Approval History
+</h3>
+
+
+<table>
+
+<tr>
+<th>
+Step
+</th>
+
+<th>
+User
+</th>
+
+<th>
+Status
+</th>
+
+<th>
+Date
+</th>
+
+</tr>
+
+
+{% for item in history %}
+
+<tr>
+
+<td>
+{{ item.step }}
+</td>
+
+<td>
+{{ item.approved_by }}
+</td>
+
+<td>
+{{ item.status }}
+</td>
+
+<td>
+{{ item.approved_at }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+
+</table>
+
+
+
+<hr>
+
+
+<form method="post">
+
+{% csrf_token %}
+
+
+<button type="submit">
+
+Sign Specification
+
+</button>
+
+
+</form>

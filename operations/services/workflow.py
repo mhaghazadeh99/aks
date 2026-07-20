@@ -1,4 +1,4 @@
-from .models import LicenseApproval
+from operations.models import LicenseApproval
 
 
 def create_license_workflow(license_request):

@@ -64,5 +64,10 @@ path(
         views.license_export_csv,
         name="license_export_csv",
     ),
+    path(
+    "licenses/<int:pk>/sign/",
+    views.license_sign,
+    name="license_sign",
+),
 
 ]

@@ -12,6 +12,9 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 
 from django.shortcuts import redirect
+from .services.workflow import create_license_workflow
+from .services.specification_generator import (
+    generate_specification,)
 
 from .forms import (
 
@@ -200,13 +203,16 @@ def license_create(request):
 
 
             if action == "draft":
-                license_request.status = "DRAFT"
+                license_request.status = LicenseStatus.DRAFT
             else:
-                license_request.status = "NEW"
+                license_request.status = LicenseStatus.SPECIFICATION
 
 
             license_request.save()
 
+            create_license_workflow(
+                    license_request
+                )
 
             files = {
 
@@ -347,10 +353,24 @@ def license_specification(request, pk):
         if formset.is_valid():
 
             formset.save()
+            generate_specification(
+
+                license_request,
+
+                request.user,
+
+            )
+
+            license_request.status = LicenseStatus.WAITING_CREATOR
 
             license_request.specification_completed = True
 
-            license_request.save()
+            license_request.save(
+                update_fields=[
+                    "status",
+                    "specification_completed",
+                ]
+            )
 
             messages.success(
 
@@ -359,14 +379,12 @@ def license_specification(request, pk):
                 _("Specification saved successfully."),
 
             )
-
             return redirect(
-
-                "license_specification",
-
-                pk=pk,
-
+                "license_sign",
+                pk=license_request.pk,
             )
+            
+
 
     else:
 
@@ -438,7 +456,7 @@ def license_detail(request, pk):
 
 
 
-
+@login_required
 def license_continue(request, pk):
 
     license_request = get_object_or_404(
@@ -446,8 +464,15 @@ def license_continue(request, pk):
         pk=pk,
     )
 
+    # Draft -> continue editing
+    if license_request.status == LicenseStatus.DRAFT:
 
-    # Specification step
+        return redirect(
+            "license_create_edit",
+            pk=license_request.pk,
+        )
+
+    # Specification not finished
     if not license_request.specification_completed:
 
         return redirect(
@@ -455,69 +480,51 @@ def license_continue(request, pk):
             pk=license_request.pk,
         )
 
+    # Waiting for signatures
+    if license_request.status in [
 
-    # Workflow stages
+        LicenseStatus.WAITING_CREATOR,
 
-    if license_request.status == LicenseStatus.DRAFT:
+        LicenseStatus.WAITING_MANAGER,
 
-        license_request.status = LicenseStatus.SIGNATURE
-        license_request.save(
-            update_fields=["status"]
-        )
+        LicenseStatus.WAITING_DEPUTY,
 
-        messages.success(
-            request,
-            _("Moved to signature stage."),
-        )
-
-        return redirect(
-            "license_detail",
-            pk=license_request.pk,
-        )
-
-
-    elif license_request.status == LicenseStatus.SIGNATURE:
-
-        # later:
-        # signature verification page
-
-        return redirect(
-            "license_detail",
-            pk=license_request.pk,
-        )
-
-
-    elif license_request.status == LicenseStatus.CONTRACT:
-
-        # later:
-        # contract page
-
-        return redirect(
-            "license_detail",
-            pk=license_request.pk,
-        )
-
-
-    elif license_request.status == LicenseStatus.FINANCE:
-
-        # later:
-        # payment confirmation page
-
-        return redirect(
-            "license_detail",
-            pk=license_request.pk,
-        )
-
-
-    elif license_request.status in [
-        LicenseStatus.ISSUED,
-        LicenseStatus.COMPLETED,
     ]:
 
         return redirect(
-            "license_detail",
+            "license_sign",
             pk=license_request.pk,
         )
+
+    # Contracts
+    if license_request.status == LicenseStatus.CONTRACTS:
+
+        return redirect(
+            "contract_detail",
+            pk=license_request.pk,
+        )
+
+    # Finance
+    if license_request.status == LicenseStatus.FINANCE:
+
+        return redirect(
+            "finance_detail",
+            pk=license_request.pk,
+        )
+
+    # Ready to issue
+    if license_request.status == LicenseStatus.READY_TO_ISSUE:
+
+        return redirect(
+            "license_issue",
+            pk=license_request.pk,
+        )
+
+    # Issued / completed
+    return redirect(
+        "license_detail",
+        pk=license_request.pk,
+    )
 
 
 

@@ -28,21 +28,58 @@ def license_attachment_path(instance, filename):
         attachment_type,
         filename,
     )
+
+
 class LicenseStatus(models.TextChoices):
 
     DRAFT = "DRAFT", _("Draft")
 
-    SIGNATURE = "SIGNATURE", _("Waiting Signature")
+    SPECIFICATION = "SPECIFICATION", _("Preparing Specification")
 
-    CONTRACT = "CONTRACT", _("Contract")
+    WAITING_CREATOR = (
+        "WAITING_CREATOR",
+        _("Waiting Creator Signature"),
+    )
 
-    FINANCE = "FINANCE", _("Finance")
+    WAITING_MANAGER = (
+        "WAITING_MANAGER",
+        _("Waiting Manager Signature"),
+    )
 
-    ISSUED = "ISSUED", _("Issued")
+    WAITING_DEPUTY = (
+        "WAITING_DEPUTY",
+        _("Waiting Deputy Signature"),
+    )
 
-    COMPLETED = "COMPLETED", _("Completed")
+    CONTRACTS = (
+        "CONTRACTS",
+        _("Contracts"),
+    )
 
+    FINANCE = (
+        "FINANCE",
+        _("Finance"),
+    )
 
+    READY_TO_ISSUE = (
+        "READY_TO_ISSUE",
+        _("Ready To Issue"),
+    )
+
+    ISSUED = (
+        "ISSUED",
+        _("Issued"),
+    )
+
+    COMPLETED = (
+        "COMPLETED",
+        _("Completed"),
+    )
+
+    REJECTED = (
+        "REJECTED",
+        _("Rejected"),
+    )
 
 class LicenseRequest(models.Model):
 
@@ -91,7 +128,13 @@ class LicenseRequest(models.Model):
         blank=True,
     )
     specification_completed = models.BooleanField(default=False,)
+    
 
+    description = models.TextField(
+
+        _("Description"),
+
+        blank=True,)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -128,6 +171,7 @@ class LicenseAttachmentType(models.TextChoices):
     INQUIRY = "INQUIRY", _("DSRS Inquiry")
 
     CONTRACT = "CONTRACT", _("Contract")
+    SPECIFICATION = "SPECIFICATION", _("Generated Specification")
 
     OTHER = "OTHER", _("Other")
 
@@ -217,12 +261,6 @@ class LicenseSource(models.Model):
         blank=True,
     )
 
-    description = models.TextField(
-        _("Description"),
-        blank=True,
-        null=True,
-        help_text=_("Additional Description")
-    )
     specification_order = models.PositiveIntegerField(default=1,)
 
     created_dsrs = models.ForeignKey(
@@ -248,3 +286,125 @@ class LicenseSource(models.Model):
     def __str__(self):
 
         return f"{self.nuclide}"
+
+
+    
+class UserSignature(models.Model):
+
+    user = models.OneToOneField(
+
+        settings.AUTH_USER_MODEL,
+
+        on_delete=models.CASCADE,
+
+    )
+
+    signature = models.ImageField(
+
+        upload_to="signatures/",
+
+    )
+
+    title = models.CharField(
+
+        max_length=150,
+
+        blank=True,
+
+    )
+
+    updated_at = models.DateTimeField(
+
+        auto_now=True,
+
+    )
+
+
+
+
+
+class LicenseApproval(models.Model):
+
+    class ApprovalStep(models.TextChoices):
+
+        CREATOR = "CREATOR", _("Creator")
+
+        MANAGER = "MANAGER", _("Manager")
+
+        DEPUTY = "DEPUTY", _("Deputy Manager")
+
+        CONTRACTS = "CONTRACTS", _("Contracts")
+
+    class ApprovalStatus(models.TextChoices):
+
+        PENDING = "PENDING", _("Pending")
+
+        APPROVED = "APPROVED", _("Approved")
+
+        REJECTED = "REJECTED", _("Rejected")
+
+    license = models.ForeignKey(
+
+        LicenseRequest,
+
+        related_name="approvals",
+
+        on_delete=models.CASCADE,
+
+    )
+
+    step = models.CharField(
+
+        max_length=30,
+
+        choices=ApprovalStep.choices,
+
+    )
+
+    order = models.PositiveSmallIntegerField()
+
+    approver = models.ForeignKey(
+
+        settings.AUTH_USER_MODEL,
+
+        on_delete=models.SET_NULL,
+
+        null=True,
+
+        blank=True,
+
+    )
+
+    status = models.CharField(
+
+        max_length=20,
+
+        choices=ApprovalStatus.choices,
+
+        default=ApprovalStatus.PENDING,
+
+    )
+
+    approved_at = models.DateTimeField(
+
+        null=True,
+
+        blank=True,
+
+    )
+
+    comments = models.TextField(
+
+        blank=True,
+
+    )
+
+    class Meta:
+
+        ordering = ["order"]
+
+
+
+
+
+

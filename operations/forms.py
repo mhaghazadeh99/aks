@@ -21,6 +21,7 @@ class LicenseRequestForm(forms.ModelForm):
             "letter_number",
 
             "letter_date",
+            "description",
 
             
 
@@ -62,6 +63,7 @@ class LicenseRequestForm(forms.ModelForm):
             Field("letter_number"),
 
             Field("letter_date"),
+            Field("description"),
 
             
 
@@ -221,7 +223,7 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
 
             "activity_date",
 
-            "description",
+           
 
         ]
 
@@ -259,7 +261,7 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
 
             Field("activity_date"),
 
-            Field("description"),
+            
 
         )
 

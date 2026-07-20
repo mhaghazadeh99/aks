@@ -71,7 +71,7 @@ def radionuclide_import_csv(request):
             file = request.FILES["file"]
 
             try:
-                decoded = file.read().decode("utf-8").splitlines()
+                decoded = file.read().decode("utf-8-sig").splitlines()
                 reader = csv.DictReader(decoded)
             except Exception:
                 report["errors"].append("File is not a valid UTF-8 CSV.")

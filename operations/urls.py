@@ -25,7 +25,10 @@ urlpatterns = [
     views.license_create,
     name="license_create",
 ),
-
+path(
+    "licenses/<int:pk>/specification/",
+    views.license_specification,
+    name="license_specification",),
     path(
         "<int:pk>/",
         views.license_detail,

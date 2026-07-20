@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+
+{% block content %}
+
+<h2>
+{% trans "Edit License" %}
+</h2>
+
+
+<form method="post">
+
+{% csrf_token %}
+
+
+<h4>
+{% trans "License Information" %}
+</h4>
+
+{{ request_form.as_p }}
+
+
+<h4>
+{% trans "Facility" %}
+</h4>
+
+{{ facility_form.as_p }}
+
+
+
+<button type="submit" class="btn btn-primary">
+
+{% trans "Save Changes" %}
+
+</button>
+
+
+<a href="{% url 'license_detail' license.pk %}">
+
+{% trans "Cancel" %}
+
+</a>
+
+
+</form>
+
+
+{% endblock %}

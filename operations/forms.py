@@ -2,23 +2,15 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field
 from django import forms
 from django.utils.translation import gettext_lazy as _
-
+from django.forms import modelformset_factory
 from facilities.models import Facility
 
-from .models import LicenseRequest
+from .models import LicenseRequest,LicenseSource
 from reference.models import Nuclides
 
 class LicenseRequestForm(forms.ModelForm):
 
-    facility = forms.ModelChoiceField(
-
-        queryset=Facility.objects.order_by("name"),
-
-        label=_("Facility"),
-
-        empty_label=_("Select Facility"),
-
-    )
+    
 
     class Meta:
 
@@ -30,7 +22,7 @@ class LicenseRequestForm(forms.ModelForm):
 
             "letter_date",
 
-            "facility",
+            
 
         ]
 
@@ -63,7 +55,7 @@ class LicenseRequestForm(forms.ModelForm):
 
         self.helper = FormHelper()
 
-        self.helper.form_method = "post"
+        self.helper.form_tag = False
 
         self.helper.layout = Layout(
 
@@ -71,12 +63,37 @@ class LicenseRequestForm(forms.ModelForm):
 
             Field("letter_date"),
 
-            Field("facility"),
+            
 
         )
 
 
+class LicenseFacilityForm(forms.Form):
 
+    facility = forms.ModelChoiceField(
+
+        queryset=Facility.objects.order_by("name"),
+
+        label=_("Facility"),
+
+        empty_label=_("Select Facility"),
+
+    )
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+
+        self.helper.form_tag = False
+
+        self.helper.layout = Layout(
+
+            Field("facility"),
+
+        )
+        
 class LicenseAttachmentForm(forms.Form):
 
     letter = forms.FileField(
@@ -185,3 +202,73 @@ class LicenseSourceForm(forms.Form):
             Field("quantity"),
 
         )
+
+
+
+class LicenseSourceSpecificationForm(forms.ModelForm):
+
+    class Meta:
+
+        model = LicenseSource
+
+        fields = [
+
+            "serial_number",
+
+            "activity",
+
+            "activity_unit",
+
+            "activity_date",
+
+            "description",
+
+        ]
+
+        widgets = {
+
+            "activity_date": forms.DateInput(
+
+                attrs={
+
+                    "type": "text",
+
+                    "class": "datepicker",
+
+                }
+
+            ),
+
+        }
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+
+        self.helper.form_tag = False
+
+        self.helper.layout = Layout(
+
+            Field("serial_number"),
+
+            Field("activity"),
+
+            Field("activity_unit"),
+
+            Field("activity_date"),
+
+            Field("description"),
+
+        )
+
+LicenseSourceSpecificationFormSet = modelformset_factory(
+
+        LicenseSource,
+
+        form=LicenseSourceSpecificationForm,
+
+        extra=0,
+
+    )

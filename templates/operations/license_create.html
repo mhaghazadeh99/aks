@@ -108,7 +108,7 @@
 
                                     <div class="col-lg-8">
 
-                                        {{ request_form.facility|as_crispy_field }}
+                                        {% crispy facility_form %}
 
                                     </div>
 
@@ -244,23 +244,21 @@
 
                             </a>
 
-                            <button
-                                class="btn btn-warning"
-                                type="submit"
-                                name="draft"
-                            >
-
-                                {% trans "Save Draft" %}
-
+                            <button 
+                                type="submit" 
+                                name="action" 
+                                value="draft"
+                                class="btn btn-secondary">
+                                Save Draft
                             </button>
 
-                            <button
-                                class="btn btn-primary"
-                                type="submit"
-                            >
 
-                                {% trans "Save & Continue" %}
-
+                            <button 
+                                type="submit" 
+                                name="action" 
+                                value="continue"
+                                class="btn btn-primary">
+                                Save and Continue
                             </button>
 
                         </div>
@@ -474,36 +472,6 @@ window.addEventListener(
 {% endif %}
 
 
-
-/*
----------------------------------------------------
-Localization / Jalali
-
-Only initialize if your localization.js
-doesn't already do it automatically.
----------------------------------------------------
-*/
-
-window.addEventListener(
-
-    "load",
-
-    function(){
-
-        if(
-
-            typeof initializeLocalization
-            === "function"
-
-        ){
-
-            initializeLocalization();
-
-        }
-
-    }
-
-);
 
 </script>
 

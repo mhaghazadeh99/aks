@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+
+{% block content %}
+
+
+<h2>
+{% trans "Delete License" %}
+</h2>
+
+
+<div class="alert alert-danger">
+
+<p>
+{% trans "Are you sure you want to delete this license request?" %}
+</p>
+
+
+<strong>
+{{ license.facility }}
+</strong>
+
+
+</div>
+
+
+
+<form method="post">
+
+{% csrf_token %}
+
+
+<button 
+    type="submit"
+    class="btn btn-danger"
+>
+
+{% trans "Yes, Delete" %}
+
+</button>
+
+
+<a 
+href="{% url 'license_detail' license.pk %}"
+class="btn btn-secondary"
+>
+
+{% trans "Cancel" %}
+
+</a>
+
+
+</form>
+
+
+{% endblock %}

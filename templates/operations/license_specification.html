@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block title %}
+{% trans "DSRS Specification" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="card shadow">
+
+<div class="card-header">
+
+<h3>
+
+{% trans "DSRS Specification Form" %}
+
+</h3>
+
+</div>
+
+<div class="card-body">
+
+<div class="row mb-4">
+
+<div class="col-md-6">
+
+<strong>{% trans "Letter Number" %}</strong>
+
+<br>
+
+{{ license.letter_number }}
+
+</div>
+
+<div class="col-md-6">
+
+<strong>{% trans "Letter Date" %}</strong>
+
+<br>
+
+{{ license.letter_date }}
+
+</div>
+
+</div>
+
+<div class="row mb-4">
+
+<div class="col-md-6">
+
+<strong>{% trans "Facility" %}</strong>
+
+<br>
+
+{{ license.facility.name }}
+
+</div>
+
+<div class="col-md-6">
+
+<strong>{% trans "Responsible Person" %}</strong>
+
+<br>
+
+{{ license.facility.responsible_person }}
+
+</div>
+
+</div>
+
+<div class="row mb-4">
+
+<div class="col-md-6">
+
+<strong>{% trans "Telephone" %}</strong>
+
+<br>
+
+{{ license.facility.telephone }}
+
+</div>
+
+<div class="col-md-6">
+
+<strong>{% trans "Address" %}</strong>
+
+<br>
+
+{{ license.facility.address1 }}
+
+</div>
+
+</div>
+
+<hr>
+
+<form method="post">
+
+{% csrf_token %}
+
+{{ formset.management_form }}
+
+<div class="table-responsive">
+
+<table class="table table-bordered align-middle">
+
+<thead>
+
+<tr>
+
+<th>#</th>
+
+<th>{% trans "Nuclide" %}</th>
+
+<th>{% trans "Serial Number" %}</th>
+
+<th>{% trans "Activity" %}</th>
+
+<th>{% trans "Unit" %}</th>
+
+<th>{% trans "Reference Date" %}</th>
+
+<th>{% trans "description" %}</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for form in formset %}
+
+<tr>
+
+<td>
+
+{{ forloop.counter }}
+
+{{ form.id }}
+
+</td>
+
+<td>
+
+{{ form.instance.nuclide }}
+
+</td>
+
+<td>
+
+{{ form.serial_number }}
+
+</td>
+
+<td>
+
+{{ form.activity }}
+
+</td>
+
+<td>
+
+{{ form.activity_unit }}
+
+</td>
+
+<td>
+
+{{ form.activity_date }}
+
+</td>
+
+<td>
+
+{{ form.description }}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+<div class="mt-4 d-flex justify-content-end gap-2">
+
+<a
+
+href="{% url 'license_list' %}"
+
+class="btn btn-secondary"
+
+>
+
+{% trans "Back" %}
+
+</a>
+
+<button
+
+type="submit"
+
+class="btn btn-primary"
+
+>
+
+{% trans "Save" %}
+
+</button>
+
+<button
+
+type="submit"
+
+name="action"
+
+value="generate"
+
+class="btn btn-success"
+
+>
+
+{% trans "Generate DSRS Specification form" %}
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

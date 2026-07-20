@@ -32,8 +32,6 @@ class LicenseStatus(models.TextChoices):
 
     DRAFT = "DRAFT", _("Draft")
 
-    OCR = "OCR", _("OCR")
-
     SIGNATURE = "SIGNATURE", _("Waiting Signature")
 
     CONTRACT = "CONTRACT", _("Contract")
@@ -88,12 +86,17 @@ class LicenseRequest(models.Model):
         choices=LicenseStatus.choices,
         default=LicenseStatus.DRAFT,
     )
+    status_date = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    specification_completed = models.BooleanField(default=False,)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
     )
-
+    
     created_at = models.DateTimeField(
         auto_now_add=True,
     )
@@ -101,6 +104,7 @@ class LicenseRequest(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True,
     )
+
 
     class Meta:
 
@@ -213,10 +217,13 @@ class LicenseSource(models.Model):
         blank=True,
     )
 
-    notes = models.TextField(
-        _("Notes"),
+    description = models.TextField(
+        _("Description"),
         blank=True,
+        null=True,
+        help_text=_("Additional Description")
     )
+    specification_order = models.PositiveIntegerField(default=1,)
 
     created_dsrs = models.ForeignKey(
         "dashboard.DSRS",

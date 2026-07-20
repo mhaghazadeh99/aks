@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 
 from django.contrib import messages
 
@@ -17,9 +17,9 @@ from .forms import (
 
     LicenseRequestForm,
 
-    LicenseAttachmentForm,
+    LicenseAttachmentForm,LicenseSourceSpecificationFormSet,
 
-    LicenseSourceForm,)
+    LicenseSourceForm,LicenseFacilityForm)
 
 from .models import (
 
@@ -29,7 +29,7 @@ from .models import (
 
     LicenseAttachmentType,
 
-    LicenseSource,)
+    LicenseSource,LicenseStatus,)
 # ============================================================
 # Operation Home
 # ============================================================
@@ -154,70 +154,79 @@ def license_list(request):
 
 from django.http import HttpResponse
 
-
 def license_create(request):
+
+    def get_license_forms(post=None, files=None):
+
+        return {
+            "request_form": LicenseRequestForm(post),
+            "facility_form": LicenseFacilityForm(post),
+            "attachment_form": LicenseAttachmentForm(post, files),
+            "source_form": LicenseSourceForm(post),
+        }
+
 
     if request.method == "POST":
 
-        form = LicenseRequestForm(
-
+        forms = get_license_forms(
             request.POST,
+            request.FILES
         )
 
-        attachment_form = LicenseAttachmentForm(
+        request_form = forms["request_form"]
+        facility_form = forms["facility_form"]
+        attachment_form = forms["attachment_form"]
+        source_form = forms["source_form"]
 
-            request.POST,
-
-            request.FILES,
-        )
-
-        source_form = LicenseSourceForm(
-
-            request.POST,
-        )
 
         if (
+            request_form.is_valid()
+            and facility_form.is_valid()
+            and attachment_form.is_valid()
+            and source_form.is_valid()):
+         
+            
 
-            form.is_valid()
-
-            and
-
-            attachment_form.is_valid()
-
-            and
-
-            source_form.is_valid()
-
-        ):
-
-            license_request = form.save(
-                commit=False,
+            license_request = request_form.save(
+                commit=False
             )
 
-            license_request.created_by = (
-                request.user
+            license_request.facility = (
+                facility_form.cleaned_data["facility"]
             )
+
+            license_request.created_by = request.user
+            action = request.POST.get("action")
+
+
+            if action == "draft":
+                license_request.status = "DRAFT"
+            else:
+                license_request.status = "NEW"
+
 
             license_request.save()
+
 
             files = {
 
                 LicenseAttachmentType.LETTER:
-                    attachment_form.cleaned_data["letter"],
+                    attachment_form.cleaned_data.get("letter"),
 
                 LicenseAttachmentType.COMMITMENT:
-                    attachment_form.cleaned_data["commitment"],
+                    attachment_form.cleaned_data.get("commitment"),
 
                 LicenseAttachmentType.PERMIT:
-                    attachment_form.cleaned_data["permit"],
+                    attachment_form.cleaned_data.get("permit"),
 
                 LicenseAttachmentType.INQUIRY:
-                    attachment_form.cleaned_data["inquiry"],
+                    attachment_form.cleaned_data.get("inquiry"),
 
                 LicenseAttachmentType.OTHER:
-                    attachment_form.cleaned_data["other"],
+                    attachment_form.cleaned_data.get("other"),
 
             }
+
 
             for attachment_type, uploaded_file in files.items():
 
@@ -234,20 +243,120 @@ def license_create(request):
                         uploaded_by=request.user,
 
                     )
-            selected_sources = request.POST.getlist("sources")
+
+
+            selected_sources = request.POST.getlist(
+                "sources"
+            )
+
+
             for nuclide_id in selected_sources:
 
                 LicenseSource.objects.create(
 
                     license=license_request,
 
-                    nuclide_id=nuclide_id,)
+                    nuclide_id=nuclide_id,
+
+                )
+
+
+            messages.success(
+                request,
+                _("License request saved successfully."),
+            )
+
+            
+            if action == "draft":
+
+                return redirect(
+                    "license_list"
+                )
+
+
+            return redirect(
+                "license_specification",
+                pk=license_request.pk,
+            )
+
+
+    else:
+        
+
+        forms = get_license_forms()
+
+
+    return render(
+        request,
+        "operations/license_create.html",
+        forms,
+    )
+
+
+
+
+
+def license_specification(request, pk):
+
+    license_request = get_object_or_404(
+
+        LicenseRequest.objects.select_related(
+
+            "facility",
+
+        ),
+
+        pk=pk,
+
+    )
+
+    queryset = (
+
+        LicenseSource.objects
+
+        .filter(
+
+            license=license_request,
+
+        )
+
+        .select_related(
+
+            "nuclide",
+
+        )
+
+        .order_by(
+
+            "specification_order",
+
+        )
+
+    )
+
+    if request.method == "POST":
+
+        formset = LicenseSourceSpecificationFormSet(
+
+            request.POST,
+
+            queryset=queryset,
+
+        )
+
+        if formset.is_valid():
+
+            formset.save()
+
+            license_request.specification_completed = True
+
+            license_request.save()
 
             messages.success(
 
                 request,
 
-                _("License request created successfully."),
+                _("Specification saved successfully."),
 
             )
 
@@ -255,68 +364,274 @@ def license_create(request):
 
                 "license_specification",
 
-                license_request.pk,
+                pk=pk,
 
             )
 
     else:
 
-        form = LicenseRequestForm()
+        formset = LicenseSourceSpecificationFormSet(
 
-        attachment_form = LicenseAttachmentForm()
+            queryset=queryset,
 
-        source_form = LicenseSourceForm()
+        )
 
     return render(
-            request,
-            "operations/license_create.html",
-            {
-                "request_form": form,
-                "attachment_form": attachment_form,
-                "source_form": source_form,
-            },
+
+        request,
+
+        "operations/license_specification.html",
+
+        {
+
+            "license": license_request,
+
+            "formset": formset,
+
+        },
+
+    )
+
+
+
+
+def license_detail(request, pk):
+
+    license_request = get_object_or_404(
+
+        LicenseRequest.objects
+
+        .select_related(
+            "facility",
+            "created_by",
+        )
+
+        .prefetch_related(
+
+            "attachments",
+
+            "sources__nuclide",
+
+        ),
+
+        pk=pk,
+
+    )
+
+
+    context = {
+
+        "license": license_request,
+
+    }
+
+
+    return render(
+
+        request,
+
+        "operations/license_detail.html",
+
+        context,
+
+    )
+
+
+
+
+def license_continue(request, pk):
+
+    license_request = get_object_or_404(
+        LicenseRequest,
+        pk=pk,
+    )
+
+
+    # Specification step
+    if not license_request.specification_completed:
+
+        return redirect(
+            "license_specification",
+            pk=license_request.pk,
         )
 
 
-def license_detail(
-    request,
-    pk,
-    ):
+    # Workflow stages
 
-    return HttpResponse(
-        f"License {pk}"
+    if license_request.status == LicenseStatus.DRAFT:
+
+        license_request.status = LicenseStatus.SIGNATURE
+        license_request.save(
+            update_fields=["status"]
+        )
+
+        messages.success(
+            request,
+            _("Moved to signature stage."),
+        )
+
+        return redirect(
+            "license_detail",
+            pk=license_request.pk,
+        )
+
+
+    elif license_request.status == LicenseStatus.SIGNATURE:
+
+        # later:
+        # signature verification page
+
+        return redirect(
+            "license_detail",
+            pk=license_request.pk,
+        )
+
+
+    elif license_request.status == LicenseStatus.CONTRACT:
+
+        # later:
+        # contract page
+
+        return redirect(
+            "license_detail",
+            pk=license_request.pk,
+        )
+
+
+    elif license_request.status == LicenseStatus.FINANCE:
+
+        # later:
+        # payment confirmation page
+
+        return redirect(
+            "license_detail",
+            pk=license_request.pk,
+        )
+
+
+    elif license_request.status in [
+        LicenseStatus.ISSUED,
+        LicenseStatus.COMPLETED,
+    ]:
+
+        return redirect(
+            "license_detail",
+            pk=license_request.pk,
+        )
+
+
+
+
+def license_update(request, pk):
+
+    license_request = get_object_or_404(
+        LicenseRequest,
+        pk=pk,
     )
 
 
-def license_continue(
-    request,
-    pk,
-    ):
+    if request.method == "POST":
 
-    return HttpResponse(
-        f"Continue {pk}"
+        request_form = LicenseRequestForm(
+            request.POST,
+            instance=license_request,
+        )
+
+        facility_form = LicenseFacilityForm(
+            request.POST,
+        )
+
+
+        if (
+            request_form.is_valid()
+            and facility_form.is_valid()
+        ):
+
+            license_request = request_form.save(
+                commit=False
+            )
+
+
+            license_request.facility = (
+                facility_form.cleaned_data["facility"]
+            )
+
+
+            license_request.save()
+
+
+            messages.success(
+                request,
+                _("License updated successfully."),
+            )
+
+
+            return redirect(
+                "license_detail",
+                pk=license_request.pk,
+            )
+
+
+    else:
+
+        request_form = LicenseRequestForm(
+            instance=license_request,
+        )
+
+
+        facility_form = LicenseFacilityForm(
+            initial={
+                "facility": license_request.facility,
+            }
+        )
+
+
+    return render(
+        request,
+        "operations/license_update.html",
+        {
+            "license": license_request,
+            "request_form": request_form,
+            "facility_form": facility_form,
+        },
     )
 
 
-def license_update(
-    request,
-    pk,
-    ):
 
-    return HttpResponse(
-        f"Update {pk}"
+
+def license_delete(request, pk):
+
+    license_request = get_object_or_404(
+        LicenseRequest,
+        pk=pk,
     )
 
 
-def license_delete(
-    request,
-    pk,
-    ):
+    if request.method == "POST":
 
-    return HttpResponse(
-        f"Delete {pk}"
+        license_request.delete()
+
+
+        messages.success(
+            request,
+            _("License deleted successfully."),
+        )
+
+
+        return redirect(
+            "license_list"
+        )
+
+
+    return render(
+        request,
+        "operations/license_delete_confirm.html",
+        {
+            "license": license_request,
+        },
     )
 
+    
 
 def license_import_csv(
     request,

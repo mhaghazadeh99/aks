@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+
+{% block content %}
+
+<h2>
+    {% trans "License Details" %}
+</h2>
+
+
+<table class="table">
+
+
+<tr>
+    <th>
+        {% trans "Facility" %}
+    </th>
+
+    <td>
+        {{ license.facility.name }}
+    </td>
+</tr>
+
+
+<tr>
+    <th>
+        {% trans "Status" %}
+    </th>
+
+    <td>
+        {{ license.status }}
+    </td>
+</tr>
+
+
+<tr>
+    <th>
+        {% trans "Letter Number" %}
+    </th>
+
+    <td>
+        {{ license.letter_number }}
+    </td>
+</tr>
+
+
+<tr>
+    <th>
+        {% trans "Contract Number" %}
+    </th>
+
+    <td>
+        {{ license.contract_number }}
+    </td>
+</tr>
+
+
+<tr>
+    <th>
+        {% trans "Created By" %}
+    </th>
+
+    <td>
+        {{ license.created_by }}
+    </td>
+</tr>
+
+
+</table>
+
+
+<h3>
+{% trans "Sources" %}
+</h3>
+
+
+<table class="table">
+
+<tr>
+<th>
+{% trans "Nuclide" %}
+</th>
+
+<th>
+{% trans "Serial Number" %}
+</th>
+
+<th>
+{% trans "Activity" %}
+</th>
+
+</tr>
+
+
+{% for source in license.sources.all %}
+
+<tr>
+
+<td>
+{{ source.nuclide }}
+</td>
+
+<td>
+{{ source.serial_number }}
+</td>
+
+<td>
+{{ source.activity }}
+</td>
+
+</tr>
+
+
+{% empty %}
+
+<tr>
+<td colspan="3">
+{% trans "No sources added." %}
+</td>
+</tr>
+
+{% endfor %}
+
+
+</table>
+
+
+
+
+<h3>
+{% trans "Attachments" %}
+</h3>
+
+
+<ul>
+
+{% for file in license.attachments.all %}
+
+<li>
+
+<a href="{{ file.file.url }}">
+
+{{ file.get_attachment_type_display }}
+
+</a>
+
+</li>
+
+
+{% empty %}
+
+<li>
+{% trans "No attachments." %}
+</li>
+
+{% endfor %}
+
+
+</ul>
+
+
+<a href="{% url 'license_list' %}">
+{% trans "Back" %}
+</a>
+
+
+{% endblock %}

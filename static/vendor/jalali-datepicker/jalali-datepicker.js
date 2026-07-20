@@ -148,9 +148,19 @@ document.documentElement.lang === "fa"
 "en";
 
 
-
-
 function updateCalendar(){
+
+    if(currentLanguage === "fa"){
+        updateJalaliCalendar();
+    }else{
+        updateGregorianCalendar();
+    }
+
+}
+
+
+
+function updateJalaliCalendar(){
 
 
 if(typeof jalaali === "undefined"){
@@ -175,7 +185,8 @@ currentDate.getMonth()+1,
 1
 
 );
-
+prevMonthButton.textContent = "قبلی";
+nextMonthButton.textContent = "بعدی";
 
 
 const monthDays =
@@ -303,6 +314,73 @@ calendarContainer.style.display =
 }
 
 
+
+function updateGregorianCalendar(){
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ];
+
+    calendarTitle.innerHTML =
+        `${monthNames[month]} ${year}`;
+
+    prevMonthButton.textContent = "Previous";
+    nextMonthButton.textContent = "Next";
+
+    const monthDays =
+        new Date(year, month + 1, 0).getDate();
+
+    calendar.querySelector(".calendar-body").innerHTML =
+        Array.from(
+            {length: monthDays},
+            (_, i) =>
+            `
+            <div class="day">
+                ${i + 1}
+            </div>
+            `
+        ).join("");
+
+    calendar
+        .querySelectorAll(".day")
+        .forEach(function(day){
+
+            day.addEventListener(
+                "click",
+                function(){
+
+                    const selectedDay =
+                        Number(this.textContent);
+
+                    activeDatepicker.value =
+                        `${year}-${String(month+1).padStart(2,"0")}-${String(selectedDay).padStart(2,"0")}`;
+
+                    activeDatepicker.dataset.gregorian =
+                        activeDatepicker.value;
+
+                    calendarContainer.style.display =
+                        "none";
+
+                }
+            );
+
+        });
+
+}
 
 
 

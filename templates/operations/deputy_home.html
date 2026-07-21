@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{% trans "Operations Manager" %}
+{% endblock %}
+
+{% block content %}
+
+<h2>{% trans "Operations Manager" %}</h2>
+
+<hr>
+
+<div class="operations-grid">
+
+    <a href="{% url 'operation_deputy_license_list' %}" class="operation-card">
+
+        <div class="operation-icon">
+            📜
+        </div>
+
+        <h3>
+            {% trans "License Requests" %}
+        </h3>
+
+        <p>
+
+            {{ waiting_count }}
+
+            {% trans "license(s) waiting for approval." %}
+
+        </p>
+
+    </a>
+
+</div>
+
+{% endblock %}

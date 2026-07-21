@@ -223,6 +223,8 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
 
             "activity_date",
 
+            "description",
+
            
 
         ]
@@ -260,6 +262,8 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
             Field("activity_unit"),
 
             Field("activity_date"),
+
+            Field("description"),
 
             
 

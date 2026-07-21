@@ -307,10 +307,10 @@ def _format_half_life(seconds):
 
 def _fill_sources(doc, sources):
     table = doc.tables[1]
-
+ 
     FIRST_DATA_ROW = 7
     MAX_ROWS = 8  # the template only has 8 pre-drawn rows
-
+ 
     sources = list(sources)
     if len(sources) > MAX_ROWS:
         # The form has no more rows to add sources to as-is. Decide how you
@@ -318,25 +318,23 @@ def _fill_sources(doc, sources):
         # in _fill_description, etc.) — for now this just fills the first 8
         # and silently drops the rest.
         sources = sources[:MAX_ROWS]
-
+ 
     for i, source in enumerate(sources):
         row = FIRST_DATA_ROW + i
-
+ 
         activity = ""
         if source.activity is not None:
             activity = f"{source.activity} {source.get_activity_unit_display()}"
-
+ 
         # LicenseSource has no "name" field — the source's identity is its
         # nuclide.
         _set_cell_value(table.cell(row, 1), source.nuclide.name)
         _set_cell_value(table.cell(row, 2), activity)
         _set_cell_value(table.cell(row, 4), source.serial_number)
         _set_cell_value(table.cell(row, 6), _format_half_life(source.nuclide.half_life))
-
-        # TODO: no per-row notes/description field on LicenseSource in the
-        # models you shared — leaving this column blank.
-        _set_cell_value(table.cell(row, 8), "")
-
+        _set_cell_value(table.cell(row, 8), source.description or "")
+ 
+ 
 
 def _fill_description(doc, description):
     table = doc.tables[1]

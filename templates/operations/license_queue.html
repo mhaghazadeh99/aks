@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{{ page_title }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h2>{{ page_title }}</h2>
+
+</div>
+
+<div class="card shadow">
+
+<div class="card-body">
+
+<form method="get" class="row g-2 mb-3">
+
+    <div class="col-md-5">
+
+        <input
+            type="text"
+            name="search"
+            value="{{ search }}"
+            class="form-control"
+            placeholder="{% trans 'Search...' %}">
+
+    </div>
+
+    <div class="col-md-2">
+
+        <button class="btn btn-primary">
+
+            {% trans "Search" %}
+
+        </button>
+
+    </div>
+
+</form>
+
+<table class="table table-hover align-middle">
+
+<thead>
+
+<tr>
+
+<th>{% trans "Facility" %}</th>
+
+<th>{% trans "Letter No." %}</th>
+
+<th>{% trans "Letter Date" %}</th>
+
+<th>{% trans "Sources" %}</th>
+
+<th>{% trans "Created By" %}</th>
+
+<th>{% trans "Status" %}</th>
+
+<th width="130">{% trans "Action" %}</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for license in page_obj %}
+
+<tr>
+
+<td>
+
+{{ license.facility }}
+
+</td>
+
+<td>
+
+{{ license.letter_number }}
+
+</td>
+
+<td>
+
+{{ license.letter_date }}
+
+</td>
+
+<td>
+
+{{ license.sources.count }}
+
+</td>
+
+<td>
+
+{{ license.created_by }}
+
+</td>
+
+<td>
+
+{{ license.get_status_display }}
+
+</td>
+
+<td>
+
+<a
+href="{% url 'license_sign' license.pk %}"
+class="btn btn-primary btn-sm">
+
+{% trans "Open" %}
+
+</a>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="7" class="text-center">
+
+{% trans "No licenses found." %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

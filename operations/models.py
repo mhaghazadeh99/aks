@@ -262,7 +262,7 @@ class LicenseSource(models.Model):
     )
 
     specification_order = models.PositiveIntegerField(default=1,)
-
+    description = models.TextField(max_length=50, blank=True, null= True)
     created_dsrs = models.ForeignKey(
         "dashboard.DSRS",
         null=True,

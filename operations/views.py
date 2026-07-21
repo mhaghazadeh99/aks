@@ -53,6 +53,89 @@ def operation_home(request):
 
 
 
+def operation_manager_home(request):
+
+    context = {
+
+        "waiting_count": (
+
+            LicenseRequest.objects.filter(
+
+                status=LicenseStatus.WAITING_MANAGER
+
+            ).count()
+
+        ),
+
+    }
+
+    return render(
+
+        request,
+
+        "operations/manager_home.html",
+
+        context,
+
+    )
+
+
+
+
+def operation_deputy_home(request):
+
+    context = {
+
+        "waiting_count": (
+
+            LicenseRequest.objects.filter(
+
+                status=LicenseStatus.WAITING_DEPUTY
+
+            ).count()
+
+        ),
+
+    }
+
+    return render(
+
+        request,
+
+        "operations/deputy_home.html",
+
+        context,
+
+    )
+
+
+def operation_control_home(request):
+
+    context = {
+
+        "active_count": (
+
+            LicenseRequest.objects.exclude(
+
+                status=LicenseStatus.COMPLETED
+
+            ).count()
+
+        ),
+
+    }
+
+    return render(
+
+        request,
+
+        "operations/control_home.html",
+
+        context,
+
+    )
+
+
 
 def license_list(request):
 
@@ -467,85 +550,60 @@ def license_continue(request, pk):
         pk=pk,
     )
 
-    # Draft -> continue editing
     if license_request.status == LicenseStatus.DRAFT:
 
         return redirect(
             "license_create_edit",
-            pk=license_request.pk,
+            pk=pk,
         )
 
-    # Specification not finished
     if not license_request.specification_completed:
 
         return redirect(
             "license_specification",
-            pk=license_request.pk,
+            pk=pk,
         )
 
-    # Waiting for signatures
-    if license_request.status == LicenseStatus.WAITING_CREATOR:
+    if license_request.status in [
+
+        LicenseStatus.WAITING_CREATOR,
+
+        LicenseStatus.WAITING_MANAGER,
+
+        LicenseStatus.WAITING_DEPUTY,
+
+    ]:
 
         return redirect(
             "license_sign",
-            pk=license_request.pk,
+            pk=pk,
         )
 
-
-    if license_request.status == LicenseStatus.WAITING_MANAGER:
-
-        return render(
-            request,
-            "operations/waiting.html",
-            {
-                "license": license_request,
-                "message": "Waiting for manager approval",
-            }
-        )
-
-
-    if license_request.status == LicenseStatus.WAITING_DEPUTY:
-
-        return render(
-            request,
-            "operations/waiting.html",
-            {
-                "license": license_request,
-                "message": "Waiting for deputy approval",
-            }
-        )
-
-    # Contracts
     if license_request.status == LicenseStatus.CONTRACTS:
 
         return redirect(
             "contract_detail",
-            pk=license_request.pk,
+            pk=pk,
         )
 
-    # Finance
     if license_request.status == LicenseStatus.FINANCE:
 
         return redirect(
             "finance_detail",
-            pk=license_request.pk,
+            pk=pk,
         )
 
-    # Ready to issue
     if license_request.status == LicenseStatus.READY_TO_ISSUE:
 
         return redirect(
             "license_issue",
-            pk=license_request.pk,
+            pk=pk,
         )
 
-    # Issued / completed
     return redirect(
         "license_detail",
-        pk=license_request.pk,
+        pk=pk,
     )
-
-
 
 
 def license_update(request, pk):
@@ -749,4 +807,141 @@ def license_sign(request, pk):
             "approval": creator_approval,
             "history": history,
         }
+    )
+
+    
+
+def operation_manager_license_list(request):
+
+    queryset = (
+
+        LicenseRequest.objects
+
+        .select_related(
+            "facility",
+            "created_by",
+        )
+
+        .prefetch_related(
+            "sources",
+        )
+
+        .filter(
+            status=LicenseStatus.WAITING_MANAGER
+        )
+
+        .order_by(
+            "-created_at",
+        )
+
+    )
+
+    search = request.GET.get("search", "")
+
+    if search:
+
+        queryset = queryset.filter(
+
+            Q(
+                facility__name__icontains=search
+            )
+
+            |
+
+            Q(
+                letter_number__icontains=search
+            )
+
+        )
+
+    paginator = Paginator(queryset, 15)
+
+    page_obj = paginator.get_page(
+        request.GET.get("page")
+    )
+
+    return render(
+
+        request,
+
+        "operations/license_queue.html",
+
+        {
+
+            "page_title": _("Operations Manager"),
+
+            "page_obj": page_obj,
+
+            "search": search,
+
+        },
+
+    )
+
+
+def operation_deputy_license_list(request):
+
+    queryset = (
+
+        LicenseRequest.objects
+
+        .select_related(
+            "facility",
+            "created_by",
+        )
+
+        .prefetch_related(
+            "sources",
+        )
+
+        .filter(
+            status=LicenseStatus.WAITING_DEPUTY
+        )
+
+        .order_by(
+            "-created_at",
+        )
+
+    )
+
+    search = request.GET.get("search", "")
+
+    if search:
+
+        queryset = queryset.filter(
+
+            Q(
+                facility__name__icontains=search
+            )
+
+            |
+
+            Q(
+                letter_number__icontains=search
+            )
+
+        )
+
+    paginator = Paginator(queryset, 15)
+
+    page_obj = paginator.get_page(
+        request.GET.get("page")
+    )
+
+    return render(
+
+        request,
+
+        "operations/license_queue.html",
+
+        {
+
+            "page_title": _("Deputy Manager"),
+
+            "page_obj": page_obj,
+
+            "search": search,
+
+        },
+
     )

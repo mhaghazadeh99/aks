@@ -112,7 +112,52 @@
 </p>
 
 <div class="operations-grid">
+<a href="{% url 'operation_deputy_home' %}" class="operation-card">
 
+    <div class="operation-icon">
+        👔
+    </div>
+
+    <h3>
+        {% trans "Deputy Manager" %}
+    </h3>
+
+    <p>
+        {% trans "Review and approve license specifications waiting for deputy approval." %}
+    </p>
+
+</a>
+
+<a href="{% url 'operation_manager_home' %}" class="operation-card">
+
+    <div class="operation-icon">
+        👨‍💼
+    </div>
+
+    <h3>
+        {% trans "Operations Manager" %}
+    </h3>
+
+    <p>
+        {% trans "Review and approve license specifications waiting for manager approval." %}
+    </p>
+
+</a>
+<a href="{% url 'operation_control_home' %}" class="operation-card">
+
+    <div class="operation-icon">
+        📋
+    </div>
+
+    <h3>
+        {% trans "Operations Control" %}
+    </h3>
+
+    <p>
+        {% trans "Monitor license requests and workflow progress." %}
+    </p>
+
+</a>
 
 <a href="{% url 'facility_list' %}" class="operation-card">
 
@@ -202,6 +247,7 @@
 </p>
 
 </a>
+
 
 </div>
 

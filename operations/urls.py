@@ -69,5 +69,37 @@ path(
     views.license_sign,
     name="license_sign",
 ),
+path(
+    "manager/",
+    views.operation_manager_home,
+    name="operation_manager_home",
+),
+
+path(
+    "manager/licenses/",
+    views.operation_manager_license_list,
+    name="operation_manager_license_list",
+),
+
+
+path(
+    "deputy/",
+    views.operation_deputy_home,
+    name="operation_deputy_home",
+),
+
+path(
+    "deputy/licenses/",
+    views.operation_deputy_license_list,
+    name="operation_deputy_license_list",
+),
+
+
+path(
+    "control/",
+    views.operation_control_home,
+    name="operation_control_home",
+),
+
 
 ]

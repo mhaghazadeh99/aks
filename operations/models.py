@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-from dashboard.models import ActivityUnit   # or wherever your ActivityUnit choices are
+from dashboard.choices import ActivityUnit   # or wherever your ActivityUnit choices are
 from facilities.models import Facility
 
 from reference.models import Nuclides
@@ -100,23 +100,7 @@ class LicenseRequest(models.Model):
         null=True,
     )
 
-    contract_number = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-    )
-
-    contract_date = models.DateField(
-        blank=True,
-        null=True,
-    )
-
-    contract_cost = models.DecimalField(
-        max_digits=14,
-        decimal_places=2,
-        blank=True,
-        null=True,
-    )
+    
 
     status = models.CharField(
         max_length=20,

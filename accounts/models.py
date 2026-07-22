@@ -7,6 +7,7 @@ from django.conf import settings
 def signature_upload_path(instance, filename):
 
     return (
+        f"users/"
         f"signatures/"
         f"user_{instance.user.id}/"
         f"{filename}"
@@ -39,6 +40,7 @@ class UserProfile(models.Model):
         blank=True,
         null=True,
     )
+    
    
     def __str__(self):
         return self.user.username

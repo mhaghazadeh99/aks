@@ -9,7 +9,7 @@ from reference.models import Nuclides
 # Create your models here.
 
 from django.contrib.auth.models import User
-
+from .choices import ActivityUnit
 
 
 class OriginType(models.TextChoices):
@@ -42,18 +42,7 @@ class SOURCE_TYPE(models.TextChoices):
     SEALED = "Solid", "Solid"
     LIQUID = "Liquid", "Liquid"
 # -----------------------------
-# NEW: Source type for filtering
-# -----------------------------
-class ActivityUnit(models.TextChoices):
-    
-    Bq = 'Bq', 'Bq'
-    kBq = 'kBq', 'kBq'
-    MBq = 'MBq', 'MBq'
-    GBq = 'GBq', 'GBq'
-    Ci    = 'Ci', 'Ci'
-    mCi = 'mCi', 'mCi'
-    µCi    ='µCi', 'µCi'
-        
+
 
 # ---- MAIN MODEL ----
 class DSRS(models.Model):

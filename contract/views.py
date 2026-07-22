@@ -12,6 +12,25 @@ from django.http import HttpResponse
 from datetime import datetime
 from django.core.paginator import Paginator
 from dashboard.models import DSRS
+
+from operations.models import LicenseRequest,LicenseStatus
+
+def contract_home(request):
+
+    licenses = LicenseRequest.objects.filter(
+        status=LicenseStatus.CONTRACTS
+    )
+
+    return render(
+        request,
+        "contract/contract_home.html",
+        {
+            "licenses": licenses
+        }
+    )
+
+
+
 def contract_index(request):
     contracts = Contract.objects.prefetch_related(
     "dsrs").order_by('-created_at')

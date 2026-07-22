@@ -59,6 +59,12 @@
     🏠 {% trans "Home" %}
 </a>
 
+<a href="{% url 'operation_home' %}"
+   class="{% if request.resolver_match.url_name == 'operation_home' %}active{% endif %}">
+    📋 {% trans "operation" %}
+</a>
+
+
 
 <a href="{% url 'tables' %}"
    class="{% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
@@ -76,7 +82,7 @@
     ☢ {% trans "Reference Data" %}
 </a>
 
-<a href="{% url 'contract_index' %}"
+<a href="{% url 'contract_home' %}"
    class="{% if request.resolver_match.url_name == 'contract_index' %}active{% endif %}">
     📑 {% trans "Contracts" %}
 </a>

@@ -5,13 +5,114 @@
 {% trans "Operations Manager" %}
 {% endblock %}
 
+{% block extrastyle %}
+
+<style>
+
+.operations-container{
+    padding:30px;
+}
+
+.operations-title{
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+.operations-subtitle{
+    color:#777;
+    margin-bottom:30px;
+}
+
+.operations-grid{
+
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:25px;
+
+}
+
+.operation-card{
+
+    background:#fff;
+
+    border-radius:16px;
+
+    padding:25px;
+
+    text-decoration:none;
+
+    color:inherit;
+
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+    transition:.25s;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    min-height:140px;
+
+}
+
+.operation-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+
+}
+
+.operation-icon{
+
+    font-size:36px;
+
+    margin-bottom:18px;
+
+}
+
+.operation-card h3{
+
+    margin:0;
+
+    font-size:20px;
+
+}
+
+.operation-card p{
+
+    margin-top:8px;
+
+    color:#666;
+
+}
+
+</style>
+
+{% endblock %}
+
+
 {% block content %}
 
-<h2>{% trans "Operations Manager" %}</h2>
+<div class="operations-container">
 
-<hr>
+<h1 class="operations-title">
+
+{% trans "Operation manager" %}
+
+</h1>
+
+<p class="operations-subtitle">
+
+{% trans "Select an operation to continue." %}
+
+</p>
 
 <div class="operations-grid">
+
 
     <a href="{% url 'operation_manager_license_list' %}" class="operation-card">
 
@@ -33,6 +134,11 @@
 
     </a>
 
+
+
+</div>
+
 </div>
 
 {% endblock %}
+    

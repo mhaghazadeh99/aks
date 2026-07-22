@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block title %}
-{% trans "Operations Manager" %}
+{% trans "Contracts Manager" %}
 {% endblock %}
 
 {% block extrastyle %}
@@ -101,20 +101,20 @@
 
 <h1 class="operations-title">
 
-{% trans "Operation manager" %}
+{% trans "Contract Manager" %}
 
 </h1>
 
 <p class="operations-subtitle">
 
-{% trans "Select an operation to continue." %}
+{% trans "Select a contract operation to continue." %}
 
 </p>
 
 <div class="operations-grid">
 
 
-    <a href="{% url 'operation_deputy_license_list' %}" class="operation-card">
+    <a href="{% url 'license_list' %}" class="operation-card">
 
         <div class="operation-icon">
             📜
@@ -133,8 +133,39 @@
         </p>
 
     </a>
+      <a href="#" class="operation-card">
 
+        <div class="operation-icon">
+            📜
+        </div>
 
+        <h3>
+            {% trans "issued Licenses " %}
+        </h3>
+
+        <p>
+
+            {{ waiting_count }}
+
+            {% trans "issued license(s)." %}
+
+        </p>
+
+    </a>
+
+  <a href="{% url 'contract_index' %}" class="operation-card">
+
+        <div class="operation-icon">
+            📜
+        </div>
+
+        <h3>
+            {% trans "sell Sources" %}
+        </h3>
+
+        
+
+    </a>
 
 </div>
 

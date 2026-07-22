@@ -16,8 +16,7 @@ from operations.models import (
 
 def generate_specification(
     license_request,
-    generated_by,
-):
+    generated_by,):
 
     template_path = (
         Path(settings.BASE_DIR)

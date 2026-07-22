@@ -1,7 +1,12 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from django.utils import timezone
 from django.contrib import messages
+import os
+import tempfile
 
+from django.core.files import File
+
+from operations.services.signature_service import SpecificationSigner
 from django.db import transaction
 
 from django.utils.translation import gettext_lazy as _
@@ -16,22 +21,10 @@ from .services.workflow import create_license_workflow
 from .services.specification_generator import (
     generate_specification,)
 
-from .forms import (
-
-    LicenseRequestForm,
-
-    LicenseAttachmentForm,LicenseSourceSpecificationFormSet,
-
+from .forms import (LicenseRequestForm, LicenseAttachmentForm, LicenseSourceSpecificationFormSet,
     LicenseSourceForm,LicenseFacilityForm)
 
-from .models import (
-
-    LicenseRequest,
-
-    LicenseAttachment,
-
-    LicenseAttachmentType,
-
+from .models import (LicenseRequest, LicenseAttachment, LicenseAttachmentType,
     LicenseSource,LicenseStatus,LicenseApproval)
 # ============================================================
 # Operation Home
@@ -564,39 +557,10 @@ def license_continue(request, pk):
             pk=pk,
         )
 
-    if license_request.status in [
-
-        LicenseStatus.WAITING_CREATOR,
-
-        LicenseStatus.WAITING_MANAGER,
-
-        LicenseStatus.WAITING_DEPUTY,
-
-    ]:
+    if license_request.status == LicenseStatus.WAITING_CREATOR:
 
         return redirect(
             "license_sign",
-            pk=pk,
-        )
-
-    if license_request.status == LicenseStatus.CONTRACTS:
-
-        return redirect(
-            "contract_detail",
-            pk=pk,
-        )
-
-    if license_request.status == LicenseStatus.FINANCE:
-
-        return redirect(
-            "finance_detail",
-            pk=pk,
-        )
-
-    if license_request.status == LicenseStatus.READY_TO_ISSUE:
-
-        return redirect(
-            "license_issue",
             pk=pk,
         )
 
@@ -604,6 +568,7 @@ def license_continue(request, pk):
         "license_detail",
         pk=pk,
     )
+
 
 
 def license_update(request, pk):
@@ -737,6 +702,10 @@ def license_export_csv(
 
 
 
+
+
+
+
 def license_sign(request, pk):
 
     license_request = get_object_or_404(
@@ -744,72 +713,221 @@ def license_sign(request, pk):
         pk=pk,
     )
 
+    # -------------------------------------------------------
+    # Current workflow step
+    # -------------------------------------------------------
 
-    # Creator can only sign in this stage
-    if license_request.status != LicenseStatus.WAITING_CREATOR:
+    if license_request.status == LicenseStatus.WAITING_CREATOR:
+
+        current_step = LicenseApproval.ApprovalStep.CREATOR
+
+    elif license_request.status == LicenseStatus.WAITING_MANAGER:
+
+        current_step = LicenseApproval.ApprovalStep.MANAGER
+
+    elif license_request.status == LicenseStatus.WAITING_DEPUTY:
+
+        current_step = LicenseApproval.ApprovalStep.DEPUTY
+
+    else:
+
+        messages.info(
+            request,
+            _("This license is not waiting for approval."),
+        )
+
         return redirect(
-            "license_continue",
+            "license_detail",
             pk=pk,
         )
 
+    # -------------------------------------------------------
+    # Generated specification
+    # -------------------------------------------------------
 
     specification = get_object_or_404(
+
         LicenseAttachment,
+
         license=license_request,
+
         attachment_type=LicenseAttachmentType.SPECIFICATION,
+
     )
 
+    # -------------------------------------------------------
+    # Approval record
+    # -------------------------------------------------------
 
-    creator_approval = get_object_or_404(
+    approval = get_object_or_404(
+
         LicenseApproval,
+
         license=license_request,
-        step=LicenseApproval.ApprovalStep.CREATOR,
+
+        step=current_step,
+
     )
 
+    # -------------------------------------------------------
+    # Approval history
+    # -------------------------------------------------------
+
+    history = (
+
+        LicenseApproval.objects
+
+        .filter(
+            license=license_request,
+        )
+
+        .order_by(
+            "step",
+        )
+
+    )
+
+    # -------------------------------------------------------
+    # POST
+    # -------------------------------------------------------
 
     if request.method == "POST":
 
-        creator_approval.status = (
-            LicenseApproval.ApprovalStatus.APPROVED
+        profile = request.user.profile
+
+        if not profile.signature_image:
+
+            messages.error(
+                request,
+                _("Please upload your signature image first."),
+            )
+
+            return redirect(
+                "profile",
+            )
+
+        # -----------------------------------------------
+        # Sign the specification document
+        # -----------------------------------------------
+
+        tmp = tempfile.NamedTemporaryFile(
+            suffix=".docx",
+            delete=False,
         )
 
-        creator_approval.approver = request.user
-
-        creator_approval.approved_at = timezone.now()
-
-        creator_approval.save()
-
-
-        license_request.status = (
-            LicenseStatus.WAITING_MANAGER
+        signer = SpecificationSigner(
+            specification.file.path,
         )
+
+        signer.sign(
+            profile,
+            current_step.name,
+        )
+
+        signer.save(
+            tmp.name,
+        )
+
+        with open(tmp.name, "rb") as f:
+
+            specification.file.save(
+
+                os.path.basename(
+                    specification.file.name,
+                ),
+
+                File(f),
+
+                save=False,
+
+            )
+
+        specification.save()
+
+        os.remove(
+            tmp.name,
+        )
+
+        # -----------------------------------------------
+        # Save approval
+        # -----------------------------------------------
+
+        approval.status = LicenseApproval.ApprovalStatus.APPROVED
+
+        approval.approver = request.user
+
+        approval.approved_at = timezone.now()
+
+        approval.save()
+
+        # -----------------------------------------------
+        # Next workflow stage
+        # -----------------------------------------------
+
+        if current_step == LicenseApproval.ApprovalStep.CREATOR:
+
+            license_request.status = LicenseStatus.WAITING_MANAGER
+
+        elif current_step == LicenseApproval.ApprovalStep.MANAGER:
+
+            license_request.status = LicenseStatus.WAITING_DEPUTY
+
+        elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
+
+            license_request.status = LicenseStatus.CONTRACTS
 
         license_request.save()
 
-
-        return redirect(
-            "license_continue",
-            pk=pk,
+        messages.success(
+            request,
+            _("Specification signed successfully."),
         )
 
+        # -----------------------------------------------
+        # Redirect
+        # -----------------------------------------------
 
-    history = LicenseApproval.objects.filter(
-        license=license_request
-    )
+        if current_step == LicenseApproval.ApprovalStep.CREATOR:
 
+            return redirect(
+                "license_list",
+            )
+
+        elif current_step == LicenseApproval.ApprovalStep.MANAGER:
+
+            return redirect(
+                "operation_manager_license_list",
+            )
+
+        elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
+
+            return redirect(
+                "contract_home",
+            )
+
+    # -------------------------------------------------------
+    # GET
+    # -------------------------------------------------------
 
     return render(
-        request,
-        "operations/license_sign.html",
-        {
-            "license": license_request,
-            "specification": specification,
-            "approval": creator_approval,
-            "history": history,
-        }
-    )
 
-    
+        request,
+
+        "operations/license_sign.html",
+
+        {
+
+            "license": license_request,
+
+            "specification": specification,
+
+            "approval": approval,
+
+            "history": history,
+
+        },
+
+    )
 
 def operation_manager_license_list(request):
 

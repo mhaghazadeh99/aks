@@ -327,19 +327,17 @@ def license_create(request):
                     )
 
 
-            selected_sources = request.POST.getlist(
-                "sources"
+            selected_sources = json.loads(
+                request.POST["sources_json"]
             )
 
-
-            for nuclide_id in selected_sources:
+            for item in selected_sources:
 
                 LicenseSource.objects.create(
-
                     license=license_request,
-
-                    nuclide_id=nuclide_id,
-
+                    source_type=item["type"],
+                    nuclide_id=item["nuclide"],
+                    source_dsrs_id=item.get("dsrs"),
                 )
 
 
@@ -393,28 +391,18 @@ def license_specification(request, pk):
     )
 
     queryset = (
-
-        LicenseSource.objects
-
-        .filter(
-
-            license=license_request,
-
+            LicenseSource.objects
+            .filter(
+                license=license_request,
+            )
+            .select_related(
+                "nuclide",
+                "source_dsrs",
+            )
+            .order_by(
+                "specification_order",
+            )
         )
-
-        .select_related(
-
-            "nuclide",
-
-        )
-
-        .order_by(
-
-            "specification_order",
-
-        )
-
-    )
 
     if request.method == "POST":
 
@@ -428,7 +416,19 @@ def license_specification(request, pk):
 
         if formset.is_valid():
 
-            formset.save()
+            instances = formset.save(commit=False)
+
+            for obj in instances:
+
+                # reused/recycled
+                if obj.source_type != LicenseSourceType.NEW:
+
+                    obj.nuclide = obj.source_dsrs.Nuclide
+
+                    if not obj.serial_number:
+                        obj.serial_number = obj.source_dsrs.serial_number
+
+                obj.save()
             generate_specification(
 
                 license_request,
@@ -505,12 +505,10 @@ def license_detail(request, pk):
         )
 
         .prefetch_related(
-
-            "attachments",
-
-            "sources__nuclide",
-
-        ),
+                "attachments",
+                "sources__nuclide",
+                "sources__source_dsrs",
+            ),
 
         pk=pk,
 

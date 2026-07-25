@@ -138,95 +138,62 @@
                         <!-- 4 REQUESTED SOURCES -->
                         <!-- ===================================================== -->
 
-                        <div class="card mb-4">
+                        <h5 class="mb-3">
+④ {% trans "Requested Sources" %}
+</h5>
 
-                            <div class="card-header">
+<div class="card mb-3">
+    <div class="card-body">
 
-                                <h5 class="mb-0">
+        <div class="row g-3">
 
-                                    ④ {% trans "Requested Sources" %}
+            <div class="col-md-3">
+                <label class="form-label">
+                    {% trans "Source Type" %}
+                </label>
 
-                                </h5>
+                {{ source_form.source_type }}
+            </div>
 
-                            </div>
+            <div class="col-md-5" id="nuclideArea">
+                <label class="form-label">
+                    {% trans "Nuclide" %}
+                </label>
 
-                            <div class="card-body">
+                {{ source_form.nuclide }}
+            </div>
 
-                                <div class="row align-items-end">
+            <div class="col-md-5 d-none" id="dsrsArea">
+                <label class="form-label">
+                    {% trans "Existing DSRS Source" %}
+                </label>
 
-                                    <div class="col-lg-5">
+                {{ source_form.source_dsrs }}
+            </div>
 
-                                        {{ source_form.nuclide|as_crispy_field }}
+            <div class="col-md-2">
+                <label class="form-label">
+                    {% trans "Quantity" %}
+                </label>
 
-                                    </div>
+                {{ source_form.quantity }}
+            </div>
 
-                                    <div class="col-lg-3">
+            <div class="col-md-2 d-grid">
+                <button
+                    type="button"
+                    class="btn btn-success"
+                    onclick="addSources()">
 
-                                        {{ source_form.quantity|as_crispy_field }}
+                    {% trans "Add" %}
 
-                                    </div>
+                </button>
+            </div>
 
-                                    <div class="col-lg-2">
+        </div>
 
-                                        <button
-                                            type="button"
-                                            class="btn btn-success w-100"
-                                            onclick="addSources();"
-                                        >
-
-                                            {% trans "Add" %}
-
-                                        </button>
-
-                                    </div>
-
-                                </div>
-
-                                <div class="table-responsive mt-4">
-
-                                    <table class="table table-bordered table-hover align-middle">
-
-                                        <thead class="table-light">
-
-                                            <tr>
-
-                                                <th style="width:70px">
-
-                                                    #
-
-                                                </th>
-
-                                                <th>
-
-                                                    {% trans "Nuclide" %}
-
-                                                </th>
-
-                                                <th style="width:150px">
-
-                                                    {% trans "Remove" %}
-
-                                                </th>
-
-                                            </tr>
-
-                                        </thead>
-
-                                        <tbody id="sourceTable">
-
-                                        </tbody>
-
-                                    </table>
-
-                                </div>
-
-                                <div id="hiddenSources">
-
-                                </div>
-
-                            </div>
-
-                        </div>
+    </div>
+</div>
 
 
                         <!-- ===================================================== -->

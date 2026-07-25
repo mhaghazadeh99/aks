@@ -200,7 +200,13 @@ class LicenseAttachment(models.Model):
 
 
 
+class LicenseSourceType(models.TextChoices):
 
+    NEW = "NEW", _("New Source")
+
+    REUSED = "REUSED", _("Reused Source")
+
+    RECYCLED = "RECYCLED", _("Recycled Source")
 
 
 
@@ -212,7 +218,19 @@ class LicenseSource(models.Model):
         related_name="sources",
         verbose_name=_("License"),
     )
-
+    source_type = models.CharField(
+            max_length=15,
+            choices=LicenseSourceType.choices,
+            default=LicenseSourceType.NEW,
+        )
+    source_dsrs = models.ForeignKey(
+           "dashboard.DSRS",
+            null=True,
+            blank=True,
+            on_delete=models.PROTECT,
+            related_name="requested_in_licenses",
+        )
+    
     nuclide = models.ForeignKey(
         Nuclides,
         on_delete=models.PROTECT,
@@ -248,12 +266,13 @@ class LicenseSource(models.Model):
 
     specification_order = models.PositiveIntegerField(default=1,)
     description = models.TextField(max_length=50, blank=True, null= True)
-    created_dsrs = models.ForeignKey(
+
+    result_dsrs = models.ForeignKey(
         "dashboard.DSRS",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="license_sources",
+        related_name="created_by_licenses",
     )
 
     class Meta:

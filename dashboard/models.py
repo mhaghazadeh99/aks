@@ -3,11 +3,11 @@ from django.utils import timezone
 import math
 from common.utils.physics import LN2, mci_to_bq, bq_to_mci
 from common.utils.fileValidator import validate_attachment
-from contract.models import Contract
+from contract.models import Contract,LicenseContract
 from simple_history.models import HistoricalRecords
 from reference.models import Nuclides
 # Create your models here.
-
+from facilities.models import Facility
 from django.contrib.auth.models import User
 from .choices import ActivityUnit
 
@@ -27,7 +27,7 @@ class SOURCE_STATUS(models.TextChoices):
     REUSED = "Reused", "Reused"               # Sent out again
     RECYCLED = "Recycled", "Recycled"
     DISPOSED = "Disposed", "Disposed"         # Final state
-    Loaned = "Loaned", "Loaned"
+    LOANED = "Loaned", "Loaned"
 
 class SourceState(models.TextChoices):
     OK = "OK", "OK"
@@ -40,21 +40,42 @@ class SourceForm(models.TextChoices):
 
 
 class SOURCE_TYPE(models.TextChoices):
-    SEALED = "Solid", "Solid"
-    LIQUID = "Liquid", "Liquid"
+    SRS = "SRS", "SRS"
+    DSRS = "DSRS", "DSRS"
 # -----------------------------
 
 
 # ---- MAIN MODEL ----
 class DSRS(models.Model):
+    contract = models.ForeignKey(
+        LicenseContract,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    @property
+    def contract_number(self):
+        return self.LicenseContract.contract_number if self.contract else ""
+    created_from = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="children",
+    )
     Source_Type = models.CharField( max_length=10, choices=SOURCE_TYPE.choices, default="DSRS")
+
     Sso_Code = models.CharField(max_length=12,null=True, blank=True)
+
     Facility = models.CharField(max_length=100, blank=True, null=True)
+
     Origin_Type = models.CharField(max_length=20, choices=OriginType.choices,null=True, blank=True)
 
     Date_received = models.DateField(blank=True, null=True)
     Origin_Facility = models.CharField(max_length=250,blank=True, null=True)
-
+    is_divisible = models.BooleanField(default=False,)
+    source_count = models.PositiveIntegerField(default=1,)
+    available_count = models.PositiveIntegerField(default=1,)
     Location = models.CharField(max_length=20,blank=True, null=True)
 
     @property
@@ -236,7 +257,56 @@ class DSRSImage(models.Model):
         null=True
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+class SourceMovement(models.Model):
     
+    source = models.ForeignKey(
+        DSRS,
+        on_delete=models.CASCADE,
+    )
+
+    movement_type = models.CharField(
+        max_length=20,
+        choices=[
+            ("ISSUE", "Issue"),
+            ("RETURN", "Return"),
+            ("REUSE", "Reuse"),
+            ("RECYCLE", "Recycle"),
+            ("DISPOSAL", "Disposal"),
+        ],
+    )
+
+    from_facility = models.ForeignKey(
+        Facility,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+
+    to_facility = models.ForeignKey(
+        Facility,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+
+    quantity = models.PositiveIntegerField(default=1)
+
+    movement_date = models.DateField()
+
+    contract = models.ForeignKey(
+        LicenseContract,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    remarks = models.TextField(blank=True)
+
+
 class HideShowFilterT(models.Model):
     parent = models.CharField(max_length=50)
     key = models.CharField(max_length=50)

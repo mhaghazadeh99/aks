@@ -293,26 +293,26 @@ def license_create(request):
             files = {
 
                 LicenseAttachmentType.LETTER:
-                    attachment_form.cleaned_data.get("letter"),
+                    attachment_form.cleaned_data.get("letter", []),
 
                 LicenseAttachmentType.COMMITMENT:
-                    attachment_form.cleaned_data.get("commitment"),
+                    attachment_form.cleaned_data.get("commitment", []),
 
                 LicenseAttachmentType.PERMIT:
-                    attachment_form.cleaned_data.get("permit"),
+                    attachment_form.cleaned_data.get("permit", []),
 
                 LicenseAttachmentType.INQUIRY:
-                    attachment_form.cleaned_data.get("inquiry"),
+                    attachment_form.cleaned_data.get("inquiry", []),
 
                 LicenseAttachmentType.OTHER:
-                    attachment_form.cleaned_data.get("other"),
+                    attachment_form.cleaned_data.get("other", []),
 
             }
 
 
-            for attachment_type, uploaded_file in files.items():
+            for attachment_type, uploaded_files in files.items():
 
-                if uploaded_file:
+                for uploaded_file in uploaded_files:
 
                     LicenseAttachment.objects.create(
 

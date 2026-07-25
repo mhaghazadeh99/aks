@@ -9,7 +9,10 @@ from .models import LicenseContract
 
 
 class LicenseContractForm(forms.ModelForm):
-
+    contract_attachment = forms.FileField(
+                required=False,
+                label="Contract Document",
+            )
     class Meta:
 
         model = LicenseContract
@@ -22,9 +25,9 @@ class LicenseContractForm(forms.ModelForm):
             "draft_sent_date",
             "notification_letter_number",
             "notification_letter_date",
-            "amendment_notes",
             "source_owner",
             "contract_accountable",
+            "amendment_notes",
         ]
 
 
@@ -65,14 +68,23 @@ class LicenseContractForm(forms.ModelForm):
                 ),
 
             }
+            
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+
+        self.helper.form_tag = False
 
 
 
 
 class ContractForm(forms.ModelForm):
-
+    
     class Meta:
         model = Contract
+        
         exclude = [
             'created_at',
             'history',

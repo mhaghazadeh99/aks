@@ -9,228 +9,386 @@
 
 <div class="container">
 
-<div class="row">
+    <div class="row">
 
-<div class="col-lg-8">
+        <!-- ================= LEFT SIDE ================= -->
 
-<div class="card shadow mb-4">
+        <div class="col-lg-8">
 
-<div class="card-header">
+            <!-- Approval History -->
 
-<h4>
+            <div class="card mb-4">
 
-{% trans "License Information" %}
+                <div class="card-header">
+                    <h4>{% trans "Approval History" %}</h4>
+                </div>
 
-</h4>
+                <div class="card-body">
+
+                    <table class="table table-striped">
+
+                        <thead>
+                            <tr>
+                                <th>{% trans "Step" %}</th>
+                                <th>{% trans "Approver" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Status" %}</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for approval in history %}
+
+                            <tr>
+
+                                <td>
+                                    {{ approval.get_step_display }}
+                                </td>
+
+                                <td>
+                                    {{ approval.approver|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ approval.approved_at|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ approval.get_status_display }}
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+                                <td colspan="4">
+                                    {% trans "No approvals." %}
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- License Information -->
+
+            <div class="card mb-4">
+
+                <div class="card-header">
+
+                    <h4>
+                        {% trans "License Information" %}
+                    </h4>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    <table class="table table-bordered">
+
+                        <tr>
+                            <th>{% trans "Facility" %}</th>
+                            <td>{{ license.facility }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>{% trans "Letter Number" %}</th>
+                            <td>{{ license.letter_number|default:"-" }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>{% trans "Letter Date" %}</th>
+                            <td>{{ license.letter_date|default:"-" }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>{% trans "Description" %}</th>
+                            <td>{{ license.description|default:"-" }}</td>
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- Sources -->
+
+            <div class="card mb-4">
+
+                <div class="card-header">
+
+                    <h4>
+                        {% trans "Sources" %}
+                    </h4>
+
+                </div>
+
+
+                <div class="card-body">
+
+
+                    {% if license.sources.exists %}
+
+                        <table class="table table-striped">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        {% trans "Nuclide" %}
+                                    </th>
+
+                                    <th>
+                                        {% trans "Serial Number" %}
+                                    </th>
+
+                                    <th>
+                                        {% trans "Activity" %}
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                            {% for source in license.sources.all %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ source.nuclide }}
+                                    </td>
+
+                                    <td>
+                                        {{ source.serial_number }}
+                                    </td>
+
+                                    <td>
+                                        {{ source.activity }}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+
+                    {% else %}
+
+                        <p>
+                            {% trans "No sources." %}
+                        </p>
+
+                    {% endif %}
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Attachments -->
+
+            <div class="card mb-4">
+
+                <div class="card-header">
+
+                    <h4>
+                        {% trans "Attachments" %}
+                    </h4>
+
+                </div>
+
+
+                <div class="card-body">
+
+
+                    <table class="table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    {% trans "Type" %}
+                                </th>
+
+                                <th>
+                                    {% trans "File" %}
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+
+                        {% for attachment in license.attachments.all %}
+
+                            <tr>
+
+                                <td>
+                                    {{ attachment.get_attachment_type_display }}
+                                </td>
+
+
+                                <td>
+
+                                    <a 
+                                        href="{{ attachment.file.url }}" 
+                                        target="_blank"
+                                    >
+
+                                        {% trans "Open" %}
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td colspan="2">
+
+                                    {% trans "No attachments." %}
+
+                                </td>
+
+                            </tr>
+
+
+                        {% endfor %}
+
+
+                        </tbody>
+
+                    </table>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- ================= RIGHT SIDE ================= -->
+
+
+        <div class="col-lg-4">
+
+
+            <div class="card shadow">
+
+
+                <div class="card-body">
+
+
+                    <form method="post">
+
+                        {% csrf_token %}
+
+
+                        <div class="mb-3">
+
+                            <label>
+
+                                {% trans "Comment" %}
+
+                            </label>
+
+
+                            <textarea
+
+                                name="comment"
+
+                                class="form-control"
+
+                                rows="4">
+
+                            </textarea>
+
+
+                        </div>
+
+
+
+                        <div class="d-grid gap-2">
+
+
+                            <button
+
+                                class="btn btn-success"
+
+                                name="approve">
+
+                                ✓
+
+                                {% trans "Approve & Sign" %}
+
+                            </button>
+
+
+
+                            <button
+
+                                class="btn btn-danger"
+
+                                name="reject">
+
+                                ✖
+
+                                {% trans "Reject" %}
+
+                            </button>
+
+
+                        </div>
+
+
+                    </form>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
 
 </div>
 
-<div class="card-body">
-
-<table class="table">
-
-<tr>
-
-<th>{% trans "Facility" %}</th>
-
-<td>{{ license.facility }}</td>
-
-</tr>
-
-<tr>
-
-<th>{% trans "Letter Number" %}</th>
-
-<td>{{ license.letter_number }}</td>
-
-</tr>
-
-<tr>
-
-<th>{% trans "Letter Date" %}</th>
-
-<td>{{ license.letter_date }}</td>
-
-</tr>
-
-<tr>
-
-<th>{% trans "Sources" %}</th>
-
-<td>{{ license.sources.count }}</td>
-
-</tr>
-
-<tr>
-
-<th>{% trans "Status" %}</th>
-
-<td>{{ license.get_status_display }}</td>
-
-</tr>
-
-</table>
-
-</div>
-
-</div>
-
-
-
-<div class="card shadow">
-
-<div class="card-header">
-
-<h4>
-
-{% trans "Generated Specification" %}
-
-</h4>
-
-</div>
-
-<div class="card-body">
-
-<a
-
-class="btn btn-outline-primary"
-
-href="{{ specification.file.url }}"
-
-target="_blank">
-
-{% trans "Open Specification" %}
-
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-4">
-
-<div class="card shadow mb-4">
-
-<div class="card-header">
-
-<h5>
-
-{% trans "Approval History" %}
-
-</h5>
-
-</div>
-
-<div class="card-body">
-
-{% for item in history %}
-
-<div class="border-bottom pb-2 mb-2">
-
-<strong>
-
-{{ item.get_step_display }}
-
-</strong>
-
-<br>
-
-{{ item.get_status_display }}
-
-<br>
-
-{{ item.approved_by }}
-
-<br>
-
-{{ item.approved_at }}
-
-</div>
-
-{% endfor %}
-
-</div>
-
-</div>
-
-<div class="card shadow">
-
-<div class="card-header">
-
-<h5>
-
-{% trans "Decision" %}
-
-</h5>
-
-</div>
-
-<div class="card-body">
-
-<form method="post">
-
-{% csrf_token %}
-
-<div class="mb-3">
-
-<label>
-
-{% trans "Comment" %}
-
-</label>
-
-<textarea
-
-name="comment"
-
-class="form-control"
-
-rows="4">
-
-</textarea>
-
-</div>
-
-<div class="d-grid gap-2">
-
-<button
-
-class="btn btn-success"
-
-name="approve">
-
-✓
-
-{% trans "Approve & Sign" %}
-
-</button>
-
-<button
-
-class="btn btn-danger"
-
-name="reject">
-
-✖
-
-{% trans "Reject" %}
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
 
 {% endblock %}

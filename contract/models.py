@@ -44,7 +44,7 @@ class LicenseContract(models.Model):
 
 
     notification_letter_number = models.CharField(
-        max_length=100,
+        max_length=30,
         blank=True,
         null=True
     )
@@ -61,12 +61,16 @@ class LicenseContract(models.Model):
     )
 
 
-    source_owner = models.TextField(max_length=50, blank=True,
+    source_owner = models.CharField(
+        max_length=100,
+        blank=True,
         null=True
     )
 
 
-    contract_accountable = models.TextField(max_length=50, blank=True,
+    contract_accountable = models.CharField(
+        max_length=100,
+        blank=True,
         null=True
     )
 

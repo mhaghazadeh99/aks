@@ -92,7 +92,7 @@ class DSRSForm(forms.ModelForm):
 
             Field("Activity_reference_date"),
 
-            Field("Status"),
+            Field("Recycled"),
 
             Field("Status_Date"),
 

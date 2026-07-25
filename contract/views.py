@@ -13,7 +13,7 @@ from datetime import datetime
 from django.core.paginator import Paginator
 from dashboard.models import DSRS
 
-from operations.models import LicenseRequest,LicenseStatus, LicenseApproval
+from operations.models import LicenseRequest,LicenseStatus, LicenseApproval,LicenseAttachmentType,LicenseAttachment
 
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
@@ -72,11 +72,12 @@ def license_contract_create(request, pk):
     if request.method == "POST":
 
         form = LicenseContractForm(
-            request.POST
-        )
+                request.POST,
+                request.FILES,
+            )
 
         if form.is_valid():
-
+            
             contract = form.save(
                 commit=False
             )
@@ -84,6 +85,34 @@ def license_contract_create(request, pk):
             contract.license = license_request
 
             contract.save()
+
+            uploaded_file = form.cleaned_data.get("contract_attachment")
+
+            if uploaded_file:
+
+                attachment = license_request.attachments.filter(
+                    attachment_type=LicenseAttachmentType.CONTRACT
+                ).first()
+
+                if attachment:
+
+                    attachment.file = uploaded_file
+                    attachment.uploaded_by = request.user
+                    attachment.save()
+
+                else:
+
+                    LicenseAttachment.objects.create(
+
+                        license=license_request,
+
+                        attachment_type=LicenseAttachmentType.CONTRACT,
+
+                        file=uploaded_file,
+
+                        uploaded_by=request.user,
+
+                    )
 
 
             messages.success(
@@ -134,12 +163,47 @@ def license_contract_update(request, pk):
 
         form = LicenseContractForm(
             request.POST,
+            request.FILES,
+
             instance=contract
         )
 
         if form.is_valid():
 
-            form.save()
+            contract = form.save()
+
+            uploaded_file = form.cleaned_data.get(
+                "contract_attachment"
+            )
+
+            if uploaded_file:
+
+                attachment = contract.license.attachments.filter(
+                    attachment_type=LicenseAttachmentType.CONTRACT
+                ).first()
+
+
+                if attachment:
+
+                    attachment.file = uploaded_file
+                    attachment.uploaded_by = request.user
+                    attachment.save()
+
+
+                else:
+
+                    LicenseAttachment.objects.create(
+
+                        license=contract.license,
+
+                        attachment_type=LicenseAttachmentType.CONTRACT,
+
+                        file=uploaded_file,
+
+                        uploaded_by=request.user,
+
+                    )
+
 
             messages.success(
                 request,
@@ -149,7 +213,6 @@ def license_contract_update(request, pk):
             return redirect(
                 "license_contract_home"
             )
-
 
     else:
 

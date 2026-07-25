@@ -8,6 +8,31 @@ from facilities.models import Facility
 from .models import LicenseRequest,LicenseSource
 from reference.models import Nuclides
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+
+    def clean(self, data, initial=None):
+
+        if not data:
+            return []
+
+        if isinstance(data, (list, tuple)):
+            files = data
+        else:
+            files = [data]
+
+        cleaned_files = []
+
+        for file in files:
+            cleaned_files.append(
+                super().clean(file, initial)
+            )
+
+        return cleaned_files
+
 class LicenseRequestForm(forms.ModelForm):
 
     
@@ -95,43 +120,42 @@ class LicenseFacilityForm(forms.Form):
             Field("facility"),
 
         )
-        
+
+
+
 class LicenseAttachmentForm(forms.Form):
 
-    letter = forms.FileField(
-
+    letter = MultipleFileField(
         required=False,
-
         label=_("Letter"),
+        widget=MultipleFileInput(),
     )
 
-    commitment = forms.FileField(
-
+    commitment = MultipleFileField(
         required=False,
-
         label=_("Commitment"),
+        widget=MultipleFileInput(),
     )
 
-    permit = forms.FileField(
-
+    permit = MultipleFileField(
         required=False,
-
         label=_("Permit"),
+        widget=MultipleFileInput(),
     )
 
-    inquiry = forms.FileField(
-
+    inquiry = MultipleFileField(
         required=False,
-
         label=_("DSRS Inquiry Form"),
+        widget=MultipleFileInput(),
     )
 
-    other = forms.FileField(
-
+    other = MultipleFileField(
         required=False,
-
         label=_("Other"),
+        widget=MultipleFileInput(),
     )
+
+    
 
     def __init__(self, *args, **kwargs):
 

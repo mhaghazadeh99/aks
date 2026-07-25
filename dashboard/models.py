@@ -20,11 +20,12 @@ class OriginType(models.TextChoices):
 # -----------------------------
 # CHANGED: Expanded lifecycle statuses
 # -----------------------------
-class STATUS(models.TextChoices):
+class SOURCE_STATUS(models.TextChoices):
     PURCHASED = "Purchased", "Purchased"      # New SRS
     IN_USE = "In Use", "In Use"               # Active at customer
     STORED = "Stored", "Stored"               # Returned to waste management
     REUSED = "Reused", "Reused"               # Sent out again
+    RECYCLED = "Recycled", "Recycled"
     DISPOSED = "Disposed", "Disposed"         # Final state
     Loaned = "Loaned", "Loaned"
 
@@ -68,7 +69,7 @@ class DSRS(models.Model):
     def Num(self):
         return self.Location[7:]
 
-    Status = models.CharField(max_length=15, choices=STATUS.choices,blank=True, null=True)
+    Status = models.CharField(max_length=15, choices=SOURCE_STATUS.choices,blank=True, null=True)
     Status_Date = models.DateField(blank=True, null=True)
 
     Responsible_Person = models.CharField(max_length=50,null=True, blank=True)

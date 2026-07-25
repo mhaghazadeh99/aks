@@ -134,31 +134,61 @@
 </h3>
 
 
-<ul>
+<table class="table">
 
-{% for file in license.attachments.all %}
+<thead>
 
-<li>
+<tr>
 
-<a href="{{ file.file.url }}">
+<th>{% trans "Type" %}</th>
 
-{{ file.get_attachment_type_display }}
+<th>{% trans "File" %}</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for attachment in license.attachments.all %}
+
+<tr>
+
+<td>
+
+{{ attachment.get_attachment_type_display }}
+
+</td>
+
+<td>
+
+<a href="{{ attachment.file.url }}" target="_blank">
+
+{% trans "Open" %}
 
 </a>
 
-</li>
+</td>
 
+</tr>
 
 {% empty %}
 
-<li>
+<tr>
+
+<td colspan="2">
+
 {% trans "No attachments." %}
-</li>
+
+</td>
+
+</tr>
 
 {% endfor %}
 
+</tbody>
 
-</ul>
+</table>
 
 
 <a href="{% url 'license_list' %}">

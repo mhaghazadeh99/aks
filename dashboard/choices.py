@@ -6,12 +6,12 @@ from django.utils.translation import gettext_lazy as _
 
 class ActivityUnit(models.TextChoices):
 
-    Bq = "Bq", _("Becquerel")
-    KBq = "KBq", _("Kilobecquerel")
-    MBq = "MBq", _("Megabecquerel")
-    GBq = "GBq", _("Gigabecquerel")
+    Bq = "Bq", "Bq"
+    KBq = "KBq", "KBq"
+    MBq = "MBq", "MBq"
+    GBq = "GBq", "GBq"
 
-    Ci = "Ci", _("Curie")
-    mCi = "mCi", _("Millicurie")
-    uCi = "uCi", _("Microcurie")
-    nCI = "nCi", _("Nanocurie")
+    Ci = "Ci", "Ci"
+    mCi = "mCi", "mCi"
+    uCi = "uCi", "uCi"
+    nCI = "nCi", "nCi"

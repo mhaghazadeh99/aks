@@ -403,31 +403,25 @@
 
     <td>
 
-        {% for file in license.attachments.all %}
+    {% for file in license.attachments.all %}
 
-            {% if file.attachment_type == "CONTRACT" %}
+        {% if file.attachment_type == "CONTRACT" %}
 
-                <a
+            <a
+                href="{{ file.file.url }}"
+                target="_blank"
+                title="{% trans 'View Contract' %}"
+            >
+                📄
+            </a>
 
-                    href="{{ file.file.url }}"
+        {% endif %}
 
-                    target="_blank"
+    {% empty %}
+        -
+    {% endfor %}
 
-                >
-
-                    title="{% trans 'View' %}"
-
-                </a>
-
-            {% endif %}
-
-        {% empty %}
-
-            -
-
-        {% endfor %}
-
-    </td>
+</td>
 
     <td>
 

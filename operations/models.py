@@ -155,6 +155,7 @@ class LicenseAttachmentType(models.TextChoices):
     INQUIRY = "INQUIRY", _("DSRS Inquiry")
 
     CONTRACT = "CONTRACT", _("Contract")
+    
     SPECIFICATION = "SPECIFICATION", _("Generated Specification")
 
     OTHER = "OTHER", _("Other")

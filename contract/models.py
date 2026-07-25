@@ -61,20 +61,12 @@ class LicenseContract(models.Model):
     )
 
 
-    source_owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="source_owner_contracts",
-        blank=True,
+    source_owner = models.TextField(max_length=50, blank=True,
         null=True
     )
 
 
-    contract_accountable = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="accountable_contracts",
-        blank=True,
+    contract_accountable = models.TextField(max_length=50, blank=True,
         null=True
     )
 

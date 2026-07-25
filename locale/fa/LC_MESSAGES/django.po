@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-19 11:56+0000\n"
+"POT-Creation-Date: 2026-07-25 06:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,20 +17,82 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: IRWA/settings.py:173
+#: IRWA/settings.py:174
 msgid "فارسی"
 msgstr ""
 
-#: IRWA/settings.py:175
+#: IRWA/settings.py:176
 msgid "English"
 msgstr ""
 
+#: contract/views.py:91
+
+msgid "Contract created successfully."
+msgstr "قرارداد با موفقیت ایجاد شد."
+
+#: contract/views.py:117 templates/contract/license_contract_form.html:5
+#: templates/contract/license_contract_form.html:10
+msgid "Create License Contract"
+msgstr "ایجاد قرارداد مجوز"
+
+#: contract/views.py:118 templates/contract/license_contract_home.html:76
+
+msgid "Create Contract"
+msgstr " ایجاد قرارداد"
+
+#: contract/views.py:146
+
+msgid "Contract updated."
+msgstr "به روزرسانی قرارداد"
+
+#: contract/views.py:172
+msgid "Update License Contract"
+msgstr ""
+
+#: contract/views.py:173 templates/operations/license_update.html:35
+msgid "Save Changes"
+msgstr "ذخیره تغییرات"
+
+#: dashboard/choices.py:9
+msgid "Becquerel"
+msgstr "بکرل"
+
+#: dashboard/choices.py:10
+msgid "Kilobecquerel"
+msgstr "کیلوبکرل"
+
+#: dashboard/choices.py:11
+msgid "Megabecquerel"
+msgstr "مگابکرل"
+
+#: dashboard/choices.py:12
+msgid "Gigabecquerel"
+msgstr "گیگابکرل"
+
+#: dashboard/choices.py:14
+msgid "Curie"
+msgstr "کوری"
+
+#: dashboard/choices.py:15
+msgid "Millicurie"
+msgstr "میلی کوری"
+
+#: dashboard/choices.py:16
+msgid "Microcurie"
+msgstr "میکرو کوری"
+
+#: dashboard/choices.py:17
+msgid "Nanocurie"
+msgstr "نانو کوری"
+
 #: facilities/forms.py:142 templates/facilities/facility_delete.html:70
-#: templates/operations/license_create.html:267
+#: templates/operations/license_create.html:243
+#: templates/operations/license_delete_confirm.html:50
+#: templates/operations/license_update.html:42
 msgid "Cancel"
 msgstr "انصراف"
 
-#: facilities/forms.py:148
+#: facilities/forms.py:148 templates/operations/license_specification.html:219
 msgid "Save"
 msgstr "ذخیره"
 
@@ -43,10 +105,12 @@ msgid "Facility Name"
 msgstr "نام مرکز"
 
 #: facilities/models.py:16 templates/facilities/facility_list.html:255
+#: templates/operations/license_specification.html:66
 msgid "Responsible Person"
 msgstr "مسئول"
 
 #: facilities/models.py:21 templates/facilities/facility_list.html:260
+#: templates/operations/license_specification.html:80
 msgid "Telephone"
 msgstr "تلفن"
 
@@ -74,15 +138,21 @@ msgstr "شناسه ملی"
 msgid "Economic Code"
 msgstr "کد اقتصادی"
 
-#: facilities/models.py:70 operations/forms.py:18
-#: templates/operations/license_create.html:145
+#: facilities/models.py:70 operations/forms.py:79
+#: templates/contract/license_contract_form.html:78
+#: templates/contract/license_contract_home.html:17
+#: templates/operations/license_create.html:99
+#: templates/operations/license_detail.html:18
 #: templates/operations/license_list.html:281
+#: templates/operations/license_queue.html:53
+#: templates/operations/license_sign.html:34
+#: templates/operations/license_specification.html:56
+#: templates/operations/license_update.html:26
 msgid "Facility"
 msgstr "مرکز"
 
-#: facilities/models.py:71 templates/base.html:79
-#: templates/facilities/facility_list.html:7
-#: templates/operations/operation_home.html:124
+#: facilities/models.py:71 templates/facilities/facility_list.html:7
+#: templates/operations/operation_home.html:169
 msgid "Facilities"
 msgstr "مراکز"
 
@@ -103,84 +173,224 @@ msgstr "مرکز حذف شد."
 msgid "%(count)s facilities imported successfully."
 msgstr "%(count)sمرکز با موفقیت استخراج شد."
 
-#: operations/forms.py:20
+#: operations/forms.py:81
 msgid "Select Facility"
 msgstr "انتخاب مرکز"
 
-#: operations/forms.py:60 operations/models.py:117
+#: operations/forms.py:105 operations/models.py:149
 #: templates/operations/license_list.html:295
 msgid "Letter"
-msgstr "نامه درخواست"
+msgstr "نامه"
 
-#: operations/forms.py:67 operations/models.py:119
+#: operations/forms.py:112 operations/models.py:151
 msgid "Commitment"
 msgstr "تعهدنامه"
 
-#: operations/forms.py:74 operations/models.py:121
+#: operations/forms.py:119 operations/models.py:153
 msgid "Permit"
 msgstr "پروانه"
 
-#: operations/forms.py:81
+#: operations/forms.py:126
 msgid "DSRS Inquiry Form"
 msgstr "فرم استعلام چشمه ها"
 
-#: operations/forms.py:88 operations/models.py:127
+#: operations/forms.py:133 operations/models.py:160
 msgid "Other"
 msgstr "موارد دیگر"
 
-#: operations/forms.py:107
+#: operations/forms.py:174
 msgid "Select Nuclide"
 msgstr "انتخاب نوکلئید"
 
-#: operations/forms.py:111 templates/operations/license_create.html:229
+#: operations/forms.py:176 operations/models.py:218
+#: templates/contract/license_contract_form.html:120
+#: templates/operations/license_create.html:201
+#: templates/operations/license_detail.html:83
+#: templates/operations/license_specification.html:118
 #: templates/reference/radionuclide_list.html:25
 msgid "Nuclide"
 msgstr "نوکلئیدها"
 
-#: operations/models.py:32
+#: operations/forms.py:182
+msgid "Number of Sources"
+msgstr "تعداد چشمه ها"
+
+#: operations/models.py:35
 msgid "Draft"
 msgstr "پیش نویس"
 
-#: operations/models.py:34
-msgid "OCR"
-msgstr ""
+#: operations/models.py:37
+msgid "Preparing Specification"
+msgstr "آماده سازی فرم مشخصات چشمه ها"
 
-#: operations/models.py:36
-msgid "Waiting Signature"
-msgstr "منتظر امضا"
+#: operations/models.py:41
 
-#: operations/models.py:38 operations/models.py:125
-#: templates/operations/license_list.html:297
-msgid "Contract"
-msgstr " قرارداد"
+msgid "Waiting Creator Signature"
+msgstr "منتظر امضای پر کننده فرم"
 
-#: operations/models.py:40
+#: operations/models.py:46
+
+msgid "Waiting Manager Signature"
+msgstr "منتظر امضای مدیر"
+
+#: operations/models.py:51
+
+msgid "Waiting Deputy Signature"
+msgstr "منتظر امضای معاون"
+
+#: operations/models.py:56 operations/models.py:320 templates/base.html:87
+#: templates/home.html:170
+msgid "Contracts"
+msgstr " قراردادها"
+
+#: operations/models.py:61
 msgid "Finance"
 msgstr "انصراف"
 
-#: operations/models.py:42
-msgid "Issued"
-msgstr "صادر شد"
+#: operations/models.py:66
+msgid "Ready To Issue"
+msgstr "آماده صدور"
 
-#: operations/models.py:44
+#: operations/models.py:71
+msgid "Issued"
+msgstr "صادر شد."
+
+#: operations/models.py:76
 msgid "Completed"
 msgstr "کامل شد."
 
-#: operations/models.py:123
+#: operations/models.py:81 operations/models.py:328
+msgid "Rejected"
+msgstr "رد شد."
+
+#: operations/models.py:119 templates/contract/license_contract_form.html:93
+#: templates/operations/license_specification.html:128
+msgid "Description"
+msgstr "توضیحات"
+
+#: operations/models.py:155
 msgid "DSRS Inquiry"
 msgstr "فرم استعلام چشمه ها"
 
-#: operations/models.py:140
+#: operations/models.py:157 templates/operations/license_list.html:297
+msgid "Contract"
+msgstr " قرارداد"
+
+#: operations/models.py:158 templates/operations/license_sign.html:86
+
+msgid "Generated Specification"
+msgstr "فرم تولید شده مشخصات چشمه ها"
+
+#: operations/models.py:173
 msgid "Attachment Type"
 msgstr "نوع پیوست"
 
-#: operations/models.py:146
+#: operations/models.py:179 templates/contract/license_contract_form.html:172
+#: venv/lib/python3.12/site-packages/django/db/models/fields/files.py:244
 msgid "File"
 msgstr "فایل"
 
-#: operations/views.py:241
-msgid "License request created successfully."
-msgstr "درخواست صدور مجوز با موفقیت ایجاد شد."
+#: operations/models.py:212
+msgid "License"
+msgstr "مجوز"
+
+#: operations/models.py:222 templates/contract/license_contract_form.html:121
+#: templates/operations/license_detail.html:87
+#: templates/operations/license_specification.html:120
+
+msgid "Serial Number"
+msgstr " شماره سریال"
+
+#: operations/models.py:228 templates/contract/license_contract_form.html:122
+#: templates/operations/license_detail.html:91
+#: templates/operations/license_specification.html:122
+
+msgid "Activity"
+msgstr "پرتوزایی"
+
+#: operations/models.py:236
+msgid "Activity Unit"
+msgstr "واحد پرتوزایی"
+
+#: operations/models.py:243
+
+msgid "Activity Date"
+msgstr "تاریخ پرتوزایی"
+
+#: operations/models.py:266
+
+msgid "Requested Source"
+msgstr "چشمه درخواستی"
+
+#: operations/models.py:268 templates/operations/license_create.html:147
+
+msgid "Requested Sources"
+msgstr "چشمه های درخواستی"
+
+#: operations/models.py:314
+
+msgid "Creator"
+msgstr "سازنده"
+
+#: operations/models.py:316
+
+msgid "Manager"
+msgstr "مدیر"
+
+#: operations/models.py:318 operations/views.py:1057
+#: templates/operations/operation_home.html:122
+msgid "Deputy Manager"
+msgstr "معاون"
+
+#: operations/models.py:324
+msgid "Pending"
+msgstr "در حال بررسی"
+
+#: operations/models.py:326
+msgid "Approved"
+msgstr "تایید شده."
+
+#: operations/views.py:348
+
+msgid "License request saved successfully."
+msgstr "درخواست صدور مجوز با موفقیت ذخیره شد."
+
+#: operations/views.py:455
+
+msgid "Specification saved successfully."
+msgstr " فرم مشخصات با موفقیت ذخیره شد."
+
+#: operations/views.py:614
+
+msgid "License updated successfully."
+msgstr "  مجوز با موفقیت بروز شد."
+
+#: operations/views.py:666
+
+msgid "License deleted successfully."
+msgstr "  مجوز با موفقیت حذف شد."
+
+#: operations/views.py:736
+msgid "This license is not waiting for approval."
+msgstr "این مجوز در انتظار تایید نیست."
+
+#: operations/views.py:802
+msgid "Please upload your signature image first."
+msgstr "لطفا ابتدا امضای خود را آپلود کنید."
+
+#: operations/views.py:883
+
+msgid "Specification signed successfully."
+msgstr " فرم مشخصات با موفقیت امضا شد."
+
+#: operations/views.py:989 templates/operations/control_home.html:5
+#: templates/operations/control_home.html:10
+#: templates/operations/deputy_home.html:5
+#: templates/operations/manager_home.html:5
+#: templates/operations/operation_home.html:138
+
+msgid "Operations Manager"
+msgstr "مدیر عملیات"
 
 #: reference/forms.py:24
 msgid "CSV file"
@@ -204,47 +414,205 @@ msgstr "ردیف %(row)s: مقدار وارد شده برای %(field)s باید
 msgid "Home"
 msgstr "خانه"
 
-#: templates/base.html:64 templates/home.html:152
-#: templates/operations/operation_home.html:5
-#: templates/operations/operation_home.html:104
-msgid "Operations"
+#: templates/base.html:64
+
+msgid "operation"
 msgstr "عملیات"
 
-#: templates/base.html:69
+#: templates/base.html:71 templates/contract/license_contract_form.html:107
+#: templates/operations/license_detail.html:75
+#: templates/operations/license_queue.html:59
+#: templates/operations/license_sign.html:58
 msgid "Sources"
 msgstr "چشمه ها"
 
-#: templates/base.html:74
+#: templates/base.html:76
 msgid "Waste"
 msgstr "پسماندها"
 
-#: templates/base.html:84
+#: templates/base.html:82
 msgid "Reference Data"
 msgstr "داده های مرجع"
 
-#: templates/base.html:89 templates/home.html:170
-msgid "Contracts"
-msgstr " قراردادها"
-
-#: templates/base.html:93
+#: templates/base.html:91
 msgid "Laboratory"
 msgstr "آزمایشگاه"
 
-#: templates/base.html:98 templates/home.html:188
+#: templates/base.html:96 templates/home.html:188
 msgid "Reports"
 msgstr "گزارش"
 
-#: templates/base.html:105
+#: templates/base.html:103
 msgid "Change Password"
 msgstr "تغییر رمز"
 
-#: templates/base.html:112
+#: templates/base.html:110
 msgid "Logout"
 msgstr "خروج"
 
-#: templates/base.html:120
+#: templates/base.html:118
 msgid "Login"
 msgstr "ورود"
+
+#: templates/contract/contract_home.html:5
+#, fuzzy
+#| msgid "Contract Date"
+msgid "Contracts Manager"
+msgstr "تاریخ قرارداد"
+
+#: templates/contract/contract_home.html:104
+
+msgid "Contract Manager"
+msgstr "مدیریت امور قراردادها"
+
+#: templates/contract/contract_home.html:110
+
+msgid "Select a contract operation to continue."
+msgstr "برای ادامه یک گزینه انتخاب کنید"
+
+#: templates/contract/contract_home.html:124
+#: templates/operations/control_home.html:23
+#: templates/operations/deputy_home.html:124
+#: templates/operations/manager_home.html:124
+
+msgid "License Requests"
+msgstr " درخواست های صدور مجوز "
+
+#: templates/contract/contract_home.html:131
+#: templates/operations/control_home.html:30
+#: templates/operations/deputy_home.html:131
+#: templates/operations/manager_home.html:131
+msgid "license(s) waiting for approval."
+msgstr "مجوزهای در انتظار صدور"
+
+#: templates/contract/contract_home.html:143
+
+msgid "issued Licenses "
+msgstr " مجوزهای صادر شده."
+
+#: templates/contract/contract_home.html:150
+msgid "issued license(s)."
+msgstr " مجوزهای صادر شده."
+
+#: templates/contract/contract_home.html:163
+
+msgid "sell Sources"
+msgstr "فروش چشمه ها"
+
+#: templates/contract/license_contract_form.html:14
+#: templates/operations/license_sign.html:120
+msgid "Approval History"
+msgstr "تارخچه تایید"
+
+#: templates/contract/license_contract_form.html:24
+msgid "Step"
+msgstr "مرحله"
+
+#: templates/contract/license_contract_form.html:25
+msgid "Approver"
+msgstr "تایید کننده"
+
+#: templates/contract/license_contract_form.html:26
+msgid "Date"
+msgstr "تاریخ"
+
+#: templates/contract/license_contract_form.html:27
+#: templates/operations/license_detail.html:29
+#: templates/operations/license_list.html:299
+#: templates/operations/license_queue.html:63
+#: templates/operations/license_sign.html:66
+msgid "Status"
+msgstr "وضعیت"
+
+#: templates/contract/license_contract_form.html:53
+msgid "No approvals."
+msgstr "بدون تایید کننده"
+
+#: templates/contract/license_contract_form.html:70
+#: templates/operations/license_sign.html:22
+#: templates/operations/license_update.html:19
+
+msgid "License Information"
+msgstr "اطلاعات مجوز"
+
+#: templates/contract/license_contract_form.html:83
+#: templates/contract/license_contract_home.html:21
+#: templates/operations/license_detail.html:40
+#: templates/operations/license_list.html:283
+#: templates/operations/license_sign.html:42
+#: templates/operations/license_specification.html:32
+msgid "Letter Number"
+msgstr " شماره نامه"
+
+#: templates/contract/license_contract_form.html:88
+#: templates/operations/license_list.html:285
+#: templates/operations/license_queue.html:57
+#: templates/operations/license_sign.html:50
+#: templates/operations/license_specification.html:42
+msgid "Letter Date"
+msgstr "تاریخ نامه "
+
+#: templates/contract/license_contract_form.html:148
+
+msgid "No sources."
+msgstr " چشمه ای وجود ندارد. "
+
+#: templates/contract/license_contract_form.html:160
+#: templates/operations/license_create.html:74
+#: templates/operations/license_detail.html:133
+msgid "Attachments"
+msgstr "پیوست ها"
+
+#: templates/contract/license_contract_form.html:171
+msgid "Type"
+msgstr "نوع"
+
+#: templates/contract/license_contract_form.html:190
+#: templates/operations/license_queue.html:119
+msgid "Open"
+msgstr "باز کردن."
+
+#: templates/contract/license_contract_form.html:204
+#: templates/operations/license_detail.html:155
+
+msgid "No attachments."
+msgstr "بدون پیوست "
+
+#: templates/contract/license_contract_form.html:224
+
+msgid "License Contract"
+msgstr "قرارداد صدور مجوز "
+
+#: templates/contract/license_contract_form.html:301
+
+msgid "Save Contract"
+msgstr " ذخیره قرارداد"
+
+#: templates/contract/license_contract_home.html:8
+
+msgid "Contracts Waiting"
+msgstr " قراردادهای در حال صدور"
+
+#: templates/contract/license_contract_home.html:25
+#: templates/operations/license_detail.html:51
+#: templates/operations/license_list.html:291
+msgid "Contract Number"
+msgstr "شاره قرارداد"
+
+#: templates/contract/license_contract_home.html:29
+#: templates/operations/license_list.html:301
+#: templates/operations/license_queue.html:65
+msgid "Action"
+msgstr "اقدامات"
+
+#: templates/contract/license_contract_home.html:69
+#: templates/operations/license_list.html:472
+msgid "Continue"
+msgstr "ادامه"
+
+#: templates/contract/license_contract_home.html:92
+msgid "No contracts waiting."
+msgstr "قرارداد جدیدی وجود ندارد"
 
 #: templates/facilities/facility_create.html:8
 #: templates/facilities/facility_create.html:24
@@ -283,7 +651,8 @@ msgstr ""
 "\n"
 
 #: templates/facilities/facility_delete.html:56
-#: templates/operations/license_list.html:499
+#: templates/operations/license_list.html:501
+#: venv/lib/python3.12/site-packages/django/forms/formsets.py:499
 msgid "Delete"
 msgstr "حذف"
 
@@ -297,10 +666,12 @@ msgstr " فایل CSV حاوی سوابق مراکز را بارگذاری کن�
 
 #: templates/facilities/facility_list.html:114
 #: templates/operations/license_list.html:149
+#: templates/operations/license_queue.html:31
 msgid "Search..."
 msgstr "جستجو..."
 
 #: templates/facilities/facility_list.html:129
+#: templates/operations/license_queue.html:39
 msgid "Search"
 msgstr "جستجو..."
 
@@ -314,6 +685,7 @@ msgid "Name"
 msgstr "نام مرکز"
 
 #: templates/facilities/facility_list.html:270
+#: templates/operations/license_specification.html:90
 msgid "Address"
 msgstr "آدرس"
 
@@ -328,7 +700,6 @@ msgstr "مرکزی وجود ندارد."
 
 #: templates/facilities/facility_update.html:10
 #: templates/facilities/facility_update.html:28
-#: templates/operations/license_create.html:173
 msgid "Edit Facility"
 msgstr "ویرایش"
 
@@ -344,6 +715,11 @@ msgstr "به سامانه پسمانداری خوش آمدید"
 msgid "Select a service to continue"
 msgstr "برای ادامه، به صفحه مربوطه مراجعه کنید"
 
+#: templates/home.html:152 templates/operations/operation_home.html:5
+#: templates/operations/operation_home.html:104
+msgid "Operations"
+msgstr "عملیات"
+
 #: templates/home.html:156
 msgid "Create and manage operational services"
 msgstr "شروع خدمت جدید"
@@ -356,163 +732,248 @@ msgstr "مدیریت امور قراردادها"
 msgid "Reports and analytics"
 msgstr "گزارش"
 
+#: templates/operations/deputy_home.html:104
+#: templates/operations/manager_home.html:104
+
+msgid "Operation manager"
+msgstr "مدیریت عملیات"
+
+#: templates/operations/deputy_home.html:110
+#: templates/operations/manager_home.html:110
+#: templates/operations/operation_home.html:110
+msgid "Select an operation to continue."
+msgstr "برای ادامه یک عملیات انتخاب کنید"
+
 #: templates/operations/license_create.html:7
-#: templates/operations/license_create.html:21
+#: templates/operations/license_create.html:24
 msgid "New License Request"
 msgstr " درخواست مجوز جدید"
 
-#: templates/operations/license_create.html:45
+#: templates/operations/license_create.html:49
 msgid "General Information"
 msgstr "اطلاعات کلی"
 
-#: templates/operations/license_create.html:77
-msgid "Attachments"
-msgstr "پیوست ها"
+#: templates/operations/license_create.html:124
 
-#: templates/operations/license_create.html:189
-msgid "Nuclides"
-msgstr "نوکلئیدها"
+msgid "Edit Selected Facility"
+msgstr "اصلاح اطلاعات مرکز انتخاب شده"
 
-#: templates/operations/license_create.html:213
+#: templates/operations/license_create.html:177
 msgid "Add"
 msgstr "افزودن"
 
-#: templates/operations/license_create.html:235
+#: templates/operations/license_create.html:207
 msgid "Remove"
 msgstr "حذف"
 
-#: templates/operations/license_create.html:281
-msgid "Save Draft"
-msgstr "ذخیره پیش نویس"
+#: templates/operations/license_delete_confirm.html:10
 
-#: templates/operations/license_create.html:293
-msgid "Save & Continue"
-msgstr "ذخیره و ادامه"
+msgid "Delete License"
+msgstr "حذف مجوز "
+
+#: templates/operations/license_delete_confirm.html:17
+
+#| msgid ""
+#| "\n"
+#| "\n"
+#| "Are you sure you want to delete \"%(facility)s\"?\n"
+#| "\n"
+msgid "Are you sure you want to delete this license request?"
+msgstr ""
+"\n"
+"\n"
+" از حذف «%(facility)s» مطمئن هستید؟\n"
+"\n"
+
+#: templates/operations/license_delete_confirm.html:40
+
+msgid "Yes, Delete"
+msgstr "بله، حذف"
+
+#: templates/operations/license_detail.html:9
+msgid "License Details"
+msgstr "جزئیات مجوز"
+
+#: templates/operations/license_detail.html:62
+#: templates/operations/license_queue.html:61
+
+msgid "Created By"
+msgstr " ایجاد شده توسط"
+
+#: templates/operations/license_detail.html:120
+msgid "No sources added."
+msgstr "چشمه ای افزوده نشده است."
+
+#: templates/operations/license_detail.html:165
+#: templates/operations/license_specification.html:207
+msgid "Back"
+msgstr "بازگشت"
 
 #: templates/operations/license_list.html:5
 msgid "Tables"
 msgstr "جدول"
 
 #: templates/operations/license_list.html:229
-
 msgid "Export CSV"
 msgstr "'خروجی فایل CSV"
 
 #: templates/operations/license_list.html:255
-
 msgid "+ Start New License"
 msgstr "صدور مجوز جدید"
-
-#: templates/operations/license_list.html:283
-
-msgid "Letter Number"
-msgstr " شماره نامه"
-
-#: templates/operations/license_list.html:285
-
-msgid "Letter Date"
-msgstr "تاریخ نامه "
 
 #: templates/operations/license_list.html:287
 msgid "Cost"
 msgstr "مبلغ"
 
 #: templates/operations/license_list.html:289
-
 msgid "Contract Date"
 msgstr "تاریخ قرارداد"
-
-#: templates/operations/license_list.html:291
-
-msgid "Contract Number"
-msgstr "شاره قرارداد"
 
 #: templates/operations/license_list.html:293
 msgid "DSRSs"
 msgstr "چشمه ها"
 
-#: templates/operations/license_list.html:299
-msgid "Status"
-msgstr "وضعیت"
-
-#: templates/operations/license_list.html:301
-
-msgid "Action"
-msgstr "اقدامات"
-
-#: templates/operations/license_list.html:399
-#: templates/operations/license_list.html:427
-#: templates/operations/license_list.html:457
+#: templates/operations/license_list.html:400
+#: templates/operations/license_list.html:428
+#: templates/operations/license_list.html:458
 msgid "View"
 msgstr "مشاهده"
 
-#: templates/operations/license_list.html:471
-
-msgid "Continue"
-msgstr "ادامه"
-
-#: templates/operations/license_list.html:485
+#: templates/operations/license_list.html:487
 msgid "Edit"
 msgstr "ویرایش"
 
-#: templates/operations/license_list.html:519
-
+#: templates/operations/license_list.html:521
 msgid "No license requests found."
 msgstr " درخواست مجوز جدید"
 
-#: templates/operations/license_list.html:537
+#: templates/operations/license_list.html:539
 msgid "Previous"
 msgstr "قبلی"
 
-#: templates/operations/license_list.html:575
+#: templates/operations/license_list.html:577
 msgid "Next"
 msgstr "بعدی"
 
-#: templates/operations/license_list.html:582
+#: templates/operations/license_list.html:584
 msgid "of"
 msgstr "از"
 
-#: templates/operations/license_list.html:583
+#: templates/operations/license_list.html:585
 msgid "records"
 msgstr "مراکز"
 
-#: templates/operations/operation_home.html:110
-msgid "Select an operation to continue."
-msgstr "برای ادامه یک عملیات انتخاب کنید"
+#: templates/operations/license_queue.html:55
 
-#: templates/operations/operation_home.html:128
+msgid "Letter No."
+msgstr "شماره نامه "
+
+#: templates/operations/license_queue.html:133
+
+msgid "No licenses found."
+msgstr " درخواست جدیدی یافت نشد"
+
+#: templates/operations/license_sign.html:5
+msgid "License Approval"
+msgstr "تایید مجوز"
+
+#: templates/operations/license_sign.html:102
+msgid "Open Specification"
+msgstr "باز کردن فرم مشخصات چشمه"
+
+#: templates/operations/license_sign.html:164
+msgid "Decision"
+msgstr "تصمیم"
+
+#: templates/operations/license_sign.html:180
+
+msgid "Comment"
+msgstr "کامنت"
+
+#: templates/operations/license_sign.html:206
+msgid "Approve & Sign"
+msgstr "تایید و امضا"
+
+#: templates/operations/license_sign.html:218
+msgid "Reject"
+msgstr "رد"
+
+#: templates/operations/license_specification.html:7
+msgid "DSRS Specification"
+msgstr " مشخصات چشمه"
+
+#: templates/operations/license_specification.html:20
+msgid "DSRS Specification Form"
+msgstr "فرم مشخصات چشمه"
+
+#: templates/operations/license_specification.html:124
+msgid "Unit"
+msgstr "واحد"
+
+#: templates/operations/license_specification.html:126
+
+msgid "Reference Date"
+msgstr " تاریخ پرتوزایی "
+
+#: templates/operations/license_specification.html:235
+msgid "Generate DSRS Specification form"
+msgstr "تولید فرم مشخصات چشمه ها"
+
+#: templates/operations/license_update.html:9
+msgid "Edit License"
+msgstr "اصلاح مجوز"
+
+#: templates/operations/operation_home.html:126
+msgid "Review and approve license specifications waiting for deputy approval."
+msgstr "مشاهده و تایید مجوزهای در انتظار تایید"
+
+#: templates/operations/operation_home.html:142
+msgid "Review and approve license specifications waiting for manager approval."
+msgstr "مشاهده و تایید مجوزهای در انتظار تایید"
+
+#: templates/operations/operation_home.html:153
+
+msgid "Operations Control"
+msgstr "کنترل عملیات"
+
+#: templates/operations/operation_home.html:157
+
+msgid "Monitor license requests and workflow progress."
+msgstr "نظارت بر درخواست‌های مجوز و پیشرفت گردش کار."
+
+#: templates/operations/operation_home.html:173
 msgid "View and manage customer facilities."
 msgstr "مشاهده و ویرایش مراکز"
 
-#: templates/operations/operation_home.html:144
+#: templates/operations/operation_home.html:189
 msgid "Receive Waste"
 msgstr "دریافت پسماند"
 
-#: templates/operations/operation_home.html:148
+#: templates/operations/operation_home.html:193
 msgid "View received Waste."
 msgstr "دریافت پسماند"
 
-#: templates/operations/operation_home.html:162
+#: templates/operations/operation_home.html:207
 msgid "Receive Source"
 msgstr "دریافت چشمه"
 
-#: templates/operations/operation_home.html:166
+#: templates/operations/operation_home.html:211
 msgid "View received sources."
 msgstr "ثبت دریافت چشمه"
 
-#: templates/operations/operation_home.html:180
+#: templates/operations/operation_home.html:225
 msgid "Sell Source"
 msgstr "فروش چشمه ها"
 
-#: templates/operations/operation_home.html:184
+#: templates/operations/operation_home.html:229
 msgid "View sold sources."
 msgstr "شروع خدمت جدید"
 
-#: templates/operations/operation_home.html:197
+#: templates/operations/operation_home.html:242
 msgid "Issue Source License"
 msgstr "صدور مجوز"
 
-#: templates/operations/operation_home.html:201
+#: templates/operations/operation_home.html:246
 msgid "View issued license for radioactive sources and add new ones."
 msgstr "مشاهده مجوزهای صادر شده و صدور مجوز جدید"
 
@@ -563,7 +1024,7 @@ msgstr ""
 
 #: templates/reference/radionuclide_list.html:28
 msgid "Decay Mode"
-msgstr ""
+msgstr "حالت واپاشی"
 
 #: templates/reference/radionuclide_list.html:29
 msgid "Gamma (MeV)"
@@ -576,6 +1037,1278 @@ msgstr ""
 #: templates/reference/radionuclide_list.html:58
 msgid "No data available"
 msgstr "داده ای وجود ندارد."
+
+#: venv/lib/python3.12/site-packages/django/contrib/messages/apps.py:16
+msgid "Messages"
+msgstr "پیامها"
+
+#: venv/lib/python3.12/site-packages/django/contrib/sitemaps/apps.py:8
+msgid "Site Maps"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/contrib/staticfiles/apps.py:9
+#, fuzzy
+#| msgid "CSV File"
+msgid "Static Files"
+msgstr "فایل CSV"
+
+#: venv/lib/python3.12/site-packages/django/contrib/syndication/apps.py:7
+msgid "Syndication"
+msgstr ""
+
+#. Translators: String used to replace omitted page numbers in elided page
+#. range generated by paginators, e.g. [1, 2, '…', 5, 6, 7, '…', 9, 10].
+#: venv/lib/python3.12/site-packages/django/core/paginator.py:33
+msgid "…"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/paginator.py:35
+msgid "That page number is not an integer"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/paginator.py:36
+msgid "That page number is less than 1"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/paginator.py:37
+msgid "That page contains no results"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:22
+msgid "Enter a valid value."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:70
+msgid "Enter a valid domain name."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:153
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:773
+msgid "Enter a valid URL."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:200
+msgid "Enter a valid integer."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:211
+msgid "Enter a valid email address."
+msgstr ""
+
+#. Translators: "letters" means latin letters: a-z and A-Z.
+#: venv/lib/python3.12/site-packages/django/core/validators.py:289
+msgid ""
+"Enter a valid “slug” consisting of letters, numbers, underscores or hyphens."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:297
+msgid ""
+"Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or "
+"hyphens."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:309
+#: venv/lib/python3.12/site-packages/django/core/validators.py:318
+#: venv/lib/python3.12/site-packages/django/core/validators.py:332
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2220
+#, python-format
+msgid "Enter a valid %(protocol)s address."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:311
+msgid "IPv4"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:320
+#: venv/lib/python3.12/site-packages/django/utils/ipv6.py:43
+msgid "IPv6"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:334
+msgid "IPv4 or IPv6"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:375
+msgid "Enter only digits separated by commas."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:381
+#, python-format
+msgid "Ensure this value is %(limit_value)s (it is %(show_value)s)."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:416
+#, python-format
+msgid "Ensure this value is less than or equal to %(limit_value)s."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:425
+#, python-format
+msgid "Ensure this value is greater than or equal to %(limit_value)s."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:434
+#, python-format
+msgid "Ensure this value is a multiple of step size %(limit_value)s."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:441
+#, python-format
+msgid ""
+"Ensure this value is a multiple of step size %(limit_value)s, starting from "
+"%(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and so on."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:473
+#, python-format
+msgid ""
+"Ensure this value has at least %(limit_value)d character (it has "
+"%(show_value)d)."
+msgid_plural ""
+"Ensure this value has at least %(limit_value)d characters (it has "
+"%(show_value)d)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:491
+#, python-format
+msgid ""
+"Ensure this value has at most %(limit_value)d character (it has "
+"%(show_value)d)."
+msgid_plural ""
+"Ensure this value has at most %(limit_value)d characters (it has "
+"%(show_value)d)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:514
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:364
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:403
+#, fuzzy
+#| msgid "Contract Number"
+msgid "Enter a number."
+msgstr "شاره قرارداد"
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:516
+#, python-format
+msgid "Ensure that there are no more than %(max)s digit in total."
+msgid_plural "Ensure that there are no more than %(max)s digits in total."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:521
+#, python-format
+msgid "Ensure that there are no more than %(max)s decimal place."
+msgid_plural "Ensure that there are no more than %(max)s decimal places."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:526
+#, python-format
+msgid ""
+"Ensure that there are no more than %(max)s digit before the decimal point."
+msgid_plural ""
+"Ensure that there are no more than %(max)s digits before the decimal point."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:597
+#, python-format
+msgid ""
+"File extension “%(extension)s” is not allowed. Allowed extensions are: "
+"%(allowed_extensions)s."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/core/validators.py:659
+msgid "Null characters are not allowed."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/base.py:1633
+#: venv/lib/python3.12/site-packages/django/forms/models.py:932
+msgid "and"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/base.py:1635
+#, python-format
+msgid "%(model_name)s with this %(field_labels)s already exists."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/constraints.py:20
+#, python-format
+msgid "Constraint “%(name)s” is violated."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:134
+#, python-format
+msgid "Value %(value)r is not a valid choice."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:135
+msgid "This field cannot be null."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:136
+msgid "This field cannot be blank."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:137
+#, python-format
+msgid "%(model_name)s with this %(field_label)s already exists."
+msgstr ""
+
+#. Translators: The 'lookup_type' is one of 'date', 'year' or
+#. 'month'. Eg: "Title must be unique for pub_date year"
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:141
+#, python-format
+msgid ""
+"%(field_label)s must be unique for %(date_field_label)s %(lookup_type)s."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:180
+#, python-format
+msgid "Field of type: %(field_type)s"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1161
+#, python-format
+msgid "“%(value)s” value must be either True or False."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1162
+#, python-format
+msgid "“%(value)s” value must be either True, False, or None."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1164
+msgid "Boolean (Either True or False)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1214
+#, python-format
+msgid "String (up to %(max_length)s)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1216
+msgid "String (unlimited)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1325
+msgid "Comma-separated integers"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1426
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid date format. It must be in YYYY-MM-DD "
+"format."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1430
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1565
+#, python-format
+msgid ""
+"“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid "
+"date."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1434
+msgid "Date (without time)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1561
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid format. It must be in YYYY-MM-DD HH:MM[:ss[."
+"uuuuuu]][TZ] format."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1569
+#, python-format
+msgid ""
+"“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
+"[TZ]) but it is an invalid date/time."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1574
+msgid "Date (with time)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1701
+#, python-format
+msgid "“%(value)s” value must be a decimal number."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1703
+msgid "Decimal number"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1864
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid format. It must be in [DD] [[HH:]MM:]ss[."
+"uuuuuu] format."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1868
+#, fuzzy
+#| msgid "Operations"
+msgid "Duration"
+msgstr "عملیات"
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1920
+#, fuzzy
+#| msgid "Address"
+msgid "Email address"
+msgstr "آدرس"
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1945
+#, fuzzy
+#| msgid "File"
+msgid "File path"
+msgstr "فایل"
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2023
+#, python-format
+msgid "“%(value)s” value must be a float."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2025
+msgid "Floating point number"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2065
+#, python-format
+msgid "“%(value)s” value must be an integer."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2067
+msgid "Integer"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2163
+msgid "Big (8 byte) integer"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2180
+msgid "Small integer"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2188
+#, fuzzy
+#| msgid "Address"
+msgid "IPv4 address"
+msgstr "آدرس"
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2219
+#, fuzzy
+#| msgid "Address"
+msgid "IP address"
+msgstr "آدرس"
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2310
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2311
+#, python-format
+msgid "“%(value)s” value must be either None, True or False."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2313
+msgid "Boolean (Either True, False or None)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2364
+msgid "Positive big integer"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2379
+msgid "Positive integer"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2394
+msgid "Positive small integer"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2410
+#, python-format
+msgid "Slug (up to %(max_length)s)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2446
+msgid "Text"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2526
+#, python-format
+msgid ""
+"“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
+"format."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2530
+#, python-format
+msgid ""
+"“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
+"invalid time."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2534
+msgid "Time"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2642
+msgid "URL"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2666
+msgid "Raw binary data"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2731
+#, python-format
+msgid "“%(value)s” is not a valid UUID."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2733
+msgid "Universally unique identifier"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/files.py:420
+msgid "Image"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/json.py:24
+msgid "A JSON object"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/json.py:26
+msgid "Value must be valid JSON."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:974
+#, python-format
+msgid "%(model)s instance with %(field)s %(value)r is not a valid choice."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:977
+msgid "Foreign Key (type determined by related field)"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1271
+msgid "One-to-one relationship"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1328
+#, python-format
+msgid "%(from)s-%(to)s relationship"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1330
+#, python-format
+msgid "%(from)s-%(to)s relationships"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1378
+msgid "Many-to-many relationship"
+msgstr ""
+
+#. Translators: If found as last label character, these punctuation
+#. characters will prevent the default label_suffix to be appended to
+#. the label
+#: venv/lib/python3.12/site-packages/django/forms/boundfield.py:188
+msgid ":?.!"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:91
+msgid "This field is required."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:313
+msgid "Enter a whole number."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:484
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:1241
+msgid "Enter a valid date."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:507
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:1242
+msgid "Enter a valid time."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:534
+msgid "Enter a valid date/time."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:568
+msgid "Enter a valid duration."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:569
+#, python-brace-format
+msgid "The number of days must be between {min_days} and {max_days}."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:638
+msgid "No file was submitted. Check the encoding type on the form."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:639
+msgid "No file was submitted."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:640
+msgid "The submitted file is empty."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:642
+#, python-format
+msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
+msgid_plural ""
+"Ensure this filename has at most %(max)d characters (it has %(length)d)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:647
+msgid "Please either submit a file or check the clear checkbox, not both."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:715
+msgid ""
+"Upload a valid image. The file you uploaded was either not an image or a "
+"corrupted image."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:862
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:949
+#: venv/lib/python3.12/site-packages/django/forms/models.py:1621
+#, python-format
+msgid "Select a valid choice. %(value)s is not one of the available choices."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:951
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:1070
+#: venv/lib/python3.12/site-packages/django/forms/models.py:1619
+msgid "Enter a list of values."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:1071
+msgid "Enter a complete value."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:1313
+msgid "Enter a valid UUID."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/fields.py:1343
+msgid "Enter a valid JSON."
+msgstr ""
+
+#. Translators: This is the default suffix added to form field labels
+#: venv/lib/python3.12/site-packages/django/forms/forms.py:97
+msgid ":"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/forms.py:239
+#, python-format
+msgid "(Hidden field %(name)s) %(error)s"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/formsets.py:61
+#, python-format
+msgid ""
+"ManagementForm data is missing or has been tampered with. Missing fields: "
+"%(field_names)s. You may need to file a bug report if the issue persists."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/formsets.py:65
+#, python-format
+msgid "Please submit at most %(num)d form."
+msgid_plural "Please submit at most %(num)d forms."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/forms/formsets.py:70
+#, python-format
+msgid "Please submit at least %(num)d form."
+msgid_plural "Please submit at least %(num)d forms."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/forms/formsets.py:484
+#: venv/lib/python3.12/site-packages/django/forms/formsets.py:491
+msgid "Order"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/models.py:925
+#, python-format
+msgid "Please correct the duplicate data for %(field)s."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/models.py:930
+#, python-format
+msgid "Please correct the duplicate data for %(field)s, which must be unique."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/models.py:937
+#, python-format
+msgid ""
+"Please correct the duplicate data for %(field_name)s which must be unique "
+"for the %(lookup)s in %(date_field)s."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/models.py:946
+msgid "Please correct the duplicate values below."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/models.py:1383
+msgid "The inline value did not match the parent instance."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/models.py:1474
+msgid "Select a valid choice. That choice is not one of the available choices."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/models.py:1623
+#, python-format
+msgid "“%(pk)s” is not a valid value."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/utils.py:229
+#, python-format
+msgid ""
+"%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it "
+"may be ambiguous or it may not exist."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/widgets.py:528
+msgid "Clear"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/widgets.py:529
+msgid "Currently"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/widgets.py:530
+msgid "Change"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/widgets.py:869
+msgid "Unknown"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/widgets.py:870
+msgid "Yes"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/forms/widgets.py:871
+msgid "No"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/tasks/base.py:34
+msgctxt "Task"
+msgid "Ready"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/tasks/base.py:36
+msgctxt "Task"
+msgid "Running"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/tasks/base.py:38
+msgctxt "Task"
+msgid "Failed"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/tasks/base.py:40
+msgctxt "Task"
+msgid "Successful"
+msgstr ""
+
+#. Translators: Please do not add spaces around commas.
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:878
+msgid "yes,no,maybe"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:908
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:925
+#, python-format
+msgid "%(size)d byte"
+msgid_plural "%(size)d bytes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:927
+#, python-format
+msgid "%s KB"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:929
+#, python-format
+msgid "%s MB"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:931
+#, python-format
+msgid "%s GB"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:933
+#, python-format
+msgid "%s TB"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:935
+#, python-format
+msgid "%s PB"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dateformat.py:74
+msgid "p.m."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dateformat.py:75
+msgid "a.m."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dateformat.py:80
+msgid "PM"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dateformat.py:81
+msgid "AM"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dateformat.py:153
+msgid "midnight"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dateformat.py:155
+msgid "noon"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:7
+msgid "Monday"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:8
+msgid "Tuesday"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:9
+msgid "Wednesday"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:10
+msgid "Thursday"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:11
+msgid "Friday"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:12
+msgid "Saturday"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:13
+msgid "Sunday"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:16
+msgid "Mon"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:17
+msgid "Tue"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:18
+msgid "Wed"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:19
+msgid "Thu"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:20
+msgid "Fri"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:21
+#, fuzzy
+#| msgid "Status"
+msgid "Sat"
+msgstr "وضعیت"
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:22
+msgid "Sun"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:25
+msgid "January"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:26
+msgid "February"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:27
+#, fuzzy
+#| msgid "Search"
+msgid "March"
+msgstr "جستجو..."
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:28
+msgid "April"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:29
+msgid "May"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:30
+msgid "June"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:31
+msgid "July"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:32
+msgid "August"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:33
+#, fuzzy
+#| msgid "Letter Number"
+msgid "September"
+msgstr " شماره نامه"
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:34
+msgid "October"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:35
+msgid "November"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:36
+msgid "December"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:39
+msgid "jan"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:40
+msgid "feb"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:41
+msgid "mar"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:42
+msgid "apr"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:43
+msgid "may"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:44
+msgid "jun"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:45
+msgid "jul"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:46
+msgid "aug"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:47
+msgid "sep"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:48
+msgid "oct"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:49
+msgid "nov"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:50
+msgid "dec"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:53
+msgctxt "abbrev. month"
+msgid "Jan."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:54
+msgctxt "abbrev. month"
+msgid "Feb."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:55
+#, fuzzy
+#| msgid "Search"
+msgctxt "abbrev. month"
+msgid "March"
+msgstr "جستجو..."
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:56
+msgctxt "abbrev. month"
+msgid "April"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:57
+msgctxt "abbrev. month"
+msgid "May"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:58
+msgctxt "abbrev. month"
+msgid "June"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:59
+msgctxt "abbrev. month"
+msgid "July"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:60
+msgctxt "abbrev. month"
+msgid "Aug."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:61
+msgctxt "abbrev. month"
+msgid "Sept."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:62
+msgctxt "abbrev. month"
+msgid "Oct."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:63
+msgctxt "abbrev. month"
+msgid "Nov."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:64
+msgctxt "abbrev. month"
+msgid "Dec."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:67
+msgctxt "alt. month"
+msgid "January"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:68
+msgctxt "alt. month"
+msgid "February"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:69
+#, fuzzy
+#| msgid "Search"
+msgctxt "alt. month"
+msgid "March"
+msgstr "جستجو..."
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:70
+msgctxt "alt. month"
+msgid "April"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:71
+msgctxt "alt. month"
+msgid "May"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:72
+msgctxt "alt. month"
+msgid "June"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:73
+msgctxt "alt. month"
+msgid "July"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:74
+msgctxt "alt. month"
+msgid "August"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:75
+#, fuzzy
+#| msgid "Letter Number"
+msgctxt "alt. month"
+msgid "September"
+msgstr " شماره نامه"
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:76
+msgctxt "alt. month"
+msgid "October"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:77
+msgctxt "alt. month"
+msgid "November"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/dates.py:78
+msgctxt "alt. month"
+msgid "December"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/ipv6.py:20
+msgid "This is not a valid IPv6 address."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/text.py:76
+#, python-format
+msgctxt "String to return when truncating text"
+msgid "%(truncated_text)s…"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/text.py:282
+msgid "or"
+msgstr ""
+
+#. Translators: This string is used as a separator between list elements
+#: venv/lib/python3.12/site-packages/django/utils/text.py:301
+#: venv/lib/python3.12/site-packages/django/utils/timesince.py:135
+msgid ", "
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/utils/timesince.py:8
+#, python-format
+msgid "%(num)d year"
+msgid_plural "%(num)d years"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/utils/timesince.py:9
+#, python-format
+msgid "%(num)d month"
+msgid_plural "%(num)d months"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/utils/timesince.py:10
+#, python-format
+msgid "%(num)d week"
+msgid_plural "%(num)d weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/utils/timesince.py:11
+#, python-format
+msgid "%(num)d day"
+msgid_plural "%(num)d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/utils/timesince.py:12
+#, python-format
+msgid "%(num)d hour"
+msgid_plural "%(num)d hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/utils/timesince.py:13
+#, python-format
+msgid "%(num)d minute"
+msgid_plural "%(num)d minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:29
+msgid "Forbidden"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:30
+msgid "CSRF verification failed. Request aborted."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:34
+msgid ""
+"You are seeing this message because this HTTPS site requires a “Referer "
+"header” to be sent by your web browser, but none was sent. This header is "
+"required for security reasons, to ensure that your browser is not being "
+"hijacked by third parties."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:40
+msgid ""
+"If you have configured your browser to disable “Referer” headers, please re-"
+"enable them, at least for this site, or for HTTPS connections, or for “same-"
+"origin” requests."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:45
+msgid ""
+"If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or "
+"including the “Referrer-Policy: no-referrer” header, please remove them. The "
+"CSRF protection requires the “Referer” header to do strict referer checking. "
+"If you’re concerned about privacy, use alternatives like <a "
+"rel=\"noreferrer\" …> for links to third-party sites."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:54
+msgid ""
+"You are seeing this message because this site requires a CSRF cookie when "
+"submitting forms. This cookie is required for security reasons, to ensure "
+"that your browser is not being hijacked by third parties."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:60
+msgid ""
+"If you have configured your browser to disable cookies, please re-enable "
+"them, at least for this site, or for “same-origin” requests."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/csrf.py:66
+msgid "More information is available with DEBUG=True."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:44
+msgid "No year specified"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:64
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:115
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:214
+msgid "Date out of range"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:94
+msgid "No month specified"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:147
+msgid "No day specified"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:194
+msgid "No week specified"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:353
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:384
+#, python-format
+msgid "No %(verbose_name_plural)s available"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:680
+#, python-format
+msgid ""
+"Future %(verbose_name_plural)s not available because %(class_name)s."
+"allow_future is False."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/dates.py:720
+#, python-format
+msgid "Invalid date string “%(datestr)s” given format “%(format)s”"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/detail.py:56
+#, python-format
+msgid "No %(verbose_name)s found matching the query"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/list.py:70
+msgid "Page is not “last”, nor can it be converted to an int."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/list.py:77
+#, python-format
+msgid "Invalid page (%(page_number)s): %(message)s"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/generic/list.py:173
+#, python-format
+msgid "Empty list and “%(class_name)s.allow_empty” is False."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/static.py:49
+msgid "Directory indexes are not allowed here."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/static.py:51
+#, python-format
+msgid "“%(path)s” does not exist"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/static.py:68
+#: venv/lib/python3.12/site-packages/django/views/templates/directory_index.html:8
+#: venv/lib/python3.12/site-packages/django/views/templates/directory_index.html:11
+#, python-format
+msgid "Index of %(directory)s"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:7
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:204
+msgid "The install worked successfully! Congratulations!"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:206
+#, python-format
+msgid ""
+"View <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
+"target=\"_blank\" rel=\"noopener\">release notes</a> for Django %(version)s"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:208
+#, python-format
+msgid ""
+"You are seeing this page because <a href=\"https://docs.djangoproject.com/en/"
+"%(version)s/ref/settings/#debug\" target=\"_blank\" "
+"rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
+"configured any URLs."
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:217
+msgid "Django Documentation"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:218
+msgid "Topics, references, &amp; how-to’s"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:226
+msgid "Tutorial: A Polling App"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:227
+msgid "Get started with Django"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:235
+msgid "Django Community"
+msgstr ""
+
+#: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:236
+msgid "Connect, get help, or contribute"
+msgstr ""
+
+#~ msgid "Nuclides"
+#~ msgstr "نوکلئیدها"
+
+#~ msgid "Save Draft"
+#~ msgstr "ذخیره پیش نویس"
+
+#~ msgid "Save & Continue"
+#~ msgstr "ذخیره و ادامه"
 
 #~| msgid "Created"
 #~ msgid "deprecated"
@@ -593,9 +2326,6 @@ msgstr "داده ای وجود ندارد."
 #~ msgid "Press any key to continue..."
 #~ msgstr "برای ادامه یک عملیات انتخاب کنید"
 
-#~ msgid "Messages"
-#~ msgstr "پیامها"
-
 #~ msgid "This page will contain the radionuclide database."
 #~ msgstr "این صفحه شامل اطلاعات رادییونوکلویدها میباشد."
 
@@ -607,9 +2337,6 @@ msgstr "داده ای وجود ندارد."
 
 #~ msgid "Register the sale or transfer of a radioactive source."
 #~ msgstr "ثبت فروش یا انتقال چشمه"
-
-#~ msgid "Active"
-#~ msgstr "فعال"
 
 #~ msgid "Inactive"
 #~ msgstr "غیرفعال"

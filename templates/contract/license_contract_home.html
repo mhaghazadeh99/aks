@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+
+<h2>
+{% trans "Contracts Waiting" %}
+</h2>
+
+
+<table class="table">
+
+<tr>
+
+<th>
+{% trans "Facility" %}
+</th>
+
+<th>
+{% trans "Letter Number" %}
+</th>
+
+<th>
+{% trans "Contract Number" %}
+</th>
+
+<th>
+{% trans "Action" %}
+</th>
+
+</tr>
+
+
+{% for license in licenses %}
+
+<tr>
+
+<td>
+{{ license.facility.name }}
+</td>
+
+
+<td>
+{{ license.letter_number }}
+</td>
+
+
+<td>
+
+{% if license.contract %}
+
+{{ license.contract.contract_number }}
+
+{% else %}
+
+-
+
+{% endif %}
+
+</td>
+
+
+<td>
+
+{% if license.contract %}
+
+<a href="{% url 'license_contract_update' license.contract.pk %}">
+{% trans "Continue" %}
+</a>
+
+
+{% else %}
+
+<a href="{% url 'license_contract_create' license.pk %}">
+{% trans "Create Contract" %}
+</a>
+
+{% endif %}
+
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="4">
+
+{% trans "No contracts waiting." %}
+
+</td>
+
+</tr>
+
+
+{% endfor %}
+
+
+</table>
+
+
+{% endblock %}

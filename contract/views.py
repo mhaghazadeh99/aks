@@ -13,21 +13,166 @@ from datetime import datetime
 from django.core.paginator import Paginator
 from dashboard.models import DSRS
 
-from operations.models import LicenseRequest,LicenseStatus
+from operations.models import LicenseRequest,LicenseStatus, LicenseApproval
+
+from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
+
+
+from .models import LicenseContract
+from .forms import LicenseContractForm
 
 def contract_home(request):
 
-    licenses = LicenseRequest.objects.filter(
-        status=LicenseStatus.CONTRACTS
-    )
+    
 
     return render(
         request,
         "contract/contract_home.html",
+    )
+
+def license_contract_home(request):
+
+    licenses = LicenseRequest.objects.filter(
+        status=LicenseStatus.CONTRACTS
+    ).select_related(
+        "facility",
+        "contract",
+    )
+
+
+    return render(
+        request,
+        "contract/license_contract_home.html",
         {
             "licenses": licenses
         }
     )
+
+
+
+
+def license_contract_create(request, pk):
+
+    license_request = get_object_or_404(
+        LicenseRequest,
+        pk=pk,
+        status=LicenseStatus.CONTRACTS,
+    )
+
+
+    if hasattr(license_request, "contract"):
+
+        return redirect(
+            "license_contract_update",
+            pk=license_request.contract.pk
+        )
+
+
+    if request.method == "POST":
+
+        form = LicenseContractForm(
+            request.POST
+        )
+
+        if form.is_valid():
+
+            contract = form.save(
+                commit=False
+            )
+
+            contract.license = license_request
+
+            contract.save()
+
+
+            messages.success(
+                request,
+                _("Contract created successfully.")
+            )
+
+
+            return redirect(
+                "license_contract_update",
+                pk=contract.pk
+            )
+
+
+    else:
+
+        form = LicenseContractForm()
+
+
+    history = LicenseApproval.objects.filter(
+                license=license_request
+            ).order_by("step")
+
+    return render(
+                request,
+                "contract/license_contract_form.html",
+                {
+                    "form": form,
+                    "license": license_request,
+                    "history": history,
+                    "page_title": _("Create License Contract"),
+                    "submit_text": _("Create Contract"),
+                },
+            )
+
+
+
+
+def license_contract_update(request, pk):
+
+    contract = get_object_or_404(
+        LicenseContract,
+        pk=pk
+    )
+
+
+    if request.method == "POST":
+
+        form = LicenseContractForm(
+            request.POST,
+            instance=contract
+        )
+
+        if form.is_valid():
+
+            form.save()
+
+            messages.success(
+                request,
+                _("Contract updated.")
+            )
+
+            return redirect(
+                "license_contract_home"
+            )
+
+
+    else:
+
+        form = LicenseContractForm(
+            instance=contract
+        )
+
+    history = LicenseApproval.objects.filter(
+            license=contract.license
+        ).order_by("step")
+
+    return render(
+            request,
+            "contract/license_contract_form.html",
+            {
+                "form": form,
+                "contract": contract,
+                "license": contract.license,
+                "history": history,
+                "page_title": _("Update License Contract"),
+                "submit_text": _("Save Changes"),
+            },
+        )
 
 
 
@@ -45,7 +190,7 @@ def contract_index(request):
             continue
 
         # -------- BOOLEAN FIELDS --------
-        if k in ["payment_done", "contract_signed", "licence_valid"]:
+        if k in ["payment_done", "contract_signed", "licene_valid"]:
             if v.lower() in ["true", "1", "yes"]:
                 contracts = contracts.filter(**{k: True})
             elif v.lower() in ["false", "0", "no"]:

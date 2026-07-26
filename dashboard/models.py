@@ -21,6 +21,7 @@ class OriginType(models.TextChoices):
 # CHANGED: Expanded lifecycle statuses
 # -----------------------------
 class SOURCE_STATUS(models.TextChoices):
+
     PURCHASED = "Purchased", "Purchased"      # New SRS
     IN_USE = "In Use", "In Use"               # Active at customer
     STORED = "Stored", "Stored"               # Returned to waste management
@@ -317,7 +318,7 @@ class MovementType(models.TextChoices):
 
 MOVEMENT_TO_STATUS = {
     MovementType.PURCHASE: SOURCE_STATUS.PURCHASED,
-    MovementType.RECEIVE: SOURCE_STATUS.IN_USE,
+    MovementType.RECEIVE: SOURCE_STATUS.STORED,
     MovementType.ISSUE: SOURCE_STATUS.IN_USE,
     MovementType.RETURN: SOURCE_STATUS.STORED,
     MovementType.TRANSFER: SOURCE_STATUS.IN_USE,

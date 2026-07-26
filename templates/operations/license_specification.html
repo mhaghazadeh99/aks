@@ -142,8 +142,11 @@
 <td>
 
 {{ forloop.counter }}
+    {{ form.id }}
+    {{ form.source_type.as_hidden }}
+    {{ form.source_dsrs.as_hidden }}
 
-{{ form.id }}
+
 
 </td>
 

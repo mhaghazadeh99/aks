@@ -1,57 +1,68 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Submit, Div
 from django import forms
-
-from .models import DSRS
+from .models import DSRS,SourceMovement, MovementType
 
 
 class DSRSForm(forms.ModelForm):
 
     class Meta:
         model = DSRS
+
         exclude = [
-            'created_by',
-            'created_at',
-            'initial_activity_bq'
+            "created_by",
+            "created_at",
+            "initial_activity_bq",
+
+            "Facility",
+            "Status",
+            "Status_Date",
         ]
 
         widgets = {
 
-            'Date_received': forms.DateInput(
+            "Date_received": forms.DateInput(
                 attrs={
-                     'type':'text',
-                    'class': 'datepicker'
+                    "type": "text",
+                    "class": "datepicker"
                 }
             ),
 
-            'Activity_reference_date': forms.DateInput(
+            "Activity_reference_date": forms.DateInput(
                 attrs={
-                    'type':'text',
-                    'class': 'datepicker'
+                    "type": "text",
+                    "class": "datepicker"
                 }
             ),
 
-            'Status_Date': forms.DateInput(
+            "Status_Date": forms.DateInput(
                 attrs={
-                     'type':'text',
-                    'class': 'datepicker'
+                    "type": "text",
+                    "class": "datepicker"
                 }
             ),
 
-            'Dose_rate_measurement_date': forms.DateInput(
+            "Dose_rate_measurement_date": forms.DateInput(
                 attrs={
-                     'type':'text',
-                    'class': 'datepicker'
+                    "type": "text",
+                    "class": "datepicker"
+                }
+            ),
+
+            "Comment": forms.Textarea(
+                attrs={
+                    "rows": 3
                 }
             ),
         }
 
 
         labels = {
-        "activity_input":
-        "Initial Activity",
+            "activity_input": "Activity",
+            "Dose_rate_surface_uSv": "Surface Dose Rate (µSv/h)",
+            "Dose_rate_1m_uSv": "1m Dose Rate (µSv/h)",
+            "contamination_bq_cm2": "Contamination (Bq/cm²)",
         }
-
 
 
     def __init__(self, *args, **kwargs):
@@ -61,57 +72,171 @@ class DSRSForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
 
-        # Required fields
-
+        # Add * to required fields
         for name, field in self.fields.items():
 
             if field.required:
                 field.label = f"{field.label} *"
 
 
-
-        # Crispy
-
         self.helper = FormHelper()
 
-        self.helper.form_method = "post"
+        self.helper.form_tag = False
+
 
         self.helper.layout = Layout(
 
+
+            # -------------------------
+            # Identification
+            # -------------------------
+
             Div(
                 Field("Source_Type"),
+                Field("Sso_Code"),
                 Field("serial_number"),
                 Field("Nuclide"),
+
                 css_class="row"
             ),
 
-            Field("activity_input"),
-            Field("activity_unit"),
 
-            Field("Date_received"),
+            # -------------------------
+            # Origin
+            # -------------------------
 
-            Field("Activity_reference_date"),
+            Div(
+                Field("Origin_Type"),
+                
+                
 
-            Field("Recycled"),
+                css_class="row"
+            ),
 
-            Field("Status_Date"),
 
-            Field("Dose_rate_measurement_date"),
+            Div(
+                Field("Date_received"),
+                Field("Responsible_Person"),
+                Field("Location"),
 
-            Field("Responsible_Person"),
+                css_class="row"
+            ),
 
-            Field("Facility"),
 
-            Submit(
-                "submit",
-                "Save Source",
-                css_class="btn btn-primary"
-            )
+
+            # -------------------------
+            # Activity
+            # -------------------------
+
+            Div(
+                Field("activity_input"),
+                Field("activity_unit"),
+                Field("Activity_reference_date"),
+
+                css_class="row"
+            ),
+
+
+
+            # -------------------------
+            # Status
+            # -------------------------
+
+            Div(
+                Field("source_state"),
+                css_class="row",
+            ),
+
+
+
+            # -------------------------
+            # Dose information
+            # -------------------------
+
+            Div(
+                Field("Dose_rate_surface_uSv"),
+                Field("Dose_rate_1m_uSv"),
+                Field("Dose_rate_measurement_date"),
+
+                css_class="row"
+            ),
+
+
+            Field("contamination_bq_cm2"),
+
+
+
+            # -------------------------
+            # Source details
+            # -------------------------
+
+            Div(
+
+                Field("Source_Physical_Form"),
+                Field("Source_Manufacturer"),
+                Field("Source_Model"),
+
+                css_class="row"
+
+            ),
+
+
+            Field("Source_Practice"),
+
+
+
+            # -------------------------
+            # Device details
+            # -------------------------
+
+            Div(
+
+                Field("Device_Manufacturer"),
+                Field("Device_Model"),
+                Field("Device_Serial_Number"),
+
+                css_class="row"
+
+            ),
+
+
+
+            # -------------------------
+            # Storage/container
+            # -------------------------
+
+            Div(
+
+                Field("Container_Type"),
+                Field("Dimension"),
+
+                css_class="row"
+
+            ),
+
+
+
+            Field("is_divisible"),
+            Field("source_count"),
+            Field("available_count"),
+
+
+
+            Field("Attachments"),
+
+            Field("Comment"),
+
+
+
+            
 
         )
 
 
-        # Group logic
+
+        # -------------------------
+        # User restrictions
+        # -------------------------
 
         if user:
 
@@ -119,47 +244,42 @@ class DSRSForm(forms.ModelForm):
                 name="SRS Users"
             ).exists()
 
+
             dsrs = user.groups.filter(
                 name="DSRS Users"
             ).exists()
 
 
+
             if srs != dsrs:
 
-                self.fields[
-                    "Source_Type"
-                ].disabled = True
+
+                self.fields["Source_Type"].widget = (
+                    forms.HiddenInput()
+                )
 
 
                 if srs:
-
-                    self.initial[
-                        "Source_Type"
-                    ] = "SRS"
+                    self.initial["Source_Type"] = "SRS"
 
                 else:
-
-                    self.initial[
-                        "Source_Type"
-                    ] = "DSRS"
+                    self.initial["Source_Type"] = "DSRS"
 
 
 
-    def clean_activity_input_mci(self):
+    def clean_activity_input(self):
 
-        val = self.cleaned_data.get(
-            "activity_input_mci"
+        value = self.cleaned_data.get(
+            "activity_input"
         )
 
-
-        if val is not None and val <= 0:
+        if value is not None and value <= 0:
 
             raise forms.ValidationError(
                 "Activity must be positive."
             )
 
-
-        return val
+        return value
 
 
 
@@ -168,20 +288,75 @@ class DSRSForm(forms.ModelForm):
         cleaned = super().clean()
 
 
-        activity = cleaned.get(
-            "activity_input_mci"
-        )
-
-        nuclide = cleaned.get(
-            "Nuclide"
-        )
-
-
-        if activity and not nuclide:
+        if (
+            cleaned.get("activity_input")
+            and not cleaned.get("Nuclide")
+        ):
 
             raise forms.ValidationError(
-                "Nuclide is required when activity is set."
+                "Nuclide is required when activity is entered."
             )
 
 
         return cleaned
+
+
+    
+
+
+
+class SourceMovementForm(forms.ModelForm):
+
+    class Meta:
+        model = SourceMovement
+
+        fields = [
+            "movement_type",
+            "from_facility",
+            "to_facility",
+            "movement_date",
+            "contract",
+            "source_count",
+            "remarks",
+        ]
+
+        widgets = {
+            "movement_date": forms.DateInput(
+                attrs={
+                    "type": "text",
+                    "class": "datepicker",
+                }
+            ),
+            "remarks": forms.Textarea(
+                attrs={"rows": 3}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+        self.helper.layout = Layout(
+
+            Div(
+                Field("movement_type"),
+                Field("movement_date"),
+                css_class="row",
+            ),
+
+            Div(
+                Field("from_facility"),
+                Field("to_facility"),
+                css_class="row",
+            ),
+
+            Div(
+                Field("contract"),
+                Field("source_count"),
+                css_class="row",
+            ),
+
+            Field("remarks"),
+        )

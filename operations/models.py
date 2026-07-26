@@ -3,7 +3,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from dashboard.choices import ActivityUnit   # or wherever your ActivityUnit choices are
-from facilities.models import Facility
+from facilities.models import FacilityModel
 
 from reference.models import Nuclides
 
@@ -84,7 +84,7 @@ class LicenseStatus(models.TextChoices):
 class LicenseRequest(models.Model):
 
     facility = models.ForeignKey(
-        Facility,
+        FacilityModel,
         on_delete=models.PROTECT,
         related_name="license_requests",
     )
@@ -234,7 +234,7 @@ class LicenseSource(models.Model):
     nuclide = models.ForeignKey(
         Nuclides,
         on_delete=models.PROTECT,
-        verbose_name=_("Nuclide"),
+        verbose_name=_("Nuclide"),blank=True,null=True,
     )
 
     serial_number = models.CharField(

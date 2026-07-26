@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 
 from .forms import FacilityForm, FacilityImportForm
-from .models import Facility
+from .models import FacilityModel
 import csv
 
 
@@ -29,7 +29,7 @@ def facility_list(request):
 
 
 
-    queryset = Facility.objects.all()
+    queryset = FacilityModel.objects.all()
 
 
 
@@ -176,7 +176,7 @@ def facility_create(request):
 def facility_update(request, pk):
 
     facility = get_object_or_404(
-        Facility,
+        FacilityModel,
         pk=pk
     )
 
@@ -226,7 +226,7 @@ def facility_update(request, pk):
 def facility_delete(request, pk):
 
     facility = get_object_or_404(
-        Facility,
+        FacilityModel,
         pk=pk
     )
 
@@ -285,7 +285,7 @@ def facility_import(request):
                         f"Invalid CSV format near row: {row}"
                     )
                     continue
-                Facility.objects.create(
+                FacilityModel.objects.create(
 
                     name=row.get("name"),
 

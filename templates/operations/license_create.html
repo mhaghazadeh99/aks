@@ -134,6 +134,7 @@
                         </div>
 
 
+
                         <!-- ===================================================== -->
                         <!-- 4 REQUESTED SOURCES -->
                         <!-- ===================================================== -->
@@ -194,7 +195,31 @@
 
     </div>
 </div>
+<table class="table table-bordered table-striped">
 
+    <thead class="table-light">
+
+        <tr>
+
+            <th>#</th>
+
+            <th>Type</th>
+
+            <th>Source</th>
+
+            <th width="80">Remove</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody id="sourceTable">
+
+    </tbody>
+
+</table>
+
+<div id="hiddenSources"></div>
 
                         <!-- ===================================================== -->
                         <!-- BUTTONS -->
@@ -229,7 +254,7 @@
                             </button>
 
                         </div>
-
+                        
                     </form>
 
                 </div>
@@ -243,94 +268,132 @@
 </div>
 
 <script>
-
 let sourceCounter = 0;
 
 function addSources(){
 
-    const select =
-        document.getElementById("id_nuclide");
+    const sourceType = document.getElementById("id_picker-source_type").value;
+    const nuclide     = document.getElementById("id_picker-nuclide").value;
+    const dsrs        = document.getElementById("id_picker-source_dsrs").value;
+    const qty         = parseInt(document.getElementById("id_picker-quantity").value);
 
-    const qty =
-        parseInt(
-            document.getElementById("id_quantity").value
-        );
-
-    if(!select.value){
-
+    if(sourceType=="NEW" && !nuclide)
         return;
 
-    }
+    if(sourceType!="NEW" && !dsrs)
+        return;
 
+    let text="";
+
+    if(sourceType=="NEW")
+        text = document.getElementById("id_picker-nuclide").selectedOptions[0].text;
+    else
+        text = document.getElementById("id_picker-source_dsrs").selectedOptions[0].text;
+   
+    console.log("type:", sourceType);
+    console.log("nuclide:", nuclide);
+    console.log("dsrs:", dsrs);
     for(let i=0;i<qty;i++){
 
         sourceCounter++;
 
-        const uid =
-            "src_"+sourceCounter;
+        const uid="src"+sourceCounter;
 
-        const row =
-            document.createElement("tr");
+        const row=document.createElement("tr");
 
-        row.id = uid;
+        row.id=uid;
 
-        row.innerHTML = `
-            <td>${sourceCounter}</td>
-            <td>${select.options[select.selectedIndex].text}</td>
-            <td>
-                <button
-                    type="button"
-                    class="btn btn-sm btn-danger"
-                    onclick="removeSource('${uid}')"
-                >
-                    ✖
-                </button>
-            </td>
+        row.innerHTML=`
+
+        <td>${sourceCounter}</td>
+
+        <td>${sourceType}</td>
+
+        <td>${text}</td>
+
+        <td>
+
+        <button
+            type="button"
+            class="btn btn-sm btn-danger"
+            onclick="removeSource('${uid}')">
+
+            ×
+
+        </button>
+
+        </td>
+
         `;
 
         document
             .getElementById("sourceTable")
             .appendChild(row);
 
-        const hidden =
-            document.createElement("input");
-
-        hidden.type="hidden";
-
-        hidden.name="sources";
-
-        hidden.value=select.value;
-
-        hidden.id="hidden_"+uid;
-
-        document
-            .getElementById("hiddenSources")
-            .appendChild(hidden);
+        createHidden(uid,sourceType,nuclide,dsrs);
 
     }
+
+}
+
+
+function createHidden(uid, type, nuclide, dsrs) {
+
+    const holder = document.getElementById("hiddenSources");
+
+    holder.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div id="hidden_${uid}">
+
+            <input
+                type="hidden"
+                name="source_type"
+                value="${type}">
+
+            <input
+                type="hidden"
+                name="nuclide"
+                value="${nuclide}">
+
+            <input
+                type="hidden"
+                name="source_dsrs"
+                value="${dsrs}">
+
+        </div>
+        `
+    );
 
 }
 function removeSource(uid){
 
-    const row =
-        document.getElementById(uid);
+    document.getElementById(uid).remove();
 
-    if(row){
-
-        row.remove();
-
-    }
-
-    const hidden =
-        document.getElementById("hidden_"+uid);
-
-    if(hidden){
-
-        hidden.remove();
-
-    }
+    document.getElementById("hidden_"+uid).remove();
 
 }
+// function removeSource(uid){
+
+//     const row =
+//         document.getElementById(uid);
+
+//     if(row){
+
+//         row.remove();
+
+//     }
+
+//     const hidden =
+//         document.getElementById("hidden_"+uid);
+
+//     if(hidden){
+
+//         hidden.remove();
+
+//     }
+
+// }
 
 
 
@@ -438,6 +501,45 @@ window.addEventListener(
 
 {% endif %}
 
+
+function updateSourceType(){
+
+    const type=
+        document.getElementById("id_source_type").value;
+
+    if(type=="NEW"){
+
+        document
+            .getElementById("nuclideArea")
+            .classList.remove("d-none");
+
+        document
+            .getElementById("dsrsArea")
+            .classList.add("d-none");
+
+    }
+    else{
+
+        document
+            .getElementById("nuclideArea")
+            .classList.add("d-none");
+
+        document
+            .getElementById("dsrsArea")
+            .classList.remove("d-none");
+
+    }
+
+}
+
+updateSourceType();
+
+document
+.getElementById("id_source_type")
+.addEventListener(
+    "change",
+    updateSourceType
+);
 
 
 </script>

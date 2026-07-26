@@ -3,7 +3,7 @@ from crispy_forms.layout import Layout, Field
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.forms import modelformset_factory
-from facilities.models import Facility
+from facilities.models import FacilityModel
 from django.utils import timezone
 from dashboard.choices import ActivityUnit
 from dashboard.models import SOURCE_STATUS
@@ -101,7 +101,7 @@ class LicenseFacilityForm(forms.Form):
 
     facility = forms.ModelChoiceField(
 
-        queryset=Facility.objects.order_by("name"),
+        queryset=FacilityModel.objects.order_by("name"),
 
         label=_("Facility"),
 
@@ -197,7 +197,7 @@ class LicenseSourceForm(forms.Form):
     )
 
     source_dsrs = forms.ModelChoiceField(
-                    queryset=DSRS.objects.filter(Status=SOURCE_STATUS.STORED,
+                    queryset=DSRS.objects.filter(Status=SOURCE_STATUS.CONTROL,
                 ).select_related("Nuclide",).order_by("serial_number",))
 
     nuclide = forms.ModelChoiceField(
@@ -220,7 +220,8 @@ class LicenseSourceForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_method = "post"
         self.helper.form_tag = False
-
+        self.fields["nuclide"].required = False
+        self.fields["source_dsrs"].required = False 
         self.helper.layout = Layout(
 
             Field("source_type"),
@@ -238,12 +239,12 @@ class LicenseSourceForm(forms.Form):
         cleaned = super().clean()
 
         source_type = cleaned.get("source_type")
-        dsrs = cleaned.get("source_dsrs")
-        nuclide = cleaned.get("nuclide")
 
         if source_type == LicenseSourceType.NEW:
 
-            if not nuclide:
+            cleaned["source_dsrs"] = None
+
+            if not cleaned.get("nuclide"):
 
                 self.add_error(
                     "nuclide",
@@ -252,13 +253,14 @@ class LicenseSourceForm(forms.Form):
 
         else:
 
-            if not dsrs:
+            cleaned["nuclide"] = None
+
+            if not cleaned.get("source_dsrs"):
 
                 self.add_error(
                     "source_dsrs",
                     _("Please select an existing DSRS."),
                 )
-
         return cleaned
 
 
@@ -304,30 +306,20 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
-
         self.helper = FormHelper()
-
         self.helper.form_tag = False
-
+        self.fields["source_dsrs"].required = False   # <-- add this
         self.helper.layout = Layout(
-
             Field("source_type"),
-
             Field("source_dsrs"),
-
             Field("serial_number"),
-
             Field("activity"),
-
             Field("activity_unit"),
-
             Field("activity_date"),
-
             Field("description"),
-
         )
+    
     def clean(self):
 
         cleaned = super().clean()

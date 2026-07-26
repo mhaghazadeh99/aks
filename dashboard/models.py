@@ -7,7 +7,7 @@ from contract.models import Contract,LicenseContract
 from simple_history.models import HistoricalRecords
 from reference.models import Nuclides
 # Create your models here.
-from facilities.models import Facility
+from facilities.models import FacilityModel
 from django.contrib.auth.models import User
 from .choices import ActivityUnit
 
@@ -28,6 +28,7 @@ class SOURCE_STATUS(models.TextChoices):
     RECYCLED = "Recycled", "Recycled"
     DISPOSED = "Disposed", "Disposed"         # Final state
     LOANED = "Loaned", "Loaned"
+    CONTROL = "Quality control", "Quality control"
 
 class SourceState(models.TextChoices):
     OK = "OK", "OK"
@@ -55,7 +56,7 @@ class DSRS(models.Model):
     )
     @property
     def contract_number(self):
-        return self.LicenseContract.contract_number if self.contract else ""
+        return self.contract.contract_number if self.contract else ""
     created_from = models.ForeignKey(
         "self",
         null=True,
@@ -67,28 +68,25 @@ class DSRS(models.Model):
 
     Sso_Code = models.CharField(max_length=12,null=True, blank=True)
 
-    Facility = models.CharField(max_length=100, blank=True, null=True)
+    Facility = models.ForeignKey(
+                FacilityModel,
+                null=True,
+                blank=True,
+                on_delete=models.SET_NULL,
+                related_name="Source_Facility"
+            )
 
     Origin_Type = models.CharField(max_length=20, choices=OriginType.choices,null=True, blank=True)
 
     Date_received = models.DateField(blank=True, null=True)
-    Origin_Facility = models.CharField(max_length=250,blank=True, null=True)
+    
+
     is_divisible = models.BooleanField(default=False,)
     source_count = models.PositiveIntegerField(default=1,)
     available_count = models.PositiveIntegerField(default=1,)
     Location = models.CharField(max_length=20,blank=True, null=True)
 
-    @property
-    def Loc1(self):
-        return self.Location[:3]
-
-    @property
-    def Loc2(self):
-        return self.Location[3:7]
-
-    @property
-    def Num(self):
-        return self.Location[7:]
+    
 
     Status = models.CharField(max_length=15, choices=SOURCE_STATUS.choices,blank=True, null=True)
     Status_Date = models.DateField(blank=True, null=True)
@@ -144,7 +142,48 @@ class DSRS(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
     initial_activity_bq = models.FloatField(null=True, blank=True)
+    @property
+    def last_movement(self):
+        return self.movements.order_by("-movement_date", "-id").first()
+    
+    @property
+    def current_facility(self):
+        return self.Facility
 
+    
+
+    def register_movement(
+        self,
+        movement_type,
+        to_facility,
+        from_facility=None,
+        contract=None,
+        performed_by=None,
+        quantity=None,
+        remarks="",
+        movement_date=None,
+    ):
+
+        if movement_date is None:
+            movement_date = timezone.now().date()
+
+        movement = self.movements.create(
+            movement_type=movement_type,
+            from_facility=from_facility,
+            to_facility=to_facility,
+            movement_date=movement_date,
+            contract=contract,
+            performed_by=performed_by,
+            source_count=quantity or self.available_count,
+            remarks=remarks,
+        )
+
+        self.Facility = to_facility
+        self.Status_Date = movement_date
+        self.Status = MOVEMENT_TO_STATUS.get(movement_type, self.Status)
+        self.save(update_fields=["Facility", "Status_Date", "Status"])          # ADD "Status" HERE
+
+        return movement
     # -----------------------------
     # CURRENT ACTIVITY
     # -----------------------------
@@ -242,6 +281,7 @@ class DSRS(models.Model):
 
     def __str__(self):
         return f"{self.Nuclide} (S.N: {self.serial_number})"
+    
 
 
 class DSRSImage(models.Model):
@@ -259,26 +299,47 @@ class DSRSImage(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
 
+
+class MovementType(models.TextChoices):
+    PURCHASE = "PURCHASE", "Purchase"
+    RECEIVE = "RECEIVE", "Receive"
+    ISSUE = "ISSUE", "Issue"
+    RETURN = "RETURN", "Return"
+    TRANSFER = "TRANSFER", "Transfer"
+    SPLIT = "SPLIT", "Split"
+    MERGE = "MERGE", "Merge"
+    REUSE = "REUSE", "Reuse"
+    RECYCLE = "RECYCLE", "Recycle"
+    DISPOSAL = "DISPOSAL", "Disposal"
+    LOAN = "LOAN", "Loan"
+    QUALITY_CONTROL = "QUALITY_CONTROL", "Quality Control"
+
+
+MOVEMENT_TO_STATUS = {
+    MovementType.PURCHASE: SOURCE_STATUS.PURCHASED,
+    MovementType.RECEIVE: SOURCE_STATUS.IN_USE,
+    MovementType.ISSUE: SOURCE_STATUS.IN_USE,
+    MovementType.RETURN: SOURCE_STATUS.STORED,
+    MovementType.TRANSFER: SOURCE_STATUS.IN_USE,
+    MovementType.REUSE: SOURCE_STATUS.REUSED,
+    MovementType.RECYCLE: SOURCE_STATUS.RECYCLED,
+    MovementType.DISPOSAL: SOURCE_STATUS.DISPOSED,
+    MovementType.LOAN: SOURCE_STATUS.LOANED,
+    MovementType.QUALITY_CONTROL: SOURCE_STATUS.CONTROL,
+}
+
+
 class SourceMovement(models.Model):
     
     source = models.ForeignKey(
         DSRS,
-        on_delete=models.CASCADE,
+        on_delete=models.CASCADE, related_name="movements",
     )
 
-    movement_type = models.CharField(
-        max_length=20,
-        choices=[
-            ("ISSUE", "Issue"),
-            ("RETURN", "Return"),
-            ("REUSE", "Reuse"),
-            ("RECYCLE", "Recycle"),
-            ("DISPOSAL", "Disposal"),
-        ],
-    )
+    movement_type = models.CharField(max_length=20, choices=MovementType.choices, )
 
     from_facility = models.ForeignKey(
-        Facility,
+        FacilityModel,
         null=True,
         blank=True,
         related_name="+",
@@ -286,14 +347,15 @@ class SourceMovement(models.Model):
     )
 
     to_facility = models.ForeignKey(
-        Facility,
+        FacilityModel,
         null=True,
         blank=True,
         related_name="+",
         on_delete=models.SET_NULL,
     )
 
-    quantity = models.PositiveIntegerField(default=1)
+    source_count = models.PositiveIntegerField(default=1)
+
 
     movement_date = models.DateField()
 
@@ -303,9 +365,33 @@ class SourceMovement(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
     )
-
+    performed_by = models.ForeignKey(
+                User,
+                on_delete=models.SET_NULL,
+                null=True,
+            )
+    created_at = models.DateTimeField(auto_now_add=True)
     remarks = models.TextField(blank=True)
+    attachment = models.FileField(
+            upload_to="source_movements/",
+            validators=[validate_attachment],
+            blank=True,
+            null=True,
+        )
+    class Meta:
+        ordering = ["movement_date", "id"]
 
+        indexes = [
+            models.Index(fields=["source"]),
+            models.Index(fields=["movement_date"]),
+            models.Index(fields=["movement_type"]),
+        ]
+    
+    def __str__(self):
+        return (
+            f"{self.get_movement_type_display()} "
+            f"{self.from_facility} → {self.to_facility}"
+        )
 
 class HideShowFilterT(models.Model):
     parent = models.CharField(max_length=50)

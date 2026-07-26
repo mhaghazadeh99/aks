@@ -11,7 +11,7 @@ from crispy_forms.layout import (
     HTML,
 )
 
-from .models import Facility
+from .models import FacilityModel
 
 
 
@@ -19,7 +19,7 @@ class FacilityForm(forms.ModelForm):
 
     class Meta:
 
-        model = Facility
+        model = FacilityModel
 
         fields = [
             "name",

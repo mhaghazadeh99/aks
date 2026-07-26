@@ -4,7 +4,7 @@ from simple_history.models import HistoricalRecords
 from django.db import models
 from django.conf import settings
 from operations.models import LicenseRequest
-
+from facilities.models import FacilityModel
 
 class LicenseContract(models.Model):
 
@@ -106,11 +106,13 @@ class Contract(models.Model):
 
     status_date = models.DateField()
 
-    facility = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True
-    )
+    facility =  models.ForeignKey(
+            FacilityModel,
+            null=True,
+            blank=True,
+            on_delete=models.SET_NULL,
+            related_name="sources"
+        )
 
 
     contract_signed = models.BooleanField(

@@ -1,75 +1,98 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %} Tables {% endblock title %}
 {% load crispy_forms_tags %}
-{% block extrastyle %}
 
+{% block title %} Add New Source {% endblock title %}
+
+{% block extrastyle %}
 <style>
     .form-check-inline label {
-    margin: 0;
-    font-weight: 500;
-}
-  .export-csv-btn {
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.export-csv-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-.export-csv-btn i {
-    font-size: 14px;
-}
-
-    .page-size .export-csv-img {
-        width: 35px;
+        margin: 0;
+        font-weight: 500;
+    }
+    .form-check-inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .form-check-inline input[type="checkbox"] {
+        transform: scale(1.3);
         cursor: pointer;
     }
-    .export-img {
-        width: 30px;
-    }
-  
-.required label::after {
-    content: " *";
-    color: red;
-}
-.form-check-inline {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.form-check-inline input[type="checkbox"] {
-    transform: scale(1.3);
-    cursor: pointer;
-}
 </style>
-
 {% endblock extrastyle %}
+
 {% block content %}
-   
-    <!-- Main Content -->
+
 <div class="content">
-  <div style="max-width:600px; margin:auto;">
+  <div style="max-width:1200px; margin:auto;">
 
     <!-- Header row -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-  <h2 style="margin: 0;">Add New Source</h2>
+        <h2 style="margin: 0;">Add New Source</h2>
 
-    <!-- Hidden file input -->
-  <input type="file" id="csvFileInput" accept=".csv" style="display: none;" />
+        <!-- Hidden file input -->
+        <input type="file" id="csvFileInput" accept=".csv" style="display: none;" />
 
-  <!-- Button -->
-  <button type="button" onclick="triggerCSVImport()" class="btn btn-success btn-sm">
-    Import CSV
-  </button>
+        <button type="button" onclick="triggerCSVImport()" class="btn btn-success btn-sm">
+            Import CSV
+        </button>
+    </div>
+
+    <!-- ================= SINGLE FORM — do not nest another <form> inside this ================= -->
+    <form method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        <!-- Source Information -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Source Information</h5>
+            </div>
+            <div class="card-body">
+                {% crispy form %}
+            </div>
+        </div>
+
+        <!-- Images -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Additional Images</h5>
+            </div>
+            <div class="card-body">
+                <label class="form-label">
+                    Upload additional images
+                </label>
+                <input
+                    class="form-control"
+                    type="file"
+                    name="dsrs_images"
+                    multiple>
+            </div>
+        </div>
+
+        <!-- Initial Movement -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Initial Movement</h5>
+            </div>
+            <div class="card-body">
+                {% crispy movement_form %}
+            </div>
+        </div>
+
+        <div class="text-end">
+            <button type="submit" class="btn btn-primary">
+                Save Source
+            </button>
+        </div>
+
+    </form>
+
+  </div>
 </div>
+
 <script>
 function triggerCSVImport() {
     document.getElementById('csvFileInput').click();
@@ -77,38 +100,29 @@ function triggerCSVImport() {
 
 document.getElementById('csvFileInput').addEventListener('change', function(event) {
     const file = event.target.files[0];
-
     if (!file) return;
 
     const reader = new FileReader();
 
     reader.onload = function(e) {
         const text = e.target.result;
-        console.log(text);
 
         const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
+        const headers = rows[0].split(',').map(h => h.trim());
 
-const headers = rows[0].split(',').map(h => h.trim());
+        const data = rows.slice(1).map(row => {
+            const values = row.split(',');
+            let obj = {};
+            headers.forEach((header, i) => {
+                obj[header] = (values[i] !== undefined) ? values[i].trim() : "";
+            });
+            return obj;
+        });
 
-const data = rows.slice(1).map(row => {
-    const values = row.split(',');
-
-    let obj = {};
-
-    headers.forEach((header, i) => {
-        obj[header] = (values[i] !== undefined) ? values[i].trim() : "";
-    });
-
-    return obj;
-});
-
-        console.log("Parsed CSV:", data);
-
-        // 👉 Next step: send to Django
         sendToServer(data);
     };
 
-    reader.readAsText(file,"UTF-8");
+    reader.readAsText(file, "UTF-8");
 });
 
 function sendToServer(data) {
@@ -121,20 +135,17 @@ function sendToServer(data) {
         body: JSON.stringify({ rows: data })
     })
     .then(async res => {
-        const text = await res.text();  // read raw response
-
+        const text = await res.text();
         try {
             const json = JSON.parse(text);
-            console.log("Response:", json);
-
-           if (json.errors.length > 0) {
-    alert(
-        "Created: " + json.created +
-        "\n\nErrors:\n" + json.errors.join("\n")
-    );
-} else {
-    alert("All rows imported successfully!");
-}
+            if (json.errors && json.errors.length > 0) {
+                alert(
+                    "Created: " + json.created +
+                    "\n\nErrors:\n" + json.errors.join("\n")
+                );
+            } else {
+                alert("All rows imported successfully!");
+            }
         } catch (e) {
             console.error("RAW RESPONSE:", text);
             alert("Server error:\n" + text);
@@ -145,7 +156,7 @@ function sendToServer(data) {
         alert("Fetch failed: " + err);
     });
 }
-// Django CSRF helper
+
 function getCSRFToken() {
     return document.cookie
         .split('; ')
@@ -153,40 +164,5 @@ function getCSRFToken() {
         ?.split('=')[1];
 }
 </script>
-
-        <form method="post" enctype="multipart/form-data">
-
-{% csrf_token %}
-
-
-{% crispy form %}
-
-
-<div class="mb-3">
-
-<label class="form-label">
-Upload additional images
-</label>
-
-
-<input 
-class="form-control"
-type="file"
-name="dsrs_images"
-multiple>
-
-
-</div>
-
-
-
-
-
-</form>
-
-</div>
-</div>
-</div>
-
 
 {% endblock %}

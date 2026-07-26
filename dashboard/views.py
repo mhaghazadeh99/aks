@@ -13,7 +13,7 @@ import re
 from django.utils import timezone
 from django.http import HttpResponseForbidden
 from datetime import timedelta
-from .forms import DSRSForm
+from .forms import DSRSForm, SourceMovementForm
 from django.db.models import Q
 
 import csv
@@ -103,92 +103,182 @@ def add_source(request):
     if not group_required(request.user, ["DSRS Users", "SRS Users"]):
         return HttpResponseForbidden("No access")
 
+
     if request.method == "POST":
-        print("POST DATA:")
-        print(request.POST)
-        form = DSRSForm(request.POST, request.FILES, user=request.user)
-    
 
-        if form.is_valid():
-            obj = form.save(commit=False)
-            obj.created_by = request.user
+        form = DSRSForm(
+            request.POST,
+            request.FILES,
+            user=request.user
+        )
 
-            srs = request.user.groups.filter(name="SRS Users").exists()
-            dsrs = request.user.groups.filter(name="DSRS Users").exists()
+        movement_form = SourceMovementForm(
+            request.POST
+        )
+
+
+        if form.is_valid() and movement_form.is_valid():
+
+            source = form.save(commit=False)
+
+            source.created_by = request.user
+
+
+            # source type control
+            srs = request.user.groups.filter(
+                name="SRS Users"
+            ).exists()
+
+            dsrs = request.user.groups.filter(
+                name="DSRS Users"
+            ).exists()
+
 
             if srs and dsrs:
-                # user has both → allow selection from form
-                obj.Source_Type = form.cleaned_data["Source_Type"]
+                source.Source_Type = form.cleaned_data.get(
+                    "Source_Type"
+                )
 
             elif srs:
-                obj.Source_Type = "SRS"
+                source.Source_Type = "SRS"
 
-            elif dsrs:
-                obj.Source_Type = "DSRS"
+            else:
+                source.Source_Type = "DSRS"
 
-            obj.save()   # IMPORTANT
 
-            
+
+            source.save()
+
+            # images
             for img in request.FILES.getlist("dsrs_images"):
-                DSRSImage.objects.create(dsrs=obj, file=img)
-            form.save_m2m()
+                DSRSImage.objects.create(dsrs=source, file=img)
+
+            # -----------------------------
+            # INITIAL MOVEMENT
+            # -----------------------------
+            movement = source.register_movement(
+                movement_type=movement_form.cleaned_data["movement_type"],
+                to_facility=movement_form.cleaned_data["to_facility"],
+                from_facility=movement_form.cleaned_data.get("from_facility"),
+                contract=movement_form.cleaned_data.get("contract"),
+                performed_by=request.user,
+                quantity=movement_form.cleaned_data.get("source_count"),
+                remarks=movement_form.cleaned_data.get("remarks", ""),
+                movement_date=movement_form.cleaned_data["movement_date"],
+            )
+
+
+
             return redirect("tables")
+
+
     else:
-        form = DSRSForm(user=request.user)
-    
 
-    return render(request, "dsrs/add_source.html", {"form": form})
+        form = DSRSForm(
+            user=request.user
+        )
 
+        movement_form = SourceMovementForm()
+
+
+
+    return render(
+        request,
+        "dsrs/add_source.html",
+        {
+            "form": form,
+            "movement_form": movement_form,
+        }
+    )
 
 
 def edit_source(request, pk):
 
-    # CHANGED: allow both groups
     if not group_required(request.user, ["DSRS Users", "SRS Users"]):
         return HttpResponseForbidden("No access")
 
     obj = get_object_or_404(DSRS, pk=pk)
 
     user_groups = set(request.user.groups.values_list("name", flat=True))
-
     is_srs_user = "SRS Users" in user_groups
     is_dsrs_user = "DSRS Users" in user_groups
-
-    # normalize value just in case
     source_type = (obj.Source_Type or "").strip()
 
-    # RULE 1: SRS users cannot access DSRS
     if is_srs_user and source_type == "DSRS" and not is_dsrs_user:
         return HttpResponseForbidden("No access to DSRS records")
 
-    # RULE 2: DSRS users cannot access SRS
     if is_dsrs_user and source_type == "SRS" and not is_srs_user:
         return HttpResponseForbidden("No access to SRS records")
 
     if request.method == "POST":
-        form = DSRSForm(request.POST, request.FILES, instance=obj)
+        action = request.POST.get("action")
 
-        if form.is_valid():
-            obj = form.save()
+        if action == "add_movement":
 
-            
+            form = DSRSForm(instance=obj, user=request.user)
+            movement_form = SourceMovementForm(request.POST)
 
-            delete_ids = request.POST.getlist("delete_images")
-            if delete_ids:
-                DSRSImage.objects.filter(
-                    id__in=delete_ids,
-                    dsrs=obj
-                ).delete()
-            
-            images = request.FILES.getlist("dsrs_images")
-            for img in images:
-                DSRSImage.objects.create(dsrs=obj, file=img)
+            if movement_form.is_valid():
 
-            return redirect("tables")
+                obj.register_movement(
+                    movement_type=movement_form.cleaned_data["movement_type"],
+                    to_facility=movement_form.cleaned_data["to_facility"],
+                    from_facility=movement_form.cleaned_data.get("from_facility"),
+                    contract=movement_form.cleaned_data.get("contract"),
+                    performed_by=request.user,
+                    quantity=movement_form.cleaned_data.get("source_count"),
+                    remarks=movement_form.cleaned_data.get("remarks", ""),
+                    movement_date=movement_form.cleaned_data["movement_date"],
+                )
+
+                messages.success(request, "Movement recorded successfully.")
+
+                return redirect("edit_source", pk=obj.pk)
+
+        else:
+
+            form = DSRSForm(request.POST, request.FILES, instance=obj, user=request.user)
+            movement_form = SourceMovementForm(initial={"from_facility": obj.Facility})
+
+            if form.is_valid():
+
+                obj = form.save(commit=False)
+                obj.save()
+
+                delete_ids = request.POST.getlist("delete_images")
+                if delete_ids:
+                    DSRSImage.objects.filter(
+                        id__in=delete_ids,
+                        dsrs=obj
+                    ).delete()
+
+                images = request.FILES.getlist("dsrs_images")
+                for img in images:
+                    DSRSImage.objects.create(dsrs=obj, file=img)
+
+                messages.success(request, "Source updated successfully.")
+
+                return redirect("tables")
+
     else:
-        form = DSRSForm(instance=obj)
+        form = DSRSForm(instance=obj, user=request.user)
+        movement_form = SourceMovementForm(initial={"from_facility": obj.Facility})
 
-    return render(request, "dsrs/edit_source.html", {"form": form})
+    movements = (
+        obj.movements
+        .select_related("from_facility", "to_facility", "performed_by")
+        .order_by("-movement_date", "-id")
+    )
+
+    return render(request, "dsrs/edit_source.html", {
+        "form": form,
+        "movement_form": movement_form,
+        "movements": movements,
+        "source": obj,
+    })
+    
+
+
 
 
 def source_list(request):
@@ -203,17 +293,20 @@ def source_list(request):
 def tables_view(request):
 
     queryset = DSRS.objects.select_related(
-    'Nuclide',
-    'created_by'
-    ).prefetch_related(
-    'dsrs_images'
-    )
+            'Nuclide',
+            'created_by',
+            'Facility'
+        ).prefetch_related(
+            'dsrs_images',
+            'movements__from_facility',
+            'movements__to_facility'
+        )
 
     # 🔍 SEARCH
     search = request.GET.get("search")
     if search:
         queryset = queryset.filter(
-            Q(Facility__icontains=search) |
+            Q(Facility__name__icontains=search) |
             Q(Status__icontains=search) |
             Q(Nuclide__name__icontains=search) |
             Q(Source_Type__icontains=search) |
@@ -393,11 +486,9 @@ def export_csv(request):
         "Facility",
         "Origin_Type",
         "Date_received",
-        "Origin_Facility",
+        "Current_Facility",
         "Location",
-        "Loc1",
-        "Loc2",
-        "Num",
+    
         "Status",
         "Status_Date",
         "Responsible_Person",
@@ -439,11 +530,9 @@ def export_csv(request):
             obj.Facility,
             obj.Origin_Type,
             obj.Date_received,
-            obj.Origin_Facility,
+            obj.Facility.name if obj.Facility else None,
             obj.Location,
-            obj.Loc1,
-            obj.Loc2,
-            obj.Num,
+            
             obj.Status,
             obj.Status_Date,
             obj.Responsible_Person,

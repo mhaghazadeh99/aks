@@ -203,9 +203,7 @@
   <th data-col="Date_received">Received</th>
   <th data-col="Origin_Facility">Origin Facility</th>
   <th data-col="Location">Location</th>
-  <th data-col="Loc1">Loc1</th>
-  <th data-col="Loc2">Loc2</th>
-  <th data-col="Num">Num</th>
+
   <th data-col="Status">Status</th>
   <th data-col="Status_Date">Status Date</th>
   <th data-col="Responsible_Person">Responsible</th>
@@ -253,11 +251,13 @@
 <td data-col="Facility">{{ s.Facility }}</td>
 <td data-col="Origin_Type">{{ s.Origin_Type }}</td>
 <td data-col="Date_received">{{ s.Date_received }}</td>
-<td data-col="Origin_Facility">{{ s.Origin_Facility }}</td>
+<td data-col="Origin_Facility">
+    {% with movement=s.movements.first %}
+        {{ movement.from_facility }}
+    {% endwith %}
+</td>
 <td data-col="Location">{{ s.Location }}</td>
-<td data-col="Loc1">{{ s.Loc1 }}</td>
-<td data-col="Loc2">{{ s.Loc2 }}</td>
-<td data-col="Num">{{ s.Num }}</td>
+
 <td data-col="Status">{{ s.Status }}</td>
 <td data-col="Status_Date">{{ s.Status_Date }}</td>
 <td data-col="Responsible_Person">{{ s.Responsible_Person }}</td>
@@ -425,9 +425,7 @@ document.getElementById("addFilter").onclick = function () {
   <option value="Date_received">Received</option>
   <option value="Origin_Facility">Origin Facility</option>
   <option value="Location">Location</option>
-  <option value="Loc1">Loc1</option>
-  <option value="Loc2">Loc2</option>
-  <option value="Num">Num</option>
+
   <option value="Status">Status</option>
   <option value="Status_Date">Status Date</option>
   <option value="Responsible_Person">Responsible</option>

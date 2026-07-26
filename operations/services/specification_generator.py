@@ -306,33 +306,36 @@ def _format_half_life(seconds):
 
 def _fill_sources(doc, sources):
     table = doc.tables[1]
- 
+
     FIRST_DATA_ROW = 7
     MAX_ROWS = 8  # the template only has 8 pre-drawn rows
- 
+
     sources = list(sources)
     if len(sources) > MAX_ROWS:
-        # The form has no more rows to add sources to as-is. Decide how you
-        # want to handle overflow (extra page, cloned row, truncate + note
-        # in _fill_description, etc.) — for now this just fills the first 8
-        # and silently drops the rest.
         sources = sources[:MAX_ROWS]
- 
+
     for i, source in enumerate(sources):
         row = FIRST_DATA_ROW + i
- 
+
         activity = ""
         if source.activity is not None:
             activity = f"{source.activity} {source.get_activity_unit_display()}"
- 
-        # LicenseSource has no "name" field — the source's identity is its
-        # nuclide.
+
+        # Column 8 ("توضیحات") is the only free-text cell available, so the
+        # source type is prepended to whatever description was entered,
+        # rather than needing its own column in this template.
+        type_label = source.get_source_type_display()
+        description = source.description or ""
+        if description:
+            combined_description = f"{type_label} - {description}"
+        else:
+            combined_description = type_label
+
         _set_cell_value(table.cell(row, 1), source.nuclide.name)
         _set_cell_value(table.cell(row, 2), activity)
         _set_cell_value(table.cell(row, 4), source.serial_number)
         _set_cell_value(table.cell(row, 6), _format_half_life(source.nuclide.half_life))
-        _set_cell_value(table.cell(row, 8), source.description or "")
- 
+        _set_cell_value(table.cell(row, 8), combined_description)
  
 
 def _fill_description(doc, description):

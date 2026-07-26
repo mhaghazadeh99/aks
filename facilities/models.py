@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class Facility(models.Model):
+class FacilityModel(models.Model):
 
     name = models.CharField(
         _("Facility Name"),

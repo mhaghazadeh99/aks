@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.contrib import messages
 import os
 import tempfile
-
+import json
 from django.core.files import File
 
 from operations.services.signature_service import SpecificationSigner
@@ -25,7 +25,7 @@ from .forms import (LicenseRequestForm, LicenseAttachmentForm, LicenseSourceSpec
     LicenseSourceForm,LicenseFacilityForm)
 
 from .models import (LicenseRequest, LicenseAttachment, LicenseAttachmentType,
-    LicenseSource,LicenseStatus,LicenseApproval)
+    LicenseSource,LicenseStatus,LicenseApproval,LicenseSourceType)
 # ============================================================
 # Operation Home
 # ============================================================
@@ -234,15 +234,14 @@ def license_list(request):
 from django.http import HttpResponse
 
 def license_create(request):
-
     def get_license_forms(post=None, files=None):
-
         return {
             "request_form": LicenseRequestForm(post),
             "facility_form": LicenseFacilityForm(post),
             "attachment_form": LicenseAttachmentForm(post, files),
-            "source_form": LicenseSourceForm(post),
+            "source_form": LicenseSourceForm(post, prefix="picker"),
         }
+    
 
 
     if request.method == "POST":
@@ -327,17 +326,16 @@ def license_create(request):
                     )
 
 
-            selected_sources = json.loads(
-                request.POST["sources_json"]
-            )
-
-            for item in selected_sources:
-
+            source_types = request.POST.getlist("source_type")
+            nuclides = request.POST.getlist("nuclide")
+            dsrs_sources = request.POST.getlist("source_dsrs")
+            for i in range(len(source_types)):
+                
                 LicenseSource.objects.create(
                     license=license_request,
-                    source_type=item["type"],
-                    nuclide_id=item["nuclide"],
-                    source_dsrs_id=item.get("dsrs"),
+                    source_type=source_types[i],
+                    nuclide_id=nuclides[i] if nuclides[i] else None,
+                    source_dsrs_id=dsrs_sources[i] if dsrs_sources[i] else None,
                 )
 
 
@@ -413,6 +411,14 @@ def license_specification(request, pk):
             queryset=queryset,
 
         )
+        formset = LicenseSourceSpecificationFormSet(request.POST, queryset=queryset)
+
+        is_valid = formset.is_valid()
+        print("FORMSET VALID:", is_valid)
+        print("FORMSET ERRORS:", formset.errors)
+        print("NON-FORM ERRORS:", formset.non_form_errors())
+        print("MANAGEMENT FORM:", request.POST.get("form-TOTAL_FORMS"), request.POST.get("form-INITIAL_FORMS"))
+
 
         if formset.is_valid():
 

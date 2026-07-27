@@ -239,31 +239,40 @@ def license_list(request):
 
 from django.http import HttpResponse
 
-def license_create(request):
+def license_create(request, pk=None):
+
+    license_request_instance = None
+
+    if pk is not None:
+        license_request_instance = get_object_or_404(LicenseRequest, pk=pk)
+
+        if license_request_instance.status != LicenseStatus.DRAFT:
+            messages.info(request, _("This license is no longer a draft and can't be edited here."))
+            return redirect("license_detail", pk=pk)
+
     def get_license_forms(post=None, files=None):
         return {
-            "request_form": LicenseRequestForm(post),
-            "facility_form": LicenseFacilityForm(post),
+            "request_form": LicenseRequestForm(post, instance=license_request_instance),
+            "facility_form": LicenseFacilityForm(
+                post,
+                initial=(
+                    {"facility": license_request_instance.facility}
+                    if license_request_instance else None
+                ),
+            ),
             "attachment_form": LicenseAttachmentForm(post, files),
             "source_form": LicenseSourceForm(post, prefix="picker"),
         }
 
     if request.method == "POST":
-
-        forms = get_license_forms(
-            request.POST,
-            request.FILES
-        )
+        # print("POST received")
+        # print(request.POST)
+        forms = get_license_forms(request.POST, request.FILES)
 
         request_form = forms["request_form"]
         facility_form = forms["facility_form"]
         attachment_form = forms["attachment_form"]
         source_form = forms["source_form"]
-
-        # -------------------------------------------------------
-        # Parse the requested-sources rows (raw POST, not a formset —
-        # see note on LicenseSourceForm.clean() from Step 2).
-        # -------------------------------------------------------
 
         source_types = request.POST.getlist("source_type")
         nuclides = request.POST.getlist("nuclide")
@@ -275,36 +284,27 @@ def license_create(request):
         if not source_types:
             source_errors.append(_("Please add at least one requested source."))
 
-        # Cumulative quantity requested per DSRS id across ALL rows in this
-        # submission — a DSRS could be picked once for Reuse and again as a
-        # Recycled component, or used in two different Recycled groups.
         requested_qty_by_dsrs = {}
-        parsed_recycled_components = []  # aligned by index with source_types
+        parsed_recycled_components = []
 
         for i, s_type in enumerate(source_types):
 
             if s_type == LicenseSourceType.NEW:
                 parsed_recycled_components.append([])
                 if not nuclides[i]:
-                    source_errors.append(
-                        _("Row %(row)d: nuclide is required for a New source.") % {"row": i + 1}
-                    )
+                    source_errors.append(_("Row %(row)d: nuclide is required for a New source.") % {"row": i + 1})
 
             elif s_type == LicenseSourceType.REUSED:
                 parsed_recycled_components.append([])
                 dsrs_id = dsrs_sources[i]
                 if not dsrs_id:
-                    source_errors.append(
-                        _("Row %(row)d: no DSRS selected for Reuse.") % {"row": i + 1}
-                    )
+                    source_errors.append(_("Row %(row)d: no DSRS selected for Reuse.") % {"row": i + 1})
                 else:
                     requested_qty_by_dsrs[dsrs_id] = requested_qty_by_dsrs.get(dsrs_id, 0) + 1
 
             elif s_type == LicenseSourceType.RECYCLED:
                 if not nuclides[i]:
-                    source_errors.append(
-                        _("Row %(row)d: final nuclide is required for a Recycled source.") % {"row": i + 1}
-                    )
+                    source_errors.append(_("Row %(row)d: final nuclide is required for a Recycled source.") % {"row": i + 1})
 
                 try:
                     components = json.loads(recycled_components_raw[i]) if recycled_components_raw[i] else []
@@ -312,9 +312,7 @@ def license_create(request):
                     components = []
 
                 if not components:
-                    source_errors.append(
-                        _("Row %(row)d: no components staged for this Recycled source.") % {"row": i + 1}
-                    )
+                    source_errors.append(_("Row %(row)d: no components staged for this Recycled source.") % {"row": i + 1})
 
                 for comp in components:
                     dsrs_id = comp.get("dsrsId")
@@ -326,29 +324,15 @@ def license_create(request):
 
             else:
                 parsed_recycled_components.append([])
-                source_errors.append(
-                    _("Row %(row)d: unknown source type.") % {"row": i + 1}
-                )
-
-        # -------------------------------------------------------
-        # Validate requested quantities against current availability.
-        # Fetch all referenced DSRS in one query rather than one-by-one.
-        # -------------------------------------------------------
+                source_errors.append(_("Row %(row)d: unknown source type.") % {"row": i + 1})
 
         if requested_qty_by_dsrs:
-
             dsrs_lookup = DSRS.objects.in_bulk(requested_qty_by_dsrs.keys())
-
             for dsrs_id, requested_qty in requested_qty_by_dsrs.items():
-
                 dsrs_obj = dsrs_lookup.get(int(dsrs_id))
-
                 if dsrs_obj is None:
-                    source_errors.append(
-                        _("Selected DSRS (id %(id)s) no longer exists.") % {"id": dsrs_id}
-                    )
+                    source_errors.append(_("Selected DSRS (id %(id)s) no longer exists.") % {"id": dsrs_id})
                     continue
-
                 if requested_qty > dsrs_obj.available_count:
                     source_errors.append(
                         _("DSRS %(serial)s: requested %(requested)d but only %(available)d available.") % {
@@ -357,23 +341,33 @@ def license_create(request):
                             "available": dsrs_obj.available_count,
                         }
                     )
+        # print("request_form", request_form.is_valid())
+        # print(request_form.errors)
 
-        # -------------------------------------------------------
-        # Save only if every form AND the source rows are valid.
-        # -------------------------------------------------------
+        # print("facility_form", facility_form.is_valid())
+        # print(facility_form.errors)
 
+        # print("attachment_form", attachment_form.is_valid())
+        # print(attachment_form.errors)
+
+        # print("source_form", source_form.is_valid())
+        # print(source_form.errors)
+
+        # print("source_errors", source_errors)
         if (
             request_form.is_valid()
             and facility_form.is_valid()
             and attachment_form.is_valid()
-            and source_form.is_valid()
+            # and source_form.is_valid()
             and not source_errors
         ):
 
             license_request = request_form.save(commit=False)
             license_request.facility = facility_form.cleaned_data["facility"]
-            license_request.created_by = request.user
             action = request.POST.get("action")
+
+            if license_request_instance is None:
+                license_request.created_by = request.user
 
             if action == "draft":
                 license_request.status = LicenseStatus.DRAFT
@@ -382,7 +376,8 @@ def license_create(request):
 
             license_request.save()
 
-            create_license_workflow(license_request)
+            if license_request_instance is None:
+                create_license_workflow(license_request)
 
             files = {
                 LicenseAttachmentType.LETTER: attachment_form.cleaned_data.get("letter", []),
@@ -401,16 +396,16 @@ def license_create(request):
                         uploaded_by=request.user,
                     )
 
-            # -------------------------------------------------------
-            # Create LicenseSource rows (+ LicenseSourceComponent for
-            # Recycled). available_count is intentionally NOT touched
-            # here — it's decremented later, at the specification step.
-            # -------------------------------------------------------
+            # Editing a draft: simplest correct approach is to replace the
+            # source list wholesale rather than diff it — nothing has been
+            # consumed yet (available_count is untouched until the
+            # specification step), so this is safe.
+            if license_request_instance is not None:
+                license_request.sources.all().delete()
 
             for i, s_type in enumerate(source_types):
 
                 if s_type == LicenseSourceType.NEW:
-
                     LicenseSource.objects.create(
                         license=license_request,
                         source_type=s_type,
@@ -419,7 +414,6 @@ def license_create(request):
                     )
 
                 elif s_type == LicenseSourceType.REUSED:
-
                     LicenseSource.objects.create(
                         license=license_request,
                         source_type=s_type,
@@ -428,14 +422,12 @@ def license_create(request):
                     )
 
                 elif s_type == LicenseSourceType.RECYCLED:
-
                     license_source = LicenseSource.objects.create(
                         license=license_request,
                         source_type=s_type,
                         nuclide_id=nuclides[i],
                         source_dsrs=None,
                     )
-
                     for comp in parsed_recycled_components[i]:
                         LicenseSourceComponent.objects.create(
                             license_source=license_source,
@@ -451,20 +443,51 @@ def license_create(request):
             return redirect("license_specification", pk=license_request.pk)
 
         else:
-
             for err in source_errors:
                 messages.error(request, err)
 
     else:
-
         forms = get_license_forms()
 
-    return render(
-        request,
-        "operations/license_create.html",
-        forms,
-    )
+    existing_sources_data = []
 
+    if license_request_instance is not None:
+        existing_sources = (
+            license_request_instance.sources
+            .select_related("nuclide", "source_dsrs")
+            .prefetch_related("components__dsrs")
+        )
+        for src in existing_sources:
+            if src.source_type == LicenseSourceType.NEW:
+                existing_sources_data.append({
+                    "type": "NEW",
+                    "nuclideId": src.nuclide_id,
+                    "nuclideLabel": str(src.nuclide),
+                })
+            elif src.source_type == LicenseSourceType.REUSED:
+                existing_sources_data.append({
+                    "type": "REUSED",
+                    "dsrsId": src.source_dsrs_id,
+                    "dsrsLabel": str(src.source_dsrs),
+                })
+            elif src.source_type == LicenseSourceType.RECYCLED:
+                existing_sources_data.append({
+                    "type": "RECYCLED",
+                    "nuclideId": src.nuclide_id,
+                    "nuclideLabel": str(src.nuclide),
+                    "components": [
+                        {"dsrsId": c.dsrs_id, "dsrsText": str(c.dsrs), "qty": c.quantity_used}
+                        for c in src.components.all()
+                    ],
+                })
+
+    forms["existing_sources_json"] = json.dumps(existing_sources_data)
+    forms["license_request_instance"] = license_request_instance
+
+    if license_request_instance is not None:
+        forms["existing_attachments"] = license_request_instance.attachments.all()
+
+    return render(request, "operations/license_create.html", forms)
 
 
 
@@ -1015,7 +1038,7 @@ def license_sign(request, pk):
         elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
 
             return redirect(
-                "contract_home",
+                "operation_deputy_license_list",
             )
 
     # -------------------------------------------------------

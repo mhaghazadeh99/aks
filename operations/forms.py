@@ -269,10 +269,10 @@ class LicenseSourceForm(forms.Form):
             for d in controlled_dsrs
         }
 
+        self.fields["source_dsrs"].widget = DSRSSelect(dsrs_meta=dsrs_meta)
         self.fields["source_dsrs"].queryset = DSRS.objects.filter(
             pk__in=[d.pk for d in controlled_dsrs]
         )
-        self.fields["source_dsrs"].widget = DSRSSelect(dsrs_meta=dsrs_meta)
 
         self.helper = FormHelper()
         self.helper.form_method = "post"

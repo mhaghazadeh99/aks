@@ -170,7 +170,7 @@ class DSRS(models.Model):
             movement_date=movement_date,
             contract=contract,
             performed_by=performed_by,
-            source_count=quantity or self.available_count,
+            source_count=quantity or 1,
             remarks=remarks,
         )
 

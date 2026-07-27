@@ -19,10 +19,12 @@
 
                 <div class="card-header">
 
-                    <h3 class="mb-0">
-
-                        {% trans "New License Request" %}
-
+                    <h3>
+                        {% if license_request_instance %}
+                            {% trans "Continue Draft" %}
+                        {% else %}
+                            {% trans "New License Request" %}
+                        {% endif %}
                     </h3>
 
                 </div>
@@ -80,6 +82,19 @@
                             <div class="card-body">
 
                                 {% crispy attachment_form %}
+                                {% if existing_attachments %}
+                                <hr>
+                                <h6>{% trans "Already Uploaded" %}</h6>
+                                <ul>
+                                    {% for att in existing_attachments %}
+                                        <li>
+                                            {{ att.get_attachment_type_display }} —
+                                            <a href="{{ att.file.url }}" target="_blank">{{ att.file.name|slice:"-40:" }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                <p class="text-muted small">{% trans "Uploading a file above adds to this list — it doesn't replace it." %}</p>
+                                {% endif %}
 
                             </div>
 
@@ -279,282 +294,7 @@
 
 </div>
 
-<script>
-let sourceCounter = 0;
 
-function addSources(){
-
-    const sourceType = document.getElementById("id_picker-source_type").value;
-    const nuclide     = document.getElementById("id_picker-nuclide").value;
-    const dsrs        = document.getElementById("id_picker-source_dsrs").value;
-    const qty         = parseInt(document.getElementById("id_picker-quantity").value);
-
-    if(sourceType=="NEW" && !nuclide)
-        return;
-
-    if(sourceType!="NEW" && !dsrs)
-        return;
-
-    let text="";
-
-    if(sourceType=="NEW")
-        text = document.getElementById("id_picker-nuclide").selectedOptions[0].text;
-    else
-        text = document.getElementById("id_picker-source_dsrs").selectedOptions[0].text;
-   
-    console.log("type:", sourceType);
-    console.log("nuclide:", nuclide);
-    console.log("dsrs:", dsrs);
-    for(let i=0;i<qty;i++){
-
-        sourceCounter++;
-
-        const uid="src"+sourceCounter;
-
-        const row=document.createElement("tr");
-
-        row.id=uid;
-
-        row.innerHTML=`
-
-        <td>${sourceCounter}</td>
-
-        <td>${sourceType}</td>
-
-        <td>${text}</td>
-
-        <td>
-
-        <button
-            type="button"
-            class="btn btn-sm btn-danger"
-            onclick="removeSource('${uid}')">
-
-            ×
-
-        </button>
-
-        </td>
-
-        `;
-
-        document
-            .getElementById("sourceTable")
-            .appendChild(row);
-
-        createHidden(uid,sourceType,nuclide,dsrs);
-
-    }
-
-}
-
-
-function createHidden(uid, type, nuclide, dsrs) {
-
-    const holder = document.getElementById("hiddenSources");
-
-    holder.insertAdjacentHTML(
-        "beforeend",
-        `
-        <div id="hidden_${uid}">
-
-            <input
-                type="hidden"
-                name="source_type"
-                value="${type}">
-
-            <input
-                type="hidden"
-                name="nuclide"
-                value="${nuclide}">
-
-            <input
-                type="hidden"
-                name="source_dsrs"
-                value="${dsrs}">
-
-        </div>
-        `
-    );
-
-}
-function removeSource(uid){
-
-    document.getElementById(uid).remove();
-
-    document.getElementById("hidden_"+uid).remove();
-
-}
-// function removeSource(uid){
-
-//     const row =
-//         document.getElementById(uid);
-
-//     if(row){
-
-//         row.remove();
-
-//     }
-
-//     const hidden =
-//         document.getElementById("hidden_"+uid);
-
-//     if(hidden){
-
-//         hidden.remove();
-
-//     }
-
-// }
-
-
-
-const facilitySelect =
-    document.getElementById("id_facility");
-
-const editFacilityBtn =
-    document.getElementById("editFacilityBtn");
-
-
-
-function updateFacilityLink(){
-
-    if(!facilitySelect){
-
-        return;
-
-    }
-
-    const id =
-        facilitySelect.value;
-
-    if(!id){
-
-        editFacilityBtn.href="#";
-
-        editFacilityBtn.classList.add(
-            "disabled"
-        );
-
-        return;
-
-    }
-
-    editFacilityBtn.classList.remove(
-        "disabled"
-    );
-
-    const next =
-        encodeURIComponent(
-
-            window.location.pathname +
-            window.location.search
-
-        );
-
-    editFacilityBtn.href =
-
-        `/facilities/${id}/edit/?next=${next}`;
-
-}
-
-
-
-if(facilitySelect){
-
-    facilitySelect.addEventListener(
-
-        "change",
-
-        updateFacilityLink
-
-    );
-
-    updateFacilityLink();
-
-}
-
-
-
-/*
----------------------------------------------------
-Restore selected sources after validation errors
----------------------------------------------------
-*/
-
-{% if selected_sources %}
-
-window.addEventListener(
-
-    "load",
-
-    function(){
-
-        const select =
-            document.getElementById(
-                "id_nuclide"
-            );
-
-        {% for source in selected_sources %}
-
-        select.value="{{ source }}";
-
-        document.getElementById(
-            "id_quantity"
-        ).value=1;
-
-        addSources();
-
-        {% endfor %}
-
-    }
-
-);
-
-{% endif %}
-
-
-function updateSourceType(){
-
-    const type=
-        document.getElementById("id_source_type").value;
-
-    if(type=="NEW"){
-
-        document
-            .getElementById("nuclideArea")
-            .classList.remove("d-none");
-
-        document
-            .getElementById("dsrsArea")
-            .classList.add("d-none");
-
-    }
-    else{
-
-        document
-            .getElementById("nuclideArea")
-            .classList.add("d-none");
-
-        document
-            .getElementById("dsrsArea")
-            .classList.remove("d-none");
-
-    }
-
-}
-
-updateSourceType();
-
-document
-.getElementById("id_source_type")
-.addEventListener(
-    "change",
-    updateSourceType
-);
-
-
-</script>
 <script>
 let sourceCounter = 0;
 
@@ -819,5 +559,49 @@ function updateSourceType(){
 
 updateSourceType();
 fld("source_type").addEventListener("change", updateSourceType);
+</script>
+<script id="existingSourcesData" type="application/json">{{ existing_sources_json|safe }}</script>
+
+<script>
+function prefillSources(sources){
+    sources.forEach(s => {
+        sourceCounter++;
+        const uid = "src"+sourceCounter;
+        let text = "";
+        let recycledJson = "";
+
+        if(s.type === "NEW"){
+            text = s.nuclideLabel;
+        } else if(s.type === "REUSED"){
+            text = s.dsrsLabel;
+        } else if(s.type === "RECYCLED"){
+            text = `${s.nuclideLabel} (Recycled from ${s.components.length} component${s.components.length > 1 ? "s" : ""})`;
+            recycledJson = JSON.stringify(s.components);
+        }
+
+        const row = document.createElement("tr");
+        row.id = uid;
+        row.innerHTML = `
+            <td>${sourceCounter}</td>
+            <td>${s.type}</td>
+            <td>${text}</td>
+            <td><button type="button" class="btn btn-sm btn-danger" onclick="removeSource('${uid}')">×</button></td>
+        `;
+        document.getElementById("sourceTable").appendChild(row);
+
+        createHidden(
+            uid,
+            s.type,
+            (s.type === "NEW" || s.type === "RECYCLED") ? s.nuclideId : "",
+            s.type === "REUSED" ? s.dsrsId : "",
+            recycledJson
+        );
+    });
+}
+
+const existingSources = JSON.parse(document.getElementById("existingSourcesData").textContent || "[]");
+if(existingSources.length > 0){
+    prefillSources(existingSources);
+}
 </script>
 {% endblock %}

@@ -100,6 +100,10 @@ path(
     views.operation_control_home,
     name="operation_control_home",
 ),
-
+path(
+    "licenses/<int:pk>/edit-draft/",
+    views.license_create,
+    name="license_create_edit",
+),
 
 ]

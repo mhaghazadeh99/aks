@@ -21,75 +21,80 @@ Edit Source
         {% endfor %}
     {% endif %}
 
-
-<!-- ================= RECORD NEW MOVEMENT ================= -->
-<form method="POST" enctype="multipart/form-data" id="movementForm">
-
-    {% csrf_token %}
-    <input type="hidden" name="action" value="add_movement">
-
+    <!-- ================= MOVEMENT HISTORY ================= -->
     <h4 class="mb-3">
-        Record New Movement
+        Movement History
     </h4>
 
-    {% crispy movement_form %}
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Quantity</th>
+                    <th>Performed By</th>
+                    <th>Remarks</th>
+                    <th>Attachments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in movements %}
+                <tr>
+                    <td>{{ m.movement_date }}</td>
+                    <td>{{ m.get_movement_type_display }}</td>
+                    <td>{{ m.from_facility|default:"-" }}</td>
+                    <td>{{ m.to_facility }}</td>
+                    <td>{{ m.source_count }}</td>
+                    <td>{{ m.performed_by }}</td>
+                    <td>{{ m.remarks|default:"-" }}</td>
+                    <td>
+                        {% for att in m.attachments.all %}
+                            <a href="{{ att.file.url }}" target="_blank">File {{ forloop.counter }}</a><br>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">No movements recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <label class="form-label">
-        Attachments
-    </label>
-    <input
-        class="form-control"
-        type="file"
-        name="movement_attachments"
-        multiple>
+    <!-- ================= RECORD NEW MOVEMENT — directly under Movement History ================= -->
+    <form method="POST" enctype="multipart/form-data" id="movementForm" class="mb-4">
 
-</form>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_movement">
 
-    <hr class="my-4">
-<h4 class="mb-3">
-    Movement History
-</h4>
+        <h4 class="mb-3">
+            Record New Movement
+        </h4>
 
-<div class="table-responsive mb-4">
-    <table class="table table-bordered table-sm">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Quantity</th>
-                <th>Performed By</th>
-                <th>Remarks</th>
-                <th>Attachment</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for m in movements %}
-            <tr>
-                <td>{{ m.movement_date }}</td>
-                <td>{{ m.get_movement_type_display }}</td>
-                <td>{{ m.from_facility|default:"-" }}</td>
-                <td>{{ m.to_facility }}</td>
-                <td>{{ m.source_count }}</td>
-                <td>{{ m.performed_by }}</td>
-                <td>{{ m.remarks|default:"-" }}</td>
-                <td>
-                    {% for att in m.attachments.all %}
-                        <a href="{{ att.file.url }}" target="_blank">File {{ forloop.counter }}</a><br>
-                    {% empty %}
-                        -
-                    {% endfor %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="8">No movements recorded yet.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+        {% crispy movement_form %}
+
+        <label class="form-label">
+            Attachments
+        </label>
+        <input
+            class="form-control"
+            type="file"
+            name="movement_attachments"
+            multiple>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">
+                Record Movement
+            </button>
+        </div>
+
+    </form>
 
     <hr class="my-4">
 
@@ -141,36 +146,102 @@ Edit Source
 
         </div>
 
-        <label class="form-label">
-            Upload additional images
-        </label>
+       <label class="form-label">
+    Upload additional images
+</label>
+
+<div class="d-flex gap-2 mt-2">
+    <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('cameraInputEdit').click()">
+        📷 Take Photo
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInputEdit').click()">
+        🖼️ Choose from Gallery
+    </button>
+</div>
+
+<input
+    id="cameraInputEdit"
+    type="file"
+    name="dsrs_images"
+    accept="image/*"
+    capture="environment"
+    multiple
+    style="display:none;">
+
+<input
+    id="galleryInputEdit"
+    type="file"
+    name="dsrs_images"
+    accept="image/*"
+    multiple
+    style="display:none;">
+
+<div id="imagePreviewListEdit" class="mt-2 small text-muted"></div>
+
+
+
+   <hr class="my-4">
+
+<div style="
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:20px;
+    margin-bottom:20px;
+">
+
+    <button type="submit" class="btn btn-success">
+        Update Source
+    </button>
+
+    <a href="{% url 'tables' %}" class="btn btn-secondary">
+        Cancel
+    </a>
+
+</div>
+
+</div>
 
         <input
-            class="form-control"
+            id="cameraInputEdit"
             type="file"
             name="dsrs_images"
-            multiple>
+            accept="image/*"
+            capture="environment"
+            multiple
+            style="display:none;">
+
+        <input
+            id="galleryInputEdit"
+            type="file"
+            name="dsrs_images"
+            accept="image/*"
+            multiple
+            style="display:none;">
+
+        <div id="imagePreviewListEdit" class="mt-2 small text-muted"></div>
 
     </form>
 
-    <!-- ================= ACTION ROW — both buttons, side by side ================= -->
-    <div class="d-flex gap-2 mt-4 mb-4">
-
-        <button type="submit" form="movementForm" class="btn btn-primary">
-            Record Movement
-        </button>
-
-        <button type="submit" form="sourceDetailsForm" class="btn btn-success">
-            Update Source
-        </button>
-
-        <a href="{% url 'tables' %}" class="btn btn-secondary">
-            Cancel
-        </a>
-
-    </div>
-
   </div>
 </div>
+
+<script>
+function updateImagePreviewEdit() {
+    const camFiles = document.getElementById('cameraInputEdit').files;
+    const galFiles = document.getElementById('galleryInputEdit').files;
+
+    const names = [
+        ...Array.from(camFiles).map(f => f.name),
+        ...Array.from(galFiles).map(f => f.name),
+    ];
+
+    document.getElementById('imagePreviewListEdit').textContent =
+        names.length ? `Selected: ${names.join(', ')}` : '';
+}
+
+document.getElementById('cameraInputEdit').addEventListener('change', updateImagePreviewEdit);
+document.getElementById('galleryInputEdit').addEventListener('change', updateImagePreviewEdit);
+</script>
 
 {% endblock %}

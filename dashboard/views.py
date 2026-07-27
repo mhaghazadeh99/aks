@@ -304,7 +304,7 @@ def tables_view(request):
                 'movements__from_facility',
                 'movements__to_facility',
                 'movements__attachments',   # added
-            )
+            ).order_by("-created_at")
 
     # 🔍 SEARCH
     search = request.GET.get("search")

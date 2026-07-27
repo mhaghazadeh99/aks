@@ -10,6 +10,8 @@ from dashboard.models import SOURCE_STATUS
 from .models import LicenseRequest,LicenseSource,LicenseSourceType
 from reference.models import Nuclides
 
+from dashboard.models import DSRS
+
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
 
@@ -186,19 +188,50 @@ class LicenseAttachmentForm(forms.Form):
 
 
 
-from dashboard.models import DSRS
+
+class DSRSSelect(forms.Select):
+    """
+    Adds data-count / data-available attributes to each <option>, so the
+    template's JS can filter/validate DSRS picks client-side (Reuse only
+    allows source_count == 1; Recycled quantity can't exceed available_count)
+    without a round-trip to the server. Built from a pre-fetched dict rather
+    than querying per-option to avoid N+1 queries.
+    """
+
+    def __init__(self, *args, dsrs_meta=None, **kwargs):
+        self.dsrs_meta = dsrs_meta or {}
+        super().__init__(*args, **kwargs)
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        meta = self.dsrs_meta.get(str(value))
+        if meta:
+            option["attrs"]["data-count"] = meta[0]
+            option["attrs"]["data-available"] = meta[1]
+        return option
+
 
 class LicenseSourceForm(forms.Form):
+    """
+    The "add source" picker used above the sources table on the create page.
+    One shared set of fields is reused across all three source_type flows —
+    which fields are visible/required is controlled entirely by JS in the
+    template based on the selected source_type:
+
+      NEW      -> nuclide + quantity          (unchanged from before)
+      REUSED   -> source_dsrs only, quantity always 1, DSRS must have
+                  source_count == 1 (enforced both here and via JS filtering
+                  the dropdown options)
+      RECYCLED -> source_dsrs + quantity used to stage multiple components
+                  client-side (see template JS); nuclide + activity for the
+                  combined result are entered once, at "finalize" time
+    """
 
     source_type = forms.ChoiceField(
         choices=LicenseSourceType.choices,
         initial=LicenseSourceType.NEW,
         label=_("Source Type"),
     )
-
-    source_dsrs = forms.ModelChoiceField(
-                    queryset=DSRS.objects.filter(Status=SOURCE_STATUS.CONTROL,
-                ).select_related("Nuclide",).order_by("serial_number",))
 
     nuclide = forms.ModelChoiceField(
         queryset=Nuclides.objects.order_by("name"),
@@ -207,31 +240,49 @@ class LicenseSourceForm(forms.Form):
         label=_("Nuclide"),
     )
 
+    source_dsrs = forms.ModelChoiceField(
+        queryset=DSRS.objects.none(),  # set in __init__ once we can build dsrs_meta from it
+        required=False,
+        empty_label=_("Select DSRS"),
+        label=_("DSRS Source"),
+    )
+
     quantity = forms.IntegerField(
-        label=_("Number of Sources"),
+        label=_("Quantity"),
         initial=1,
         min_value=1,
+        required=False,
     )
 
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 
+        controlled_dsrs = list(
+            DSRS.objects.filter(
+                Status=SOURCE_STATUS.CONTROL,
+            ).select_related("Nuclide").order_by("serial_number")
+        )
+
+        dsrs_meta = {
+            str(d.pk): (d.source_count, d.available_count)
+            for d in controlled_dsrs
+        }
+
+        self.fields["source_dsrs"].queryset = DSRS.objects.filter(
+            pk__in=[d.pk for d in controlled_dsrs]
+        )
+        self.fields["source_dsrs"].widget = DSRSSelect(dsrs_meta=dsrs_meta)
+
         self.helper = FormHelper()
         self.helper.form_method = "post"
         self.helper.form_tag = False
-        self.fields["nuclide"].required = False
-        self.fields["source_dsrs"].required = False 
+
         self.helper.layout = Layout(
-
             Field("source_type"),
-
-            Field("source_dsrs"),
-
             Field("nuclide"),
-
+            Field("source_dsrs"),
             Field("quantity"),
-
         )
 
     def clean(self):
@@ -245,24 +296,41 @@ class LicenseSourceForm(forms.Form):
             cleaned["source_dsrs"] = None
 
             if not cleaned.get("nuclide"):
+                self.add_error("nuclide", _("Please select a nuclide."))
 
-                self.add_error(
-                    "nuclide",
-                    _("Please select a nuclide."),
-                )
+            if not cleaned.get("quantity"):
+                self.add_error("quantity", _("Please enter a quantity."))
 
-        else:
+        elif source_type == LicenseSourceType.REUSED:
 
             cleaned["nuclide"] = None
+            dsrs = cleaned.get("source_dsrs")
 
-            if not cleaned.get("source_dsrs"):
-
+            if not dsrs:
+                self.add_error("source_dsrs", _("Please select an existing DSRS."))
+            elif dsrs.source_count != 1:
                 self.add_error(
                     "source_dsrs",
-                    _("Please select an existing DSRS."),
+                    _("Only single-count DSRS sources can be reused."),
                 )
-        return cleaned
 
+        elif source_type == LicenseSourceType.RECYCLED:
+
+            dsrs = cleaned.get("source_dsrs")
+            qty = cleaned.get("quantity")
+
+            if not dsrs:
+                self.add_error("source_dsrs", _("Please select a DSRS component."))
+
+            if not qty:
+                self.add_error("quantity", _("Please enter a quantity."))
+            elif dsrs and qty > dsrs.available_count:
+                self.add_error(
+                    "quantity",
+                    _("Quantity exceeds this DSRS's available count."),
+                )
+
+        return cleaned
 
 
 class LicenseSourceSpecificationForm(forms.ModelForm):
@@ -306,10 +374,49 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
+
         self.helper = FormHelper()
         self.helper.form_tag = False
-        self.fields["source_dsrs"].required = False   # <-- add this
+        self.fields["source_dsrs"].required = False
+
+        has_instance = self.instance and self.instance.pk
+        source_type = self.instance.source_type if has_instance else None
+
+        # source_type is fixed at creation (Step 3) — never editable here.
+        self.fields["source_type"].disabled = True
+
+        if source_type == LicenseSourceType.REUSED:
+
+            # Everything comes from the linked DSRS — user shouldn't retype it.
+            self.fields["source_dsrs"].disabled = True
+            self.fields["serial_number"].disabled = True
+            self.fields["activity"].disabled = True
+            self.fields["activity_unit"].disabled = True
+            self.fields["activity_date"].disabled = True
+
+            # Pre-fill DISPLAY values from the live DSRS record, so the user sees
+            # the real numbers on this page even before the object is re-saved
+            # with them (the view is what actually copies these over on submit —
+            # this is purely so the greyed-out boxes aren't blank on screen).
+            if self.instance.source_dsrs_id:
+                dsrs_obj = self.instance.source_dsrs
+                self.initial["serial_number"] = self.instance.serial_number or dsrs_obj.serial_number
+                self.initial["activity"] = (
+                    self.instance.activity
+                    if self.instance.activity is not None
+                    else dsrs_obj.activity_input
+                )
+                self.initial["activity_unit"] = self.instance.activity_unit or dsrs_obj.activity_unit
+                self.initial["activity_date"] = self.instance.activity_date or dsrs_obj.Activity_reference_date
+
+        elif source_type == LicenseSourceType.RECYCLED:
+
+            # No single DSRS to pick — this row is built from components
+            # (LicenseSourceComponent), shown read-only in the template.
+            self.fields["source_dsrs"].disabled = True
+
         self.helper.layout = Layout(
             Field("source_type"),
             Field("source_dsrs"),
@@ -319,7 +426,7 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
             Field("activity_date"),
             Field("description"),
         )
-    
+
     def clean(self):
 
         cleaned = super().clean()
@@ -327,11 +434,8 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
         source_type = cleaned.get("source_type")
         source_dsrs = cleaned.get("source_dsrs")
 
-        if source_type != LicenseSourceType.NEW and not source_dsrs:
-
-            raise forms.ValidationError(
-                _("Please select an existing source.")
-            )
+        if source_type == LicenseSourceType.REUSED and not source_dsrs:
+            raise forms.ValidationError(_("Please select an existing source."))
 
         return cleaned
     

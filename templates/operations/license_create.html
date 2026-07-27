@@ -138,56 +138,79 @@
                         <!-- ===================================================== -->
                         <!-- 4 REQUESTED SOURCES -->
                         <!-- ===================================================== -->
-
-                        <h5 class="mb-3">
+<h5 class="mb-3">
 ④ {% trans "Requested Sources" %}
 </h5>
 
 <div class="card mb-3">
     <div class="card-body">
 
-        <div class="row g-3">
-
-            <div class="col-md-3">
-                <label class="form-label">
-                    {% trans "Source Type" %}
-                </label>
-
-                {{ source_form.source_type }}
-            </div>
-
-            <div class="col-md-5" id="nuclideArea">
-                <label class="form-label">
-                    {% trans "Nuclide" %}
-                </label>
-
-                {{ source_form.nuclide }}
-            </div>
-
-            <div class="col-md-5 d-none" id="dsrsArea">
-                <label class="form-label">
-                    {% trans "Existing DSRS Source" %}
-                </label>
-
-                {{ source_form.source_dsrs }}
-            </div>
+        <div class="row g-3 align-items-end">
 
             <div class="col-md-2">
                 <label class="form-label">
+                    {% trans "Source Type" %}
+                </label>
+                {{ source_form.source_type }}
+            </div>
+
+            <div class="col-md-3" id="nuclideArea">
+                <label class="form-label" id="nuclideLabel">
+                    {% trans "Nuclide" %}
+                </label>
+                {{ source_form.nuclide }}
+            </div>
+
+            <div class="col-md-3 d-none" id="dsrsArea">
+                <label class="form-label" id="dsrsLabel">
+                    {% trans "Existing DSRS Source" %}
+                </label>
+                {{ source_form.source_dsrs }}
+            </div>
+
+            <div class="col-md-2" id="quantityArea">
+                <label class="form-label" id="quantityLabel">
                     {% trans "Quantity" %}
                 </label>
-
                 {{ source_form.quantity }}
             </div>
 
-            <div class="col-md-2 d-grid">
-                <button
-                    type="button"
-                    class="btn btn-success"
-                    onclick="addSources()">
-
+            <div class="col-md-2 d-grid" id="addBtnArea">
+                <button type="button" class="btn btn-success" onclick="addSources()">
                     {% trans "Add" %}
+                </button>
+            </div>
 
+            <div class="col-md-2 d-grid d-none" id="addComponentBtnArea">
+                <button type="button" class="btn btn-outline-primary" onclick="addRecycleComponent()">
+                    {% trans "Add Component" %}
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ===== RECYCLED staging area — only visible when source_type == RECYCLED ===== -->
+        <div id="recycleStaging" class="d-none mt-3">
+
+            <p class="text-muted small mb-2">
+                {% trans "Add each DSRS (and quantity used from it) below, then finalize to combine them into one requested source." %}
+            </p>
+
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>{% trans "DSRS" %}</th>
+                        <th>{% trans "Quantity Used" %}</th>
+                        <th width="60"></th>
+                    </tr>
+                </thead>
+                <tbody id="recycleComponentTable"></tbody>
+            </table>
+
+            <div class="d-grid">
+                <button type="button" class="btn btn-primary" onclick="finalizeRecycledSource()">
+                    {% trans "Finalize Recycled Source" %}
                 </button>
             </div>
 
@@ -195,28 +218,17 @@
 
     </div>
 </div>
+
 <table class="table table-bordered table-striped">
-
     <thead class="table-light">
-
         <tr>
-
             <th>#</th>
-
             <th>Type</th>
-
             <th>Source</th>
-
             <th width="80">Remove</th>
-
         </tr>
-
     </thead>
-
-    <tbody id="sourceTable">
-
-    </tbody>
-
+    <tbody id="sourceTable"></tbody>
 </table>
 
 <div id="hiddenSources"></div>
@@ -543,5 +555,269 @@ document
 
 
 </script>
+<script>
+let sourceCounter = 0;
 
+// ---- RECYCLED staging state ----
+let recycleComponents = [];   // [{dsrsId, dsrsText, qty}, ...] for the group currently being built
+let recycleUsed = {};         // dsrsId -> total qty already staged in THIS group (prevents over-staging the same DSRS twice)
+
+function fld(name) {
+    return document.getElementById("id_picker-" + name);
+}
+
+function addSources(){
+
+    const sourceType = fld("source_type").value;
+    const nuclide = fld("nuclide").value;
+    const dsrs = fld("source_dsrs").value;
+    const qty = parseInt(fld("quantity").value) || 1;
+
+    if(sourceType=="NEW" && !nuclide) return;
+    if(sourceType=="REUSED" && !dsrs) return;
+
+    let text="";
+    let effectiveQty = qty;
+
+    if(sourceType=="NEW"){
+        text = fld("nuclide").selectedOptions[0].text;
+    } else {
+        const opt = fld("source_dsrs").selectedOptions[0];
+        text = opt.text;
+        effectiveQty = 1;   // Reuse is always exactly one specific DSRS, quantity is locked
+    }
+
+    for(let i=0;i<effectiveQty;i++){
+
+        sourceCounter++;
+        const uid="src"+sourceCounter;
+
+        const row=document.createElement("tr");
+        row.id=uid;
+        row.innerHTML=`
+        <td>${sourceCounter}</td>
+        <td>${sourceType}</td>
+        <td>${text}</td>
+        <td>
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeSource('${uid}')">×</button>
+        </td>
+        `;
+
+        document.getElementById("sourceTable").appendChild(row);
+        createHidden(uid, sourceType, nuclide, dsrs, "");
+    }
+}
+
+
+function createHidden(uid, type, nuclide, dsrs, recycledComponentsJson) {
+
+    const holder = document.getElementById("hiddenSources");
+
+    holder.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div id="hidden_${uid}">
+            <input type="hidden" name="source_type" value="${type}">
+            <input type="hidden" name="nuclide" value="${nuclide || ""}">
+            <input type="hidden" name="source_dsrs" value="${dsrs || ""}">
+            <input type="hidden" name="recycled_components" value='${(recycledComponentsJson || "").replace(/'/g, "&#39;")}'>
+        </div>
+        `
+    );
+}
+
+function removeSource(uid){
+    document.getElementById(uid).remove();
+    document.getElementById("hidden_"+uid).remove();
+}
+
+
+// ---- RECYCLED: staging a group of components before finalizing ----
+
+function renderRecycleComponentTable(){
+    const body = document.getElementById("recycleComponentTable");
+    body.innerHTML = "";
+
+    recycleComponents.forEach((c, idx) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${idx+1}</td>
+            <td>${c.dsrsText}</td>
+            <td>${c.qty}</td>
+            <td><button type="button" class="btn btn-sm btn-danger" onclick="removeRecycleComponent(${idx})">×</button></td>
+        `;
+        body.appendChild(row);
+    });
+}
+
+function addRecycleComponent(){
+
+    const dsrsSelect = fld("source_dsrs");
+    const dsrsId = dsrsSelect.value;
+    if(!dsrsId) return;
+
+    const opt = dsrsSelect.selectedOptions[0];
+    const available = parseInt(opt.dataset.available || "0");
+    const qty = parseInt(fld("quantity").value) || 0;
+
+    if(qty < 1) return;
+
+    const alreadyUsed = recycleUsed[dsrsId] || 0;
+
+    if(alreadyUsed + qty > available){
+        alert("Quantity exceeds this DSRS's available count (" + available + ").");
+        return;
+    }
+
+    recycleComponents.push({ dsrsId: dsrsId, dsrsText: opt.text, qty: qty });
+    recycleUsed[dsrsId] = alreadyUsed + qty;
+
+    renderRecycleComponentTable();
+}
+
+function removeRecycleComponent(idx){
+    const removed = recycleComponents[idx];
+    recycleUsed[removed.dsrsId] -= removed.qty;
+    recycleComponents.splice(idx, 1);
+    renderRecycleComponentTable();
+}
+
+function finalizeRecycledSource(){
+
+    if(recycleComponents.length === 0){
+        alert("Add at least one component first.");
+        return;
+    }
+
+    const nuclideSelect = fld("nuclide");
+    const nuclideId = nuclideSelect.value;
+
+    if(!nuclideId){
+        alert("Select the final nuclide for this recycled source.");
+        return;
+    }
+
+    sourceCounter++;
+    const uid = "src"+sourceCounter;
+
+    const text = `${nuclideSelect.selectedOptions[0].text} (Recycled from ${recycleComponents.length} component${recycleComponents.length > 1 ? "s" : ""})`;
+
+    const row = document.createElement("tr");
+    row.id = uid;
+    row.innerHTML = `
+        <td>${sourceCounter}</td>
+        <td>RECYCLED</td>
+        <td>${text}</td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeSource('${uid}')">×</button></td>
+    `;
+    document.getElementById("sourceTable").appendChild(row);
+
+    createHidden(uid, "RECYCLED", nuclideId, "", JSON.stringify(recycleComponents));
+
+    // reset staging for the next recycled source
+    recycleComponents = [];
+    recycleUsed = {};
+    renderRecycleComponentTable();
+    nuclideSelect.value = "";
+}
+
+
+// ---- Filter the DSRS dropdown to source_count==1 options when REUSED is selected ----
+
+function filterDsrsOptionsForType(sourceType){
+
+    const select = fld("source_dsrs");
+
+    Array.from(select.options).forEach(opt => {
+        if(!opt.value){ return; }  // skip the empty "Select DSRS" option
+
+        if(sourceType === "REUSED"){
+            const count = opt.dataset.count;
+            const allowed = (count === "1");
+            opt.hidden = !allowed;
+            opt.disabled = !allowed;
+        } else {
+            opt.hidden = false;
+            opt.disabled = false;
+        }
+    });
+
+    // if the currently selected option is no longer allowed, reset selection
+    const selected = select.selectedOptions[0];
+    if(selected && selected.disabled){
+        select.value = "";
+    }
+}
+
+
+// ---- Toggle visible fields/buttons per source_type ----
+
+function updateSourceType(){
+
+    const type = fld("source_type").value;
+
+    const nuclideArea = document.getElementById("nuclideArea");
+    const dsrsArea = document.getElementById("dsrsArea");
+    const quantityArea = document.getElementById("quantityArea");
+    const addBtnArea = document.getElementById("addBtnArea");
+    const addComponentBtnArea = document.getElementById("addComponentBtnArea");
+    const recycleStaging = document.getElementById("recycleStaging");
+
+    const nuclideLabel = document.getElementById("nuclideLabel");
+    const dsrsLabel = document.getElementById("dsrsLabel");
+    const quantityLabel = document.getElementById("quantityLabel");
+
+    // reset any in-progress recycled staging when leaving RECYCLED
+    if(type !== "RECYCLED" && recycleComponents.length > 0){
+        recycleComponents = [];
+        recycleUsed = {};
+        renderRecycleComponentTable();
+    }
+
+    if(type === "NEW"){
+
+        nuclideArea.classList.remove("d-none");
+        dsrsArea.classList.add("d-none");
+        quantityArea.classList.remove("d-none");
+        addBtnArea.classList.remove("d-none");
+        addComponentBtnArea.classList.add("d-none");
+        recycleStaging.classList.add("d-none");
+
+        nuclideLabel.textContent = "{% trans 'Nuclide' %}";
+        quantityLabel.textContent = "{% trans 'Quantity' %}";
+
+    } else if(type === "REUSED"){
+
+        nuclideArea.classList.add("d-none");
+        dsrsArea.classList.remove("d-none");
+        quantityArea.classList.add("d-none");
+        addBtnArea.classList.remove("d-none");
+        addComponentBtnArea.classList.add("d-none");
+        recycleStaging.classList.add("d-none");
+
+        dsrsLabel.textContent = "{% trans 'Existing DSRS Source' %}";
+        fld("quantity").value = 1;
+
+        filterDsrsOptionsForType("REUSED");
+
+    } else if(type === "RECYCLED"){
+
+        nuclideArea.classList.remove("d-none");
+        dsrsArea.classList.remove("d-none");
+        quantityArea.classList.remove("d-none");
+        addBtnArea.classList.add("d-none");
+        addComponentBtnArea.classList.remove("d-none");
+        recycleStaging.classList.remove("d-none");
+
+        nuclideLabel.textContent = "{% trans 'Final Nuclide' %}";
+        dsrsLabel.textContent = "{% trans 'DSRS Component' %}";
+        quantityLabel.textContent = "{% trans 'Quantity Used' %}";
+
+        filterDsrsOptionsForType("RECYCLED");
+    }
+}
+
+updateSourceType();
+fld("source_type").addEventListener("change", updateSourceType);
+</script>
 {% endblock %}

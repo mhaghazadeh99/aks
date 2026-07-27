@@ -55,22 +55,50 @@
             </div>
         </div>
 
-        <!-- Images -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Additional Images</h5>
-            </div>
-            <div class="card-body">
-                <label class="form-label">
-                    Upload additional images
-                </label>
-                <input
-                    class="form-control"
-                    type="file"
-                    name="dsrs_images"
-                    multiple>
-            </div>
+<!-- Images -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">DSRS Images</h5>
+    </div>
+    <div class="card-body">
+
+        <label class="form-label">
+            Upload DSRS images
+        </label>
+
+        <div class="d-flex gap-2 mb-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('cameraInput').click()">
+                📷 Take Photo
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInput').click()">
+                🖼️ Choose from Gallery
+            </button>
         </div>
+
+        <!-- Camera-hinted input -->
+        <input
+            id="cameraInput"
+            type="file"
+            name="dsrs_images"
+            accept="image/*"
+            capture="environment"
+            multiple
+            style="display:none;">
+
+        <!-- Plain gallery/file picker, no capture hint -->
+        <input
+            id="galleryInput"
+            type="file"
+            name="dsrs_images"
+            accept="image/*"
+            multiple
+            style="display:none;">
+
+        <!-- Shows what's been picked from either input, since browsers don't show filenames for hidden inputs -->
+        <div id="imagePreviewList" class="mt-2 small text-muted"></div>
+
+    </div>
+</div>
 
         <!-- Initial Movement -->
         <!-- Initial Movement -->
@@ -174,5 +202,21 @@ function getCSRFToken() {
         ?.split('=')[1];
 }
 </script>
+<script>
+function updateImagePreview() {
+    const camFiles = document.getElementById('cameraInput').files;
+    const galFiles = document.getElementById('galleryInput').files;
 
+    const names = [
+        ...Array.from(camFiles).map(f => f.name),
+        ...Array.from(galFiles).map(f => f.name),
+    ];
+
+    document.getElementById('imagePreviewList').textContent =
+        names.length ? `Selected: ${names.join(', ')}` : '';
+}
+
+document.getElementById('cameraInput').addEventListener('change', updateImagePreview);
+document.getElementById('galleryInput').addEventListener('change', updateImagePreview);
+</script>
 {% endblock %}

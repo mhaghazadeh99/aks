@@ -110,87 +110,46 @@
 <table class="table table-bordered align-middle">
 
 <thead>
-
 <tr>
-
-<th>#</th>
-
-<th>{% trans "Nuclide" %}</th>
-
-<th>{% trans "Serial Number" %}</th>
-
-<th>{% trans "Activity" %}</th>
-
-<th>{% trans "Unit" %}</th>
-
-<th>{% trans "Reference Date" %}</th>
-
-<th>{% trans "Description" %}</th>
-
-
-
+    <th>#</th>
+    <th>{% trans "Type" %}</th>
+    <th>{% trans "Nuclide" %}</th>
+    <th>{% trans "Serial Number" %}</th>
+    <th>{% trans "Activity" %}</th>
+    <th>{% trans "Unit" %}</th>
+    <th>{% trans "Reference Date" %}</th>
+    <th>{% trans "Description" %}</th>
+    <th>{% trans "Components" %}</th>
 </tr>
-
 </thead>
 
 <tbody>
-
 {% for form in formset %}
-
 <tr>
-
-<td>
-
-{{ forloop.counter }}
-    {{ form.id }}
-    {{ form.source_type.as_hidden }}
-    {{ form.source_dsrs.as_hidden }}
-
-
-
-</td>
-
-<td>
-
-{{ form.instance.nuclide }}
-
-</td>
-
-<td>
-
-{{ form.serial_number }}
-
-</td>
-
-<td>
-
-{{ form.activity }}
-
-</td>
-
-<td>
-
-{{ form.activity_unit }}
-
-</td>
-
-<td>
-
-{{ form.activity_date }}
-
-</td>
-
-<td>
-
-{{ form.description }}
-
-</td>
-
-
+    <td>
+        {{ forloop.counter }}
+        {{ form.id }}
+        {{ form.source_type.as_hidden }}
+        {{ form.source_dsrs.as_hidden }}
+    </td>
+    <td>{{ form.instance.get_source_type_display }}</td>
+    <td>{{ form.instance.nuclide }}</td>
+    <td>{{ form.serial_number }}</td>
+    <td>{{ form.activity }}</td>
+    <td>{{ form.activity_unit }}</td>
+    <td>{{ form.activity_date }}</td>
+    <td>{{ form.description }}</td>
+    <td>
+        {% if form.instance.source_type == "RECYCLED" %}
+            {% for comp in form.instance.components.all %}
+                {{ comp.quantity_used }} x {{ comp.dsrs }}<br>
+            {% endfor %}
+        {% else %}
+            -
+        {% endif %}
+    </td>
 </tr>
-
 {% endfor %}
-
 </tbody>
 
 </table>

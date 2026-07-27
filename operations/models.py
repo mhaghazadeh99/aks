@@ -291,7 +291,35 @@ class LicenseSource(models.Model):
 
         return f"{self.nuclide}"
 
+class LicenseSourceComponent(models.Model):
+    """
+    One physical DSRS record (or a portion of its available_count)
+    contributed toward a RECYCLED LicenseSource. A recycled source can
+    draw from multiple DSRS records — this table records which ones
+    and how much of each was used. Not used for NEW (no DSRS involved)
+    or REUSED (uses LicenseSource.source_dsrs directly, since it's
+    always exactly one DSRS at quantity 1).
+    """
 
+    license_source = models.ForeignKey(
+        LicenseSource,
+        on_delete=models.CASCADE,
+        related_name="components",
+    )
+
+    dsrs = models.ForeignKey(
+        "dashboard.DSRS",
+        on_delete=models.PROTECT,
+        related_name="used_in_license_components",
+    )
+
+    quantity_used = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.quantity_used} x {self.dsrs} -> {self.license_source}"
     
 class UserSignature(models.Model):
 

@@ -131,12 +131,7 @@ class DSRS(models.Model):
 
     Dimension = models.CharField(max_length=20, blank=True, null=True)
 
-    Attachments = models.FileField(
-        upload_to="DSRS_Doc",
-        validators=[validate_attachment],
-        blank=True,
-        null=True
-    )
+    
 
     Comment = models.CharField(max_length=255, blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
@@ -373,12 +368,8 @@ class SourceMovement(models.Model):
             )
     created_at = models.DateTimeField(auto_now_add=True)
     remarks = models.TextField(blank=True)
-    attachment = models.FileField(
-            upload_to="source_movements/",
-            validators=[validate_attachment],
-            blank=True,
-            null=True,
-        )
+    
+    
     class Meta:
         ordering = ["movement_date", "id"]
 
@@ -394,6 +385,20 @@ class SourceMovement(models.Model):
             f"{self.from_facility} → {self.to_facility}"
         )
 
+
+class MovementAttachment(models.Model):
+    movement = models.ForeignKey(
+        SourceMovement,
+        on_delete=models.CASCADE,
+        related_name="attachments"
+    )
+    file = models.FileField(
+        upload_to="source_movements/",
+        validators=[validate_attachment],
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    
 class HideShowFilterT(models.Model):
     parent = models.CharField(max_length=50)
     key = models.CharField(max_length=50)

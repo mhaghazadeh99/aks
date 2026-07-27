@@ -167,7 +167,8 @@ def add_source(request):
                 movement_date=movement_form.cleaned_data["movement_date"],
             )
 
-
+            for f in request.FILES.getlist("movement_attachments"):
+                MovementAttachment.objects.create(movement=movement, file=f)
 
             return redirect("tables")
 
@@ -216,11 +217,11 @@ def edit_source(request, pk):
         if action == "add_movement":
 
             form = DSRSForm(instance=obj, user=request.user)
-            movement_form = SourceMovementForm(request.POST)
+            movement_form = SourceMovementForm(request.POST)   # no request.FILES needed now — field removed from form
 
             if movement_form.is_valid():
 
-                obj.register_movement(
+                movement = obj.register_movement(
                     movement_type=movement_form.cleaned_data["movement_type"],
                     to_facility=movement_form.cleaned_data["to_facility"],
                     from_facility=movement_form.cleaned_data.get("from_facility"),
@@ -231,8 +232,10 @@ def edit_source(request, pk):
                     movement_date=movement_form.cleaned_data["movement_date"],
                 )
 
-                messages.success(request, "Movement recorded successfully.")
+                for f in request.FILES.getlist("movement_attachments"):
+                    MovementAttachment.objects.create(movement=movement, file=f)
 
+                messages.success(request, "Movement recorded successfully.")
                 return redirect("edit_source", pk=obj.pk)
 
         else:
@@ -293,14 +296,15 @@ def source_list(request):
 def tables_view(request):
 
     queryset = DSRS.objects.select_related(
-            'Nuclide',
-            'created_by',
-            'Facility'
-        ).prefetch_related(
-            'dsrs_images',
-            'movements__from_facility',
-            'movements__to_facility'
-        )
+                'Nuclide',
+                'created_by',
+                'Facility'
+            ).prefetch_related(
+                'dsrs_images',
+                'movements__from_facility',
+                'movements__to_facility',
+                'movements__attachments',   # added
+            )
 
     # 🔍 SEARCH
     search = request.GET.get("search")

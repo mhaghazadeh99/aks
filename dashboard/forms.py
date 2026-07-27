@@ -222,7 +222,7 @@ class DSRSForm(forms.ModelForm):
 
 
 
-            Field("Attachments"),
+            
 
             Field("Comment"),
 
@@ -318,6 +318,7 @@ class SourceMovementForm(forms.ModelForm):
             "contract",
             "source_count",
             "remarks",
+            
         ]
 
         widgets = {
@@ -359,4 +360,5 @@ class SourceMovementForm(forms.ModelForm):
             ),
 
             Field("remarks"),
+            
         )

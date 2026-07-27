@@ -73,14 +73,24 @@
         </div>
 
         <!-- Initial Movement -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Initial Movement</h5>
-            </div>
-            <div class="card-body">
-                {% crispy movement_form %}
-            </div>
-        </div>
+        <!-- Initial Movement -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Initial Movement</h5>
+    </div>
+    <div class="card-body">
+        {% crispy movement_form %}
+
+        <label class="form-label">
+            Attachments
+        </label>
+        <input
+            class="form-control"
+            type="file"
+            name="movement_attachments"
+            multiple>
+    </div>
+</div>
 
         <div class="text-end">
             <button type="submit" class="btn btn-primary">

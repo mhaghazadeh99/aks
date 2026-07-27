@@ -21,58 +21,75 @@ Edit Source
         {% endfor %}
     {% endif %}
 
-    <!-- ================= RECORD NEW MOVEMENT ================= -->
-    <form method="POST" id="movementForm">
 
-        {% csrf_token %}
-        <input type="hidden" name="action" value="add_movement">
+<!-- ================= RECORD NEW MOVEMENT ================= -->
+<form method="POST" enctype="multipart/form-data" id="movementForm">
 
-        <h4 class="mb-3">
-            Record New Movement
-        </h4>
-
-        {% crispy movement_form %}
-
-    </form>
-
-    <hr class="my-4">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_movement">
 
     <h4 class="mb-3">
-        Movement History
+        Record New Movement
     </h4>
 
-    <div class="table-responsive mb-4">
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Quantity</th>
-                    <th>Performed By</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for m in movements %}
-                <tr>
-                    <td>{{ m.movement_date }}</td>
-                    <td>{{ m.get_movement_type_display }}</td>
-                    <td>{{ m.from_facility|default:"-" }}</td>
-                    <td>{{ m.to_facility }}</td>
-                    <td>{{ m.source_count }}</td>
-                    <td>{{ m.performed_by }}</td>
-                    <td>{{ m.remarks|default:"-" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7">No movements recorded yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    {% crispy movement_form %}
+
+    <label class="form-label">
+        Attachments
+    </label>
+    <input
+        class="form-control"
+        type="file"
+        name="movement_attachments"
+        multiple>
+
+</form>
+
+    <hr class="my-4">
+<h4 class="mb-3">
+    Movement History
+</h4>
+
+<div class="table-responsive mb-4">
+    <table class="table table-bordered table-sm">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Quantity</th>
+                <th>Performed By</th>
+                <th>Remarks</th>
+                <th>Attachment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in movements %}
+            <tr>
+                <td>{{ m.movement_date }}</td>
+                <td>{{ m.get_movement_type_display }}</td>
+                <td>{{ m.from_facility|default:"-" }}</td>
+                <td>{{ m.to_facility }}</td>
+                <td>{{ m.source_count }}</td>
+                <td>{{ m.performed_by }}</td>
+                <td>{{ m.remarks|default:"-" }}</td>
+                <td>
+                    {% for att in m.attachments.all %}
+                        <a href="{{ att.file.url }}" target="_blank">File {{ forloop.counter }}</a><br>
+                    {% empty %}
+                        -
+                    {% endfor %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">No movements recorded yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
     <hr class="my-4">
 

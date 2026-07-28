@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+{% block title %}
+{% trans "License Payment" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <h3>
+
+                {% trans "License Payment" %}
+
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <p>
+
+                <strong>{% trans "Letter Number" %}:</strong>
+
+                {{ license_request.letter_number }}
+
+            </p>
+
+            <p>
+
+                <strong>{% trans "Facility" %}:</strong>
+
+                {{ license_request.facility }}
+
+            </p>
+
+            <hr>
+
+            <form method="post">
+
+    {% csrf_token %}
+
+    {% crispy form %}
+
+    <button type="submit" class="btn btn-primary">
+        {% trans "Save" %}
+    </button>
+
+    <a href="{% url 'license_payment_list' %}"
+       class="btn btn-secondary">
+        {% trans "Cancel" %}
+    </a>
+
+</form>
+</div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -492,13 +492,17 @@ function filterDsrsOptionsForType(sourceType){
 
 // ---- Toggle visible fields/buttons per source_type ----
 
+function setField(name, {visible, disabled}){
+    const area = document.getElementById(name + "Area");
+    const field = fld(name);
+    if(area){ area.classList.toggle("d-none", !visible); }
+    if(field){ field.disabled = disabled; }
+}
+
 function updateSourceType(){
 
     const type = fld("source_type").value;
 
-    const nuclideArea = document.getElementById("nuclideArea");
-    const dsrsArea = document.getElementById("dsrsArea");
-    const quantityArea = document.getElementById("quantityArea");
     const addBtnArea = document.getElementById("addBtnArea");
     const addComponentBtnArea = document.getElementById("addComponentBtnArea");
     const recycleStaging = document.getElementById("recycleStaging");
@@ -507,7 +511,6 @@ function updateSourceType(){
     const dsrsLabel = document.getElementById("dsrsLabel");
     const quantityLabel = document.getElementById("quantityLabel");
 
-    // reset any in-progress recycled staging when leaving RECYCLED
     if(type !== "RECYCLED" && recycleComponents.length > 0){
         recycleComponents = [];
         recycleUsed = {};
@@ -516,9 +519,10 @@ function updateSourceType(){
 
     if(type === "NEW"){
 
-        nuclideArea.classList.remove("d-none");
-        dsrsArea.classList.add("d-none");
-        quantityArea.classList.remove("d-none");
+        setField("nuclide", {visible: true, disabled: false});
+        setField("source_dsrs", {visible: false, disabled: true});
+        setField("quantity", {visible: true, disabled: false});
+
         addBtnArea.classList.remove("d-none");
         addComponentBtnArea.classList.add("d-none");
         recycleStaging.classList.add("d-none");
@@ -528,23 +532,26 @@ function updateSourceType(){
 
     } else if(type === "REUSED"){
 
-        nuclideArea.classList.add("d-none");
-        dsrsArea.classList.remove("d-none");
-        quantityArea.classList.add("d-none");
+        setField("nuclide", {visible: false, disabled: true});
+        setField("source_dsrs", {visible: true, disabled: false});
+        setField("quantity", {visible: false, disabled: true});
+
+        fld("quantity").value = 1;
+
         addBtnArea.classList.remove("d-none");
         addComponentBtnArea.classList.add("d-none");
         recycleStaging.classList.add("d-none");
 
         dsrsLabel.textContent = "{% trans 'Existing DSRS Source' %}";
-        fld("quantity").value = 1;
 
         filterDsrsOptionsForType("REUSED");
 
     } else if(type === "RECYCLED"){
 
-        nuclideArea.classList.remove("d-none");
-        dsrsArea.classList.remove("d-none");
-        quantityArea.classList.remove("d-none");
+        setField("nuclide", {visible: true, disabled: false});
+        setField("source_dsrs", {visible: true, disabled: false});
+        setField("quantity", {visible: true, disabled: false});
+
         addBtnArea.classList.add("d-none");
         addComponentBtnArea.classList.remove("d-none");
         recycleStaging.classList.remove("d-none");
@@ -602,6 +609,38 @@ function prefillSources(sources){
 const existingSources = JSON.parse(document.getElementById("existingSourcesData").textContent || "[]");
 if(existingSources.length > 0){
     prefillSources(existingSources);
+}
+</script>
+<script>
+const facilitySelect = document.getElementById("id_facility");
+const editFacilityBtn = document.getElementById("editFacilityBtn");
+
+function updateFacilityLink(){
+
+    if(!facilitySelect){
+        return;
+    }
+
+    const id = facilitySelect.value;
+
+    if(!id){
+        editFacilityBtn.href = "#";
+        editFacilityBtn.classList.add("disabled");
+        return;
+    }
+
+    editFacilityBtn.classList.remove("disabled");
+
+    const next = encodeURIComponent(
+        window.location.pathname + window.location.search
+    );
+
+    editFacilityBtn.href = `/facilities/${id}/edit/?next=${next}`;
+}
+
+if(facilitySelect){
+    facilitySelect.addEventListener("change", updateFacilityLink);
+    updateFacilityLink();
 }
 </script>
 {% endblock %}

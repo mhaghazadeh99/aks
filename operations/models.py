@@ -143,21 +143,16 @@ class LicenseRequest(models.Model):
 
 
 
-    
 class LicenseAttachmentType(models.TextChoices):
 
     LETTER = "LETTER", _("Letter")
-
     COMMITMENT = "COMMITMENT", _("Commitment")
-
     PERMIT = "PERMIT", _("Permit")
-
     INQUIRY = "INQUIRY", _("DSRS Inquiry")
-
     CONTRACT = "CONTRACT", _("Contract")
-    
     SPECIFICATION = "SPECIFICATION", _("Generated Specification")
-
+    SPECIFICATION_APPENDIX = "SPECIFICATION_APPENDIX", _("Specification Appendix")   # added
+    LICENSE = ("LICENSE",_("Issued License"),)
     OTHER = "OTHER", _("Other")
 
 
@@ -172,7 +167,7 @@ class LicenseAttachment(models.Model):
 
     attachment_type = models.CharField(
         _("Attachment Type"),
-        max_length=20,
+        max_length=25,
         choices=LicenseAttachmentType.choices,
     )
 

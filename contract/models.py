@@ -31,6 +31,9 @@ class LicenseContract(models.Model):
         blank=True,
         null=True
     )
+    send_to_financial = models.BooleanField(
+            default=False
+        )
 
 
     draft_sent_to_customer = models.BooleanField(
@@ -73,6 +76,7 @@ class LicenseContract(models.Model):
         blank=True,
         null=True
     )
+    
 
 
     created_at = models.DateTimeField(

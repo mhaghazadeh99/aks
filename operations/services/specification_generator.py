@@ -4,7 +4,7 @@ import copy
 from docx.shared import Pt
 from django.conf import settings
 from django.core.files.base import ContentFile
-
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx import Document
 from docx.oxml.ns import qn
 
@@ -14,22 +14,14 @@ from operations.models import (
 )
 
 
-def generate_specification(
-    license_request,
-    generated_by,):
+def generate_specification(license_request, generated_by):
 
     template_path = (
-        Path(settings.BASE_DIR)
-        / "templates"
-        / "documents"
-        / "dsrs_specification.docx"
+        Path(settings.BASE_DIR) / "templates" / "documents" / "dsrs_specification.docx"
     )
 
     doc = Document(template_path)
 
-    # Fail loudly instead of silently producing a blank doc if the template
-    # at this path isn't the one this code was written against (wrong file,
-    # someone re-saved it in Word and reshaped the tables, etc.).
     assert len(doc.tables) == 2, (
         f"Expected 2 tables in {template_path}, found {len(doc.tables)}. "
         "The fill logic below is hard-coded to this template's structure."
@@ -39,47 +31,33 @@ def generate_specification(
         f"{len(doc.tables[1].rows)}. Template structure may have changed."
     )
 
-
-    # --------------------------------------------------
-    # Fill document
-    # --------------------------------------------------
-
-    _fill_facility(
-        doc,
-        license_request,
+    all_sources = list(
+        license_request.sources.select_related("nuclide").order_by("specification_order")
     )
 
+    main_sources = all_sources[:MAIN_TABLE_ROWS]
+    overflow_sources = all_sources[MAIN_TABLE_ROWS:]
+    _fill_facility(doc, license_request)
+    _fill_sources(doc, main_sources)
 
-    _fill_sources(
-        doc,
-        license_request.sources
-        .select_related("nuclide")
-        .order_by("specification_order"),
-    )
+    overflow_note = None
+    if overflow_sources:
+        overflow_note = _to_persian_digits(
+            f"ادامه فهرست ({len(overflow_sources)} چشمه دیگر) در پیوست شماره ۱"
+        )
 
+    _fill_description(doc, license_request.description, overflow_note=overflow_note)
 
-    _fill_description(
-        doc,
-        license_request.description,
-    )
-
-
-    # --------------------------------------------------
-    # Save to memory
-    # --------------------------------------------------
+    
 
     buffer = BytesIO()
-
     doc.save(buffer)
-
     buffer.seek(0)
-
 
     LicenseAttachment.objects.filter(
         license=license_request,
         attachment_type=LicenseAttachmentType.SPECIFICATION,
     ).delete()
-
 
     attachment = LicenseAttachment.objects.create(
         license=license_request,
@@ -87,17 +65,42 @@ def generate_specification(
         uploaded_by=generated_by,
     )
 
-
     attachment.file.save(
         "dsrs_specification.docx",
         ContentFile(buffer.read()),
         save=True,
     )
 
+    # -------------------------------------------------
+    # Overflow appendix — only created/replaced when needed
+    # -------------------------------------------------
+
+    LicenseAttachment.objects.filter(
+        license=license_request,
+        attachment_type=LicenseAttachmentType.SPECIFICATION_APPENDIX,
+    ).delete()
+
+    if overflow_sources:
+
+        overflow_doc = _build_overflow_document(overflow_sources, license_request)
+
+        overflow_buffer = BytesIO()
+        overflow_doc.save(overflow_buffer)
+        overflow_buffer.seek(0)
+
+        overflow_attachment = LicenseAttachment.objects.create(
+            license=license_request,
+            attachment_type=LicenseAttachmentType.SPECIFICATION_APPENDIX,
+            uploaded_by=generated_by,
+        )
+
+        overflow_attachment.file.save(
+            "dsrs_specification_appendix.docx",
+            ContentFile(overflow_buffer.read()),
+            save=True,
+        )
 
     return attachment
-
-
 # --------------------------------------------------
 # Low-level helpers
 #
@@ -304,40 +307,107 @@ def _format_half_life(seconds):
     return f"{seconds / YEAR:.2f} y"
 
 
+MAIN_TABLE_ROWS = 7   # real source data; the 8th slot is reserved for an
+                       # overflow note when there are more than 7 sources
 def _fill_sources(doc, sources):
     table = doc.tables[1]
-
     FIRST_DATA_ROW = 7
-    MAX_ROWS = 8  # the template only has 8 pre-drawn rows
 
-    sources = list(sources)
-    if len(sources) > MAX_ROWS:
-        sources = sources[:MAX_ROWS]
-
-    for i, source in enumerate(sources):
+    for i, source in enumerate(sources[:MAIN_TABLE_ROWS]):
         row = FIRST_DATA_ROW + i
+
+        if source.nuclide is None:
+            _set_cell_value(table.cell(row, 1), "—")
+        else:
+            _set_cell_value(table.cell(row, 1), source.nuclide.name)
 
         activity = ""
         if source.activity is not None:
             activity = f"{source.activity} {source.get_activity_unit_display()}"
 
-        # Column 8 ("توضیحات") is the only free-text cell available, so the
-        # source type is prepended to whatever description was entered,
-        # rather than needing its own column in this template.
         type_label = source.get_source_type_display()
         description = source.description or ""
-        if description:
-            combined_description = f"{type_label} - {description}"
-        else:
-            combined_description = type_label
+        combined_description = f"{type_label} - {description}" if description else type_label
 
         _set_cell_value(table.cell(row, 1), source.nuclide.name)
         _set_cell_value(table.cell(row, 2), activity)
         _set_cell_value(table.cell(row, 4), source.serial_number)
         _set_cell_value(table.cell(row, 6), _format_half_life(source.nuclide.half_life))
         _set_cell_value(table.cell(row, 8), combined_description)
- 
 
-def _fill_description(doc, description):
+
+
+
+def _fill_description(doc, description, overflow_note=None):
     table = doc.tables[1]
-    _append_value(table.cell(15, 0), description)
+
+    combined = description or ""
+
+    if overflow_note:
+        combined = f"{combined}\n{overflow_note}".strip() if combined else overflow_note
+
+    _append_value(table.cell(15, 0), combined)
+
+
+def _build_overflow_document(overflow_sources, license_request):
+    """Builds a standalone docx listing sources beyond the main form's 7
+    slots, using the same column structure (ردیف/نام چشمه/اکتیویته/
+    شماره سریال/نیمه‌عمر/توضیحات) as the main specification table's source
+    rows — but as a simple single table rather than cloning the original
+    template's merged-cell layout, since this is an appendix, not a
+    second copy of the official form."""
+
+    doc = Document()
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = title.add_run(
+        _to_persian_digits(
+            f"پیوست شماره ۱ - ادامه فهرست چشمه‌های درخواستی ({license_request.facility})"
+        )
+    )
+    run.font.name = "B Nazanin"
+    run.font.size = Pt(14)
+    run.bold = True
+
+    doc.add_paragraph()  # spacer
+
+    headers = ["ردیف", "نام چشمه", "اکتیویته میانگین (mCi)", "شماره سریال", "نیمه عمر", "توضیحات"]
+
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = "Table Grid"
+
+    for col, text in enumerate(headers):
+        cell = table.rows[0].cells[col]
+        _set_cell_value(cell, text)
+        for p in cell.paragraphs:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    for i, source in enumerate(overflow_sources):
+
+        row_cells = table.add_row().cells
+
+        activity = ""
+        if source.activity is not None:
+            activity = f"{source.activity} {source.get_activity_unit_display()}"
+
+        type_label = source.get_source_type_display()
+        description = source.description or ""
+        combined_description = f"{type_label} - {description}" if description else type_label
+
+        # Row numbering continues from where the main form left off (8, 9, ...)
+        row_number = _to_persian_digits(str(i + MAIN_TABLE_ROWS + 1))
+
+        values = [
+            row_number,
+            source.nuclide.name,
+            activity,
+            source.serial_number,
+            _format_half_life(source.nuclide.half_life),
+            combined_description,
+        ]
+
+        for col, value in enumerate(values):
+            _set_cell_value(row_cells[col], value)
+
+    return doc

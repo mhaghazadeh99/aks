@@ -273,6 +273,11 @@ def license_create(request, pk=None):
         facility_form = forms["facility_form"]
         attachment_form = forms["attachment_form"]
         source_form = forms["source_form"]
+        print("REQUEST FORM ERRORS:", request_form.errors)
+        print("FACILITY FORM ERRORS:", facility_form.errors)
+        print("ATTACHMENT FORM ERRORS:", attachment_form.errors)
+        print("SOURCE FORM ERRORS:", source_form.errors)
+        print("SOURCE TYPES POSTED:", request.POST.getlist("source_type"))
 
         source_types = request.POST.getlist("source_type")
         nuclides = request.POST.getlist("nuclide")
@@ -341,19 +346,10 @@ def license_create(request, pk=None):
                             "available": dsrs_obj.available_count,
                         }
                     )
-        # print("request_form", request_form.is_valid())
-        # print(request_form.errors)
-
-        # print("facility_form", facility_form.is_valid())
-        # print(facility_form.errors)
-
-        # print("attachment_form", attachment_form.is_valid())
-        # print(attachment_form.errors)
-
-        # print("source_form", source_form.is_valid())
-        # print(source_form.errors)
-
-        # print("source_errors", source_errors)
+        print("SOURCE ERRORS:", source_errors)
+        print("NUCLIDES POSTED:", request.POST.getlist("nuclide"))
+        print("DSRS SOURCES POSTED:", request.POST.getlist("source_dsrs"))
+        print("RECYCLED COMPONENTS POSTED:", request.POST.getlist("recycled_components"))
         if (
             request_form.is_valid()
             and facility_form.is_valid()
@@ -490,8 +486,6 @@ def license_create(request, pk=None):
     return render(request, "operations/license_create.html", forms)
 
 
-
-
 def license_specification(request, pk):
 
     license_request = get_object_or_404(
@@ -513,111 +507,33 @@ def license_specification(request, pk):
 
         if formset.is_valid():
 
-            instances = formset.save(commit=False)
+            for form in formset.forms:
 
-            # Every DSRS this specification will actually consume —
-            # 1 per Reuse source, quantity_used per Recycled component.
-            dsrs_ids_needed = set()
+                obj = form.instance
 
-            for obj in instances:
-                if obj.source_type == LicenseSourceType.REUSED and obj.source_dsrs_id:
-                    dsrs_ids_needed.add(obj.source_dsrs_id)
+                if obj.source_type == LicenseSourceType.REUSED and obj.source_dsrs:
 
-            for src in queryset:
-                if src.source_type == LicenseSourceType.RECYCLED:
-                    for comp in src.components.all():
-                        dsrs_ids_needed.add(comp.dsrs_id)
+                    dsrs_obj = obj.source_dsrs
+                    obj.nuclide = dsrs_obj.Nuclide
+                    if not obj.serial_number:
+                        obj.serial_number = dsrs_obj.serial_number
+                    obj.activity = dsrs_obj.activity_input
+                    obj.activity_unit = dsrs_obj.activity_unit
+                    obj.activity_date = dsrs_obj.Activity_reference_date
 
-            try:
-                with transaction.atomic():
+                obj.save()
 
-                    # Lock the rows we're about to decrement so two
-                    # concurrent specification saves can't both pass the
-                    # availability check against the same stale count.
-                    locked_dsrs = {
-                        d.pk: d
-                        for d in DSRS.objects.select_for_update().filter(pk__in=dsrs_ids_needed)
-                    }
+            generate_specification(license_request, request.user)
 
-                    errors = []
+            license_request.status = LicenseStatus.WAITING_CREATOR
+            license_request.specification_completed = True
+            license_request.save(update_fields=["status", "specification_completed"])
 
-                    for obj in instances:
+            messages.success(request, _("Specification saved successfully."))
 
-                        if obj.source_type == LicenseSourceType.REUSED:
-
-                            dsrs_obj = locked_dsrs.get(obj.source_dsrs_id)
-
-                            if dsrs_obj is None:
-                                errors.append(_("Reused source: linked DSRS not found."))
-                                continue
-
-                            obj.nuclide = dsrs_obj.Nuclide
-                            if not obj.serial_number:
-                                obj.serial_number = dsrs_obj.serial_number
-                            obj.activity = dsrs_obj.activity_input
-                            obj.activity_unit = dsrs_obj.activity_unit
-                            obj.activity_date = dsrs_obj.Activity_reference_date
-
-                            if dsrs_obj.available_count < 1:
-                                errors.append(
-                                    _("DSRS %(serial)s has no remaining availability.")
-                                    % {"serial": dsrs_obj.serial_number or dsrs_obj.pk}
-                                )
-                            else:
-                                dsrs_obj.available_count -= 1
-
-                    for src in queryset:
-
-                        if src.source_type == LicenseSourceType.RECYCLED:
-
-                            for comp in src.components.all():
-
-                                dsrs_obj = locked_dsrs.get(comp.dsrs_id)
-
-                                if dsrs_obj is None:
-                                    errors.append(_("Recycled component: linked DSRS not found."))
-                                    continue
-
-                                if comp.quantity_used > dsrs_obj.available_count:
-                                    errors.append(
-                                        _("DSRS %(serial)s: needs %(needed)d but only %(available)d available.")
-                                        % {
-                                            "serial": dsrs_obj.serial_number or dsrs_obj.pk,
-                                            "needed": comp.quantity_used,
-                                            "available": dsrs_obj.available_count,
-                                        }
-                                    )
-                                else:
-                                    dsrs_obj.available_count -= comp.quantity_used
-
-                    if errors:
-                        for e in errors:
-                            messages.error(request, e)
-                        raise _SpecificationValidationFailed()
-
-                    for obj in instances:
-                        obj.save()
-
-                    for dsrs_obj in locked_dsrs.values():
-                        dsrs_obj.save(update_fields=["available_count"])
-
-                    generate_specification(license_request, request.user)
-
-                    license_request.status = LicenseStatus.WAITING_CREATOR
-                    license_request.specification_completed = True
-                    license_request.save(
-                        update_fields=["status", "specification_completed"]
-                    )
-
-            except _SpecificationValidationFailed:
-                pass  # messages already queued above; fall through to re-render
-
-            else:
-                messages.success(request, _("Specification saved successfully."))
-                return redirect("license_sign", pk=license_request.pk)
+            return redirect("license_sign", pk=license_request.pk)
 
     else:
-
         formset = LicenseSourceSpecificationFormSet(queryset=queryset)
 
     return render(
@@ -628,6 +544,7 @@ def license_specification(request, pk):
             "formset": formset,
         },
     )
+
 
 
 

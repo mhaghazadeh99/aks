@@ -28,10 +28,13 @@ class LicenseContractForm(forms.ModelForm):
             "source_owner",
             "contract_accountable",
             "amendment_notes",
+            "send_to_financial",
         ]
 
 
-
+        labels = {
+            "send_to_financial": _("Send to Financial"),
+        }
               
         widgets = {
 

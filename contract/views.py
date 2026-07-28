@@ -22,6 +22,24 @@ from django.utils.translation import gettext_lazy as _
 from .models import LicenseContract
 from .forms import LicenseContractForm
 
+
+def ready_to_issue_list(request):
+
+    licenses = LicenseRequest.objects.filter(
+        status=LicenseStatus.READY_TO_ISSUE
+    ).select_related(
+        "facility",
+        "contract",
+    )
+
+    return render(
+        request,
+        "contract/ready_to_issue_list.html",
+        {
+            "licenses": licenses,
+        }
+    )
+
 def contract_home(request):
 
     
@@ -77,7 +95,7 @@ def license_contract_create(request, pk):
             )
 
         if form.is_valid():
-            
+
             contract = form.save(
                 commit=False
             )
@@ -85,6 +103,18 @@ def license_contract_create(request, pk):
             contract.license = license_request
 
             contract.save()
+
+
+            if (
+                contract.send_to_financial
+                and license_request.status == LicenseStatus.CONTRACTS
+            ):
+
+                license_request.status = LicenseStatus.FINANCE
+
+                license_request.save(
+                    update_fields=["status"]
+                )
 
             uploaded_file = form.cleaned_data.get("contract_attachment")
 
@@ -122,9 +152,8 @@ def license_contract_create(request, pk):
 
 
             return redirect(
-                "license_contract_update",
-                pk=contract.pk
-            )
+                    "license_contract_home"
+                )
 
 
     else:
@@ -171,6 +200,15 @@ def license_contract_update(request, pk):
         if form.is_valid():
 
             contract = form.save()
+            if contract.send_to_financial:
+
+                if contract.license.status == LicenseStatus.CONTRACTS:
+
+                    contract.license.status = LicenseStatus.FINANCE
+
+                    contract.license.save(
+                        update_fields=["status"]
+                    )
 
             uploaded_file = form.cleaned_data.get(
                 "contract_attachment"

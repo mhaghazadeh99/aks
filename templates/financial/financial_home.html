@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{% trans "Financial Management" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <h2>{% trans "Financial Management" %}</h2>
+
+    <div class="list-group mt-4">
+
+        <a href="{% url 'license_payment_list' %}"
+           class="list-group-item list-group-item-action">
+
+            {% trans "License Payments" %}
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

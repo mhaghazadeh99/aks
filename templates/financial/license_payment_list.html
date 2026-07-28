@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{% trans "License Payments" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <h3>
+                {% trans "License Payments" %}
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>
+                            {% trans "Letter No." %}
+                        </th>
+
+                        <th>
+                            {% trans "Facility" %}
+                        </th>
+
+                        <th>
+                            {% trans "Contract Number" %}
+                        </th>
+
+                        <th>
+                            {% trans "Contract Cost" %}
+                        </th>
+
+                        <th>
+                            {% trans "Paid" %}
+                        </th>
+
+                        <th>
+                            {% trans "Payment Date" %}
+                        </th>
+
+                        <th>
+                            {% trans "Amount Paid" %}
+                        </th>
+
+                        <th width="120">
+                            {% trans "Action" %}
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for row in rows %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ row.license.letter_number }}
+
+                        </td>
+
+                        <td>
+
+                            {{ row.license.facility }}
+
+                        </td>
+
+                        <td>
+
+                            {% if row.license.contract %}
+
+                                {{ row.license.contract.contract_number }}
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if row.license.contract %}
+
+                                {{ row.license.contract.contract_cost }}
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if row.payment %}
+
+                                {% if row.payment.payment_done %}
+
+                                    <span class="badge bg-success">
+
+                                        {% trans "Yes" %}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-warning text-dark">
+
+                                        {% trans "No" %}
+
+                                    </span>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+
+                                    {% trans "No Record" %}
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if row.payment %}
+
+                                {{ row.payment.payment_date }}
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if row.payment %}
+
+                                {{ row.payment.amount_paid }}
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="{% url 'license_payment_update' row.license.pk %}"
+                                class="btn btn-primary btn-sm"
+                            >
+
+                                {% trans "Edit" %}
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="8" class="text-center">
+
+                            {% trans "No licenses waiting for payment." %}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

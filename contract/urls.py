@@ -33,4 +33,9 @@ urlpatterns = [
     views.create_contract_bulk,
     name="create_contract_bulk"
 ),
+path(
+    "ready-to-issue/",
+    views.ready_to_issue_list,
+    name="ready_to_issue_list",
+),
     ]

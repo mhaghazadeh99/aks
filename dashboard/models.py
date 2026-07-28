@@ -3,7 +3,7 @@ from django.utils import timezone
 import math
 from common.utils.physics import LN2, mci_to_bq, bq_to_mci
 from common.utils.fileValidator import validate_attachment
-from contract.models import Contract,LicenseContract
+from contract.models import LicenseContract
 from simple_history.models import HistoricalRecords
 from reference.models import Nuclides
 # Create your models here.
@@ -17,6 +17,19 @@ class OriginType(models.TextChoices):
     HISTORICAL = "Historical", "Historical"
     SRS = "SRS", "SRS"
 
+class MovementType(models.TextChoices):
+    PURCHASE = "PURCHASE", "Purchase"
+    RECEIVE = "RECEIVE", "Receive"
+    ISSUE = "ISSUE", "Issue"
+    RETURN = "RETURN", "Return"
+    TRANSFER = "TRANSFER", "Transfer"
+    SPLIT = "SPLIT", "Split"
+    MERGE = "MERGE", "Merge"
+    REUSE = "REUSE", "Reuse"
+    RECYCLE = "RECYCLE", "Recycle"
+    DISPOSAL = "DISPOSAL", "Disposal"
+    LOAN = "LOAN", "Loan"
+    QUALITY_CONTROL = "QUALITY_CONTROL", "Quality Control"
 # -----------------------------
 # CHANGED: Expanded lifecycle statuses
 # -----------------------------
@@ -31,6 +44,12 @@ class SOURCE_STATUS(models.TextChoices):
     LOANED = "Loaned", "Loaned"
     CONTROL = "Quality control", "Quality control"
 
+CONSUMPTION_MOVEMENT_TYPES = {
+        MovementType.REUSE,
+        MovementType.RECYCLE,
+        MovementType.DISPOSAL,
+    }
+    
 class SourceState(models.TextChoices):
     OK = "OK", "OK"
     CONTAMINATED = "Contaminated", "Contaminated"
@@ -85,7 +104,7 @@ class DSRS(models.Model):
     is_divisible = models.BooleanField(default=False,)
     source_count = models.PositiveIntegerField(default=1,)
     available_count = models.PositiveIntegerField(default=1,)
-    Location = models.CharField(max_length=20,blank=True, null=True)
+    Location = models.CharField(max_length=150,blank=True, null=True)
 
     
 
@@ -148,6 +167,9 @@ class DSRS(models.Model):
 
     
 
+    
+
+
     def register_movement(
         self,
         movement_type,
@@ -170,16 +192,58 @@ class DSRS(models.Model):
             movement_date=movement_date,
             contract=contract,
             performed_by=performed_by,
-            source_count=quantity or 1,
+            source_count=quantity or self.available_count,
             remarks=remarks,
         )
 
         self.Facility = to_facility
         self.Status_Date = movement_date
-        self.Status = MOVEMENT_TO_STATUS.get(movement_type, self.Status)
-        self.save(update_fields=["Facility", "Status_Date", "Status"])          # ADD "Status" HERE
+
+        if movement_type in CONSUMPTION_MOVEMENT_TYPES:
+            # Only flip status once nothing usable is left. Relies on the
+            # CALLER having already decremented available_count before this
+            # runs — see fulfillment.py. A partial recycle (e.g. 2 of 5
+            # available used) keeps this DSRS selectable for further
+            # Reuse/Recycle picks, staying at Quality Control.
+            if self.available_count <= 0:
+                self.Status = MOVEMENT_TO_STATUS.get(movement_type, self.Status)
+            # else: leave Status as-is
+        else:
+            self.Status = MOVEMENT_TO_STATUS.get(movement_type, self.Status)
+
+        self.save(update_fields=["Facility", "Status_Date", "Status"])
+
+        if movement_type == MovementType.RETURN and self.Status == SOURCE_STATUS.STORED:
+            self._check_license_completion()
 
         return movement
+
+
+    def _check_license_completion(self):
+        """If this DSRS is the result_dsrs of a LicenseSource on a currently
+        ISSUED license, and every source on that license now has a Stored
+        result_dsrs, mark the license COMPLETED. Local import avoids a
+        circular dependency, since operations already imports from dashboard."""
+
+        from operations.models import LicenseStatus
+
+        for license_source in self.created_by_licenses.select_related("license").all():
+
+            license_request = license_source.license
+
+            if license_request.status != LicenseStatus.ISSUED:
+                continue
+
+            all_sources = license_request.sources.select_related("result_dsrs")
+
+            all_returned = all(
+                s.result_dsrs and s.result_dsrs.Status == SOURCE_STATUS.STORED
+                for s in all_sources
+            )
+
+            if all_returned:
+                license_request.status = LicenseStatus.COMPLETED
+                license_request.save(update_fields=["status"])
     # -----------------------------
     # CURRENT ACTIVITY
     # -----------------------------
@@ -296,19 +360,6 @@ class DSRSImage(models.Model):
 
 
 
-class MovementType(models.TextChoices):
-    PURCHASE = "PURCHASE", "Purchase"
-    RECEIVE = "RECEIVE", "Receive"
-    ISSUE = "ISSUE", "Issue"
-    RETURN = "RETURN", "Return"
-    TRANSFER = "TRANSFER", "Transfer"
-    SPLIT = "SPLIT", "Split"
-    MERGE = "MERGE", "Merge"
-    REUSE = "REUSE", "Reuse"
-    RECYCLE = "RECYCLE", "Recycle"
-    DISPOSAL = "DISPOSAL", "Disposal"
-    LOAN = "LOAN", "Loan"
-    QUALITY_CONTROL = "QUALITY_CONTROL", "Quality Control"
 
 
 MOVEMENT_TO_STATUS = {

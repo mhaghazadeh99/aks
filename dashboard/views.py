@@ -103,85 +103,76 @@ def add_source(request):
     if not group_required(request.user, ["DSRS Users", "SRS Users"]):
         return HttpResponseForbidden("No access")
 
-
     if request.method == "POST":
 
-        form = DSRSForm(
-            request.POST,
-            request.FILES,
-            user=request.user
-        )
-
-        movement_form = SourceMovementForm(
-            request.POST
-        )
-
+        form = DSRSForm(request.POST, request.FILES, user=request.user)
+        movement_form = SourceMovementForm(request.POST)
 
         if form.is_valid() and movement_form.is_valid():
 
-            source = form.save(commit=False)
-
-            source.created_by = request.user
-
-
-            # source type control
-            srs = request.user.groups.filter(
-                name="SRS Users"
-            ).exists()
-
-            dsrs = request.user.groups.filter(
-                name="DSRS Users"
-            ).exists()
-
+            srs = request.user.groups.filter(name="SRS Users").exists()
+            dsrs = request.user.groups.filter(name="DSRS Users").exists()
 
             if srs and dsrs:
-                source.Source_Type = form.cleaned_data.get(
-                    "Source_Type"
+                resolved_source_type = form.cleaned_data.get("Source_Type")
+            elif srs:
+                resolved_source_type = "SRS"
+            else:
+                resolved_source_type = "DSRS"
+
+            quantity = movement_form.cleaned_data.get("source_count") or 1
+
+            base_data = form.cleaned_data.copy()
+            base_data.pop("Source_Type", None)
+
+            created_sources = []
+
+            for _ in range(quantity):
+
+                source = DSRS(
+                    **base_data,
+                    Source_Type=resolved_source_type,
+                    source_count=1,
+                    available_count=1,
+                    created_by=request.user,
+                )
+                source.save()
+                created_sources.append(source)
+
+            # Images go on the first instance only — the others can get
+            # their own photos individually later via the edit page.
+            if created_sources:
+                for img in request.FILES.getlist("dsrs_images"):
+                    DSRSImage.objects.create(dsrs=created_sources[0], file=img)
+
+            # -----------------------------
+            # ONE MOVEMENT PER INSTANCE
+            # -----------------------------
+            movement_attachments = request.FILES.getlist("movement_attachments")
+
+            for source in created_sources:
+
+                movement = source.register_movement(
+                    movement_type=movement_form.cleaned_data["movement_type"],
+                    to_facility=movement_form.cleaned_data["to_facility"],
+                    from_facility=movement_form.cleaned_data.get("from_facility"),
+                    contract=movement_form.cleaned_data.get("contract"),
+                    performed_by=request.user,
+                    quantity=1,
+                    remarks=movement_form.cleaned_data.get("remarks", ""),
+                    movement_date=movement_form.cleaned_data["movement_date"],
                 )
 
-            elif srs:
-                source.Source_Type = "SRS"
-
-            else:
-                source.Source_Type = "DSRS"
-
-
-
-            source.save()
-
-            # images
-            for img in request.FILES.getlist("dsrs_images"):
-                DSRSImage.objects.create(dsrs=source, file=img)
-
-            # -----------------------------
-            # INITIAL MOVEMENT
-            # -----------------------------
-            movement = source.register_movement(
-                movement_type=movement_form.cleaned_data["movement_type"],
-                to_facility=movement_form.cleaned_data["to_facility"],
-                from_facility=movement_form.cleaned_data.get("from_facility"),
-                contract=movement_form.cleaned_data.get("contract"),
-                performed_by=request.user,
-                quantity=movement_form.cleaned_data.get("source_count"),
-                remarks=movement_form.cleaned_data.get("remarks", ""),
-                movement_date=movement_form.cleaned_data["movement_date"],
-            )
-
-            for f in request.FILES.getlist("movement_attachments"):
-                MovementAttachment.objects.create(movement=movement, file=f)
+                for f in movement_attachments:
+                    f.seek(0)   # same uploaded file reused across N movements — reset pointer each time
+                    MovementAttachment.objects.create(movement=movement, file=f)
 
             return redirect("tables")
 
-
     else:
 
-        form = DSRSForm(
-            user=request.user
-        )
-
+        form = DSRSForm(user=request.user)
         movement_form = SourceMovementForm()
-
-
 
     return render(
         request,
@@ -191,7 +182,7 @@ def add_source(request):
             "movement_form": movement_form,
         }
     )
-
+    
 
 def edit_source(request, pk):
 

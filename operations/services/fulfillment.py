@@ -5,25 +5,10 @@ from dashboard.models import DSRS, MovementType, SOURCE_STATUS
 
 from ..models import LicenseSourceType
 
-
 def fulfill_license_sources(license_request, performed_by):
-    """
-    Call this once a license is fully issued and payment is confirmed —
-    NOT at specification time. This is the point where requested sources
-    actually become real inventory:
 
-      NEW      -> a brand new DSRS record is created.
-      REUSED   -> 1 unit is consumed from the linked DSRS (available_count
-                  drops by 1) and a REUSE movement is recorded, which moves
-                  its Status from Quality Control -> Reused.
-      RECYCLED -> quantity_used is consumed from each component DSRS (a
-                  RECYCLE movement per component), then ONE new DSRS is
-                  created representing the combined result.
-
-    Raises ValueError if any referenced DSRS no longer has enough
-    available_count — nothing is partially applied in that case, since
-    everything runs inside one transaction.
-    """
+    facility = license_request.facility
+    contract = getattr(license_request, "contract", None)
 
     with transaction.atomic():
 
@@ -50,18 +35,7 @@ def fulfill_license_sources(license_request, performed_by):
 
             if src.source_type == LicenseSourceType.NEW:
 
-                new_dsrs = DSRS.objects.create(
-                    Source_Type="DSRS",
-                    Facility=license_request.facility,
-                    Nuclide=src.nuclide,
-                    activity_input=src.activity,
-                    activity_unit=src.activity_unit,
-                    Activity_reference_date=src.activity_date,
-                    serial_number=src.serial_number,
-                    Status=SOURCE_STATUS.IN_USE,
-                    Status_Date=timezone.now().date(),
-                    created_by=performed_by,
-                )
+                new_dsrs = _create_result_dsrs(src, facility, contract, performed_by)
                 src.result_dsrs = new_dsrs
                 src.save(update_fields=["result_dsrs"])
 
@@ -75,16 +49,19 @@ def fulfill_license_sources(license_request, performed_by):
                         f"DSRS {dsrs_obj.serial_number or dsrs_obj.pk}: no availability left."
                     )
 
+                dsrs_obj.available_count -= 1
+                dsrs_obj.Responsible_Person = facility.responsible_person
+                dsrs_obj.contract = contract
+                dsrs_obj.save(update_fields=["available_count", "Responsible_Person", "contract"])
+
                 dsrs_obj.register_movement(
                     movement_type=MovementType.REUSE,
-                    to_facility=license_request.facility,
+                    to_facility=facility,
+                    contract=contract,
                     performed_by=performed_by,
                     quantity=1,
                     remarks=f"Reused for license {license_request.pk}",
                 )
-                dsrs_obj.available_count -= 1
-                dsrs_obj.save(update_fields=["available_count"])
-
                 src.result_dsrs = dsrs_obj
                 src.save(update_fields=["result_dsrs"])
 
@@ -100,27 +77,41 @@ def fulfill_license_sources(license_request, performed_by):
                             f"DSRS {dsrs_obj.serial_number or dsrs_obj.pk}: insufficient availability."
                         )
 
+                    dsrs_obj.available_count -= comp.quantity_used
+                    dsrs_obj.save(update_fields=["available_count"])
+
                     dsrs_obj.register_movement(
                         movement_type=MovementType.RECYCLE,
-                        to_facility=license_request.facility,
+                        to_facility=facility,
+                        contract=contract,
                         performed_by=performed_by,
                         quantity=comp.quantity_used,
                         remarks=f"Recycled into new source for license {license_request.pk}",
                     )
-                    dsrs_obj.available_count -= comp.quantity_used
-                    dsrs_obj.save(update_fields=["available_count"])
+                    # NOTE: the component DSRS itself is being consumed/retired,
+                    # not becoming "this license's" source — so its own
+                    # `contract` field is deliberately left untouched here.
+                    # The NEW combined DSRS below gets the contract instead.
 
-                new_dsrs = DSRS.objects.create(
-                    Source_Type="DSRS",
-                    Facility=license_request.facility,
-                    Nuclide=src.nuclide,
-                    activity_input=src.activity,
-                    activity_unit=src.activity_unit,
-                    Activity_reference_date=src.activity_date,
-                    serial_number=src.serial_number,
-                    Status=SOURCE_STATUS.IN_USE,
-                    Status_Date=timezone.now().date(),
-                    created_by=performed_by,
-                )
+                new_dsrs = _create_result_dsrs(src, facility, contract, performed_by)
                 src.result_dsrs = new_dsrs
                 src.save(update_fields=["result_dsrs"])
+
+
+def _create_result_dsrs(src, facility, contract, performed_by):
+
+    return DSRS.objects.create(
+        Source_Type="DSRS",
+        Facility=facility,
+        Location=(facility.address1 or "")[:20],
+        Responsible_Person=facility.responsible_person,
+        Nuclide=src.nuclide,
+        activity_input=src.activity,
+        activity_unit=src.activity_unit,
+        Activity_reference_date=src.activity_date,
+        serial_number=src.serial_number,
+        Status=SOURCE_STATUS.IN_USE,
+        Status_Date=timezone.now().date(),
+        contract=contract,
+        created_by=performed_by,
+    )

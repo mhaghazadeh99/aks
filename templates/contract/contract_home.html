@@ -117,7 +117,7 @@
     <a href="{% url 'license_contract_home' %}" class="operation-card">
 
         <div class="operation-icon">
-            📜
+            📝 
         </div>
 
         <h3>
@@ -137,10 +137,11 @@
 
         <div class="operation-icon">
     
-        📜
+        🚀
         </div>
 
         <h3>
+            {{ waiting_count }}
         {% trans "Ready To Issue" %}
         </h3>
 
@@ -149,7 +150,7 @@
         </p>
 
         </a>
-      <a href="#" class="operation-card">
+      <a href="{% url 'issued_license_list' %}" class="operation-card">
 
         <div class="operation-icon">
             📜
@@ -169,19 +170,25 @@
 
     </a>
 
-  <!-- <a href="{% url 'contract_index' %}" class="operation-card">
+  <a href="{% url 'contract_index' %}" class="operation-card">
 
         <div class="operation-icon">
-            📜
+            ☢️
         </div>
 
         <h3>
-            {% trans "sell Sources" %}
+            {% trans "Sources to sell" %}
         </h3>
 
-        
+          <p>
 
-    </a> -->
+            
+
+            {% trans "Sources at PI Co for quality control." %}
+
+        </p>
+
+    </a>
 
 </div>
 

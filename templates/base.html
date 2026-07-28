@@ -64,11 +64,26 @@
     📋 {% trans "operation" %}
 </a>
 
+<a href="{% url 'contract_home' %}"
+   class="{% if request.resolver_match.url_name == 'contract_home' %}active{% endif %}">
+    📑 {% trans "Contracts" %}
+</a>
 
+<a href="{% url 'financial_home' %}"
+   class="{% if request.resolver_match.url_name == 'financial_home' %}active{% endif %}">
+    💳 {% trans "Financial" %}
+</a>
+<a href="#">
+    🧪 {% trans "Laboratory" %}
+</a>
 
+<a href="{% url 'analytics_home' %}"
+   class="{% if request.resolver_match.url_name == 'analytics_home' %}active{% endif %}">
+    📊 {% trans "Reports" %}
+</a>
 <a href="{% url 'tables' %}"
    class="{% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
-    ☢ {% trans "Sources" %}
+    📦 {% trans " Source Inventory" %}
 </a>
 
 <a href="{% url 'waste_list' %}"
@@ -82,19 +97,7 @@
     ☢ {% trans "Reference Data" %}
 </a>
 
-<a href="{% url 'contract_home' %}"
-   class="{% if request.resolver_match.url_name == 'contract_index' %}active{% endif %}">
-    📑 {% trans "Contracts" %}
-</a>
 
-<a href="#">
-    🧪 {% trans "Laboratory" %}
-</a>
-
-<a href="{% url 'analytics_home' %}"
-   class="{% if request.resolver_match.url_name == 'analytics_home' %}active{% endif %}">
-    📊 {% trans "Reports" %}
-</a>
 
 
     {% if request.user.is_authenticated %}

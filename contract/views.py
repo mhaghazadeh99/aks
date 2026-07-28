@@ -21,6 +21,74 @@ from django.utils.translation import gettext_lazy as _
 
 from .models import LicenseContract
 from .forms import LicenseContractForm
+from django.utils import timezone
+from operations.services.fulfillment import fulfill_license_sources
+from django.db.models import Q
+
+def issued_license_list(request):
+
+    licenses = (
+        LicenseRequest.objects
+        .filter(
+            Q(status=LicenseStatus.ISSUED) |
+            Q(status=LicenseStatus.COMPLETED)
+        )
+        .select_related("facility")
+        .order_by("-updated_at")
+    )
+
+    return render(
+        request,
+        "contract/issued_license_list.html",
+        {
+            "licenses": licenses,
+        },
+    )
+
+def issue_license(request, pk):
+
+    license_request = get_object_or_404(
+        LicenseRequest,
+        pk=pk,
+        status=LicenseStatus.READY_TO_ISSUE,
+    )
+
+    if request.method == "POST":
+
+        try:
+            fulfill_license_sources(license_request, request.user)
+
+        except ValueError as e:
+            messages.error(
+                request,
+                _("Could not issue license: %(error)s") % {"error": e},
+            )
+            return redirect("license_issue", pk=license_request.pk)
+
+        license_request.status = LicenseStatus.ISSUED
+        license_request.status_date = timezone.now()
+
+        license_request.save(
+            update_fields=[
+                "status",
+                "status_date",
+            ]
+        )
+
+        messages.success(
+            request,
+            _("License issued successfully."),
+        )
+
+        return redirect("ready_to_issue_list")
+
+    return render(
+        request,
+        "contract/license_issue.html",
+        {
+            "license_request": license_request,
+        },
+    )
 
 
 def ready_to_issue_list(request):

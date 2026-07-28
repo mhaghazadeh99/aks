@@ -38,4 +38,14 @@ path(
     views.ready_to_issue_list,
     name="ready_to_issue_list",
 ),
+path(
+    "licenses/<int:pk>/issue/",
+    views.issue_license,
+    name="issue_license",
+),
+path(
+    "licenses/issued/",
+    views.issued_license_list,
+    name="issued_license_list",
+),
     ]

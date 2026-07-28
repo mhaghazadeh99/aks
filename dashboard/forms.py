@@ -13,10 +13,10 @@ class DSRSForm(forms.ModelForm):
             "created_by",
             "created_at",
             "initial_activity_bq",
-
             "Facility",
             "Status",
             "Status_Date",
+            
         ]
 
         widgets = {

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{% trans "Issue License" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+<div class="card">
+
+<div class="card-header">
+<h3>{% trans "Issue License" %}</h3>
+</div>
+
+<div class="card-body">
+
+<p>
+
+<strong>{% trans "Facility:" %}</strong>
+
+{{ license_request.facility }}
+
+</p>
+
+<p>
+
+<strong>{% trans "Letter Number:" %}</strong>
+
+{{ license_request.letter_number }}
+
+</p>
+
+<p>
+
+<strong>{% trans "Requested Sources:" %}</strong>
+
+</p>
+
+<table class="table">
+
+<thead>
+
+<tr>
+
+<th>#</th>
+
+<th>{% trans "Type" %}</th>
+
+<th>{% trans "Nuclide" %}</th>
+
+<th>{% trans "Serial" %}</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for source in license_request.sources.all %}
+
+<tr>
+
+<td>{{ forloop.counter }}</td>
+
+<td>{{ source.get_source_type_display }}</td>
+
+<td>{{ source.nuclide }}</td>
+
+<td>{{ source.serial_number }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<form method="post">
+
+{% csrf_token %}
+
+<a
+href="{% url 'ready_to_issue_list' %}"
+class="btn btn-secondary">
+
+{% trans "Cancel" %}
+
+</a>
+
+<button
+class="btn btn-success"
+type="submit">
+
+{% trans "Issue License" %}
+
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

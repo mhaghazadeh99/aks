@@ -107,6 +107,8 @@ class Contract(models.Model):
         "dashboard.DSRS",
         on_delete=models.PROTECT,
         related_name="pi_record",
+        null=True,
+    blank=True,
         
     )
 

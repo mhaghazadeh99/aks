@@ -7,6 +7,21 @@
 
 {% block extrastyle %}
 <style>
+    .payment-yes {
+    background-color: #198754;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.payment-no {
+    background-color: #dc3545;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+}
 .pagination{
     display:flex;
     justify-content:center;
@@ -200,12 +215,12 @@
     <td data-col="contract_number">{{ c.contract_number|default:"—" }}</td>
     <td data-col="contract_date">{{ c.contract_date|default:"—" }}</td>
     <td data-col="payment_done">
-        {% if c.payment_done %}
-            <span class="badge bg-success">Yes</span>
-        {% else %}
-            <span class="badge bg-danger">No</span>
-        {% endif %}
-    </td>
+    {% if c.payment_done %}
+        <span class="payment-yes">Yes</span>
+    {% else %}
+        <span class="payment-no">No</span>
+    {% endif %}
+</td>
     <td data-col="payment_date">{{ c.payment_date }}</td>
     <td>
         <a href="{% url 'contract_edit' c.id %}" class="btn-yellow">Edit</a>

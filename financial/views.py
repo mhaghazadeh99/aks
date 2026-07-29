@@ -75,8 +75,7 @@ def license_payment_list(request):
 
 def license_payment_update(request, pk):
 
-    print("=== PAYMENT UPDATE VIEW CALLED ===")
-    print(request.method)
+    
     license_request = get_object_or_404(
         LicenseRequest,
         pk=pk,

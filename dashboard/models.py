@@ -15,7 +15,7 @@ from .choices import ActivityUnit
 class OriginType(models.TextChoices):
     RECEIVED = "Received", "Received"
     HISTORICAL = "Historical", "Historical"
-    SRS = "SRS", "SRS"
+    
 
 class MovementType(models.TextChoices):
     PURCHASE = "PURCHASE", "Purchase"
@@ -61,7 +61,7 @@ class SourceForm(models.TextChoices):
 
 
 class SOURCE_TYPE(models.TextChoices):
-    SRS = "SRS", "SRS"
+    NEW = "NEW", "NEW"
     DSRS = "DSRS", "DSRS"
 # -----------------------------
 

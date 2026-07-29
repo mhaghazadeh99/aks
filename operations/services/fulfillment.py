@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.utils import timezone
 
-from dashboard.models import DSRS, MovementType, SOURCE_STATUS
+from dashboard.models import DSRS, MovementType, SOURCE_STATUS, SOURCE_TYPE
 
 from ..models import LicenseSourceType
 
@@ -35,7 +35,10 @@ def fulfill_license_sources(license_request, performed_by):
 
             if src.source_type == LicenseSourceType.NEW:
 
-                new_dsrs = _create_result_dsrs(src, facility, contract, performed_by)
+                new_dsrs = _create_result_dsrs(
+                    src, facility, contract, performed_by,
+                    dsrs_source_type=SOURCE_TYPE.NEW,
+                )
                 src.result_dsrs = new_dsrs
                 src.save(update_fields=["result_dsrs"])
 
@@ -93,25 +96,47 @@ def fulfill_license_sources(license_request, performed_by):
                     # `contract` field is deliberately left untouched here.
                     # The NEW combined DSRS below gets the contract instead.
 
-                new_dsrs = _create_result_dsrs(src, facility, contract, performed_by)
+                new_dsrs = _create_result_dsrs(
+                    src, facility, contract, performed_by,
+                    dsrs_source_type=SOURCE_TYPE.DSRS,
+                )
                 src.result_dsrs = new_dsrs
                 src.save(update_fields=["result_dsrs"])
 
 
-def _create_result_dsrs(src, facility, contract, performed_by):
+def _create_result_dsrs(src, facility, contract, performed_by, dsrs_source_type):
 
-    return DSRS.objects.create(
-        Source_Type="DSRS",
-        Facility=facility,
-        Location=(facility.address1 or "")[:20],
-        Responsible_Person=facility.responsible_person,
-        Nuclide=src.nuclide,
-        activity_input=src.activity,
-        activity_unit=src.activity_unit,
-        Activity_reference_date=src.activity_date,
-        serial_number=src.serial_number,
-        Status=SOURCE_STATUS.IN_USE,
-        Status_Date=timezone.now().date(),
-        contract=contract,
-        created_by=performed_by,
-    )
+            return DSRS.objects.create(
+                Source_Type=dsrs_source_type,
+                Facility=facility,
+                Location=(facility.address1 or "")[:20],
+                Responsible_Person=facility.responsible_person,
+                Nuclide=src.nuclide,
+                activity_input=src.activity,
+                activity_unit=src.activity_unit,
+                Activity_reference_date=src.activity_date,
+                serial_number=src.serial_number,
+                Status=SOURCE_STATUS.IN_USE,
+                Status_Date=timezone.now().date(),
+                contract=contract,
+                created_by=performed_by,
+            )
+
+
+# def _create_result_dsrs(src, facility, contract, performed_by):
+
+#     return DSRS.objects.create(
+#         Source_Type="DSRS",
+#         Facility=facility,
+#         Location=(facility.address1 or "")[:20],
+#         Responsible_Person=facility.responsible_person,
+#         Nuclide=src.nuclide,
+#         activity_input=src.activity,
+#         activity_unit=src.activity_unit,
+#         Activity_reference_date=src.activity_date,
+#         serial_number=src.serial_number,
+#         Status=SOURCE_STATUS.IN_USE,
+#         Status_Date=timezone.now().date(),
+#         contract=contract,
+#         created_by=performed_by,
+#     )

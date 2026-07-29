@@ -2,9 +2,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Submit, Div
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import DSRS, SourceMovement, MovementType
 from contract.models import LicenseContract
-
+from .models import DSRS, SourceMovement, MovementType, SOURCE_TYPE
 
 class DSRSForm(forms.ModelForm):
 
@@ -43,6 +42,14 @@ class DSRSForm(forms.ModelForm):
 
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
+
+        if srs != dsrs:
+            self.fields["Source_Type"].widget = forms.HiddenInput()
+
+            if srs:
+                self.initial["Source_Type"] = SOURCE_TYPE.NEW
+            else:
+                self.initial["Source_Type"] = SOURCE_TYPE.DSRS
 
         for name, field in self.fields.items():
             if field.required:

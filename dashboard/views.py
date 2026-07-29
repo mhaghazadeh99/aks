@@ -100,6 +100,7 @@ def register_view(request):
 
 
 def add_source(request):
+    
 
     if not group_required(request.user, ["DSRS Users", "SRS Users"]):
         return HttpResponseForbidden("No access")
@@ -113,13 +114,13 @@ def add_source(request):
 
             srs = request.user.groups.filter(name="SRS Users").exists()
             dsrs = request.user.groups.filter(name="DSRS Users").exists()
-
             if srs and dsrs:
                 resolved_source_type = form.cleaned_data.get("Source_Type")
             elif srs:
-                resolved_source_type = "SRS"
+                resolved_source_type = SOURCE_TYPE.NEW
             else:
-                resolved_source_type = "DSRS"
+                resolved_source_type = SOURCE_TYPE.DSRS
+            
 
             quantity = movement_form.cleaned_data.get("source_count") or 1
 
@@ -200,8 +201,10 @@ def edit_source(request, pk):
     if is_srs_user and source_type == "DSRS" and not is_dsrs_user:
         return HttpResponseForbidden("No access to DSRS records")
 
-    if is_dsrs_user and source_type == "SRS" and not is_srs_user:
+    if is_dsrs_user and source_type == SOURCE_TYPE.NEW and not is_srs_user:
         return HttpResponseForbidden("No access to SRS records")
+
+    
 
     if request.method == "POST":
         action = request.POST.get("action")

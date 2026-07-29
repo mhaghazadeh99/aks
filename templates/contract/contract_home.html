@@ -116,79 +116,72 @@
 
     <a href="{% url 'license_contract_home' %}" class="operation-card">
 
-        <div class="operation-icon">
-            📝 
-        </div>
+    <div class="operation-icon">
+        📝
+    </div>
 
-        <h3>
-            {% trans "License Requests" %}
-        </h3>
+    <h3>
+        {% trans "License Requests" %}
+    </h3>
 
-        <p>
+    <p>
+        {{ license_contract_count }}
+        {% trans "license(s) waiting for contract." %}
+    </p>
 
-            {{ waiting_count }}
+</a>
 
-            {% trans "license(s) waiting for approval." %}
+<a href="{% url 'ready_to_issue_list' %}" class="operation-card">
 
-        </p>
-
-    </a>
-    <a href="{% url 'ready_to_issue_list' %}" class="operation-card">
-
-        <div class="operation-icon">
-    
+    <div class="operation-icon">
         🚀
-        </div>
+    </div>
 
-        <h3>
-            {{ waiting_count }}
+    <h3>
         {% trans "Ready To Issue" %}
-        </h3>
+    </h3>
 
-        <p>
-        {% trans "Issue approved licenses" %}
-        </p>
+    <p>
+        {{ ready_to_issue_count }}
+        {% trans "license(s) ready to issue." %}
+    </p>
 
-        </a>
-      <a href="{% url 'issued_license_list' %}" class="operation-card">
+</a>
 
-        <div class="operation-icon">
-            📜
-        </div>
+<a href="{% url 'issued_license_list' %}" class="operation-card">
 
-        <h3>
-            {% trans "issued Licenses " %}
-        </h3>
+    <div class="operation-icon">
+        📜
+    </div>
 
-        <p>
+    <h3>
+        {% trans "Issued Licenses" %}
+    </h3>
 
-            {{ waiting_count }}
+    <p>
+        {{ issued_count }}
+        {% trans "issued license(s)." %}
+    </p>
 
-            {% trans "issued license(s)." %}
+</a>
 
-        </p>
+<a href="{% url 'contract_index' %}" class="operation-card">
 
-    </a>
+    <div class="operation-icon">
+        ☢️
+    </div>
 
-  <a href="{% url 'contract_index' %}" class="operation-card">
+    <h3>
+        {% trans "Sources to sell" %}
+    </h3>
 
-        <div class="operation-icon">
-            ☢️
-        </div>
+    <p>
+        {% trans "Sources at PI Co for quality control." %}
+    </p>
 
-        <h3>
-            {% trans "Sources to sell" %}
-        </h3>
+</a>
 
-          <p>
-
-            
-
-            {% trans "Sources at PI Co for quality control." %}
-
-        </p>
-
-    </a>
+  
 
 </div>
 

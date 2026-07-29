@@ -152,7 +152,7 @@ class LicenseAttachmentType(models.TextChoices):
     CONTRACT = "CONTRACT", _("Contract")
     SPECIFICATION = "SPECIFICATION", _("Generated Specification")
     SPECIFICATION_APPENDIX = "SPECIFICATION_APPENDIX", _("Specification Appendix")   # added
-    LICENSE = ("LICENSE",_("Issued License"),)
+    LICENSE = ("LICENSE",_("Issued License letter"),)
     OTHER = "OTHER", _("Other")
 
 

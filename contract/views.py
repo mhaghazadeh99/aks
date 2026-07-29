@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 from .models import LicenseContract
-from .forms import LicenseContractForm
+from .forms import LicenseContractForm,LicenseIssueForm
 from django.utils import timezone
 from operations.services.fulfillment import fulfill_license_sources
 from django.db.models import Q
@@ -45,6 +45,8 @@ def issued_license_list(request):
         },
     )
 
+
+
 def issue_license(request, pk):
 
     license_request = get_object_or_404(
@@ -55,40 +57,64 @@ def issue_license(request, pk):
 
     if request.method == "POST":
 
-        try:
+        form = LicenseIssueForm(
+            request.POST,
+            request.FILES,
+            instance=license_request,
+        )
+
+        if form.is_valid():
+
+            license_request = form.save(commit=False)
+
+            license_request.status = LicenseStatus.ISSUED
+            license_request.status_date = timezone.now()
+
+            license_request.save()
+
+            uploaded_file = form.cleaned_data.get("license_attachment")
+
+            if uploaded_file:
+
+                attachment = license_request.attachments.filter(
+                    attachment_type=LicenseAttachmentType.LICENSE
+                ).first()
+
+                if attachment:
+
+                    attachment.file = uploaded_file
+                    attachment.uploaded_by = request.user
+                    attachment.save()
+
+                else:
+
+                    LicenseAttachment.objects.create(
+                        license=license_request,
+                        attachment_type=LicenseAttachmentType.LICENSE,
+                        file=uploaded_file,
+                        uploaded_by=request.user,
+                    )
+
+            # fulfill sources
             fulfill_license_sources(license_request, request.user)
 
-        except ValueError as e:
-            messages.error(
-                request,
-                _("Could not issue license: %(error)s") % {"error": e},
-            )
-            return redirect("license_issue", pk=license_request.pk)
 
-        license_request.status = LicenseStatus.ISSUED
-        license_request.status_date = timezone.now()
+            messages.success(request, _("License issued successfully."))
 
-        license_request.save(
-            update_fields=[
-                "status",
-                "status_date",
-            ]
-        )
+            return redirect("ready_to_issue_list")
 
-        messages.success(
-            request,
-            _("License issued successfully."),
-        )
+    else:
 
-        return redirect("ready_to_issue_list")
+        form = LicenseIssueForm(instance=license_request)
 
     return render(
-        request,
-        "contract/license_issue.html",
-        {
-            "license_request": license_request,
-        },
-    )
+            request,
+            "contract/license_issue.html",
+            {
+                "license_request": license_request,
+                "form": form,
+            },
+        )
 
 
 def ready_to_issue_list(request):
@@ -110,11 +136,24 @@ def ready_to_issue_list(request):
 
 def contract_home(request):
 
-    
+    context = {
+        "license_contract_count": (
+            LicenseRequest.objects.filter(status=LicenseStatus.CONTRACTS).count()
+        ),
+        "ready_to_issue_count": (
+            LicenseRequest.objects.filter(status=LicenseStatus.READY_TO_ISSUE).count()
+        ),
+        "issued_count": (
+            LicenseRequest.objects.filter(
+                Q(status=LicenseStatus.ISSUED) | Q(status=LicenseStatus.COMPLETED)
+            ).count()
+        ),
+    }
 
     return render(
         request,
         "contract/contract_home.html",
+        context,
     )
 
 def license_contract_home(request):

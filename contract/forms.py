@@ -8,6 +8,10 @@ from django.utils.translation import gettext_lazy as _
 from .models import LicenseContract
 
 
+from operations.models import LicenseRequest
+
+
+
 class LicenseContractForm(forms.ModelForm):
     contract_attachment = forms.FileField(
                 required=False,
@@ -81,6 +85,40 @@ class LicenseContractForm(forms.ModelForm):
         self.helper.form_tag = False
 
 
+
+
+class LicenseIssueForm(forms.ModelForm):
+
+    license_attachment = forms.FileField(
+        required=False,
+        label=_("License Letter"),
+    )
+
+    class Meta:
+
+        model = LicenseRequest
+
+        fields = [
+            "letter_number",
+            "letter_date",
+        ]
+
+        widgets = {
+            "letter_date": forms.DateInput(
+                attrs={
+                    "type": "text",
+                    "class": "datepicker",
+                    "autocomplete": "off",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
 
 
 

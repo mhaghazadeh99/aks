@@ -92,69 +92,54 @@ class LicenseContract(models.Model):
         return self.contract_number or f"Contract {self.pk}"
 
 
-        
+   
+
+
+
+
 class Contract(models.Model):
+    """Historically misnamed 'Contract' — this represents a PI (buyer)
+    sale record for ONE DSRS, not a legal contract. Contract number/date
+    shown for it come from the DSRS's own linked LicenseContract
+    (dashboard.DSRS.contract), never stored here directly."""
 
-    dsrs = models.ManyToManyField(
+    dsrs = models.OneToOneField(
         "dashboard.DSRS",
-        related_name="contracts"
+        on_delete=models.PROTECT,
+        related_name="pi_record",
+        
     )
 
-    Source_Type = models.CharField(
-        max_length=10
-    )
+    payment_done = models.BooleanField(default=False)
+    payment_date = models.DateField(null=True, blank=True)
 
-    status = models.CharField(
-        max_length=50
-    )
-
-    status_date = models.DateField()
-
-    facility =  models.ForeignKey(
-            FacilityModel,
-            null=True,
-            blank=True,
-            on_delete=models.SET_NULL,
-            related_name="sources"
-        )
-
-
-    contract_signed = models.BooleanField(
-        default=False
-    )
-
-    contract_signed_date = models.DateField(
-        null=True,
-        blank=True
-    )
-
-
-    payment_done = models.BooleanField(
-        default=False
-    )
-
-    payment_date = models.DateField(
-        null=True,
-        blank=True
-    )
-
-
-    licence_valid = models.BooleanField(
-        default=False
-    )
-
-    licence_issue_date = models.DateField(
-        null=True,
-        blank=True
-    )
-
-
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     history = HistoricalRecords()
 
+    @property
+    def contract_number(self):
+        return self.dsrs.contract.contract_number if self.dsrs.contract else ""
+
+    @property
+    def contract_date(self):
+        return self.dsrs.contract.contract_date if self.dsrs.contract else None
+
+    @property
+    def facility(self):
+        return self.dsrs.Facility
+
+    @property
+    def source_type(self):
+        return self.dsrs.Source_Type
+
+    @property
+    def status(self):
+        return self.dsrs.Status
+
+    @property
+    def status_date(self):
+        return self.dsrs.Status_Date
 
     def __str__(self):
-        return f"Contract #{self.id}"
+        return f"PI Record #{self.id} - {self.dsrs}"

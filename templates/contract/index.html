@@ -172,214 +172,49 @@
 <table id="mainTable">
 <thead>
 <tr>
-
-<th data-col="id">Contract ID</th>
-
-<th data-col="Source_Type">
-Source Type
-</th>
-
-<th data-col="sources">
-Sources
-</th>
-
-<th data-col="facility">
-Facilities
-</th>
-
-<th data-col="status">
-Status
-</th>
-
-<th data-col="status_date">
-Status Date
-</th>
-
-<th data-col="payment_done">
-Payment
-</th>
-
-<th data-col="payment_date">
-Payment Date
-</th>
-
-<th data-col="contract_signed">
-Signed
-</th>
-
-<th data-col="contract_signed_date">
-Signed Date
-</th>
-
-<th data-col="licence_valid">
-Licence
-</th>
-
-<th data-col="licence_issue_date">
-Licence Date
-</th>
-
-<th>
-Actions
-</th>
-
+    <th data-col="id">Record ID</th>
+    <th data-col="serial_number">Serial Number</th>
+    <th data-col="nuclide">Nuclide</th>
+    <th data-col="source_type">Source Type</th>
+    <th data-col="facility">Facility</th>
+    <th data-col="status">Status</th>
+    <th data-col="contract_number">Contract Number</th>
+    <th data-col="contract_date">Contract Date</th>
+    <th data-col="payment_done">Payment</th>
+    <th data-col="payment_date">Payment Date</th>
+    <th>Actions</th>
 </tr>
 </thead>
 
 <tbody id="tableBody">
-
 {% for c in page_obj %}
-
 <tr>
-
-<td data-col="id">
-{{ c.id }}
-</td>
-
-
-<td data-col="Source_Type">
-{{ c.Source_Type }}
-</td>
-
-
-<td data-col="sources">
-
-<span class="badge bg-info">
-
-{{ c.dsrs.count }}
-
-DSRS
-
-</span>
-
-</td>
-
-
-<td data-col="facility">
-
-{% for s in c.dsrs.all %}
-
-{{ s.Facility }}
-
-{% if not forloop.last %}
-,
-{% endif %}
-
-{% endfor %}
-
-</td>
-
-
-<td data-col="status">
-
-<span class="badge bg-success">
-{{ c.status }}
-</span>
-
-</td>
-
-
-<td data-col="status_date">
-{{ c.status_date }}
-</td>
-
-
-<td data-col="payment_done">
-
-{% if c.payment_done %}
-
-<span class="badge bg-success">
-Yes
-</span>
-
-{% else %}
-
-<span class="badge bg-danger">
-No
-</span>
-
-{% endif %}
-
-</td>
-
-
-<td data-col="payment_date">
-{{ c.payment_date }}
-</td>
-
-
-
-<td data-col="contract_signed">
-
-{% if c.contract_signed %}
-
-<span class="badge bg-success">
-Yes
-</span>
-
-{% else %}
-
-<span class="badge bg-warning">
-Pending
-</span>
-
-{% endif %}
-
-</td>
-
-
-
-<td data-col="contract_signed_date">
-{{ c.contract_signed_date }}
-</td>
-
-
-
-<td data-col="licence_valid">
-
-{% if c.licence_valid %}
-
-<span class="badge bg-success">
-Valid
-</span>
-
-{% else %}
-
-<span class="badge bg-danger">
-Invalid
-</span>
-
-{% endif %}
-
-</td>
-
-
-<td data-col="licence_issue_date">
-{{ c.licence_issue_date }}
-</td>
-
-
-
-<td>
-
-<a href="{% url 'contract_edit' c.id %}"
-class="btn-yellow">
-Edit
-</a>
-
-</td>
-
-
+    <td data-col="id">{{ c.id }}</td>
+    <td data-col="serial_number">{{ c.dsrs.serial_number }}</td>
+    <td data-col="nuclide">{{ c.dsrs.Nuclide }}</td>
+    <td data-col="source_type">{{ c.source_type }}</td>
+    <td data-col="facility">{{ c.facility }}</td>
+    <td data-col="status">
+        <span class="badge bg-success">{{ c.status }}</span>
+    </td>
+    <td data-col="contract_number">{{ c.contract_number|default:"—" }}</td>
+    <td data-col="contract_date">{{ c.contract_date|default:"—" }}</td>
+    <td data-col="payment_done">
+        {% if c.payment_done %}
+            <span class="badge bg-success">Yes</span>
+        {% else %}
+            <span class="badge bg-danger">No</span>
+        {% endif %}
+    </td>
+    <td data-col="payment_date">{{ c.payment_date }}</td>
+    <td>
+        <a href="{% url 'contract_edit' c.id %}" class="btn-yellow">Edit</a>
+    </td>
 </tr>
-
 {% empty %}
-
 <tr>
-<td colspan="13">
-No contracts found
-</td>
+    <td colspan="11">No records found</td>
 </tr>
-
 {% endfor %}
 
 </tbody>
@@ -461,23 +296,15 @@ document.getElementById("addFilter").onclick = function () {
     row.className = "d-flex mb-2";
     row.innerHTML = `
         <select class="form-control mr-2 key">
-            <option value="Source_Type">Source Type</option>
-            <option value="nuclide">Nuclide</option>
+            <option value="source_type">Source Type</option>
             <option value="serial_number">Serial Number</option>
-            <option value="facility">End User</option>
-
-            <option value="activity">Activity</option>
-            <option value="activity_unit">Unit</option>
-            <option value="activity_date">Activity Date</option>
-
+            <option value="nuclide">Nuclide</option>
+            <option value="facility">Facility</option>
             <option value="status">Status</option>
             <option value="status_date">Status Date</option>
-
+            <option value="contract_number">Contract Number</option>
             <option value="payment_done">Payment</option>
             <option value="payment_date">Payment Date</option>
-
-            <option value="contract_signed">Contract Signed</option>
-            <option value="licence_valid">Licence</option>
         </select>
         <input class="form-control mr-2 value" placeholder="Value">
         <button class="btn btn-danger">X</button>

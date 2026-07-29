@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load i18n %}
+
 {% load static %}
 {% load crispy_forms_tags %}
 
@@ -29,17 +31,30 @@
   <div style="max-width:1200px; margin:auto;">
 
     <!-- Header row -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Add New Source</h2>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
 
-        <!-- Hidden file input -->
-        <input type="file" id="csvFileInput" accept=".csv" style="display: none;" />
+    <h2 style="margin: 0;">Add New Source</h2>
 
-        <button type="button" onclick="triggerCSVImport()" class="btn btn-success btn-sm">
-            Import CSV
+    <div>
+        <form id="csvImportForm" method="post" enctype="multipart/form-data" action="{% url 'import_csv' %}" style="display:none;">
+            {% csrf_token %}
+            <input type="file" id="csvFileInput" name="csv_file" accept=".csv">
+        </form>
+
+        <button type="button" onclick="document.getElementById('csvFileInput').click()" class="btn btn-success btn-sm">
+            {% trans "Import CSV" %}
         </button>
     </div>
 
+</div>
+
+<script>
+document.getElementById('csvFileInput').addEventListener('change', function(){
+    if(this.files.length > 0){
+        document.getElementById('csvImportForm').submit();
+    }
+});
+</script>
     <!-- ================= SINGLE FORM — do not nest another <form> inside this ================= -->
     <form method="post" enctype="multipart/form-data">
 
@@ -219,4 +234,5 @@ function updateImagePreview() {
 document.getElementById('cameraInput').addEventListener('change', updateImagePreview);
 document.getElementById('galleryInput').addEventListener('change', updateImagePreview);
 </script>
+
 {% endblock %}

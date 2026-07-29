@@ -83,42 +83,27 @@ class LicenseContractForm(forms.ModelForm):
 
 
 
+
+
 class ContractForm(forms.ModelForm):
-    
+
     class Meta:
         model = Contract
-        
-        exclude = [
-            'created_at',
-            'history',
-            'dsrs',
-            'status',
-            'status_date',
-            'facility',
-            'serial_number',
-            'nuclide',
-            'activity',
-            'activity_unit',
-            'activity_date',
-        ]
+        fields = ["payment_done", "payment_date"]
 
         widgets = {
-            'payment_date': forms.DateInput(
-                attrs={'type':'date'}
-            ),
-            'contract_signed_date': forms.DateInput(
-                attrs={'type':'date'}
-            ),
-            'licence_issue_date': forms.DateInput(
-                attrs={'type':'date'}
+            "payment_date": forms.DateInput(
+                attrs={"type": "text", "class": "datepicker"}
             ),
         }
 
+        labels = {
+            "payment_done": _("Payment Done"),
+            "payment_date": _("Payment Date"),
+        }
 
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         for field in self.fields.values():
-            field.widget.attrs.update({
-                "class":"form-control"
-            })
+            existing = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = f"{existing} form-control".strip()

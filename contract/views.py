@@ -345,12 +345,16 @@ def license_contract_update(request, pk):
 
 
 
-def contract_index(request):
-    contracts = Contract.objects.prefetch_related(
-    "dsrs").order_by('-created_at')
 
-# ...your filtering code...
-     # ---------- FILTER SYSTEM ----------
+
+def contract_index(request):
+
+    contracts = (
+        Contract.objects
+        .select_related("dsrs__Nuclide", "dsrs__Facility", "dsrs__contract")
+        .order_by("-created_at")
+    )
+
     keys = request.GET.getlist("key")
     values = request.GET.getlist("value")
 
@@ -358,37 +362,44 @@ def contract_index(request):
         if not v:
             continue
 
-        # -------- BOOLEAN FIELDS --------
-        if k in ["payment_done", "contract_signed", "licene_valid"]:
+        if k == "payment_done":
             if v.lower() in ["true", "1", "yes"]:
-                contracts = contracts.filter(**{k: True})
+                contracts = contracts.filter(payment_done=True)
             elif v.lower() in ["false", "0", "no"]:
-                contracts = contracts.filter(**{k: False})
+                contracts = contracts.filter(payment_done=False)
             continue
 
-        # -------- DATE FIELDS --------
-        if k in ["payment_date", "contract_signed_date", "licence_issue_date", "created_at"]:
+        if k == "payment_date":
             try:
                 date_value = datetime.strptime(v, "%Y-%m-%d").date()
-                contracts = contracts.filter(**{k: date_value})
-            except:
-                # fallback: ignore bad date input instead of breaking
+                contracts = contracts.filter(payment_date=date_value)
+            except ValueError:
                 continue
             continue
 
-        # -------- TEXT / NORMAL FIELDS --------
-        contracts = contracts.filter(**{f"{k}__icontains": v})
+        # Everything else searches the linked DSRS instead of a field
+        # on Contract itself.
+        field_map = {
+            "source_type": "dsrs__Source_Type",
+            "serial_number": "dsrs__serial_number",
+            "nuclide": "dsrs__Nuclide__name",
+            "facility": "dsrs__Facility__name",
+            "status": "dsrs__Status",
+            "status_date": "dsrs__Status_Date",
+            "contract_number": "dsrs__contract__contract_number",
+        }
 
-    # ---------- PAGE SIZE ----------
+        lookup = field_map.get(k)
+        if lookup:
+            contracts = contracts.filter(**{f"{lookup}__icontains": v})
 
     size = request.GET.get("size", "25")
 
     if size == "all":
-        page_size = contracts.count() or 1   # avoid 0 if table is empty
+        page_size = contracts.count() or 1
     else:
         page_size = int(size)
 
-    # ---------- PAGINATION ----------
     paginator = Paginator(contracts, page_size)
     page = request.GET.get("page")
     page_obj = paginator.get_page(page)
@@ -398,137 +409,75 @@ def contract_index(request):
         "page_size": size,
     })
 
+
+
+
 @login_required
 def create_contract_bulk(request):
+    """Despite the name (kept for URL/JS compatibility), this sends each
+    selected DSRS to PI individually — one Contract row per source, not
+    one shared record across all of them."""
 
     if request.method != "POST":
-        return JsonResponse({
-            "success":False,
-            "message":"Invalid request"
-        })
+        return JsonResponse({"success": False, "message": "Invalid request"})
 
-
-    data=json.loads(request.body)
-
-    ids=data.get("ids",[])
-
+    data = json.loads(request.body)
+    ids = data.get("ids", [])
 
     if not ids:
-        return JsonResponse({
-            "success":False,
-            "message":"No sources selected"
-        })
+        return JsonResponse({"success": False, "message": "No sources selected"})
 
+    sources = DSRS.objects.filter(id__in=ids)
 
-    sources = DSRS.objects.filter(
-        id__in=ids
-    )
-
-
-    duplicate = sources.filter(
-        contracts__isnull=False
-    )
-
+    duplicate = sources.filter(pi_record__isnull=False)
 
     if duplicate.exists():
-
-        serials=list(
-            duplicate.values_list(
-                "serial_number",
-                flat=True
-            )
-        )
-
-
+        serials = list(duplicate.values_list("serial_number", flat=True))
         return JsonResponse({
-            "success":False,
-            "message":
-            "Already contracted: "
-            + ", ".join(serials)
+            "success": False,
+            "message": "Already sent to PI: " + ", ".join(serials)
         })
 
-
-    first=sources.first()
-
-
-    contract=Contract.objects.create(
-
-        Source_Type=first.Source_Type,
-
-        status=first.Status,
-
-        status_date=first.Status_Date,
-
-        facility=first.Facility,
-
-    )
-
-
-    contract.dsrs.set(
-        sources
-    )
-
+    count = 0
+    for source in sources:
+        Contract.objects.create(dsrs=source)
+        count += 1
 
     return JsonResponse({
-
-        "success":True,
-
-        "message":
-        f"Contract created with {sources.count()} DSRS"
-
+        "success": True,
+        "message": f"{count} source(s) sent to PI"
     })
+
+
+
 def contract_edit(request, pk):
 
     if not request.user.groups.filter(name="Contracts Users").exists():
         return HttpResponseForbidden("No access")
 
-
-    contract = get_object_or_404(
-        Contract,
-        pk=pk
-    )
-
+    contract = get_object_or_404(Contract, pk=pk)
 
     if request.method == "POST":
 
-        form = ContractForm(
-            request.POST,
-            instance=contract
-        )
+        form = ContractForm(request.POST, instance=contract)
 
         if form.is_valid():
-
             form.save()
-
-            return redirect(
-                "contract_index"
-            )
-
-        else:
-            print(form.errors)
-
+            return redirect("contract_index")
 
     else:
-
-        form = ContractForm(
-            instance=contract
-        )
-
-
-    sources = contract.dsrs.all()
-
+        form = ContractForm(instance=contract)
 
     return render(
         request,
         "contract/contract_edit.html",
         {
-            "form":form,
-            "contract":contract,
-            "sources":sources,
+            "form": form,
+            "contract": contract,
+            "source": contract.dsrs,   # singular now, not a queryset
         }
     )
-
-
+    
 
 
 def save_column(request):
@@ -555,68 +504,40 @@ from .models import Contract
 
 
 def export_contracts_csv(request):
-    queryset = Contract.objects.all()
 
-    # OPTIONAL FILTERING (same system as DSRS export)
+    queryset = Contract.objects.select_related("dsrs__Nuclide", "dsrs__Facility", "dsrs__contract")
+
     keys = request.GET.getlist("key")
     values = request.GET.getlist("value")
-
     for k, v in zip(keys, values):
         queryset = queryset.filter(**{f"{k}__icontains": v})
 
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = 'attachment; filename="contracts.csv"'
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="pi_records.csv"'
+    response.write('\ufeff')
 
     writer = csv.writer(response)
 
-    # -----------------------------
-    # HEADER (ALL MODEL FIELDS)
-    # -----------------------------
     writer.writerow([
-        "ID",
-        "DSRS_ID",
-        "Source_Type",
-        "Status",
-        "Status_Date",
-        "Facility",
-        "Serial_Number",
-        "Nuclide",
-        "Activity",
-        "Activity_Unit",
-        "Activity_Date",
-        "Contract_Signed",
-        "Contract_Signed_Date",
-        "Payment_Done",
-        "Payment_Date",
-        "Licence_Valid",
-        "Licence_Issue_Date",
-        "Created_At",
+        "ID", "Serial_Number", "Nuclide", "Source_Type", "Facility",
+        "Status", "Status_Date", "Contract_Number", "Contract_Date",
+        "Payment_Done", "Payment_Date", "Created_At",
     ])
 
-    # -----------------------------
-    # ROWS
-    # -----------------------------
     for c in queryset:
         writer.writerow([
             c.id,
-            c.dsrs.id if c.dsrs else None,
-            c.Source_Type,
+            c.dsrs.serial_number,
+            str(c.dsrs.Nuclide) if c.dsrs.Nuclide else None,
+            c.source_type,
+            c.facility,
             c.status,
             c.status_date,
-            c.facility,
-            c.serial_number,
-            c.nuclide,
-            c.activity,
-            c.activity_unit,
-            c.activity_date,
-            c.contract_signed,
-            c.contract_signed_date,
+            c.contract_number,
+            c.contract_date,
             c.payment_done,
             c.payment_date,
-            c.licence_valid,
-            c.licence_issue_date,
             c.created_at,
         ])
 
     return response
-  

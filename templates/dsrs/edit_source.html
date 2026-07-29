@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load i18n %}
+
 {% load static %}
 {% load crispy_forms_tags %}
 
@@ -76,6 +78,10 @@ Edit Source
         <h4 class="mb-3">
             Record New Movement
         </h4>
+        <p class="text-muted small mb-3">
+            <strong>{% trans "Linked Contract" %}:</strong>
+            {{ source.contract.contract_number|default:"—" }}
+        </p>
 
         {% crispy movement_form %}
 

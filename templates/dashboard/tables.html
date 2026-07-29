@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load i18n %}
+
 {% load static %}
 
 {% block title %}Tables{% endblock %}
@@ -171,7 +173,7 @@
     
     <button class="btn-green" onclick="exportCSV()">Export CSV</button>
     <button class="btn-blue" id="createContractBtn">
-        Create Contract
+        send to Pars Isotop
     </button>
     <a href="{% url 'add_source' %}" class="btn-blue">+ Add Source</a>
   </div>
@@ -198,6 +200,10 @@
     <th>Select</th>
   <th data-col="Source_Type">Type</th>
   <th data-col="Sso_Code">SSO</th>
+  <th data-col="Contract_Number">{% trans "Contract" %}</th>
+<th data-col="Is_Divisible">{% trans "Divisible" %}</th>
+<th data-col="Source_Count">{% trans "Count" %}</th>
+<th data-col="Available_Count">{% trans "Available" %}</th>
   <th data-col="Facility">Facility</th>
   <th data-col="Origin_Type">Origin</th>
   <th data-col="Date_received">Received</th>
@@ -248,6 +254,10 @@
 </td>
 <td data-col="Source_Type">{{ s.Source_Type }}</td>
 <td data-col="Sso_Code">{{ s.Sso_Code }}</td>
+<td data-col="Contract_Number">{{ s.contract_number }}</td>
+<td data-col="Is_Divisible">{{ s.is_divisible|yesno:_("Yes,No") }}</td>
+<td data-col="Source_Count">{{ s.source_count }}</td>
+<td data-col="Available_Count">{{ s.available_count }}</td>
 <td data-col="Facility">{{ s.Facility }}</td>
 <td data-col="Origin_Type">{{ s.Origin_Type }}</td>
 <td data-col="Date_received">{{ s.Date_received }}</td>
@@ -422,6 +432,10 @@ document.getElementById("addFilter").onclick = function () {
        <select class="form-control mr-2 key">
   <option value="Source_Type">Source Type</option>
   <option value="Sso_Code">SSO Code</option>
+  <option value="Contract_Number">Contract</option>
+<option value="is_divisible">Divisible</option>
+<option value="source_count">Count</option>
+<option value="available_count">Available</option>
   <option value="Facility">Facility</option>
   <option value="Origin_Type">Origin</option>
   <option value="Date_received">Received</option>

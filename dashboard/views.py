@@ -15,11 +15,12 @@ from django.http import HttpResponseForbidden
 from datetime import timedelta
 from .forms import DSRSForm, SourceMovementForm
 from django.db.models import Q
-
+from facilities.models import FacilityModel
+from contract.models import LicenseContract
 import csv
 from django.http import HttpResponse
 
-from django.shortcuts import render
+
 
 
 def home(request):
@@ -156,7 +157,7 @@ def add_source(request):
                     movement_type=movement_form.cleaned_data["movement_type"],
                     to_facility=movement_form.cleaned_data["to_facility"],
                     from_facility=movement_form.cleaned_data.get("from_facility"),
-                    contract=movement_form.cleaned_data.get("contract"),
+                    contract=source.contract,   # None at creation — correct, nothing to inherit yet
                     performed_by=request.user,
                     quantity=1,
                     remarks=movement_form.cleaned_data.get("remarks", ""),
@@ -216,7 +217,7 @@ def edit_source(request, pk):
                     movement_type=movement_form.cleaned_data["movement_type"],
                     to_facility=movement_form.cleaned_data["to_facility"],
                     from_facility=movement_form.cleaned_data.get("from_facility"),
-                    contract=movement_form.cleaned_data.get("contract"),
+                    contract=obj.contract,   # inherited automatically, never chosen manually
                     performed_by=request.user,
                     quantity=movement_form.cleaned_data.get("source_count"),
                     remarks=movement_form.cleaned_data.get("remarks", ""),
@@ -457,124 +458,74 @@ def get_hide_show(request, model_name):
 
 def export_csv(request):
 
-    queryset = DSRS.objects.select_related("Nuclide", "created_by")
+    queryset = (
+        DSRS.objects
+        .select_related("Nuclide", "created_by", "Facility", "contract")
+        .prefetch_related("movements__from_facility")
+    )
 
-    # apply same filters
     keys = request.GET.getlist("key")
     values = request.GET.getlist("value")
-
     for k, v in zip(keys, values):
         queryset = queryset.filter(**{f"{k}__icontains": v})
 
-    response = HttpResponse(content_type='text/csv')
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
     response['Content-Disposition'] = 'attachment; filename="dsrs.csv"'
 
     writer = csv.writer(response)
 
-    # -----------------------------
-    # HEADER (ALL IMPORTANT FIELDS)
-    # -----------------------------
     writer.writerow([
-        "ID",
-        "Source_Type",
-        "Sso_Code",
-        "Facility",
-        "Origin_Type",
-        "Date_received",
-        "Current_Facility",
-        "Location",
-    
-        "Status",
-        "Status_Date",
-        "Responsible_Person",
-        "Nuclide",
-        "Activity_Input",
-        "Activity_Unit",
-        "Initial_Activity_Bq",
-        "Current_Activity_MCi",
-        "Category",
-        "Activity_Reference_Date",
-        "Serial_Number",
-        "Dose_Rate_Surface_uSv",
-        "Dose_Rate_1m_uSv",
-        "Dose_Rate_Date",
-        "Source_State",
-        "Contamination_Bq_cm2",
-        "Source_Physical_Form",
-        "Source_Manufacturer",
-        "Source_Model",
-        "Source_Practice",
-        "Device_Manufacturer",
-        "Device_Model",
-        "Device_Serial_Number",
-        "Container_Type",
-        "Dimension",
-        "Comment",
-        "Created_By",
-        "Created_At"
+        "ID", "Contract_Number", "Source_Type", "Sso_Code", "Facility", "Origin_Facility",
+        "Origin_Type", "Date_received", "Is_Divisible", "Source_Count", "Available_Count",
+        "Location", "Status", "Status_Date", "Responsible_Person", "Nuclide",
+        "Activity_Input", "Activity_Unit", "Initial_Activity_Bq", "Current_Activity_MCi",
+        "Category", "Activity_Reference_Date", "Serial_Number", "Dose_Rate_Surface_uSv",
+        "Dose_Rate_1m_uSv", "Dose_Rate_Date", "Source_State", "Contamination_Bq_cm2",
+        "Source_Physical_Form", "Source_Manufacturer", "Source_Model", "Source_Practice",
+        "Device_Manufacturer", "Device_Model", "Device_Serial_Number", "Container_Type",
+        "Dimension", "Comment", "Created_By", "Created_At",
     ])
 
-    # -----------------------------
-    # ROWS
-    # -----------------------------
     for obj in queryset:
+
+        first_movement = obj.movements.order_by("movement_date", "id").first()
+        origin_facility = first_movement.from_facility if first_movement else None
+
         writer.writerow([
-            obj.id,
-            obj.Source_Type,
-            obj.Sso_Code,
-            obj.Facility,
-            obj.Origin_Type,
-            obj.Date_received,
+            obj.id, obj.contract_number, obj.Source_Type, obj.Sso_Code,
             obj.Facility.name if obj.Facility else None,
-            obj.Location,
-            
-            obj.Status,
-            obj.Status_Date,
-            obj.Responsible_Person,
-            str(obj.Nuclide) if obj.Nuclide else None,
-            obj.activity_input,
-            obj.activity_unit,
-            obj.initial_activity_bq,
-            obj.current_activity_mci_value,
-            obj.category_value,
-            obj.Activity_reference_date,
-            obj.serial_number,
-            obj.Dose_rate_surface_uSv,
-            obj.Dose_rate_1m_uSv,
-            obj.Dose_rate_measurement_date,
-            obj.source_state,
-            obj.contamination_bq_cm2,
-            obj.Source_Physical_Form,
-            obj.Source_Manufacturer,
-            obj.Source_Model,
-            obj.Source_Practice,
-            obj.Device_Manufacturer,
-            obj.Device_Model,
-            obj.Device_Serial_Number,
-            obj.Container_Type,
-            obj.Dimension,
-            obj.Comment,
-            obj.created_by.username if obj.created_by else None,
-            obj.created_at
+            origin_facility.name if origin_facility else None,
+            obj.Origin_Type, obj.Date_received, obj.is_divisible, obj.source_count,
+            obj.available_count, obj.Location, obj.Status, obj.Status_Date,
+            obj.Responsible_Person, str(obj.Nuclide) if obj.Nuclide else None,
+            obj.activity_input, obj.activity_unit, obj.initial_activity_bq,
+            obj.current_activity_mci_value, obj.category_value, obj.Activity_reference_date,
+            obj.serial_number, obj.Dose_rate_surface_uSv, obj.Dose_rate_1m_uSv,
+            obj.Dose_rate_measurement_date, obj.source_state, obj.contamination_bq_cm2,
+            obj.Source_Physical_Form, obj.Source_Manufacturer, obj.Source_Model,
+            obj.Source_Practice, obj.Device_Manufacturer, obj.Device_Model,
+            obj.Device_Serial_Number, obj.Container_Type, obj.Dimension, obj.Comment,
+            obj.created_by.username if obj.created_by else None, obj.created_at,
         ])
 
     return response
 
 
-# views.py
-
 def import_csv(request):
+    """Server-side CSV import. Accepts a multipart file upload directly."""
+
     if not request.user.groups.filter(name="DSRS Users").exists():
         return HttpResponseForbidden("No access")
-        
+
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=400)
 
-    try:
-        data = json.loads(request.body)
-        rows = data.get("rows", [])
-    except Exception as e:
-        return JsonResponse({"error": f"Invalid JSON: {str(e)}"}, status=400)
+    uploaded_file = request.FILES.get("csv_file")
+    if not uploaded_file:
+        return JsonResponse({"error": "No file uploaded"}, status=400)
+
+    decoded = uploaded_file.read().decode("utf-8-sig")
+    reader = csv.DictReader(decoded.splitlines())
 
     created = 0
     errors = []
@@ -582,193 +533,150 @@ def import_csv(request):
     def normalize_key(k):
         k = str(k).strip().lower()
         k = re.sub(r"[^\w]+", "_", k)
-        k = re.sub(r"_+", "_", k)
-        return k.strip("_")
+        return re.sub(r"_+", "_", k).strip("_")
 
     def get(normalized, *keys):
         for key in keys:
             key = normalize_key(key)
-            if key in normalized:
-                val = normalized[key]
-                if val not in [None, ""]:
-                    return str(val).strip()
+            if key in normalized and normalized[key] not in [None, ""]:
+                return str(normalized[key]).strip()
         return None
 
     def match_choice(value, choices, field_name):
         if value is None:
             raise ValueError(f"{field_name}: empty value")
-
         value = str(value).strip().lower()
-
         for key, label in choices:
             if value in [str(key).lower(), str(label).lower()]:
                 return key
-
         raise ValueError(f"{field_name}: invalid value '{value}'")
 
-    for i, row in enumerate(rows, start=1):
+    for i, row in enumerate(reader, start=1):
         try:
-            normalized = {
-                normalize_key(k): v
-                for k, v in row.items()
-            }
+            normalized = {normalize_key(k): v for k, v in row.items()}
 
-            # -------------------------
-            # REQUIRED FIELDS
-            # -------------------------
             source_type = get(normalized, "source_type")
             serial = get(normalized, "serial_number")
-            facility = get(normalized, "facility")
+            facility_name = get(normalized, "facility")
+            origin_facility_name = get(normalized, "origin_facility")
             origin_type = get(normalized, "origin_type")
             status = get(normalized, "status")
-            # status_date_raw = get(normalized, "status_date")
-            # status_date = parse_date(status_date_raw) if status_date_raw else None
             location = get(normalized, "location")
             responsible = get(normalized, "responsible_person")
-
             date_received = parse_date(get(normalized, "date_received"))
             ref_date = parse_date(get(normalized, "activity_reference_date"))
-
             status_date = parse_date(get(normalized, "status_date"))
-            # date_received_raw = get(normalized, "date_received")
-            # ref_date_raw = get(normalized, "activity_reference_date")
 
-            # date_received = parse_date(date_received_raw) if date_received_raw else None
-            # ref_date = parse_date(ref_date_raw) if ref_date_raw else None
-
-            # -------------------------
-            # VALIDATION
-            # -------------------------
             missing = []
             if not source_type: missing.append("source_type")
-            if not serial: missing.append("serial_Number")
-            if not facility: missing.append("Facility")
-            if not origin_type: missing.append("Origin_Type")
-            if not status: missing.append("Status")
-            if not status_date: missing.append("Status_Date")
-            if not location: missing.append("Location")
-            if not responsible: missing.append("Responsible_Person")
-            if not date_received: missing.append("Date_received")
-            if not ref_date: missing.append("Activity_reference_date")
+            if not serial: missing.append("serial_number")
+            if not facility_name: missing.append("facility")
+            if not origin_type: missing.append("origin_type")
+            if not status: missing.append("status")
 
             if missing:
                 raise ValueError(f"Missing fields: {', '.join(missing)}")
 
-            # -------------------------
-            # CHOICES
-            # -------------------------
             origin_type = match_choice(origin_type, OriginType.choices, "Origin_Type")
-            status = match_choice(status, STATUS.choices, "Status")
-            source_type = match_choice(source_type,SOURCE_TYPE.choices,"Source_Type")
-            # -------------------------
-            # NUCLIDE
-            # -------------------------
+            status = match_choice(status, SOURCE_STATUS.choices, "Status")
+            source_type = match_choice(source_type, SOURCE_TYPE.choices, "Source_Type")
+
+            facility_obj = FacilityModel.objects.filter(name__iexact=facility_name).first()
+            if not facility_obj:
+                raise ValueError(f"Facility '{facility_name}' not found")
+
+            origin_facility_obj = None
+            if origin_facility_name:
+                origin_facility_obj = FacilityModel.objects.filter(
+                    name__iexact=origin_facility_name
+                ).first()
+                if not origin_facility_obj:
+                    raise ValueError(f"Origin facility '{origin_facility_name}' not found")
+
             nuclide_name = get(normalized, "nuclide")
             nuclide = None
             if nuclide_name:
-                nuclide = Nuclides.objects.filter(
-                    name__iexact=nuclide_name.strip()
-                ).first()
-
+                nuclide = Nuclides.objects.filter(name__iexact=nuclide_name).first()
                 if not nuclide:
                     raise ValueError(f"Nuclide '{nuclide_name}' not found")
 
-            # -------------------------
-            # OPTIONAL CORE FIELDS
-            # -------------------------
+            contract_number = get(normalized, "contract_number")
+            contract_obj = None
+            if contract_number:
+                contract_obj = LicenseContract.objects.filter(
+                    contract_number__iexact=contract_number
+                ).first()
+                if not contract_obj:
+                    raise ValueError(f"Contract '{contract_number}' not found")
+
             activity_input_raw = get(normalized, "activity_input")
-            activity_input = None
-            if activity_input_raw:
-                activity_input = float(activity_input_raw.replace(",", ""))
+            activity_input = float(activity_input_raw.replace(",", "")) if activity_input_raw else None
 
-            activity_unit = get(normalized, "activity_unit") or "Bq"
-            sso_code = get(normalized, "sso_code")
-            origin_facility = get(normalized, "origin_facility")
+            source_count_raw = get(normalized, "source_count")
+            available_count_raw = get(normalized, "available_count")
+            is_divisible_raw = get(normalized, "is_divisible")
 
-            # =====================================================
-            # 🔥 NEW FIELDS (ADDED FROM YOUR MODEL)
-            # =====================================================
-
-            dose_surface = get(normalized, "dose_rate_surface_usv")
-            dose_1m = get(normalized, "dose_rate_1m_usv")
-            dose_date_raw = get(normalized, "dose_rate_measurement_date")
-
-            dose_date = parse_date(dose_date_raw) if dose_date_raw else None
-
-            source_state = get(normalized, "source_state")
-            contamination = get(normalized, "contamination_bq_cm2")
-            source_form = get(normalized, "source_physical_form")
-
-            source_model = get(normalized, "source_model")
-            source_practice = get(normalized, "source_practice")
-
-            device_manufacturer = get(normalized, "device_manufacturer")
-            device_model = get(normalized, "device_model")
-            device_serial = get(normalized, "device_serial_number")
-
-            container_type = get(normalized, "container_type")
-            
-
-            dimension = get(normalized, "dimension")
-            comment = get(normalized, "comment")
-
-            # attachments cannot be CSV-imported (ignored safely)
-            # attachments = get(normalized, "attachments")
-
-            # -------------------------
-            # CREATE OBJECT
-            # -------------------------
             obj = DSRS(
+                contract=contract_obj,
                 Source_Type=source_type,
-                Sso_Code=sso_code,
+                Sso_Code=get(normalized, "sso_code"),
                 Origin_Type=origin_type,
                 Date_received=date_received,
-                Origin_Facility=origin_facility,
+                Facility=facility_obj,
                 Location=location,
                 Status=status,
                 Status_Date=status_date,
                 Responsible_Person=responsible,
                 Nuclide=nuclide,
                 activity_input=activity_input,
-                activity_unit=activity_unit,
+                activity_unit=get(normalized, "activity_unit") or "Bq",
                 Activity_reference_date=ref_date,
                 serial_number=serial,
-                Dose_rate_surface_uSv=dose_surface,
-                Dose_rate_1m_uSv=dose_1m,
-                Dose_rate_measurement_date=dose_date,
-
-                source_state=source_state,
-                contamination_bq_cm2=contamination,
-                Source_Physical_Form=source_form,
-
-                Source_Model=source_model,
-                Source_Practice=source_practice,
-
-                Device_Manufacturer=device_manufacturer,
-                Device_Model=device_model,
-                Device_Serial_Number=device_serial,
-
-                Container_Type=container_type,
-                Facility=facility,
-
-                Dimension=dimension,
-
-                Comment=comment,
-
-                created_by=request.user
+                is_divisible=(is_divisible_raw or "").lower() in ("true", "1", "yes"),
+                source_count=int(source_count_raw) if source_count_raw else 1,
+                available_count=int(available_count_raw) if available_count_raw else 1,
+                Dose_rate_surface_uSv=get(normalized, "dose_rate_surface_usv"),
+                Dose_rate_1m_uSv=get(normalized, "dose_rate_1m_usv"),
+                Dose_rate_measurement_date=parse_date(get(normalized, "dose_rate_measurement_date")),
+                source_state=get(normalized, "source_state"),
+                contamination_bq_cm2=get(normalized, "contamination_bq_cm2"),
+                Source_Physical_Form=get(normalized, "source_physical_form"),
+                Source_Manufacturer=get(normalized, "source_manufacturer"),
+                Source_Model=get(normalized, "source_model"),
+                Source_Practice=get(normalized, "source_practice"),
+                Device_Manufacturer=get(normalized, "device_manufacturer"),
+                Device_Model=get(normalized, "device_model"),
+                Device_Serial_Number=get(normalized, "device_serial_number"),
+                Container_Type=get(normalized, "container_type"),
+                Dimension=get(normalized, "dimension"),
+                Comment=get(normalized, "comment"),
+                created_by=request.user,
             )
-            # obj._skip_contract = True   # 🔥 IMPORTANT FOR IMPORT
-            # obj.save()
+            obj.save()
+
+            # Backfill an origin movement for history/export purposes only —
+            # NOT via register_movement(), since that would overwrite the
+            # Status/Facility we just explicitly imported above.
+            if origin_facility_obj:
+                SourceMovement.objects.create(
+                    source=obj,
+                    movement_type=MovementType.RECEIVE,
+                    from_facility=origin_facility_obj,
+                    to_facility=facility_obj,
+                    movement_date=date_received or timezone.now().date(),
+                    source_count=1,
+                    performed_by=request.user,
+                    remarks="Imported origin record",
+                )
 
             created += 1
 
         except Exception as e:
             errors.append(f"Row {i}: {str(e)}")
 
-    return JsonResponse({
-        "created": created,
-        "errors": errors
-    })
+    return JsonResponse({"created": created, "errors": errors})
+
+
 
 
 def delete_dsrs_image(request, pk):

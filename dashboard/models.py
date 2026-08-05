@@ -10,39 +10,38 @@ from reference.models import Nuclides
 from facilities.models import FacilityModel
 from django.contrib.auth.models import User
 from .choices import ActivityUnit
-
+from django.utils.translation import gettext_lazy as _
 
 class OriginType(models.TextChoices):
-    RECEIVED = "Received", "Received"
-    HISTORICAL = "Historical", "Historical"
-    
+    RECEIVED = "Received", _("Received")
+    HISTORICAL = "Historical", _("Historical")
 
 class MovementType(models.TextChoices):
-    PURCHASE = "PURCHASE", "Purchase"
-    RECEIVE = "RECEIVE", "Receive"
-    ISSUE = "ISSUE", "Issue"
-    RETURN = "RETURN", "Return"
-    TRANSFER = "TRANSFER", "Transfer"
-    SPLIT = "SPLIT", "Split"
-    MERGE = "MERGE", "Merge"
-    REUSE = "REUSE", "Reuse"
-    RECYCLE = "RECYCLE", "Recycle"
-    DISPOSAL = "DISPOSAL", "Disposal"
-    LOAN = "LOAN", "Loan"
-    QUALITY_CONTROL = "QUALITY_CONTROL", "Quality Control"
+    PURCHASE = "PURCHASE", _("Purchase")
+    RECEIVE = "RECEIVE", _("Receive")
+    ISSUE = "ISSUE", _("Issue")
+    RETURN = "RETURN", _("Return")
+    TRANSFER = "TRANSFER", _("Transfer")
+    SPLIT = "SPLIT", _("Split")
+    MERGE = "MERGE", _("Merge")
+    REUSE = "REUSE", _("Reuse")
+    RECYCLE = "RECYCLE", _("Recycle")
+    DISPOSAL = "DISPOSAL", _("Disposal")
+    LOAN = "LOAN", _("Loan")
+    QUALITY_CONTROL = "QUALITY_CONTROL", _("Quality Control")
 # -----------------------------
 # CHANGED: Expanded lifecycle statuses
 # -----------------------------
 class SOURCE_STATUS(models.TextChoices):
 
-    PURCHASED = "Purchased", "Purchased"      # New SRS
-    IN_USE = "In Use", "In Use"               # Active at customer
-    STORED = "Stored", "Stored"               # Returned to waste management
-    REUSED = "Reused", "Reused"               # Sent out again
-    RECYCLED = "Recycled", "Recycled"
-    DISPOSED = "Disposed", "Disposed"         # Final state
-    LOANED = "Loaned", "Loaned"
-    CONTROL = "Quality control", "Quality control"
+    PURCHASED = "Purchased", _("Purchased")
+    IN_USE = "In Use", _("In Use")
+    STORED = "Stored", _("Stored")
+    REUSED = "Reused", _("Reused")
+    RECYCLED = "Recycled", _("Recycled")
+    DISPOSED = "Disposed", _("Disposed")
+    LOANED = "Loaned", _("Loaned")
+    CONTROL = "Quality Control", _("Quality Control")
 
 CONSUMPTION_MOVEMENT_TYPES = {
         MovementType.REUSE,
@@ -51,23 +50,27 @@ CONSUMPTION_MOVEMENT_TYPES = {
     }
     
 class SourceState(models.TextChoices):
-    OK = "OK", "OK"
-    CONTAMINATED = "Contaminated", "Contaminated"
+    OK = "OK", _("OK")
+    CONTAMINATED = "Contaminated", _("Contaminated")
 
 
 class SourceForm(models.TextChoices):
-    SEALED = "Solid", "Solid"
-    LIQUID = "Liquid", "Liquid"
+    SEALED = "Solid", _("Solid")
+    LIQUID = "Liquid", _("Liquid")
 
 
 class SOURCE_TYPE(models.TextChoices):
-    NEW = "NEW", "NEW"
-    DSRS = "DSRS", "DSRS"
+    NEW = "NEW", _("NEW")
+    DSRS = "DSRS", _("DSRS")
 # -----------------------------
 
 
 # ---- MAIN MODEL ----
 class DSRS(models.Model):
+    class Meta:
+        verbose_name = _("DSRS Source")
+        verbose_name_plural = _("DSRS Sources")
+
     contract = models.ForeignKey(
         LicenseContract,
         null=True,
@@ -84,9 +87,9 @@ class DSRS(models.Model):
         on_delete=models.SET_NULL,
         related_name="children",
     )
-    Source_Type = models.CharField( max_length=10, choices=SOURCE_TYPE.choices, default="DSRS")
+    Source_Type = models.CharField(_("Source Type"), max_length=10, choices=SOURCE_TYPE.choices, default="DSRS")
 
-    Sso_Code = models.CharField(max_length=12,null=True, blank=True)
+    Sso_Code = models.CharField( _("SSO Code"),max_length=12,null=True, blank=True)
 
     Facility = models.ForeignKey(
                 FacilityModel,
@@ -96,26 +99,26 @@ class DSRS(models.Model):
                 related_name="Source_Facility"
             )
 
-    Origin_Type = models.CharField(max_length=20, choices=OriginType.choices,null=True, blank=True)
+    Origin_Type = models.CharField( _("Origin Type"), max_length=20, choices=OriginType.choices,null=True, blank=True)
 
-    Date_received = models.DateField(blank=True, null=True)
+    Date_received = models.DateField(_("Date Received"),blank=True, null=True)
     
 
-    is_divisible = models.BooleanField(default=False,)
-    source_count = models.PositiveIntegerField(default=1,)
-    available_count = models.PositiveIntegerField(default=1,)
-    Location = models.CharField(max_length=150,blank=True, null=True)
+    is_divisible = models.BooleanField( _("is divisible"),default=False,)
+    source_count = models.PositiveIntegerField(_("source count"),default=1,)
+    available_count = models.PositiveIntegerField( _("available count"),default=1,)
+    Location = models.CharField( _("Location"), max_length=150,blank=True, null=True)
 
     
 
-    Status = models.CharField(max_length=15, choices=SOURCE_STATUS.choices,blank=True, null=True)
-    Status_Date = models.DateField(blank=True, null=True)
+    Status = models.CharField(_("SOURCE STATUS"), max_length=15, choices=SOURCE_STATUS.choices,blank=True, null=True)
+    Status_Date = models.DateField(_("Status Date"), blank=True, null=True)
 
-    Responsible_Person = models.CharField(max_length=50,null=True, blank=True)
+    Responsible_Person = models.CharField(_("Responsible Person"), max_length=50,null=True, blank=True)
 
-    Nuclide = models.ForeignKey(Nuclides, on_delete=models.SET_NULL, null=True, blank=True)
-    activity_input = models.FloatField(null=True, blank=True)
-    activity_unit = models.CharField(
+    Nuclide = models.ForeignKey( Nuclides, verbose_name=_("Nuclide"), on_delete=models.SET_NULL, null=True, blank=True)
+    activity_input = models.FloatField( _("activityinput"), null=True, blank=True)
+    activity_unit = models.CharField(_("activity unit"), 
         max_length=10,
         choices=ActivityUnit.choices,
         default='Bq',blank=True, null=True
@@ -125,34 +128,34 @@ class DSRS(models.Model):
 
     
 
-    Activity_reference_date = models.DateField(null=True, blank=True)
+    Activity_reference_date = models.DateField(_("Activity reference date"), null=True, blank=True)
 
-    serial_number = models.CharField(max_length=25,null=True, blank=True)
+    serial_number = models.CharField(_("serial number"), max_length=25,null=True, blank=True)
 
-    Dose_rate_surface_uSv = models.FloatField(null=True, blank=True)
-    Dose_rate_1m_uSv = models.FloatField(null=True, blank=True)
-    Dose_rate_measurement_date = models.DateField(null=True, blank=True)
+    Dose_rate_surface_uSv = models.FloatField(_("Dose rate on surface uSv"), null=True, blank=True)
+    Dose_rate_1m_uSv = models.FloatField(_("Dose rate at 1 m distance uSv"), null=True, blank=True)
+    Dose_rate_measurement_date = models.DateField(_("Dose rate measurement date"), null=True, blank=True)
 
-    source_state = models.CharField(max_length=15, choices=SourceState.choices, null=True, blank=True)
+    source_state = models.CharField(_("source state"), max_length=15, choices=SourceState.choices, null=True, blank=True)
 
-    contamination_bq_cm2 = models.FloatField(null=True, blank=True)
+    contamination_bq_cm2 = models.FloatField(_("contamination bq/cm2"), null=True, blank=True)
 
-    Source_Physical_Form = models.CharField(max_length=10, choices=SourceForm.choices, null=True, blank=True)
-    Source_Manufacturer = models.CharField(max_length=50, blank=True, null=True)
-    Source_Model = models.CharField(max_length=20,null=True, blank=True)
-    Source_Practice = models.CharField(max_length=20, blank=True, null=True)
+    Source_Physical_Form = models.CharField(_("Source Physical Form"), max_length=10, choices=SourceForm.choices, null=True, blank=True)
+    Source_Manufacturer = models.CharField(_("Source Manufacturer"), max_length=50, blank=True, null=True)
+    Source_Model = models.CharField(_("Source Model"), max_length=20,null=True, blank=True)
+    Source_Practice = models.CharField(_("Source Practice"), max_length=20, blank=True, null=True)
 
-    Device_Manufacturer = models.CharField(max_length=50, blank=True, null=True)
-    Device_Model = models.CharField(max_length=50, blank=True, null=True)
-    Device_Serial_Number = models.CharField(max_length=50, blank=True, null=True)
+    Device_Manufacturer = models.CharField(_("Device Manufacturer"), max_length=50, blank=True, null=True)
+    Device_Model = models.CharField(_("Device Model"), max_length=50, blank=True, null=True)
+    Device_Serial_Number = models.CharField(_("Device Serial Number"), max_length=50, blank=True, null=True)
 
-    Container_Type = models.CharField(max_length=25, blank=True, null=True)
+    Container_Type = models.CharField(_("Container Type"), max_length=25, blank=True, null=True)
 
-    Dimension = models.CharField(max_length=20, blank=True, null=True)
+    Dimension = models.CharField(_("Dimension"), max_length=20, blank=True, null=True)
 
     
 
-    Comment = models.CharField(max_length=255, blank=True, null=True)
+    Comment = models.CharField(_("Comment"), max_length=255, blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
@@ -165,9 +168,6 @@ class DSRS(models.Model):
     def current_facility(self):
         return self.Facility
 
-    
-
-    
 
 
     def register_movement(
@@ -338,7 +338,7 @@ class DSRS(models.Model):
 
         super().save(*args, **kwargs)
         
-
+    
     def __str__(self):
         return f"{self.Nuclide} (S.N: {self.serial_number})"
     
@@ -383,10 +383,10 @@ class SourceMovement(models.Model):
         on_delete=models.CASCADE, related_name="movements",
     )
 
-    movement_type = models.CharField(max_length=20, choices=MovementType.choices, )
+    movement_type = models.CharField(_("movement type"), max_length=20, choices=MovementType.choices)
 
     from_facility = models.ForeignKey(
-        FacilityModel,
+        FacilityModel, 
         null=True,
         blank=True,
         related_name="+",
@@ -422,6 +422,8 @@ class SourceMovement(models.Model):
     
     
     class Meta:
+        verbose_name = _("Source Movement")
+        verbose_name_plural = _("Source Movements")
         ordering = ["movement_date", "id"]
 
         indexes = [
@@ -429,7 +431,7 @@ class SourceMovement(models.Model):
             models.Index(fields=["movement_date"]),
             models.Index(fields=["movement_type"]),
         ]
-    
+ 
     def __str__(self):
         return (
             f"{self.get_movement_type_display()} "

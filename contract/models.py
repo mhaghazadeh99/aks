@@ -1,10 +1,9 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
-
-from django.db import models
 from django.conf import settings
 from operations.models import LicenseRequest
 from facilities.models import FacilityModel
+from django.utils.translation import gettext_lazy as _
 
 class LicenseContract(models.Model):
 
@@ -15,76 +14,86 @@ class LicenseContract(models.Model):
     )
 
     contract_number = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
-    )
-
-    contract_date = models.DateField(
-        blank=True,
-        null=True
-    )
-
-    contract_cost = models.DecimalField(
-        max_digits=14,
-        decimal_places=2,
-        blank=True,
-        null=True
-    )
-    send_to_financial = models.BooleanField(
-            default=False
+            _("Contract Number"),
+            max_length=100,
+            blank=True,
+            null=True,
         )
-
-
-    draft_sent_to_customer = models.BooleanField(
-        default=False
-    )
-
-    draft_sent_date = models.DateField(
-        blank=True,
-        null=True
-    )
-
-
-    notification_letter_number = models.CharField(
-        max_length=30,
-        blank=True,
-        null=True
-    )
-
-    notification_letter_date = models.DateField(
-        blank=True,
-        null=True
-    )
-
-
-    amendment_notes = models.TextField(
-        blank=True,
-        null=True
-    )
-
-
-    source_owner = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
-    )
-
-
-    contract_accountable = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
-    )
+    
     
 
 
+    contract_date = models.DateField(
+        _("Contract Date"),
+        blank=True,
+        null=True,
+    )
+
+    contract_cost = models.DecimalField(
+        _("Contract Cost"),
+        max_digits=14,
+        decimal_places=2,
+        blank=True,
+        null=True,
+    )
+
+    send_to_financial = models.BooleanField(
+        _("Send to Financial"),
+        default=False,
+    )
+
+    draft_sent_to_customer = models.BooleanField(
+        _("Draft Sent to Customer"),
+        default=False,
+    )
+
+    draft_sent_date = models.DateField(
+        _("Draft Sent Date"),
+        blank=True,
+        null=True,
+    )
+
+    notification_letter_number = models.CharField(
+        _("Notification Letter Number"),
+        max_length=30,
+        blank=True,
+        null=True,
+    )
+
+    notification_letter_date = models.DateField(
+        _("Notification Letter Date"),
+        blank=True,
+        null=True,
+    )
+
+    amendment_notes = models.TextField(
+        _("Amendment Notes"),
+        blank=True,
+        null=True,
+    )
+
+    source_owner = models.CharField(
+        _("Source Owner"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+
+    contract_accountable = models.CharField(
+        _("Contract Accountable"),
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+
     created_at = models.DateTimeField(
-        auto_now_add=True
+        _("Created At"),
+        auto_now_add=True,
     )
 
     updated_at = models.DateTimeField(
-        auto_now=True
+        _("Updated At"),
+        auto_now=True,
     )
 
 
@@ -112,10 +121,21 @@ class Contract(models.Model):
         
     )
 
-    payment_done = models.BooleanField(default=False)
-    payment_date = models.DateField(null=True, blank=True)
+    payment_done = models.BooleanField(
+        _("Payment Done"),
+        default=False,
+    )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    payment_date = models.DateField(
+        _("Payment Date"),
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        _("Created At"),
+        auto_now_add=True,
+    )
 
     history = HistoricalRecords()
 

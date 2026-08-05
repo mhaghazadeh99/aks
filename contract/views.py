@@ -458,13 +458,13 @@ def create_contract_bulk(request):
     one shared record across all of them."""
 
     if request.method != "POST":
-        return JsonResponse({"success": False, "message": "Invalid request"})
+        return JsonResponse({"success": False, "message": _("Invalid request")})
 
     data = json.loads(request.body)
     ids = data.get("ids", [])
 
     if not ids:
-        return JsonResponse({"success": False, "message": "No sources selected"})
+        return JsonResponse({"success": False, "message": _("No sources selected")})
 
     sources = DSRS.objects.filter(id__in=ids)
 
@@ -474,7 +474,9 @@ def create_contract_bulk(request):
         serials = list(duplicate.values_list("serial_number", flat=True))
         return JsonResponse({
             "success": False,
-            "message": "Already sent to PI: " + ", ".join(serials)
+            "message": _("Already sent to PI: %(serials)s") % {
+                    "serials": ", ".join(serials)
+                }
         })
 
     count = 0
@@ -484,7 +486,9 @@ def create_contract_bulk(request):
 
     return JsonResponse({
         "success": True,
-        "message": f"{count} source(s) sent to PI"
+        "message": _("%(count)s source(s) sent to PI") % {
+            "count": count
+        }
     })
 
 
@@ -492,7 +496,7 @@ def create_contract_bulk(request):
 def contract_edit(request, pk):
 
     if not request.user.groups.filter(name="Contracts Users").exists():
-        return HttpResponseForbidden("No access")
+        return HttpResponseForbidden(_("You dont have access to this page."))
 
     contract = get_object_or_404(Contract, pk=pk)
 
@@ -558,10 +562,19 @@ def export_contracts_csv(request):
     writer = csv.writer(response)
 
     writer.writerow([
-        "ID", "Serial_Number", "Nuclide", "Source_Type", "Facility",
-        "Status", "Status_Date", "Contract_Number", "Contract_Date",
-        "Payment_Done", "Payment_Date", "Created_At",
-    ])
+            _("ID"),
+            _("Serial Number"),
+            _("Nuclide"),
+            _("Source Type"),
+            _("Facility"),
+            _("Status"),
+            _("Status Date"),
+            _("Contract Number"),
+            _("Contract Date"),
+            _("Payment Done"),
+            _("Payment Date"),
+            _("Created At"),
+        ])
 
     for c in queryset:
         writer.writerow([

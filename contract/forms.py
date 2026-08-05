@@ -1,22 +1,17 @@
 from django import forms
 from .models import Contract
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
-from django import forms
 from django.utils.translation import gettext_lazy as _
-
 from .models import LicenseContract
-
-
 from operations.models import LicenseRequest
 
 
 
 class LicenseContractForm(forms.ModelForm):
     contract_attachment = forms.FileField(
-                required=False,
-                label="Contract Document",
-            )
+            required=False,
+            label=_("Contract Document"),
+        )
     class Meta:
 
         model = LicenseContract

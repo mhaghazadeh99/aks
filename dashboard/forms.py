@@ -43,14 +43,6 @@ class DSRSForm(forms.ModelForm):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        if srs != dsrs:
-            self.fields["Source_Type"].widget = forms.HiddenInput()
-
-            if srs:
-                self.initial["Source_Type"] = SOURCE_TYPE.NEW
-            else:
-                self.initial["Source_Type"] = SOURCE_TYPE.DSRS
-
         for name, field in self.fields.items():
             if field.required:
                 field.label = f"{field.label} *"
@@ -126,7 +118,7 @@ class DSRSForm(forms.ModelForm):
 
             if srs != dsrs:
                 self.fields["Source_Type"].widget = forms.HiddenInput()
-                self.initial["Source_Type"] = "SRS" if srs else "DSRS"
+                self.initial["Source_Type"] = SOURCE_TYPE.NEW if srs else SOURCE_TYPE.DSRS
 
     def clean_activity_input(self):
         value = self.cleaned_data.get("activity_input")

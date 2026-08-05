@@ -1,5 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import *
+from .models import (
+    DSRS,
+    DSRSImage,
+    SourceMovement,
+    MovementAttachment,
+    HideShowFilterT,
+    ModelFilterT,
+    MovementType,
+    OriginType,
+    SOURCE_STATUS,
+    SOURCE_TYPE,
+)
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
@@ -19,7 +30,7 @@ from facilities.models import FacilityModel
 from contract.models import LicenseContract
 import csv
 from django.http import HttpResponse
-
+from django.utils.translation import gettext_lazy as _
 
 
 
@@ -87,10 +98,9 @@ def register_view(request):
             user.save()
 
             messages.success(
-                request,
-                "Account created. Wait for admin approval before logging in."
-            )
-
+            request,
+            _("Account created. Wait for admin approval before logging in.")
+        )
             return redirect('login')
     else:
         form = UserCreationForm()
@@ -103,7 +113,7 @@ def add_source(request):
     
 
     if not group_required(request.user, ["DSRS Users", "SRS Users"]):
-        return HttpResponseForbidden("No access")
+        return HttpResponseForbidden( "No access" )
 
     if request.method == "POST":
 
@@ -189,7 +199,7 @@ def add_source(request):
 def edit_source(request, pk):
 
     if not group_required(request.user, ["DSRS Users", "SRS Users"]):
-        return HttpResponseForbidden("No access")
+        return HttpResponseForbidden(_("No access"))
 
     obj = get_object_or_404(DSRS, pk=pk)
 
@@ -199,10 +209,10 @@ def edit_source(request, pk):
     source_type = (obj.Source_Type or "").strip()
 
     if is_srs_user and source_type == "DSRS" and not is_dsrs_user:
-        return HttpResponseForbidden("No access to DSRS records")
+        return HttpResponseForbidden(_("No access to DSRS records"))
 
     if is_dsrs_user and source_type == SOURCE_TYPE.NEW and not is_srs_user:
-        return HttpResponseForbidden("No access to SRS records")
+        return HttpResponseForbidden(_("No access to SRS records"))
 
     
 
@@ -230,7 +240,7 @@ def edit_source(request, pk):
                 for f in request.FILES.getlist("movement_attachments"):
                     MovementAttachment.objects.create(movement=movement, file=f)
 
-                messages.success(request, "Movement recorded successfully.")
+                messages.success(request, _("Movement recorded successfully."))
                 return redirect("edit_source", pk=obj.pk)
 
         else:
@@ -254,7 +264,7 @@ def edit_source(request, pk):
                 for img in images:
                     DSRSImage.objects.create(dsrs=obj, file=img)
 
-                messages.success(request, "Source updated successfully.")
+                messages.success(request, _("Source updated successfully."))
 
                 return redirect("tables")
 
@@ -392,7 +402,7 @@ def decay_chart_view(request, pk):
     if not nuclide or not nuclide.half_life:
         return render(request, 'dsrs/decay_chart.html', {
             'source': source,
-            'error': "Missing nuclide data",
+            'error': _("Missing nuclide data"),
             'values': [],
             'years_range': 10
         })
@@ -403,7 +413,7 @@ def decay_chart_view(request, pk):
     if not A0_bq:
         return render(request, 'dsrs/decay_chart.html', {
             'source': source,
-            'error': "No current activity available",
+            'error': _("No current activity available"),
             'values': [],
             'years_range': 10
         })
@@ -445,7 +455,7 @@ def create_hide_show_filter(request, model_name):
             defaults={'value': data.get('value')}
         )
 
-        response_data = {'message': 'Model updated successfully'}
+        response_data = {'message': _('Model updated successfully')}
         return JsonResponse(response_data)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -521,11 +531,11 @@ def import_csv(request):
         return HttpResponseForbidden("No access")
 
     if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=400)
+        return JsonResponse({"error": _("POST required")}, status=400)
 
     uploaded_file = request.FILES.get("csv_file")
     if not uploaded_file:
-        return JsonResponse({"error": "No file uploaded"}, status=400)
+        return JsonResponse({"error": _("No file uploaded")}, status=400)
 
     decoded = uploaded_file.read().decode("utf-8-sig")
     reader = csv.DictReader(decoded.splitlines())
@@ -586,7 +596,7 @@ def import_csv(request):
 
             facility_obj = FacilityModel.objects.filter(name__iexact=facility_name).first()
             if not facility_obj:
-                raise ValueError(f"Facility '{facility_name}' not found")
+                raise ValueError(_("Facility '%(name)s' not found") % {"name": facility_name})
 
             origin_facility_obj = None
             if origin_facility_name:
@@ -594,14 +604,14 @@ def import_csv(request):
                     name__iexact=origin_facility_name
                 ).first()
                 if not origin_facility_obj:
-                    raise ValueError(f"Origin facility '{origin_facility_name}' not found")
+                    raise ValueError(_("Origin Facility '%(name)s' not found") % {"name": origin_facility_name})
 
             nuclide_name = get(normalized, "nuclide")
             nuclide = None
             if nuclide_name:
                 nuclide = Nuclides.objects.filter(name__iexact=nuclide_name).first()
                 if not nuclide:
-                    raise ValueError(f"Nuclide '{nuclide_name}' not found")
+                    raise ValueError(_("Nuclide '%(name)s' not found") % {"name": nuclide_name})
 
             contract_number = get(normalized, "contract_number")
             contract_obj = None
@@ -610,7 +620,7 @@ def import_csv(request):
                     contract_number__iexact=contract_number
                 ).first()
                 if not contract_obj:
-                    raise ValueError(f"Contract '{contract_number}' not found")
+                    raise ValueError(_("Contract '%(number)s' not found") % {"number": contract_number})
 
             activity_input_raw = get(normalized, "activity_input")
             activity_input = float(activity_input_raw.replace(",", "")) if activity_input_raw else None

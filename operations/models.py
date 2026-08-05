@@ -6,7 +6,7 @@ from dashboard.choices import ActivityUnit   # or wherever your ActivityUnit cho
 from facilities.models import FacilityModel
 
 from reference.models import Nuclides
-
+from simple_history.models import HistoricalRecords
 import os
 
 
@@ -89,29 +89,29 @@ class LicenseRequest(models.Model):
         related_name="license_requests",
     )
 
-    letter_number = models.CharField(
+    letter_number = models.CharField(_("Letter Number"),
         max_length=100,
         blank=True,
         null=True,
     )
 
-    letter_date = models.DateField(
+    letter_date = models.DateField(_("Letter Date"),
         blank=True,
         null=True,
     )
 
     
 
-    status = models.CharField(
+    status = models.CharField( _("Status"),
         max_length=20,
         choices=LicenseStatus.choices,
         default=LicenseStatus.DRAFT,
     )
-    status_date = models.DateTimeField(
+    status_date = models.DateTimeField( _("Status Date"),
         null=True,
         blank=True,
     )
-    specification_completed = models.BooleanField(default=False,)
+    specification_completed = models.BooleanField(_("Specification Completed"),default=False,)
     
 
     description = models.TextField(
@@ -121,25 +121,29 @@ class LicenseRequest(models.Model):
         blank=True,)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Created By"),
         on_delete=models.PROTECT,
     )
     
-    created_at = models.DateTimeField(
+    created_at = models.DateTimeField( _("Created At"),
         auto_now_add=True,
     )
 
-    updated_at = models.DateTimeField(
+    updated_at = models.DateTimeField( _("Updated At"),
         auto_now=True,
     )
 
-
+    history = HistoricalRecords()
     class Meta:
-
         ordering = ["-created_at"]
+        verbose_name = _("License Request")
+        verbose_name_plural = _("License Requests")
 
     def __str__(self):
-
-        return f"{self.facility}"
+        return (
+            self.letter_number
+            or _("License Request #%(id)s") % {"id": self.pk}
+        )
 
 
 
@@ -259,8 +263,8 @@ class LicenseSource(models.Model):
         blank=True,
     )
 
-    specification_order = models.PositiveIntegerField(default=1,)
-    description = models.TextField(max_length=50, blank=True, null= True)
+    specification_order = models.PositiveIntegerField(  _("Specification Order"),default=1,)
+    description = models.TextField(_("Description"),max_length=50, blank=True, null= True)
 
     result_dsrs = models.ForeignKey(
         "dashboard.DSRS",
@@ -283,8 +287,9 @@ class LicenseSource(models.Model):
         verbose_name_plural = _("Requested Sources")
 
     def __str__(self):
-
-        return f"{self.nuclide}"
+        if self.nuclide:
+            return str(self.nuclide)
+        return _("Source #%(id)s") % {"id": self.pk}
 
 class LicenseSourceComponent(models.Model):
     """
@@ -308,10 +313,12 @@ class LicenseSourceComponent(models.Model):
         related_name="used_in_license_components",
     )
 
-    quantity_used = models.PositiveIntegerField(default=1)
-
+    quantity_used = models.PositiveIntegerField( _("Quantity Used"),default=1)
+    history = HistoricalRecords()
     class Meta:
         ordering = ["id"]
+        verbose_name = _("Source Component")
+        verbose_name_plural = _("Source Components")
 
     def __str__(self):
         return f"{self.quantity_used} x {self.dsrs} -> {self.license_source}"
@@ -319,33 +326,33 @@ class LicenseSourceComponent(models.Model):
 class UserSignature(models.Model):
 
     user = models.OneToOneField(
-
         settings.AUTH_USER_MODEL,
-
+        verbose_name=_("User"),
         on_delete=models.CASCADE,
-
     )
 
     signature = models.ImageField(
-
+        _("Signature"),
         upload_to="signatures/",
-
     )
 
     title = models.CharField(
-
+        _("Title"),
         max_length=150,
-
         blank=True,
-
     )
 
     updated_at = models.DateTimeField(
-
+        _("Updated At"),
         auto_now=True,
-
     )
 
+    class Meta:
+        verbose_name = _("User Signature")
+        verbose_name_plural = _("User Signatures")
+
+    def __str__(self):
+        return self.user.get_username()
 
 
 
@@ -373,6 +380,7 @@ class LicenseApproval(models.Model):
     license = models.ForeignKey(
 
         LicenseRequest,
+        verbose_name=_("License"),
 
         related_name="approvals",
 
@@ -380,7 +388,7 @@ class LicenseApproval(models.Model):
 
     )
 
-    step = models.CharField(
+    step = models.CharField(  _("Approval Step"),
 
         max_length=30,
 
@@ -393,7 +401,7 @@ class LicenseApproval(models.Model):
     approver = models.ForeignKey(
 
         settings.AUTH_USER_MODEL,
-
+        verbose_name=_("Approver"),
         on_delete=models.SET_NULL,
 
         null=True,
@@ -402,7 +410,7 @@ class LicenseApproval(models.Model):
 
     )
 
-    status = models.CharField(
+    status = models.CharField(_("Status"),
 
         max_length=20,
 
@@ -412,7 +420,7 @@ class LicenseApproval(models.Model):
 
     )
 
-    approved_at = models.DateTimeField(
+    approved_at = models.DateTimeField( _("Approved At"),
 
         null=True,
 
@@ -420,15 +428,20 @@ class LicenseApproval(models.Model):
 
     )
 
-    comments = models.TextField(
+    comments = models.TextField(_("Comments"),
 
         blank=True,
 
     )
+    history = HistoricalRecords()
 
     class Meta:
-
         ordering = ["order"]
+        verbose_name = _("License Approval")
+        verbose_name_plural = _("License Approvals")
+    
+    def __str__(self):
+        return f"{self.get_step_display()} - {self.get_status_display()}"
 
 
 

@@ -377,16 +377,23 @@ MOVEMENT_TO_STATUS = {
 
 
 class SourceMovement(models.Model):
-    
+
     source = models.ForeignKey(
         DSRS,
-        on_delete=models.CASCADE, related_name="movements",
+        verbose_name=_("Source"),
+        on_delete=models.CASCADE,
+        related_name="movements",
     )
 
-    movement_type = models.CharField(_("movement type"), max_length=20, choices=MovementType.choices)
+    movement_type = models.CharField(
+        _("Movement Type"),
+        max_length=20,
+        choices=MovementType.choices,
+    )
 
     from_facility = models.ForeignKey(
-        FacilityModel, 
+        FacilityModel,
+        verbose_name=_("From Facility"),
         null=True,
         blank=True,
         related_name="+",
@@ -395,30 +402,46 @@ class SourceMovement(models.Model):
 
     to_facility = models.ForeignKey(
         FacilityModel,
+        verbose_name=_("To Facility"),
         null=True,
         blank=True,
         related_name="+",
         on_delete=models.SET_NULL,
     )
 
-    source_count = models.PositiveIntegerField(default=1)
+    source_count = models.PositiveIntegerField(
+        _("Source Count"),
+        default=1,
+    )
 
-
-    movement_date = models.DateField()
+    movement_date = models.DateField(
+        _("Movement Date"),
+    )
 
     contract = models.ForeignKey(
         LicenseContract,
+        verbose_name=_("Contract"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
+
     performed_by = models.ForeignKey(
-                User,
-                on_delete=models.SET_NULL,
-                null=True,
-            )
-    created_at = models.DateTimeField(auto_now_add=True)
-    remarks = models.TextField(blank=True)
+        User,
+        verbose_name=_("Performed By"),
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    created_at = models.DateTimeField(
+        _("Created At"),
+        auto_now_add=True,
+    )
+
+    remarks = models.TextField(
+        _("Remarks"),
+        blank=True,
+    )
     
     
     class Meta:
@@ -438,28 +461,71 @@ class SourceMovement(models.Model):
             f"{self.from_facility} → {self.to_facility}"
         )
 
-
 class MovementAttachment(models.Model):
+
     movement = models.ForeignKey(
         SourceMovement,
+        verbose_name=_("Movement"),
         on_delete=models.CASCADE,
         related_name="attachments"
     )
+
     file = models.FileField(
+        _("Attachment File"),
         upload_to="source_movements/",
         validators=[validate_attachment],
     )
-    uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    uploaded_at = models.DateTimeField(
+        _("Uploaded At"),
+        auto_now_add=True
+    )
+
+    class Meta:
+        verbose_name = _("Movement Attachment")
+        verbose_name_plural = _("Movement Attachments")
     
+
 class HideShowFilterT(models.Model):
-    parent = models.CharField(max_length=50)
-    key = models.CharField(max_length=50)
-    value = models.BooleanField(default=True)
+
+    parent = models.CharField(
+        _("Parent"),
+        max_length=50
+    )
+
+    key = models.CharField(
+        _("Key"),
+        max_length=50
+    )
+
+    value = models.BooleanField(
+        _("Visible"),
+        default=True
+    )
+
+    class Meta:
+        verbose_name = _("Hide/Show Filter")
+        verbose_name_plural = _("Hide/Show Filters")
 
 
 class ModelFilterT(models.Model):
-    parent = models.CharField(max_length=50)
-    key = models.CharField(max_length=50)
-    value = models.CharField(max_length=100)
+
+    parent = models.CharField(
+        _("Parent"),
+        max_length=50
+    )
+
+    key = models.CharField(
+        _("Key"),
+        max_length=50
+    )
+
+    value = models.CharField(
+        _("Value"),
+        max_length=100
+    )
+
+    class Meta:
+        verbose_name = _("Model Filter")
+        verbose_name_plural = _("Model Filters")
 

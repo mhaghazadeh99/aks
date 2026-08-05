@@ -58,10 +58,12 @@ class FacilityModel(models.Model):
 
     
     created_at = models.DateTimeField(
+        _("Created At"),
         auto_now_add=True
     )
 
     updated_at = models.DateTimeField(
+        _("Updated At"),
         auto_now=True
     )
 
@@ -69,6 +71,22 @@ class FacilityModel(models.Model):
         ordering = ["name"]
         verbose_name = _("Facility")
         verbose_name_plural = _("Facilities")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name"],
+                name="unique_facility_name",
+            ),
+            models.UniqueConstraint(
+                fields=["national_id"],
+                name="unique_facility_national_id",
+                condition=models.Q(national_id__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=["postal_code"],
+                name="unique_facility_postal_code",
+                condition=models.Q(postal_code__isnull=False),
+            ),
+        ]
 
     def __str__(self):
-        return str(self.name) if self.name else "Unnamed Facility"
+        return str(self.name) if self.name else _("Unnamed Facility")

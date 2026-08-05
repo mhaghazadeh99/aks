@@ -1,6 +1,6 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-
+from django.urls import reverse
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     Layout,
@@ -122,13 +122,6 @@ class FacilityForm(forms.ModelForm):
             ),
 
 
-
-
-            
-
-
-
-
             HTML(
                 """
                 <div class="form-actions mt-4">
@@ -148,7 +141,44 @@ class FacilityForm(forms.ModelForm):
                 _("Save"),
                 css_class="btn btn-primary mt-4"
             ),)
+    def clean(self):
+        cleaned_data = super().clean()
 
+        name = cleaned_data.get("name")
+        national_id = cleaned_data.get("national_id")
+        postal_code = cleaned_data.get("postal_code")
+
+        # Duplicate facility name
+        if name:
+            qs = FacilityModel.objects.filter(name__iexact=name)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError(
+                    _("A facility with this name already exists.")
+                )
+
+        # Duplicate national ID
+        if national_id:
+            qs = FacilityModel.objects.filter(national_id=national_id)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError(
+                    _("A facility with this national ID already exists.")
+                )
+
+        # Duplicate postal code
+        if postal_code:
+            qs = FacilityModel.objects.filter(postal_code=postal_code)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError(
+                    _("A facility with this postal code already exists.")
+                )
+
+        return cleaned_data
 
 
 class FacilityImportForm(forms.Form):

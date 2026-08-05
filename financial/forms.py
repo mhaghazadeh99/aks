@@ -19,30 +19,28 @@ class LicensePaymentForm(forms.ModelForm):
             "notes",
         ]
 
-        labels = {
-            "payment_done": _("Payment Completed"),
-            "payment_date": _("Payment Date"),
-            "amount_paid": _("Amount Paid"),
-            "notes": _("Notes"),
-        }
 
         widgets = {
-
-            "payment_date": forms.DateInput(
-                attrs={
-                    "type": "text",
-                    "class": "datepicker", 
-                    
-                    "autocomplete": "off",
-                }
-            ),
-
-            "notes": forms.Textarea(
-                attrs={
-                    "rows": 4,
-                }
-            ),
-        }
+                "payment_date": forms.DateInput(
+                    attrs={
+                        "type": "text",
+                        "class": "datepicker",
+                        "autocomplete": "off",
+                        "placeholder": _("Select payment date"),
+                    }
+                ),
+                "amount_paid": forms.NumberInput(
+                    attrs={
+                        "placeholder": _("Enter amount paid"),
+                    }
+                ),
+                "notes": forms.Textarea(
+                    attrs={
+                        "rows": 4,
+                        "placeholder": _("Additional notes"),
+                    }
+                ),
+            }
 
 
     def __init__(self,*args,**kwargs):

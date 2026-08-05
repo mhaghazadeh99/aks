@@ -1,11 +1,13 @@
-from django.shortcuts import render, redirect,get_object_or_404
-from django.utils import timezone
 from django.contrib import messages
-import os
-import tempfile
-import json
 from django.core.files import File
+from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+import json
+from django.utils.translation import gettext_lazy as _
 from dashboard.models import DSRS
 from .models import LicenseSourceComponent
 from operations.services.signature_service import SpecificationSigner
@@ -15,12 +17,9 @@ from django.db.models import Q
 
 from django.core.paginator import Paginator
 
-from django.contrib import messages
 
-from django.shortcuts import redirect
 from .services.workflow import create_license_workflow
-from .services.specification_generator import (
-    generate_specification,)
+from .services.specification_generator import (generate_specification,)
 
 from .forms import (LicenseRequestForm, LicenseAttachmentForm, LicenseSourceSpecificationFormSet,
     LicenseSourceForm,LicenseFacilityForm)
@@ -185,11 +184,6 @@ def license_list(request):
             )
 
             |
-
-            Q(
-                contract_number__icontains=search
-            )
-            |
             Q(
                 sources__serial_number__icontains=search
             )
@@ -199,6 +193,7 @@ def license_list(request):
             )
 
         )
+        queryset = queryset.distinct()
 
     paginator = Paginator(
 
@@ -237,7 +232,7 @@ def license_list(request):
     )
 
 
-from django.http import HttpResponse
+
 
 def license_create(request, pk=None):
 
@@ -265,19 +260,14 @@ def license_create(request, pk=None):
         }
 
     if request.method == "POST":
-        # print("POST received")
-        # print(request.POST)
+  
         forms = get_license_forms(request.POST, request.FILES)
 
         request_form = forms["request_form"]
         facility_form = forms["facility_form"]
         attachment_form = forms["attachment_form"]
         source_form = forms["source_form"]
-        print("REQUEST FORM ERRORS:", request_form.errors)
-        print("FACILITY FORM ERRORS:", facility_form.errors)
-        print("ATTACHMENT FORM ERRORS:", attachment_form.errors)
-        print("SOURCE FORM ERRORS:", source_form.errors)
-        print("SOURCE TYPES POSTED:", request.POST.getlist("source_type"))
+
 
         source_types = request.POST.getlist("source_type")
         nuclides = request.POST.getlist("nuclide")
@@ -346,10 +336,7 @@ def license_create(request, pk=None):
                             "available": dsrs_obj.available_count,
                         }
                     )
-        print("SOURCE ERRORS:", source_errors)
-        print("NUCLIDES POSTED:", request.POST.getlist("nuclide"))
-        print("DSRS SOURCES POSTED:", request.POST.getlist("source_dsrs"))
-        print("RECYCLED COMPONENTS POSTED:", request.POST.getlist("recycled_components"))
+
         if (
             request_form.is_valid()
             and facility_form.is_valid()
@@ -357,79 +344,80 @@ def license_create(request, pk=None):
             # and source_form.is_valid()
             and not source_errors
         ):
+            with transaction.atomic():
 
-            license_request = request_form.save(commit=False)
-            license_request.facility = facility_form.cleaned_data["facility"]
-            action = request.POST.get("action")
+                license_request = request_form.save(commit=False)
+                license_request.facility = facility_form.cleaned_data["facility"]
+                action = request.POST.get("action")
 
-            if license_request_instance is None:
-                license_request.created_by = request.user
+                if license_request_instance is None:
+                    license_request.created_by = request.user
 
-            if action == "draft":
-                license_request.status = LicenseStatus.DRAFT
-            else:
-                license_request.status = LicenseStatus.SPECIFICATION
+                if action == "draft":
+                    license_request.status = LicenseStatus.DRAFT
+                else:
+                    license_request.status = LicenseStatus.SPECIFICATION
 
-            license_request.save()
+                license_request.save()
 
-            if license_request_instance is None:
-                create_license_workflow(license_request)
+                if license_request_instance is None:
+                    create_license_workflow(license_request)
 
-            files = {
-                LicenseAttachmentType.LETTER: attachment_form.cleaned_data.get("letter", []),
-                LicenseAttachmentType.COMMITMENT: attachment_form.cleaned_data.get("commitment", []),
-                LicenseAttachmentType.PERMIT: attachment_form.cleaned_data.get("permit", []),
-                LicenseAttachmentType.INQUIRY: attachment_form.cleaned_data.get("inquiry", []),
-                LicenseAttachmentType.OTHER: attachment_form.cleaned_data.get("other", []),
-            }
+                files = {
+                    LicenseAttachmentType.LETTER: attachment_form.cleaned_data.get("letter", []),
+                    LicenseAttachmentType.COMMITMENT: attachment_form.cleaned_data.get("commitment", []),
+                    LicenseAttachmentType.PERMIT: attachment_form.cleaned_data.get("permit", []),
+                    LicenseAttachmentType.INQUIRY: attachment_form.cleaned_data.get("inquiry", []),
+                    LicenseAttachmentType.OTHER: attachment_form.cleaned_data.get("other", []),
+                }
 
-            for attachment_type, uploaded_files in files.items():
-                for uploaded_file in uploaded_files:
-                    LicenseAttachment.objects.create(
-                        license=license_request,
-                        attachment_type=attachment_type,
-                        file=uploaded_file,
-                        uploaded_by=request.user,
-                    )
-
-            # Editing a draft: simplest correct approach is to replace the
-            # source list wholesale rather than diff it — nothing has been
-            # consumed yet (available_count is untouched until the
-            # specification step), so this is safe.
-            if license_request_instance is not None:
-                license_request.sources.all().delete()
-
-            for i, s_type in enumerate(source_types):
-
-                if s_type == LicenseSourceType.NEW:
-                    LicenseSource.objects.create(
-                        license=license_request,
-                        source_type=s_type,
-                        nuclide_id=nuclides[i],
-                        source_dsrs=None,
-                    )
-
-                elif s_type == LicenseSourceType.REUSED:
-                    LicenseSource.objects.create(
-                        license=license_request,
-                        source_type=s_type,
-                        nuclide=None,
-                        source_dsrs_id=dsrs_sources[i],
-                    )
-
-                elif s_type == LicenseSourceType.RECYCLED:
-                    license_source = LicenseSource.objects.create(
-                        license=license_request,
-                        source_type=s_type,
-                        nuclide_id=nuclides[i],
-                        source_dsrs=None,
-                    )
-                    for comp in parsed_recycled_components[i]:
-                        LicenseSourceComponent.objects.create(
-                            license_source=license_source,
-                            dsrs_id=comp["dsrsId"],
-                            quantity_used=int(comp["qty"]),
+                for attachment_type, uploaded_files in files.items():
+                    for uploaded_file in uploaded_files:
+                        LicenseAttachment.objects.create(
+                            license=license_request,
+                            attachment_type=attachment_type,
+                            file=uploaded_file,
+                            uploaded_by=request.user,
                         )
+
+                # Editing a draft: simplest correct approach is to replace the
+                # source list wholesale rather than diff it — nothing has been
+                # consumed yet (available_count is untouched until the
+                # specification step), so this is safe.
+                if license_request_instance is not None:
+                    license_request.sources.all().delete()
+
+                for i, s_type in enumerate(source_types):
+
+                    if s_type == LicenseSourceType.NEW:
+                        LicenseSource.objects.create(
+                            license=license_request,
+                            source_type=s_type,
+                            nuclide_id=nuclides[i],
+                            source_dsrs=None,
+                        )
+
+                    elif s_type == LicenseSourceType.REUSED:
+                        LicenseSource.objects.create(
+                            license=license_request,
+                            source_type=s_type,
+                            nuclide=None,
+                            source_dsrs_id=dsrs_sources[i],
+                        )
+
+                    elif s_type == LicenseSourceType.RECYCLED:
+                        license_source = LicenseSource.objects.create(
+                            license=license_request,
+                            source_type=s_type,
+                            nuclide_id=nuclides[i],
+                            source_dsrs=None,
+                        )
+                        for comp in parsed_recycled_components[i]:
+                            LicenseSourceComponent.objects.create(
+                                license_source=license_source,
+                                dsrs_id=comp["dsrsId"],
+                                quantity_used=int(comp["qty"]),
+                            )
 
             messages.success(request, _("License request saved successfully."))
 
@@ -506,28 +494,29 @@ def license_specification(request, pk):
         formset = LicenseSourceSpecificationFormSet(request.POST, queryset=queryset)
 
         if formset.is_valid():
+            with transaction.atomic():
 
-            for form in formset.forms:
+                for form in formset.forms:
 
-                obj = form.instance
+                    obj = form.instance
 
-                if obj.source_type == LicenseSourceType.REUSED and obj.source_dsrs:
+                    if obj.source_type == LicenseSourceType.REUSED and obj.source_dsrs:
 
-                    dsrs_obj = obj.source_dsrs
-                    obj.nuclide = dsrs_obj.Nuclide
-                    if not obj.serial_number:
-                        obj.serial_number = dsrs_obj.serial_number
-                    obj.activity = dsrs_obj.activity_input
-                    obj.activity_unit = dsrs_obj.activity_unit
-                    obj.activity_date = dsrs_obj.Activity_reference_date
+                        dsrs_obj = obj.source_dsrs
+                        obj.nuclide = dsrs_obj.Nuclide
+                        if not obj.serial_number:
+                            obj.serial_number = dsrs_obj.serial_number
+                        obj.activity = dsrs_obj.activity_input
+                        obj.activity_unit = dsrs_obj.activity_unit
+                        obj.activity_date = dsrs_obj.Activity_reference_date
 
-                obj.save()
+                    obj.save()
 
-            generate_specification(license_request, request.user)
+                generate_specification(license_request, request.user)
 
-            license_request.status = LicenseStatus.WAITING_CREATOR
-            license_request.specification_completed = True
-            license_request.save(update_fields=["status", "specification_completed"])
+                license_request.status = LicenseStatus.WAITING_CREATOR
+                license_request.specification_completed = True
+                license_request.save(update_fields=["status", "specification_completed"])
 
             messages.success(request, _("Specification saved successfully."))
 
@@ -904,32 +893,32 @@ def license_sign(request, pk):
         # -----------------------------------------------
         # Save approval
         # -----------------------------------------------
+        with transaction.atomic():
+            approval.status = LicenseApproval.ApprovalStatus.APPROVED
 
-        approval.status = LicenseApproval.ApprovalStatus.APPROVED
+            approval.approver = request.user
 
-        approval.approver = request.user
+            approval.approved_at = timezone.now()
 
-        approval.approved_at = timezone.now()
+            approval.save()
 
-        approval.save()
+            # -----------------------------------------------
+            # Next workflow stage
+            # -----------------------------------------------
 
-        # -----------------------------------------------
-        # Next workflow stage
-        # -----------------------------------------------
+            if current_step == LicenseApproval.ApprovalStep.CREATOR:
 
-        if current_step == LicenseApproval.ApprovalStep.CREATOR:
+                license_request.status = LicenseStatus.WAITING_MANAGER
 
-            license_request.status = LicenseStatus.WAITING_MANAGER
+            elif current_step == LicenseApproval.ApprovalStep.MANAGER:
 
-        elif current_step == LicenseApproval.ApprovalStep.MANAGER:
+                license_request.status = LicenseStatus.WAITING_DEPUTY
 
-            license_request.status = LicenseStatus.WAITING_DEPUTY
+            elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
 
-        elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
+                license_request.status = LicenseStatus.CONTRACTS
 
-            license_request.status = LicenseStatus.CONTRACTS
-
-        license_request.save()
+            license_request.save()
 
         messages.success(
             request,

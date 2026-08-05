@@ -57,18 +57,16 @@ class LicenseRequestForm(forms.ModelForm):
         ]
 
         widgets = {
-
+           
             "letter_date": forms.DateInput(
-
                 attrs={
-
                     "type": "text",
-
                     "class": "datepicker",
-
+                    "placeholder": _("Select letter date"),
                 }
-
             ),
+
+           
 
         }
 
@@ -359,19 +357,16 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
 
         widgets = {
 
-            "activity_date": forms.DateInput(
+                "activity_date": forms.DateInput(
+                    attrs={
+                        "type": "text",
+                        "class": "datepicker",
+                        "placeholder": _("Select activity date"),
+                    }
+                ),
+            }
 
-                attrs={
-
-                    "type": "text",
-
-                    "class": "datepicker",
-
-                }
-
-            ),
-
-        }
+        
 
     def __init__(self, *args, **kwargs):
 

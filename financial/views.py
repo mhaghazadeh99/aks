@@ -1,13 +1,10 @@
-from django.shortcuts import render
-
-from django.shortcuts import get_object_or_404
-from django.shortcuts import redirect
-from django.shortcuts import render
-
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
 
 from .forms import LicensePaymentForm
 from .models import LicensePayment
-from django.db.models import Q
+
 
 from operations.models import (
     LicenseRequest,
@@ -81,9 +78,7 @@ def license_payment_update(request, pk):
         pk=pk,
     )
 
-    payment, created = LicensePayment.objects.get_or_create(
-        license=license_request,
-    )
+    payment, _ = LicensePayment.objects.get_or_create(license=license_request,)
 
     if request.method == "POST":
 
@@ -93,7 +88,6 @@ def license_payment_update(request, pk):
         )
 
         if form.is_valid():
-            
 
             payment = form.save()
 
@@ -106,11 +100,17 @@ def license_payment_update(request, pk):
                     update_fields=["status"]
                 )
 
-            return redirect(
-                "license_payment_list"
+            messages.success(
+                request,
+                _("Payment information saved successfully.")
             )
-            
 
+            return redirect("license_payment_list")
+        else:
+            messages.error(
+                request,
+                _("Please correct the errors below.")
+            )
     else:
 
         form = LicensePaymentForm(

@@ -266,7 +266,6 @@ def facility_import(request):
         
 
         if form.is_valid():
-            print("IMPORT VIEW STARTED")
             
             csv_file = form.cleaned_data["csv_file"]
 
@@ -281,9 +280,11 @@ def facility_import(request):
             for row in reader:
                 if None in row.values():
                     messages.error(
-                        request,
-                        f"Invalid CSV format near row: {row}"
-                    )
+                            request,
+                            _("Invalid CSV format near row: %(row)s") % {
+                                "row": row
+                            }
+                        )
                     continue
                 FacilityModel.objects.create(
 

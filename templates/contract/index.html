@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}Contracts{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "ُSold DSRS's" %}{% endblock %}
 
 {% block content %}
 
@@ -143,19 +143,21 @@
 
   <!-- LEFT: search -->
   <div class="header-group">
-    <input type="text" id="searchInput" placeholder="Search...">
+    <input type="text" id="searchInput" placeholder="{% trans 'Search...' %}">
     <button>🔍</button>
   </div>
 
   <!-- COLUMN TOGGLE -->
   <div class="column-bar">
-    <button class="btn-gray" onclick="toggleColumnPanel()">☰ Show/Hide Columns</button>
+    <button class="btn-gray" onclick="toggleColumnPanel()">
+    ☰ {% trans "Show/Hide Columns" %}
+</button>
     <div id="columnPanel" class="column-panel hidden"></div>
   </div>
 
   <!-- CENTER: page size -->
   <div class="header-group">
-  <span>Items:</span>
+  <span>{% trans "Items:" %}</span>
   <select name="size" id="pageSize">
     <option value="10">10</option>
     <option value="25">25</option>
@@ -166,7 +168,7 @@
 
   <!-- RIGHT: actions -->
   <div class="header-group">
-    <button class="btn-green" onclick="exportCSV()">Export CSV</button>
+    <button class="btn-green" onclick="exportCSV()">{% trans "Export CSV" %}</button>
   </div>
 
 </div>
@@ -176,8 +178,13 @@
 
   <div id="filterContainer"></div>
 
-  <button id="addFilter" class="btn-blue">Add Filter</button>
-  <button id="applyFilters" class="btn-info">Apply</button>
+  <button id="addFilter" class="btn-blue">
+    {% trans "Add Filter" %}
+</button>
+
+<button id="applyFilters" class="btn-info">
+    {% trans "Apply" %}
+</button>
 
 </div>
 
@@ -187,17 +194,17 @@
 <table id="mainTable">
 <thead>
 <tr>
-    <th data-col="id">Record ID</th>
-    <th data-col="serial_number">Serial Number</th>
-    <th data-col="nuclide">Nuclide</th>
-    <th data-col="source_type">Source Type</th>
-    <th data-col="facility">Facility</th>
-    <th data-col="status">Status</th>
-    <th data-col="contract_number">Contract Number</th>
-    <th data-col="contract_date">Contract Date</th>
-    <th data-col="payment_done">Payment</th>
-    <th data-col="payment_date">Payment Date</th>
-    <th>Actions</th>
+   <th data-col="id">{% trans "Record ID" %}</th>
+<th data-col="serial_number">{% trans "Serial Number" %}</th>
+<th data-col="nuclide">{% trans "Nuclide" %}</th>
+<th data-col="source_type">{% trans "Source Type" %}</th>
+<th data-col="facility">{% trans "Facility" %}</th>
+<th data-col="status">{% trans "Status" %}</th>
+<th data-col="contract_number">{% trans "Contract Number" %}</th>
+<th data-col="contract_date">{% trans "Contract Date" %}</th>
+<th data-col="payment_done">{% trans "Payment" %}</th>
+<th data-col="payment_date">{% trans "Payment Date" %}</th>
+<th>{% trans "Actions" %}</th>
 </tr>
 </thead>
 
@@ -216,19 +223,19 @@
     <td data-col="contract_date">{{ c.contract_date|default:"—" }}</td>
     <td data-col="payment_done">
     {% if c.payment_done %}
-        <span class="payment-yes">Yes</span>
+        <span class="payment-yes">{% trans "Yes" %}</span>
     {% else %}
-        <span class="payment-no">No</span>
+        <span class="payment-no">{% trans "No" %}</span>
     {% endif %}
 </td>
     <td data-col="payment_date">{{ c.payment_date }}</td>
     <td>
-        <a href="{% url 'contract_edit' c.id %}" class="btn-yellow">Edit</a>
+        <a href="{% url 'contract_edit' c.id %}" class="btn-yellow">{% trans "Edit" %}</a>
     </td>
 </tr>
 {% empty %}
 <tr>
-    <td colspan="11">No records found</td>
+    <td colspan="11">{% trans "No records found" %}</td>
 </tr>
 {% endfor %}
 
@@ -268,8 +275,11 @@
 
 </div>
 <div class="page-info">
-    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    ({{ page_obj.paginator.count }} records)
+    {% blocktrans count counter=page_obj.paginator.count with page=page_obj.number total=page_obj.paginator.num_pages %}
+    Page {{ page }} of {{ total }} ({{ counter }} record)
+{% plural %}
+    Page {{ page }} of {{ total }} ({{ counter }} records)
+{% endblocktrans %}
 </div>
 <!-- ================= JS ================= -->
 <script>
@@ -311,17 +321,17 @@ document.getElementById("addFilter").onclick = function () {
     row.className = "d-flex mb-2";
     row.innerHTML = `
         <select class="form-control mr-2 key">
-            <option value="source_type">Source Type</option>
-            <option value="serial_number">Serial Number</option>
-            <option value="nuclide">Nuclide</option>
-            <option value="facility">Facility</option>
-            <option value="status">Status</option>
-            <option value="status_date">Status Date</option>
-            <option value="contract_number">Contract Number</option>
-            <option value="payment_done">Payment</option>
-            <option value="payment_date">Payment Date</option>
+            <option value="source_type">{% trans "Source Type" %}</option>
+            <option value="serial_number">{% trans "Serial Number" %}</option>
+            <option value="nuclide">{% trans "Nuclide" %}</option>
+            <option value="facility">{% trans "Facility" %}</option>
+            <option value="status">{% trans "Status" %}</option>
+            <option value="status_date">{% trans "Status Date" %}</option>
+            <option value="contract_number">{% trans "Contract Number" %}</option>
+            <option value="payment_done">{% trans "Payment" %}</option>
+            <option value="payment_date">{% trans "Payment Date" %}</option>
         </select>
-        <input class="form-control mr-2 value" placeholder="Value">
+        <input class="form-control mr-2 value" placeholder="{% trans 'Value' %}">
         <button class="btn btn-danger">X</button>
     `;
     row.querySelector("button").onclick = () => row.remove();

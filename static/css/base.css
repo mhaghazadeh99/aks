@@ -1,6 +1,29 @@
+
 /* =======================
    RESET
 ======================= */
+
+html[dir="rtl"] .form-check {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+html[dir="rtl"] .form-check-input {
+    float: none;
+    margin: 0 !important;
+    position: static;
+}
+
+html[dir="rtl"] .form-check-label {
+    margin: 0;
+}
+/* RTL checkbox alignment - keep Bootstrap shape */
+
+
+
 
 
 .overlay{
@@ -143,16 +166,14 @@ html.rtl .logo{
 ====================== */
 
 
-.nav {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-    margin-top:25px;
 
+.sidebar-nav {
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
 }
-
-.nav a {
+.sidebar-nav a {
 
 
     display:flex;
@@ -172,7 +193,7 @@ html.rtl .logo{
 
 
 
-.nav a:hover {
+.sidebar-nav a:hover {
 
 
     background:#f3f4f6;
@@ -185,7 +206,7 @@ html.rtl .logo{
 
 
 
-.nav a.active {
+.sidebar-nav a.active {
 
 
     background:#2563eb;
@@ -196,11 +217,13 @@ html.rtl .logo{
 
 
 
-.nav form{
+.sidebar-nav form{
     margin:0;
+    margin-bottom: 20px;
 }
 
-.nav-btn{
+
+.sidebar-nav-btn{
 
     width:100%;
 
@@ -228,7 +251,7 @@ html.rtl .logo{
 }
 
 
-.nav-btn:hover{
+.sidebar-nav-btn:hover{
 
     background:#f3f4f6;
 
@@ -405,6 +428,8 @@ th {
 tr:hover {
   background: rgba(0,0,0,0.03);
 }
+
+
 
 /* =======================
    FORMS

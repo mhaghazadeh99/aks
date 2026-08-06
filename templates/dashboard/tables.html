@@ -3,7 +3,7 @@
 
 {% load static %}
 
-{% block title %}Tables{% endblock %}
+{% block title %}{% trans "Tables" %}{% endblock %}
 
 {% block content %}
 {% block extrastyle %}
@@ -141,14 +141,19 @@
 
   <!-- LEFT: search -->
   <div class="header-group">
-    <input type="text" id="searchInput" placeholder="Search...">
+    <input
+    type="text"
+    id="searchInput"
+    placeholder="{% trans 'Search...' %}">
     <button>🔍</button>
   </div>
 
   <!-- COLUMN TOGGLE -->
   <div class="column-bar">
 
-    <button class="btn-gray" onclick="toggleColumnPanel()">☰ Show/Hide Columns</button>
+    <button class="btn-gray" onclick="toggleColumnPanel()">
+    ☰ {% trans "Show/Hide Columns" %}
+</button>
 
     <div id="columnPanel" class="column-panel hidden"></div>
   </div>
@@ -156,7 +161,7 @@
   <!-- CENTER: page size -->
    <form method="get">
   <div class="header-group">
-    <label for="pageSize">Items:</label>
+    <label for="pageSize">{% trans "Items:" %}</label>
  <select 
     id="pageSize"
     name="size"
@@ -164,18 +169,18 @@
     <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
     <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
     <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
-    <option value="all" {% if page_size == "all" %}selected{% endif %}>All</option>
+    <option value="all" {% if page_size == "all" %}selected{% endif %}>{% trans "All" %}</option>
 </select>
   </div>
    </form>
   <!-- RIGHT: actions -->
   <div class="header-group">
     
-    <button class="btn-green" onclick="exportCSV()">Export CSV</button>
+    <button class="btn-green" onclick="exportCSV()">{% trans "Export CSV" %}</button>
     <button class="btn-blue" id="createContractBtn">
-        send to Pars Isotop
+        {% trans "send to Pars Isotop" %}
     </button>
-    <a href="{% url 'add_source' %}" class="btn-blue">+ Add Source</a>
+    <a href="{% url 'add_source' %}" class="btn-blue">+ {% trans "Add Source" %}</a>
   </div>
 
 </div>
@@ -185,8 +190,8 @@
 
   <div id="filterContainer"></div>
 
-  <button id="addFilter" class="btn-blue">Add Filter</button>
-  <button id="applyFilters" class="btn-info">Apply</button>
+  <button id="addFilter" class="btn-blue"> {% trans "Add Filter" %}</button>
+  <button id="applyFilters" class="btn-info"> {% trans "Apply" %}</button>
 
 </div>
 
@@ -197,48 +202,169 @@
 
 <thead>
 <tr>
-    <th>Select</th>
-  <th data-col="Source_Type">Type</th>
-  <th data-col="Sso_Code">SSO</th>
-  <th data-col="Contract_Number">{% trans "Contract" %}</th>
-<th data-col="Is_Divisible">{% trans "Divisible" %}</th>
-<th data-col="Source_Count">{% trans "Count" %}</th>
-<th data-col="Available_Count">{% trans "Available" %}</th>
-  <th data-col="Facility">Facility</th>
-  <th data-col="Origin_Type">Origin</th>
-  <th data-col="Date_received">Received</th>
-  <th data-col="Origin_Facility">Origin Facility</th>
-  <th data-col="Location">Location</th>
 
-  <th data-col="Status">Status</th>
-  <th data-col="Status_Date">Status Date</th>
-  <th data-col="Responsible_Person">Responsible</th>
-  <th data-col="Nuclide">Nuclide</th>
-  <th data-col="activity_input">Input</th>
-  <th data-col="activity_unit">Unit</th>
-  <th data-col="Activity">Activity</th>
-  <th data-col="Category">Category</th>
-  <th data-col="Activity_reference_date">Ref Date</th>
-  <th data-col="serial_number">Serial</th>
-  <th data-col="Dose_rate_surface_uSv">Surface</th>
-  <th data-col="Dose_rate_1m_uSv">1m</th>
-  <th data-col="Dose_rate_measurement_date">Dose Date</th>
-  <th data-col="source_state">State</th>
-  <th data-col="contamination_bq_cm2">Contam</th>
-  <th data-col="Source_Physical_Form">Form</th>
-  <th data-col="Source_Manufacturer">Src Mfr</th>
-  <th data-col="Source_Model">Src Model</th>
-  <th data-col="Source_Practice">Practice</th>
-  <th data-col="Device_Manufacturer">Dev Mfr</th>
-  <th data-col="Device_Model">Dev Model</th>
-  <th data-col="Device_Serial_Number">Dev Serial</th>
-  <th data-col="Container_Type">Container</th>
-  <th data-col="Dimension">Dim</th>
-  <th data-col="Attachments">Files</th>
-  <th data-col="Comment">Comment</th>
-  <th data-col="created_by">User</th>
-  <th data-col="created_at">Created</th>
-  <th>Action</th>
+<th>{% trans "Select" %}</th>
+
+<th data-col="Source_Type">
+    {% trans "Source Type" %}
+</th>
+
+<th data-col="Sso_Code">
+    {% trans "SSO Code" %}
+</th>
+
+<th data-col="Contract_Number">
+    {% trans "Contract Number" %}
+</th>
+
+<th data-col="is_divisible">
+    {% trans "Divisible" %}
+</th>
+
+<th data-col="source_count">
+    {% trans "Total Quantity" %}
+</th>
+
+<th data-col="available_count">
+    {% trans "Available Quantity" %}
+</th>
+
+<th data-col="Facility">
+    {% trans "Current Facility" %}
+</th>
+
+<th data-col="Origin_Type">
+    {% trans "Origin Type" %}
+</th>
+
+<th data-col="Date_received">
+    {% trans "Date Received" %}
+</th>
+
+<th data-col="Origin_Facility">
+    {% trans "Previous Facility" %}
+</th>
+
+<th data-col="Location">
+    {% trans "Storage Location" %}
+</th>
+
+<th data-col="Status">
+    {% trans "Status" %}
+</th>
+
+<th data-col="Status_Date">
+    {% trans "Status Date" %}
+</th>
+
+<th data-col="Responsible_Person">
+    {% trans "Responsible Person" %}
+</th>
+
+<th data-col="Nuclide">
+    {% trans "Radionuclide" %}
+</th>
+
+<th data-col="activity_input">
+    {% trans "Entered Activity" %}
+</th>
+
+<th data-col="activity_unit">
+    {% trans "Activity Unit" %}
+</th>
+
+<th data-col="Activity">
+    {% trans "Current Activity" %}
+</th>
+
+<th data-col="Category">
+    {% trans "Category" %}
+</th>
+
+<th data-col="Activity_reference_date">
+    {% trans "Activity Reference Date" %}
+</th>
+
+<th data-col="serial_number">
+    {% trans "Serial Number" %}
+</th>
+
+<th data-col="Dose_rate_surface_uSv">
+    {% trans "Surface Dose Rate (µSv/h)" %}
+</th>
+
+<th data-col="Dose_rate_1m_uSv">
+    {% trans "Dose Rate @ 1m (µSv/h)" %}
+</th>
+
+<th data-col="Dose_rate_measurement_date">
+    {% trans "Dose Measurement Date" %}
+</th>
+
+<th data-col="source_state">
+    {% trans "Source State" %}
+</th>
+
+<th data-col="contamination_bq_cm2">
+    {% trans "Contamination (Bq/cm²)" %}
+</th>
+
+<th data-col="Source_Physical_Form">
+    {% trans "Physical Form" %}
+</th>
+
+<th data-col="Source_Manufacturer">
+    {% trans "Source Manufacturer" %}
+</th>
+
+<th data-col="Source_Model">
+    {% trans "Source Model" %}
+</th>
+
+<th data-col="Source_Practice">
+    {% trans "Practice" %}
+</th>
+
+<th data-col="Device_Manufacturer">
+    {% trans "Device Manufacturer" %}
+</th>
+
+<th data-col="Device_Model">
+    {% trans "Device Model" %}
+</th>
+
+<th data-col="Device_Serial_Number">
+    {% trans "Device Serial Number" %}
+</th>
+
+<th data-col="Container_Type">
+    {% trans "Container Type" %}
+</th>
+
+<th data-col="Dimension">
+    {% trans "Dimensions" %}
+</th>
+
+<th data-col="Attachments">
+    {% trans "Attachments" %}
+</th>
+
+<th data-col="Comment">
+    {% trans "Remarks" %}
+</th>
+
+<th data-col="created_by">
+    {% trans "Created By" %}
+</th>
+
+<th data-col="created_at">
+    {% trans "Created Date" %}
+</th>
+
+<th>
+    {% trans "Actions" %}
+</th>
+
 </tr>
 </thead>
 
@@ -314,15 +440,15 @@
 
 <td class="action-icons">
 
-  <a href="{% url 'edit_source' s.id %}" class="icon-btn edit" title="Edit">
+  <a href="{% url 'edit_source' s.id %}" class="icon-btn edit" title="{% trans 'Edit' %}">
     ✏️
   </a>
 
-  <a href="{% url 'decay_chart' s.id %}" class="icon-btn chart" title="Chart">
+  <a href="{% url 'decay_chart' s.id %}" class="icon-btn chart" title="{% trans 'Chart' %}">
     📊
   </a>
 
-  <a href="{% url 'dsrs_history' s.id %}" class="icon-btn history" title="History">
+  <a href="{% url 'dsrs_history' s.id %}" class="icon-btn history" title="{% trans 'History' %}">
     🕓
   </a>
 
@@ -341,7 +467,7 @@
 
     {% if page_obj.has_previous %}
         <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
-            Previous
+            {% trans "Previous" %}
         </a>
     {% endif %}
 
@@ -379,15 +505,19 @@
 
     {% if page_obj.has_next %}
         <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
-            Next
+            {% trans "Next" %}
         </a>
     {% endif %}
 
 </div>
 
 <div class="page-info">
-     {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    ({{ page_obj.paginator.count }} records)
+     {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+    {% blocktrans count total=page_obj.paginator.count %}
+({{ total }} record)
+{% plural %}
+({{ total }} records)
+{% endblocktrans %}
 </div>
 <!-- ================= JS ================= -->
 <script>
@@ -430,48 +560,47 @@ document.getElementById("addFilter").onclick = function () {
     row.className = "d-flex mb-2";
     row.innerHTML = `
        <select class="form-control mr-2 key">
-  <option value="Source_Type">Source Type</option>
-  <option value="Sso_Code">SSO Code</option>
-  <option value="Contract_Number">Contract</option>
-<option value="is_divisible">Divisible</option>
-<option value="source_count">Count</option>
-<option value="available_count">Available</option>
-  <option value="Facility">Facility</option>
-  <option value="Origin_Type">Origin</option>
-  <option value="Date_received">Received</option>
-  <option value="Origin_Facility">Origin Facility</option>
-  <option value="Location">Location</option>
-
-  <option value="Status">Status</option>
-  <option value="Status_Date">Status Date</option>
-  <option value="Responsible_Person">Responsible</option>
-  <option value="Nuclide">Nuclide</option>
-  <option value="activity_input">Input</option>
-  <option value="activity_unit">Unit</option>
-  <option value="Activity">Activity</option>
-  <option value="Category">Category</option>
-  <option value="Activity_reference_date">Ref Date</option>
-  <option value="serial_number">Serial</option>
-  <option value="Dose_rate_surface_uSv">Surface</option>
-  <option value="Dose_rate_1m_uSv">1m</option>
-  <option value="Dose_rate_measurement_date">Dose Date</option>
-  <option value="source_state">State</option>
-  <option value="contamination_bq_cm2">Contam</option>
-  <option value="Source_Physical_Form">Form</option>
-  <option value="Source_Manufacturer">Src Mfr</option>
-  <option value="Source_Model">Src Model</option>
-  <option value="Source_Practice">Practice</option>
-  <option value="Device_Manufacturer">Dev Mfr</option>
-  <option value="Device_Model">Dev Model</option>
-  <option value="Device_Serial_Number">Dev Serial</option>
-  <option value="Container_Type">Container</option>
-  <option value="Dimension">Dim</option>
-  <option value="Attachments">Files</option>
-  <option value="Comment">Comment</option>
-  <option value="created_by">User</option>
-  <option value="created_at">Created</option>
+        <option value="Source_Type">{% trans "Source Type" %}</option>
+        <option value="Sso_Code">{% trans "SSO Code" %}</option>
+        <option value="Contract_Number">{% trans "Contract" %}</option>
+        <option value="is_divisible">{% trans "Divisible" %}</option>
+        <option value="source_count">{% trans "Count" %}</option>
+        <option value="available_count">{% trans "Available" %}</option>
+        <option value="Facility">{% trans "Facility" %}</option>
+        <option value="Origin_Type">{% trans "Origin" %}</option>
+        <option value="Date_received">{% trans "Received" %}</option>
+        <option value="Origin_Facility">{% trans "Origin Facility" %}</option>
+        <option value="Location">{% trans "Location" %}</option>
+        <option value="Status">{% trans "Status" %}</option>
+        <option value="Status_Date">{% trans "Status Date" %}</option>
+        <option value="Responsible_Person">{% trans "Responsible" %}</option>
+        <option value="Nuclide">{% trans "Nuclide" %}</option>
+        <option value="activity_input">{% trans "Input" %}</option>
+        <option value="activity_unit">{% trans "Unit" %}</option>
+        <option value="Activity">{% trans "Activity" %}</option>
+        <option value="Category">{% trans "Category" %}</option>
+        <option value="Activity_reference_date">{% trans "Reference Date" %}</option>
+        <option value="serial_number">{% trans "Serial Number" %}</option>
+        <option value="Dose_rate_surface_uSv">{% trans "Surface Dose" %}</option>
+        <option value="Dose_rate_1m_uSv">{% trans "1 m Dose" %}</option>
+        <option value="Dose_rate_measurement_date">{% trans "Dose Date" %}</option>
+        <option value="source_state">{% trans "State" %}</option>
+        <option value="contamination_bq_cm2">{% trans "Contamination" %}</option>
+        <option value="Source_Physical_Form">{% trans "Form" %}</option>
+        <option value="Source_Manufacturer">{% trans "Source Manufacturer" %}</option>
+        <option value="Source_Model">{% trans "Source Model" %}</option>
+        <option value="Source_Practice">{% trans "Practice" %}</option>
+        <option value="Device_Manufacturer">{% trans "Device Manufacturer" %}</option>
+        <option value="Device_Model">{% trans "Device Model" %}</option>
+        <option value="Device_Serial_Number">{% trans "Device Serial Number" %}</option>
+        <option value="Container_Type">{% trans "Container" %}</option>
+        <option value="Dimension">{% trans "Dimension" %}</option>
+        <option value="Attachments">{% trans "Files" %}</option>
+        <option value="Comment">{% trans "Comment" %}</option>
+        <option value="created_by">{% trans "User" %}</option>
+        <option value="created_at">{% trans "Created" %}</option>
 </select>
-        <input class="form-control mr-2 value" placeholder="Value">
+        <input class="form-control mr-2 value" placeholder="{% trans 'Value' %}">
         <button class="btn btn-danger">X</button>
     `;
     row.querySelector("button").onclick = () => row.remove();
@@ -582,7 +711,7 @@ document.getElementById("createContractBtn").onclick = function(){
 
 
     if(selected.length === 0){
-        alert("Please select at least one DSRS record.");
+        alert("{% trans 'Please select at least one DSRS record.' %}");
         return;
     }
 

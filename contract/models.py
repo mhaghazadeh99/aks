@@ -52,6 +52,16 @@ class LicenseContract(models.Model):
         blank=True,
         null=True,
     )
+    draft_letter_number = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("Draft Letter Number"),
+    )
+    draft_letter_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=_("Draft Letter Date"),
+    )
 
     notification_letter_number = models.CharField(
         _("Notification Letter Number"),

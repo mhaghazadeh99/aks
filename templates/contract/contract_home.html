@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block title %}
-{% trans "Contracts Manager" %}
+{% trans "Contract Manager" %}
 {% endblock %}
 
 {% block extrastyle %}
@@ -126,9 +126,12 @@
     </h3>
 
     <p>
-        {{ license_contract_count }}
-        {% trans "license(s) waiting for contract." %}
-    </p>
+{% blocktrans count counter=license_contract_count %}
+{{ counter }} license waiting for contract.
+{% plural %}
+{{ counter }} licenses waiting for contract.
+{% endblocktrans %}
+</p>
 
 </a>
 
@@ -143,9 +146,12 @@
     </h3>
 
     <p>
-        {{ ready_to_issue_count }}
-        {% trans "license(s) ready to issue." %}
-    </p>
+{% blocktrans count counter=ready_to_issue_count %}
+{{ counter }} license ready to issue.
+{% plural %}
+{{ counter }} licenses ready to issue.
+{% endblocktrans %}
+</p>
 
 </a>
 
@@ -159,10 +165,13 @@
         {% trans "Issued Licenses" %}
     </h3>
 
-    <p>
-        {{ issued_count }}
-        {% trans "issued license(s)." %}
-    </p>
+   <p>
+{% blocktrans count counter=issued_count %}
+{{ counter }} issued license.
+{% plural %}
+{{ counter }} issued licenses.
+{% endblocktrans %}
+</p>
 
 </a>
 

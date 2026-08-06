@@ -1,21 +1,25 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-
+{% load i18n %}
 {% block content %}
 
-<h3>Create Contracts</h3>
+<h3>{% trans "Create Contracts" %}</h3>
 
 <p>
-The following {{ sources.count }} source(s) will receive a contract:
+{% blocktrans count counter=sources.count %}
+The following 1 source will receive a contract:
+{% plural %}
+The following {{ counter }} sources will receive a contract:
+{% endblocktrans %}
 </p>
 
 <table class="table table-bordered">
 
 <thead>
 <tr>
-    <th>Serial Number</th>
-    <th>Nuclide</th>
-    <th>Facility</th>
+    <th>{% trans "Serial Number" %}</th>
+    <th>{% trans "Nuclide" %}</th>
+    <th>{% trans "Facility" %}</th>
 </tr>
 </thead>
 

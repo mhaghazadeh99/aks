@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-
+{% load i18n %}
 {% block content %}
 
-<h3>Edit PI Record</h3>
+<h3>{% trans "Edit PI Record" %}</h3>
 
 <table class="table table-bordered">
-    <tr><th>Serial Number</th><td>{{ source.serial_number }}</td></tr>
-    <tr><th>Nuclide</th><td>{{ source.Nuclide }}</td></tr>
-    <tr><th>Facility</th><td>{{ source.Facility }}</td></tr>
-    <tr><th>Contract Number</th><td>{{ contract.contract_number|default:"—" }}</td></tr>
-    <tr><th>Contract Date</th><td>{{ contract.contract_date|default:"—" }}</td></tr>
+    <tr><th>{% trans "Serial Number" %}</th><td>{{ source.serial_number }}</td></tr>
+    <tr><th>{% trans "Nuclide" %}</th><td>{{ source.Nuclide }}</td></tr>
+    <tr><th>{% trans "Facility" %}</th><td>{{ source.Facility }}</td></tr>
+    <tr><th>{% trans "Contract Number" %}</th><td>{{ contract.contract_number|default:"—" }}</td></tr>
+    <tr><th>{% trans "Contract Date" %}</th><td>{{ contract.contract_date|default:"—" }}</td></tr>
 </table>
 
 <form method="post">
     {% csrf_token %}
     {{ form|crispy }}
-    <button class="btn btn-success">Save</button>
+    <button class="btn btn-success">{% trans "Save" %}</button>
 </form>
 
 {% endblock %}

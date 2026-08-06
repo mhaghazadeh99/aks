@@ -4,7 +4,9 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %} Add New Source {% endblock title %}
+{% block title %}
+{% trans "Add New Source" %}
+{% endblock title %}
 
 {% block extrastyle %}
 <style>
@@ -33,7 +35,7 @@
     <!-- Header row -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
 
-    <h2 style="margin: 0;">Add New Source</h2>
+    <h2 style="margin: 0;"> {% trans "Add New Source" %}</h2>
 
     <div>
         <form id="csvImportForm" method="post" enctype="multipart/form-data" action="{% url 'import_csv' %}" style="display:none;">
@@ -63,7 +65,7 @@ document.getElementById('csvFileInput').addEventListener('change', function(){
         <!-- Source Information -->
         <div class="card shadow-sm mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Source Information</h5>
+                <h5 class="mb-0"> {% trans "Source Information" %}</h5>
             </div>
             <div class="card-body">
                 {% crispy form %}
@@ -73,21 +75,26 @@ document.getElementById('csvFileInput').addEventListener('change', function(){
 <!-- Images -->
 <div class="card shadow-sm mb-4">
     <div class="card-header">
-        <h5 class="mb-0">DSRS Images</h5>
+        <h5 class="mb-0">{% trans "DSRS Images" %}</h5>
     </div>
     <div class="card-body">
 
         <label class="form-label">
-            Upload DSRS images
+            {% trans "Upload DSRS Images" %}
         </label>
 
         <div class="d-flex gap-2 mb-2">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('cameraInput').click()">
-                📷 Take Photo
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInput').click()">
-                🖼️ Choose from Gallery
-            </button>
+            <button type="button"
+        class="btn btn-outline-primary btn-sm"
+        onclick="document.getElementById('cameraInput').click()">
+    📷 {% trans "Take Photo" %}
+</button>
+
+<button type="button"
+        class="btn btn-outline-secondary btn-sm"
+        onclick="document.getElementById('galleryInput').click()">
+    🖼️ {% trans "Choose from Gallery" %}
+</button>
         </div>
 
         <!-- Camera-hinted input -->
@@ -119,13 +126,17 @@ document.getElementById('csvFileInput').addEventListener('change', function(){
         <!-- Initial Movement -->
 <div class="card shadow-sm mb-4">
     <div class="card-header">
-        <h5 class="mb-0">Initial Movement</h5>
+        <h5 class="mb-0">
+    {% trans "Initial Movement" %}
+</h5>
     </div>
     <div class="card-body">
         {% crispy movement_form %}
 
         <label class="form-label">
-            Attachments
+            
+    {% trans "Attachments" %}
+
         </label>
         <input
             class="form-control"
@@ -137,7 +148,7 @@ document.getElementById('csvFileInput').addEventListener('change', function(){
 
         <div class="text-end">
             <button type="submit" class="btn btn-primary">
-                Save Source
+                {% trans "Save" %}
             </button>
         </div>
 
@@ -194,19 +205,19 @@ function sendToServer(data) {
             if (json.errors && json.errors.length > 0) {
                 alert(
                     "Created: " + json.created +
-                    "\n\nErrors:\n" + json.errors.join("\n")
+                    "\n\n{% trans 'Errors:' %}\n" + json.errors.join("\n")
                 );
             } else {
-                alert("All rows imported successfully!");
+                alert("{% trans 'All rows imported successfully!' %}");
             }
         } catch (e) {
             console.error("RAW RESPONSE:", text);
-            alert("Server error:\n" + text);
+           alert("{% trans 'Server error:' %}\n" + text);
         }
     })
     .catch(err => {
         console.error("FETCH ERROR:", err);
-        alert("Fetch failed: " + err);
+       alert("{% trans 'Fetch failed:' %} " + err);
     });
 }
 
@@ -228,7 +239,9 @@ function updateImagePreview() {
     ];
 
     document.getElementById('imagePreviewList').textContent =
-        names.length ? `Selected: ${names.join(', ')}` : '';
+    names.length
+        ? "{% trans 'Selected:' %} " + names.join(", ")
+        : "";
 }
 
 document.getElementById('cameraInput').addEventListener('change', updateImagePreview);

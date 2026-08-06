@@ -144,6 +144,7 @@
         <form method="get">
 
             <input
+            
                 type="text"
                 name="search"
                 placeholder="{% trans 'Search...' %}"
@@ -176,7 +177,7 @@
             </label>
 
             <select
-
+                
                 name="page_size"
 
                 onchange="this.form.submit()"
@@ -293,8 +294,7 @@
 </tr>
 
 </thead>
-
-<tbody>
+<tbody id="tableBody">
 
 {% for license in page_obj %}
 
@@ -525,7 +525,7 @@
     {% endif %}
 
     {% if page_obj.number > 3 %}
-        <a href="?page=1{% if page_size %}&size={{ page_size }}{% endif %}">1</a>
+        <a href="?page=1{% if page_size %}&page_size={{ page_size }}{% endif %}">1</a>
 
         {% if page_obj.number > 4 %}
             <span>...</span>
@@ -537,7 +537,7 @@
             {% if page_obj.number == num %}
                 <span class="current">{{ num }}</span>
             {% else %}
-                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">
+                <a href="?page={{ num }}{% if page_size %}&page_size={{ page_size }}{% endif %}">
                     {{ num }}
                 </a>
             {% endif %}
@@ -550,14 +550,14 @@
             <span>...</span>
         {% endif %}
 
-        <a href="?page={{ page_obj.paginator.num_pages }}{% if page_size %}&size={{ page_size }}{% endif %}">
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if page_size %}&page_size={{ page_size }}{% endif %}">
             {{ page_obj.paginator.num_pages }}
         </a>
 
     {% endif %}
 
     {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&page_size={{ page_size }}{% endif %}">
             {% trans "Next" %}
         </a>
     {% endif %}
@@ -569,6 +569,48 @@
     ({{ page_obj.paginator.count }} {% trans "records" %})
 </div>
 <!-- ================= JS ================= -->
+ <script>
+const filterTranslations = {
+    sourceType: "{% trans 'Source Type' %}",
+    ssoCode: "{% trans 'SSO Code' %}",
+    facility: "{% trans 'Facility' %}",
+    originType: "{% trans 'Origin Type' %}",
+    received: "{% trans 'Received' %}",
+    originFacility: "{% trans 'Origin Facility' %}",
+    location: "{% trans 'Location' %}",
+    loc1: "{% trans 'Location 1' %}",
+    loc2: "{% trans 'Location 2' %}",
+    number: "{% trans 'Number' %}",
+    status: "{% trans 'Status' %}",
+    statusDate: "{% trans 'Status Date' %}",
+    responsiblePerson: "{% trans 'Responsible Person' %}",
+    nuclide: "{% trans 'Nuclide' %}",
+    inputActivity: "{% trans 'Input Activity' %}",
+    activityUnit: "{% trans 'Activity Unit' %}",
+    activity: "{% trans 'Activity' %}",
+    category: "{% trans 'Category' %}",
+    activityReferenceDate: "{% trans 'Activity Reference Date' %}",
+    serialNumber: "{% trans 'Serial Number' %}",
+    surfaceDoseRate: "{% trans 'Surface Dose Rate' %}",
+    doseRate1m: "{% trans 'Dose Rate at 1m' %}",
+    doseMeasurementDate: "{% trans 'Dose Rate Measurement Date' %}",
+    sourceState: "{% trans 'Source State' %}",
+    contamination: "{% trans 'Contamination' %}",
+    physicalForm: "{% trans 'Source Physical Form' %}",
+    sourceManufacturer: "{% trans 'Source Manufacturer' %}",
+    sourceModel: "{% trans 'Source Model' %}",
+    sourcePractice: "{% trans 'Source Practice' %}",
+    deviceManufacturer: "{% trans 'Device Manufacturer' %}",
+    deviceModel: "{% trans 'Device Model' %}",
+    deviceSerialNumber: "{% trans 'Device Serial Number' %}",
+    containerType: "{% trans 'Container Type' %}",
+    dimension: "{% trans 'Dimension' %}",
+    attachments: "{% trans 'Attachments' %}",
+    comment: "{% trans 'Comment' %}",
+    createdBy: "{% trans 'Created By' %}",
+    createdAt: "{% trans 'Created At' %}",
+};
+</script>
 <script>
 function getCookie(name) {
     let cookieValue = null;
@@ -581,21 +623,6 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// SEARCH
-document.getElementById("searchInput").addEventListener("keyup", function () {
-    let v = this.value.toLowerCase();
-    document.querySelectorAll("#tableBody tr").forEach(r => {
-        r.style.display = r.innerText.toLowerCase().includes(v) ? "" : "none";
-    });
-});
-
-// PAGE SIZE
-document.getElementById("pageSize").onchange = function () {
-    let p = new URLSearchParams(window.location.search);
-    p.set("size", this.value);
-    p.delete("page");
-    window.location.search = p.toString();
-};
 
 // EXPORT
 window.exportCSV = function () {
@@ -609,44 +636,83 @@ document.getElementById("addFilter").onclick = function () {
     row.className = "d-flex mb-2";
     row.innerHTML = `
        <select class="form-control mr-2 key">
-  <option value="Source_Type">Source Type</option>
-  <option value="Sso_Code">SSO Code</option>
-  <option value="Facility">Facility</option>
-  <option value="Origin_Type">Origin</option>
-  <option value="Date_received">Received</option>
-  <option value="Origin_Facility">Origin Facility</option>
-  <option value="Location">Location</option>
-  <option value="Loc1">Loc1</option>
-  <option value="Loc2">Loc2</option>
-  <option value="Num">Num</option>
-  <option value="Status">Status</option>
-  <option value="Status_Date">Status Date</option>
-  <option value="Responsible_Person">Responsible</option>
-  <option value="Nuclide">Nuclide</option>
-  <option value="activity_input">Input</option>
-  <option value="activity_unit">Unit</option>
-  <option value="Activity">Activity</option>
-  <option value="Category">Category</option>
-  <option value="Activity_reference_date">Ref Date</option>
-  <option value="serial_number">Serial</option>
-  <option value="Dose_rate_surface_uSv">Surface</option>
-  <option value="Dose_rate_1m_uSv">1m</option>
-  <option value="Dose_rate_measurement_date">Dose Date</option>
-  <option value="source_state">State</option>
-  <option value="contamination_bq_cm2">Contam</option>
-  <option value="Source_Physical_Form">Form</option>
-  <option value="Source_Manufacturer">Src Mfr</option>
-  <option value="Source_Model">Src Model</option>
-  <option value="Source_Practice">Practice</option>
-  <option value="Device_Manufacturer">Dev Mfr</option>
-  <option value="Device_Model">Dev Model</option>
-  <option value="Device_Serial_Number">Dev Serial</option>
-  <option value="Container_Type">Container</option>
-  <option value="Dimension">Dim</option>
-  <option value="Attachments">Files</option>
-  <option value="Comment">Comment</option>
-  <option value="created_by">User</option>
-  <option value="created_at">Created</option>
+
+<option value="Source_Type">${filterTranslations.sourceType}</option>
+
+<option value="Sso_Code">${filterTranslations.ssoCode}</option>
+
+<option value="Facility">${filterTranslations.facility}</option>
+
+<option value="Origin_Type">${filterTranslations.originType}</option>
+
+<option value="Date_received">${filterTranslations.received}</option>
+
+<option value="Origin_Facility">${filterTranslations.originFacility}</option>
+
+<option value="Location">${filterTranslations.location}</option>
+
+<option value="Loc1">${filterTranslations.loc1}</option>
+
+<option value="Loc2">${filterTranslations.loc2}</option>
+
+<option value="Num">${filterTranslations.number}</option>
+
+<option value="Status">${filterTranslations.status}</option>
+
+<option value="Status_Date">${filterTranslations.statusDate}</option>
+
+<option value="Responsible_Person">${filterTranslations.responsiblePerson}</option>
+
+<option value="Nuclide">${filterTranslations.nuclide}</option>
+
+<option value="activity_input">${filterTranslations.inputActivity}</option>
+
+<option value="activity_unit">${filterTranslations.activityUnit}</option>
+
+<option value="Activity">${filterTranslations.activity}</option>
+
+<option value="Category">${filterTranslations.category}</option>
+
+<option value="Activity_reference_date">${filterTranslations.activityReferenceDate}</option>
+
+<option value="serial_number">${filterTranslations.serialNumber}</option>
+
+<option value="Dose_rate_surface_uSv">${filterTranslations.surfaceDoseRate}</option>
+
+<option value="Dose_rate_1m_uSv">${filterTranslations.doseRate1m}</option>
+
+<option value="Dose_rate_measurement_date">${filterTranslations.doseMeasurementDate}</option>
+
+<option value="source_state">${filterTranslations.sourceState}</option>
+
+<option value="contamination_bq_cm2">${filterTranslations.contamination}</option>
+
+<option value="Source_Physical_Form">${filterTranslations.physicalForm}</option>
+
+<option value="Source_Manufacturer">${filterTranslations.sourceManufacturer}</option>
+
+<option value="Source_Model">${filterTranslations.sourceModel}</option>
+
+<option value="Source_Practice">${filterTranslations.sourcePractice}</option>
+
+<option value="Device_Manufacturer">${filterTranslations.deviceManufacturer}</option>
+
+<option value="Device_Model">${filterTranslations.deviceModel}</option>
+
+<option value="Device_Serial_Number">${filterTranslations.deviceSerialNumber}</option>
+
+<option value="Container_Type">${filterTranslations.containerType}</option>
+
+<option value="Dimension">${filterTranslations.dimension}</option>
+
+<option value="Attachments">${filterTranslations.attachments}</option>
+
+<option value="Comment">${filterTranslations.comment}</option>
+
+<option value="created_by">${filterTranslations.createdBy}</option>
+
+<option value="created_at">${filterTranslations.createdAt}</option>
+
 </select>
         <input class="form-control mr-2 value" placeholder="Value">
         <button class="btn btn-danger">X</button>
@@ -759,7 +825,7 @@ document.getElementById("createContractBtn").onclick = function(){
 
 
     if(selected.length === 0){
-        alert("Please select at least one DSRS record.");
+        alert("{% trans 'Please select at least one DSRS record.' %}");
         return;
     }
 

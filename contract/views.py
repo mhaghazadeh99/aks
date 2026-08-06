@@ -307,15 +307,17 @@ def license_contract_update(request, pk):
         if form.is_valid():
 
             contract = form.save()
-            if contract.send_to_financial:
+            if (
+                contract.send_to_financial
+                and license_request.status == LicenseStatus.CONTRACTS
+            ):
 
-                if contract.license.status == LicenseStatus.CONTRACTS:
+                license_request.status = LicenseStatus.FINANCE
 
-                    contract.license.status = LicenseStatus.FINANCE
+                license_request.save(
+                    update_fields=["status"]
+                )
 
-                    contract.license.save(
-                        update_fields=["status"]
-                    )
 
             uploaded_file = form.cleaned_data.get(
                 "contract_attachment"

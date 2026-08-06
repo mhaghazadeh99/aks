@@ -31,7 +31,7 @@ from contract.models import LicenseContract
 import csv
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
-
+from reference.models import Nuclides
 
 
 def home(request):
@@ -130,12 +130,23 @@ def add_source(request):
                 resolved_source_type = SOURCE_TYPE.NEW
             else:
                 resolved_source_type = SOURCE_TYPE.DSRS
-            
 
             quantity = movement_form.cleaned_data.get("source_count") or 1
 
+            # source_count / available_count describe the internal makeup of ONE
+            # device (e.g. a seed source device with many recyclable sub-sources)
+            # — not how many DSRS rows to create. That's what `quantity` above is
+            # for. If available_count is left blank, default it to source_count
+            # (a freshly added device starts with everything available).
+            device_source_count = form.cleaned_data.get("source_count") or 1
+            device_available_count = form.cleaned_data.get("available_count")
+            if not device_available_count:
+                device_available_count = device_source_count
+
             base_data = form.cleaned_data.copy()
             base_data.pop("Source_Type", None)
+            base_data.pop("source_count", None)
+            base_data.pop("available_count", None)
 
             created_sources = []
 
@@ -144,12 +155,13 @@ def add_source(request):
                 source = DSRS(
                     **base_data,
                     Source_Type=resolved_source_type,
-                    source_count=1,
-                    available_count=1,
+                    source_count=device_source_count,
+                    available_count=device_available_count,
                     created_by=request.user,
                 )
                 source.save()
                 created_sources.append(source)
+
 
             # Images go on the first instance only — the others can get
             # their own photos individually later via the edit page.

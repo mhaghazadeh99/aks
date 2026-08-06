@@ -7,23 +7,16 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 import json
+import os
+import tempfile
 from django.utils.translation import gettext_lazy as _
 from dashboard.models import DSRS
 from .models import LicenseSourceComponent
 from operations.services.signature_service import SpecificationSigner
-
-from django.utils.translation import gettext_lazy as _
-from django.db.models import Q
-
-from django.core.paginator import Paginator
-
-
 from .services.workflow import create_license_workflow
 from .services.specification_generator import (generate_specification,)
-
 from .forms import (LicenseRequestForm, LicenseAttachmentForm, LicenseSourceSpecificationFormSet,
     LicenseSourceForm,LicenseFacilityForm)
-
 from .models import (LicenseRequest, LicenseAttachment, LicenseAttachmentType,
     LicenseSource,LicenseStatus,LicenseApproval,LicenseSourceType)
 
@@ -153,8 +146,8 @@ def license_list(request):
 
         .select_related(
             "facility",
+            "contract",
         )
-
         .prefetch_related(
 
             "sources__nuclide",
@@ -729,7 +722,7 @@ def license_import_csv(
     ):
 
     return HttpResponse(
-        "Import CSV"
+        _("Import CSV")
     )
 
 
@@ -738,7 +731,7 @@ def license_export_csv(
     ):
 
     return HttpResponse(
-        "Export CSV"
+        _("Export CSV")
     )
 
 

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block content %}
 <div class="dashboard-content">
 <div class="dsrs-chart-page">
@@ -8,15 +9,22 @@
 </h2>
 
 <div style="color: gray;">
-    Serial No: {{ source.serial_number }}
+    {% trans "Serial Number:" %} {{ source.serial_number }}
 </div>
+
 
     <!-- USER CONTROL -->
     <form method="GET" class="year-form">
-        <label>Show years:</label>
-        <input type="number" name="years" value="{{ years_range }}" min="1" max="200">
-        <button type="submit">Update</button>
-    </form>
+    <label>{% trans "Show Years:" %}</label>
+    <input type="number"
+           name="years"
+           value="{{ years_range }}"
+           min="1"
+           max="200">
+    <button type="submit">
+        {% trans "Update" %}
+    </button>
+</form>
 
     {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
@@ -43,7 +51,7 @@
             data: {
                 labels: labels,
                datasets: [{
-                    label: 'Activity (mCi)',
+                    label: "{% trans 'Activity (mCi)' %}",
                     data: dataValues,
                     borderWidth: 2,
                     tension: 0.3,
@@ -57,7 +65,7 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Radioactive Decay Over Time (Years)'
+                         text: "{% trans 'Radioactive Decay Over Time (Years)' %}"
                     }
                 },
 
@@ -65,13 +73,13 @@
                     x: {
                         title: {
                             display: true,
-                            text: 'Time (years)'
+                             text: "{% trans 'Time (Years)' %}"
                         }
                     },
                     y: {
                         title: {
                             display: true,
-                            text: 'Activity (mCi)'
+                            text: "{% trans 'Activity (mCi)' %}"
                         }
                     }
                 }

@@ -6,77 +6,86 @@ from .models import LicenseContract
 from operations.models import LicenseRequest
 
 
-
 class LicenseContractForm(forms.ModelForm):
+
     contract_attachment = forms.FileField(
-            required=False,
-            label=_("Contract Document"),
-        )
+        required=False,
+        label=_("Contract Document"),
+    )
+
     class Meta:
 
         model = LicenseContract
 
         fields = [
-            "contract_number",
-            "contract_date",
-            "contract_cost",
             "draft_sent_to_customer",
             "draft_sent_date",
+            "draft_letter_number",
+            "draft_letter_date",
+            "contract_cost",
+            "contract_number",
+            "contract_date",
             "notification_letter_number",
             "notification_letter_date",
             "source_owner",
             "contract_accountable",
+            "contract_attachment",
             "amendment_notes",
             "send_to_financial",
         ]
 
-
         labels = {
             "send_to_financial": _("Send to Financial"),
         }
-              
+
         widgets = {
 
-                "contract_date": forms.DateInput(
-                    attrs={
-                        "type": "text",
-                        "class": "datepicker",
-                        "autocomplete": "off",
+            "contract_date": forms.DateInput(
+                format="%Y-%m-%d",
+                attrs={
+                    "type": "text",
+                    "class": "form-control datepicker",
+                    "autocomplete": "off",
+                }
+            ),
 
-                    }
-                ),
+            "draft_sent_date": forms.DateInput(
+                attrs={
+                    "type": "text",
+                    "class": "datepicker",
+                    "autocomplete": "off",
+                }
+            ),
 
-                "draft_sent_date": forms.DateInput(
-                    attrs={
-                        "type": "text",
+            "draft_letter_date": forms.DateInput(
+                attrs={
+                    "type": "text",
+                    "class": "datepicker",
+                    "autocomplete": "off",
+                }
+            ),
 
-                        "class": "datepicker",
-                        "autocomplete": "off",
-                    }
-                ),
+            "notification_letter_date": forms.DateInput(
+                attrs={
+                    "type": "text",
+                    "class": "datepicker",
+                    "autocomplete": "off",
+                }
+            ),
 
-                "notification_letter_date": forms.DateInput(
-                    attrs={
-                        "type": "text",
+            "amendment_notes": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                }
+            ),
 
-                        "class": "datepicker",
-                    }
-                ),
+        }
 
-                "amendment_notes": forms.Textarea(
-                    attrs={
-                        "rows":4
-                    }
-                ),
-
-            }
-            
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 
         self.helper = FormHelper()
-
         self.helper.form_tag = False
 
 

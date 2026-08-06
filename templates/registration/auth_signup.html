@@ -1,14 +1,15 @@
 {% load static %}
+{% load i18n %}
+
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
-
+<title>{% trans "Create Account" %}</title>
 
     <style>
         body {
-            background: #0f172a;
-        }
+    background: #f5f7fb;
+}
 
         .auth-wrapper {
             min-height: 100vh;
@@ -21,7 +22,7 @@
         .auth-card {
             width: 100%;
             max-width: 460px;
-            background: #111827;
+            background: #ffffff;
             border-radius: 16px;
             padding: 32px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.4);
@@ -29,25 +30,24 @@
 
         .auth-title {
             text-align: center;
-            color: #fff;
+            color: #1f2937;
             font-size: 22px;
             font-weight: 600;
             margin-bottom: 20px;
         }
 
         label {
-            color: #cbd5e1;
+            color: #374151;
             font-size: 13px;
             margin-bottom: 6px;
         }
-
         input {
+            background: #ffffff;
+            color: #111827;
+            border: 1px solid #d1d5db;
             width: 100%;
             padding: 12px 14px;
             border-radius: 10px;
-            border: 1px solid #334155;
-            background: #0b1220;
-            color: #fff;
             outline: none;
             transition: 0.2s;
         }
@@ -99,6 +99,7 @@
             margin-top: 15px;
             font-size: 13px;
             color: #94a3b8;
+    
         }
 
         .bottom-link a {
@@ -115,7 +116,7 @@
     <div class="auth-card">
 
         <div class="auth-title">
-            Create Account
+            {% trans "Create Account" %}
         </div>
 
         <!-- Messages -->
@@ -140,7 +141,7 @@
 
                     {% if "password" in field.name %}
                         <div class="hint">
-                            Use at least 8 characters with letters and numbers.
+                            {% trans "Use at least 8 characters with letters and numbers." %}
                         </div>
                     {% endif %}
 
@@ -161,14 +162,16 @@
             {% endif %}
 
             <button type="submit" class="btn-primary">
-                Create account
+                {% trans "Create account" %}
             </button>
 
         </form>
 
         <div class="bottom-link">
-            Already have an account?
-            <a href="{% url 'login' %}">Sign in</a>
+            {% trans "Already have an account?" %}
+            <a href="{% url 'login' %}">
+                {% trans "Sign in" %}
+            </a>
         </div>
 
     </div>

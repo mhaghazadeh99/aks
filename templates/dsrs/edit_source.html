@@ -5,7 +5,7 @@
 {% load crispy_forms_tags %}
 
 {% block title %}
-Edit Source
+{% trans "Edit Source" %}
 {% endblock title %}
 
 {% block content %}
@@ -14,7 +14,7 @@ Edit Source
   <div style="max-width:1200px; margin:auto;">
 
     <h2 class="mb-4">
-        Edit Source
+       {% trans "Edit Source" %}
     </h2>
 
     {% if messages %}
@@ -25,21 +25,21 @@ Edit Source
 
     <!-- ================= MOVEMENT HISTORY ================= -->
     <h4 class="mb-3">
-        Movement History
+        {% trans "Movement History" %}
     </h4>
 
     <div class="table-responsive mb-4">
         <table class="table table-bordered table-sm">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Quantity</th>
-                    <th>Performed By</th>
-                    <th>Remarks</th>
-                    <th>Attachments</th>
+                    <th>{% trans "Date" %}</th>
+                    <th>{% trans "Type" %}</th>
+                    <th>{% trans "From" %}</th>
+                    <th>{% trans "To" %}</th>
+                    <th>{% trans "Quantity" %}</th>
+                    <th>{% trans "Performed By" %}</th>
+                    <th>{% trans "Remarks" %}</th>
+                    <th>{% trans "Attachments" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,7 +62,7 @@ Edit Source
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8">No movements recorded yet.</td>
+                    <td colspan="8">{% trans "No movements recorded yet." %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -76,7 +76,7 @@ Edit Source
         <input type="hidden" name="action" value="add_movement">
 
         <h4 class="mb-3">
-            Record New Movement
+             {% trans "Record New Movement" %}
         </h4>
         <p class="text-muted small mb-3">
             <strong>{% trans "Linked Contract" %}:</strong>
@@ -86,7 +86,7 @@ Edit Source
         {% crispy movement_form %}
 
         <label class="form-label">
-            Attachments
+             {% trans "Attachments" %}
         </label>
         <input
             class="form-control"
@@ -96,7 +96,7 @@ Edit Source
 
         <div class="mt-3">
             <button type="submit" class="btn btn-primary">
-                Record Movement
+                 {% trans "Record Movement" %}
             </button>
         </div>
 
@@ -110,7 +110,7 @@ Edit Source
         {% csrf_token %}
 
         <h4 class="mb-3">
-            Source Information
+           {% trans "Source Information" %}
         </h4>
 
         {% crispy form %}
@@ -118,7 +118,7 @@ Edit Source
         <hr class="my-4">
 
         <h4>
-            Existing Images
+             {% trans "Existing Images" %}
         </h4>
 
         <div style="display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px;">
@@ -139,7 +139,7 @@ Edit Source
                                 type="checkbox"
                                 name="delete_images"
                                 value="{{ img.id }}">
-                            Delete
+                           {% trans "Delete" %}
                         </label>
 
                     {% endif %}
@@ -147,21 +147,21 @@ Edit Source
                 </div>
 
             {% empty %}
-                <p>No images uploaded.</p>
+                <p>{% trans "No images uploaded." %}</p>
             {% endfor %}
 
         </div>
 
        <label class="form-label">
-    Upload additional images
+    {% trans "Upload additional images" %}
 </label>
 
 <div class="d-flex gap-2 mt-2">
     <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('cameraInputEdit').click()">
-        📷 Take Photo
+        📷 {% trans "Take Photo" %}
     </button>
     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInputEdit').click()">
-        🖼️ Choose from Gallery
+        🖼️  Choose from Gallery
     </button>
 </div>
 
@@ -197,12 +197,12 @@ Edit Source
 ">
 
     <button type="submit" class="btn btn-success">
-        Update Source
-    </button>
+    {% trans "Update Source" %}
+</button>
 
-    <a href="{% url 'tables' %}" class="btn btn-secondary">
-        Cancel
-    </a>
+<a href="{% url 'tables' %}" class="btn btn-secondary">
+    {% trans "Cancel" %}
+</a>
 
 </div>
 
@@ -243,7 +243,7 @@ function updateImagePreviewEdit() {
     ];
 
     document.getElementById('imagePreviewListEdit').textContent =
-        names.length ? `Selected: ${names.join(', ')}` : '';
+        names.length ? `{% trans "Selected" %}: ${names.join(', ')}` : '';
 }
 
 document.getElementById('cameraInputEdit').addEventListener('change', updateImagePreviewEdit);

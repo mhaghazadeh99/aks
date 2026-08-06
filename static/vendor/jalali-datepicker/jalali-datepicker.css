@@ -1,5 +1,5 @@
 
-
+/* 
 .datepicker {
   width: 200px;
   padding: 10px;
@@ -13,7 +13,7 @@
 
 .datepicker:focus {
   scale: 1.1;
-}
+} */
 
 .calendar-container {
   display: none;

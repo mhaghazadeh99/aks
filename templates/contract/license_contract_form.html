@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load crispy_forms_tags %}
+
 {% block title %}
 {% trans "Create License Contract" %}
 {% endblock %}
@@ -8,6 +9,7 @@
 {% block content %}
 
 <h2>{% trans "Create License Contract" %}</h2>
+
 <div class="card mb-4">
 
     <div class="card-header">
@@ -31,21 +33,18 @@
 
             <tbody>
 
-            {% for approval in history %}
+                {% for approval in history %}
 
                 <tr>
 
                     <td>{{ approval.get_step_display }}</td>
-
                     <td>{{ approval.approver|default:"-" }}</td>
-
                     <td>{{ approval.approved_at|default:"-" }}</td>
-
                     <td>{{ approval.get_status_display }}</td>
 
                 </tr>
 
-            {% empty %}
+                {% empty %}
 
                 <tr>
 
@@ -55,7 +54,7 @@
 
                 </tr>
 
-            {% endfor %}
+                {% endfor %}
 
             </tbody>
 
@@ -64,6 +63,8 @@
     </div>
 
 </div>
+
+
 <div class="card mb-4">
 
     <div class="card-header">
@@ -111,9 +112,9 @@
 
         {% if license.sources.all %}
 
-            <table class="table table-striped">
+        <table class="table table-striped">
 
-                <thead>
+            <thead>
 
                 <tr>
 
@@ -123,29 +124,29 @@
 
                 </tr>
 
-                </thead>
+            </thead>
 
-                <tbody>
+            <tbody>
 
                 {% for source in license.sources.all %}
 
-                    <tr>
+                <tr>
 
-                        <td>{{ source.nuclide }}</td>
-                        <td>{{ source.serial_number }}</td>
-                        <td>{{ source.activity }}</td>
+                    <td>{{ source.nuclide }}</td>
+                    <td>{{ source.serial_number }}</td>
+                    <td>{{ source.activity }}</td>
 
-                    </tr>
+                </tr>
 
                 {% endfor %}
 
-                </tbody>
+            </tbody>
 
-            </table>
+        </table>
 
         {% else %}
 
-            <p>{% trans "No sources." %}</p>
+        <p>{% trans "No sources." %}</p>
 
         {% endif %}
 
@@ -166,18 +167,18 @@
 
             <thead>
 
-            <tr>
+                <tr>
 
-                <th>{% trans "Type" %}</th>
-                <th>{% trans "File" %}</th>
+                    <th>{% trans "Type" %}</th>
+                    <th>{% trans "File" %}</th>
 
-            </tr>
+                </tr>
 
             </thead>
 
             <tbody>
 
-            {% for attachment in license.attachments.all %}
+                {% for attachment in license.attachments.all %}
 
                 <tr>
 
@@ -195,7 +196,7 @@
 
                 </tr>
 
-            {% empty %}
+                {% empty %}
 
                 <tr>
 
@@ -207,7 +208,7 @@
 
                 </tr>
 
-            {% endfor %}
+                {% endfor %}
 
             </tbody>
 
@@ -230,134 +231,152 @@
 
             {% csrf_token %}
 
+            <h5 class="mb-3">
+                {% trans "Draft Information" %}
+            </h5>
+
             <div class="row">
 
-    <div class="col-md-6">
-        {{ form.contract_number|as_crispy_field }}
-    </div>
+                <div class="col-md-2">
+                    {{ form.draft_sent_to_customer|as_crispy_field }}
+                </div>
 
-    <div class="col-md-6">
-        {{ form.contract_date|as_crispy_field }}
-    </div>
+                <div class="col-md-2">
+                    {{ form.draft_sent_date|as_crispy_field }}
+                </div>
 
-</div>
+                <div class="col-md-2">
+                    {{ form.draft_letter_number|as_crispy_field }}
+                </div>
 
-<div class="row">
+                <div class="col-md-2">
+                    {{ form.draft_letter_date|as_crispy_field }}
+                </div>
 
-    <div class="col-md-6">
-        {{ form.contract_cost|as_crispy_field }}
-    </div>
+            </div>
 
-</div>
+            <hr>
 
-<hr>
+            <h5 class="mb-3">
+                {% trans "Contract Information" %}
+            </h5>
 
-<div class="row">
+            <div class="row">
 
-    <div class="col-md-6">
-        {{ form.draft_sent_to_customer|as_crispy_field }}
-    </div>
+                <div class="col-md-2">
+                    {{ form.contract_cost|as_crispy_field }}
+                </div>
 
-    <div class="col-md-6">
-        {{ form.draft_sent_date|as_crispy_field }}
-    </div>
+            </div>
 
-</div>
+            <div class="row">
 
-<hr>
+                <div class="col-md-2">
+                    {{ form.contract_number|as_crispy_field }}
+                </div>
 
-<div class="row">
+                <div class="col-md-2">
+                    {{ form.contract_date|as_crispy_field }}
+                </div>
 
-    <div class="col-md-6">
-        {{ form.notification_letter_number|as_crispy_field }}
-    </div>
+            </div>
 
-    <div class="col-md-6">
-        {{ form.notification_letter_date|as_crispy_field }}
-    </div>
+            <hr>
 
-</div>
+            <h5 class="mb-3">
+                {% trans "Notification Letter" %}
+            </h5>
 
-<hr>
+            <div class="row">
 
-<div class="row">
+                <div class="col-md-2">
+                    {{ form.notification_letter_number|as_crispy_field }}
+                </div>
 
-    <div class="col-md-6">
-        {{ form.source_owner|as_crispy_field }}
-    </div>
+                <div class="col-md-2">
+                    {{ form.notification_letter_date|as_crispy_field }}
+                </div>
 
-    <div class="col-md-6">
-        {{ form.contract_accountable|as_crispy_field }}
-    </div>
+            </div>
 
-</div>
-<div class="card mt-4">
+            <hr>
 
-    <div class="card-header">
+            <h5 class="mb-3">
+                {% trans "Administrative Information" %}
+            </h5>
 
-        <h4>
+            <div class="row">
 
-            {% trans "Contract Document" %}
+                <div class="col-md-4">
+                    {{ form.source_owner|as_crispy_field }}
+                </div>
 
-        </h4>
+                <div class="col-md-4">
+                    {{ form.contract_accountable|as_crispy_field }}
+                </div>
 
-    </div>
+            </div>
 
-    <div class="card-body">
+            <hr>
 
-        {% for attachment in license.attachments.all %}
+            <div class="card mt-3">
 
-            {% if attachment.attachment_type == "CONTRACT" %}
+                <div class="card-header">
+                    <h5>{% trans "Contract Document" %}</h5>
+                </div>
 
-                <p>
+                <div class="card-body">
 
-                    <strong>
+                    {% for attachment in license.attachments.all %}
 
-                        {% trans "Current File:" %}
+                        {% if attachment.attachment_type == "CONTRACT" %}
 
-                    </strong>
+                            <p>
 
-                    <a href="{{ attachment.file.url }}" target="_blank">
+                                <strong>{% trans "Current File:" %}</strong>
 
-                        {{ attachment.file.name }}
+                                <a href="{{ attachment.file.url }}" target="_blank">
 
-                    </a>
+                                    {{ attachment.file.name }}
 
-                </p>
+                                </a>
 
-            {% endif %}
+                            </p>
 
-        {% endfor %}
+                        {% endif %}
 
-        {{ form.contract_attachment|as_crispy_field }}
+                    {% endfor %}
 
-    </div>
+                    {{ form.contract_attachment|as_crispy_field }}
 
-</div>
-<hr>
+                </div>
 
-{{ form.amendment_notes|as_crispy_field }}
+            </div>
 
-<div class="row mt-3">
+            <hr>
 
-    <div class="col-md-6">
+            {{ form.amendment_notes|as_crispy_field }}
 
-        {{ form.send_to_financial|as_crispy_field }}
+            <hr>
 
-    </div>
+            <div class="row">
 
-</div>
+                <div class="col-md-2">
+                    {{ form.send_to_financial|as_crispy_field }}
+                </div>
+
+            </div>
+
             <button type="submit" class="btn btn-primary">
 
                 {% trans "Save Contract" %}
 
             </button>
-            
+
         </form>
 
     </div>
 
 </div>
-
 
 {% endblock %}

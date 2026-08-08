@@ -1042,7 +1042,8 @@ def license_import_csv(request):
                     serial_number = get(row, "serial_number")
                     quantity_raw = get(row, "quantity")
                     quantity = int(quantity_raw) if quantity_raw else 1
-
+                    source_description = get(row, "source_description") 
+                    
                     if source_type == LicenseSourceType.REUSED:
 
                         if not serial_number:
@@ -1070,6 +1071,7 @@ def license_import_csv(request):
                             activity=activity,
                             activity_unit=activity_unit,
                             activity_date=reference_date,
+                            description = source_description or ""
                         )
 
                         # Mirrors fulfillment.py's REUSED branch: consume the
@@ -1117,6 +1119,7 @@ def license_import_csv(request):
                                 activity=activity,
                                 activity_unit=activity_unit,
                                 activity_date=reference_date,
+                                description = source_description or ""
                             )
 
                 created += 1

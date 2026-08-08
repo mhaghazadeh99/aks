@@ -50,7 +50,10 @@ urlpatterns = [
     path("facilities/", include("facilities.urls")),
 path("reference/", include("reference.urls")),
 path("financial/", include("financial.urls")),
-    
+path(
+        "receive-source/",
+        include("receive_source.urls"),
+    ),
 ]
 
 

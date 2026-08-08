@@ -37,6 +37,7 @@ def generate_specification(license_request, generated_by):
 
     main_sources = all_sources[:MAIN_TABLE_ROWS]
     overflow_sources = all_sources[MAIN_TABLE_ROWS:]
+
     _fill_facility(doc, license_request)
     _fill_sources(doc, main_sources)
 
@@ -48,16 +49,24 @@ def generate_specification(license_request, generated_by):
 
     _fill_description(doc, license_request.description, overflow_note=overflow_note)
 
-    
-
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
 
-    LicenseAttachment.objects.filter(
+    # -------------------------------------------------
+    # Delete the OLD file from storage before writing the new
+    # one — otherwise Django's storage backend just renames the
+    # new file to avoid a collision, leaving every prior version
+    # orphaned on disk instead of actually being replaced.
+    # -------------------------------------------------
+    old_specification = LicenseAttachment.objects.filter(
         license=license_request,
         attachment_type=LicenseAttachmentType.SPECIFICATION,
-    ).delete()
+    ).first()
+
+    if old_specification:
+        old_specification.file.delete(save=False)
+        old_specification.delete()
 
     attachment = LicenseAttachment.objects.create(
         license=license_request,
@@ -72,13 +81,16 @@ def generate_specification(license_request, generated_by):
     )
 
     # -------------------------------------------------
-    # Overflow appendix — only created/replaced when needed
+    # Overflow appendix — same fix
     # -------------------------------------------------
-
-    LicenseAttachment.objects.filter(
+    old_appendix = LicenseAttachment.objects.filter(
         license=license_request,
         attachment_type=LicenseAttachmentType.SPECIFICATION_APPENDIX,
-    ).delete()
+    ).first()
+
+    if old_appendix:
+        old_appendix.file.delete(save=False)
+        old_appendix.delete()
 
     if overflow_sources:
 
@@ -101,6 +113,8 @@ def generate_specification(license_request, generated_by):
         )
 
     return attachment
+
+
 # --------------------------------------------------
 # Low-level helpers
 #

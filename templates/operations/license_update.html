@@ -1,53 +1,99 @@
+
 {% extends "base.html" %}
-
 {% load i18n %}
-
+{% load crispy_forms_tags %}
 
 {% block content %}
 
-<h2>
-{% trans "Edit License" %}
-</h2>
+<h2>{% trans "Edit License" %}</h2>
 
+<form method="post" enctype="multipart/form-data">
 
-<form 
-    method="post"
-    enctype="multipart/form-data"
->
+    {% csrf_token %}
 
-{% csrf_token %}
+    <h4>{% trans "License Information" %}</h4>
+    {{ request_form.as_p }}
 
+    <h4>{% trans "Facility" %}</h4>
+    {{ facility_form.as_p }}
 
-<h4>
-{% trans "License Information" %}
-</h4>
+    <h4>{% trans "Contract" %}</h4>
+    {{ contract_form.as_p }}
 
-{{ request_form.as_p }}
+    <h4>{% trans "Payment" %}</h4>
+    {{ payment_form.as_p }}
+    
 
+<h4>{% trans "Attachments" %}</h4>
 
-<h4>
-{% trans "Facility" %}
-</h4>
+{% if existing_attachments %}
+<table class="table table-sm table-bordered">
+    <thead>
+        <tr>
+            <th>{% trans "Type" %}</th>
+            <th>{% trans "File" %}</th>
+            <th>{% trans "Delete" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for att in existing_attachments %}
+        <tr>
+            <td>{{ att.get_attachment_type_display }}</td>
+            <td><a href="{{ att.file.url }}" target="_blank">{{ att.file.name|slice:"-40:" }}</a></td>
+            <td>
+                <input type="checkbox" name="delete_attachments" value="{{ att.id }}">
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>{% trans "No attachments." %}</p>
+{% endif %}
 
-{{ facility_form.as_p }}
+{{ attachment_form.as_p }}
 
+    <h4>{% trans "Sources" %}</h4>
 
+    {{ source_formset.management_form }}
 
-<button type="submit" class="btn btn-primary">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>{% trans "Type" %}</th>
+                <th>{% trans "Existing DSRS Source" %}</th>
+                <th>{% trans "Serial Number" %}</th>
+                <th>{% trans "Nuclide" %}</th>
+                <th>{% trans "Activity" %}</th>
+                <th>{% trans "Unit" %}</th>
+                <th>{% trans "Activity Date" %}</th>
+                <th>{% trans "Description" %}</th>
+                <th>{% trans "Delete" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in source_formset %}
+            <tr>
+                <td>{{ form.id }}{{ form.source_type }}</td>
+                <td>{{ form.source_dsrs }}</td>
+                <td>{{ form.serial_number }}</td>
+                <td>{{ form.instance.nuclide|default:"" }}</td>
+                <td>{{ form.activity }}</td>
+                <td>{{ form.activity_unit }}</td>
+                <td>{{ form.activity_date }}</td>
+                <td>{{ form.description }}</td>
+                <td>{% if form.instance.pk %}{{ form.DELETE }}{% endif %}</td>
+            </tr>
+            {% if form.errors %}
+            <tr><td colspan="9" class="text-danger">{{ form.errors }}</td></tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
 
-{% trans "Save Changes" %}
-
-</button>
-
-
-<a href="{% url 'license_detail' license.pk %}">
-
-{% trans "Cancel" %}
-
-</a>
-
+    <button type="submit" class="btn btn-primary">{% trans "Save Changes" %}</button>
+    <a href="{% url 'license_detail' license.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
 
 </form>
-
 
 {% endblock %}

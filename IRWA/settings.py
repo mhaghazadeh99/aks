@@ -60,8 +60,10 @@ INSTALLED_APPS = [
     'common',
     "facilities",
     "reference",
-     "accounts.apps.AccountsConfig",
-     "financial",
+    "accounts.apps.AccountsConfig",
+    "financial",
+    "receive_source",
+
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

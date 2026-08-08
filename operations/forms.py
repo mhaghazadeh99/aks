@@ -437,13 +437,9 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
    
 
 
-
 LicenseSourceSpecificationFormSet = modelformset_factory(
-
-        LicenseSource,
-
-        form=LicenseSourceSpecificationForm,
-
-        extra=0,
-
-    )
+    LicenseSource,
+    form=LicenseSourceSpecificationForm,
+    extra=1,
+    can_delete=True,
+)

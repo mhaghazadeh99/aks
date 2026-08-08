@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+{% trans "Import Licenses" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+            <h3>{% trans "Import Licenses from CSV" %}</h3>
+        </div>
+
+        <div class="card-body">
+
+            <p class="text-muted">
+                {% trans "Upload a CSV where each row is one source; rows sharing the same Letter Number are grouped into one license." %}
+            </p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">{% trans "CSV File" %}</label>
+                    <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{% trans "Attachments (ZIP, optional)" %}</label>
+                    <input type="file" name="attachments_zip" accept=".zip" class="form-control">
+                    <div class="form-text">
+                        {% trans "Filenames referenced in the attachment_* CSV columns must match files inside this ZIP." %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">{% trans "Import" %}</button>
+                <a href="{% url 'license_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

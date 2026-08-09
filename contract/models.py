@@ -76,6 +76,20 @@ class LicenseContract(models.Model):
         null=True,
     )
 
+     
+    License_letter_number = models.CharField(
+        _("License Letter Number"),
+        max_length=30,
+        blank=True,
+        null=True,
+    )
+
+    License_letter_date = models.DateField(
+        _("License Letter Date"),
+        blank=True,
+        null=True,
+    )
+
     amendment_notes = models.TextField(
         _("Amendment Notes"),
         blank=True,
@@ -122,9 +136,9 @@ class Contract(models.Model):
     shown for it come from the DSRS's own linked LicenseContract
     (dashboard.DSRS.contract), never stored here directly."""
 
-    dsrs = models.OneToOneField(
+    dsrs = models.ManyToManyField(
         "dashboard.DSRS",
-        on_delete=models.PROTECT,
+       
         related_name="pi_record",
         null=True,
     blank=True,
@@ -148,30 +162,53 @@ class Contract(models.Model):
     )
 
     history = HistoricalRecords()
-
     @property
     def contract_number(self):
-        return self.dsrs.contract.contract_number if self.dsrs.contract else ""
+        source = self.dsrs.select_related("contract").first()
+        if source and source.contract:
+            return source.contract.contract_number
+        return ""
+
 
     @property
     def contract_date(self):
-        return self.dsrs.contract.contract_date if self.dsrs.contract else None
+        source = self.dsrs.select_related("contract").first()
+        if source and source.contract:
+            return source.contract.contract_date
+        return None
+
 
     @property
     def facility(self):
-        return self.dsrs.Facility
+        source = self.dsrs.first()
+        return source.Facility if source else ""
+
 
     @property
     def source_type(self):
-        return self.dsrs.Source_Type
+        return ", ".join(
+            str(s)
+            for s in self.dsrs.values_list("Source_Type", flat=True).distinct()
+            if s
+        )
+
 
     @property
     def status(self):
-        return self.dsrs.Status
+        return ", ".join(
+            str(s)
+            for s in self.dsrs.values_list("Status", flat=True).distinct()
+            if s
+        )
+
 
     @property
     def status_date(self):
-        return self.dsrs.Status_Date
+        dates = self.dsrs.values_list("Status_Date", flat=True).distinct()
+        return ", ".join(str(d) for d in dates if d)
+
+  
+    
 
     def __str__(self):
         return f"PI Record #{self.id} - {self.dsrs}"

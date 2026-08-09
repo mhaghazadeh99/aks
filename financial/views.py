@@ -71,14 +71,9 @@ def license_payment_list(request):
 
 
 def license_payment_update(request, pk):
+    license_request = get_object_or_404(LicenseRequest,pk=pk,)
 
-    
-    license_request = get_object_or_404(
-        LicenseRequest,
-        pk=pk,
-    )
-
-    payment, _ = LicensePayment.objects.get_or_create(license=license_request,)
+    payment, created = LicensePayment.objects.get_or_create(license=license_request,)
 
     if request.method == "POST":
 

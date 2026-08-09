@@ -205,13 +205,19 @@
 
 <th>{% trans "Select" %}</th>
 
+<th data-col="Nuclide">
+    {% trans "Radionuclide" %}
+</th>
+
+<th data-col="serial_number">
+    {% trans "Serial Number" %}
+</th>
+
+
 <th data-col="Source_Type">
     {% trans "Source Type" %}
 </th>
 
-<th data-col="Sso_Code">
-    {% trans "SSO Code" %}
-</th>
 
 <th data-col="Contract_Number">
     {% trans "Contract Number" %}
@@ -261,9 +267,7 @@
     {% trans "Responsible Person" %}
 </th>
 
-<th data-col="Nuclide">
-    {% trans "Radionuclide" %}
-</th>
+
 
 <th data-col="activity_input">
     {% trans "Entered Activity" %}
@@ -285,9 +289,6 @@
     {% trans "Activity Reference Date" %}
 </th>
 
-<th data-col="serial_number">
-    {% trans "Serial Number" %}
-</th>
 
 <th data-col="Dose_rate_surface_uSv">
     {% trans "Surface Dose Rate (µSv/h)" %}
@@ -345,6 +346,10 @@
     {% trans "Dimensions" %}
 </th>
 
+<th data-col="Sso_Code">
+    {% trans "SSO Code" %}
+</th>
+
 <th data-col="Attachments">
     {% trans "Attachments" %}
 </th>
@@ -378,8 +383,11 @@
         class="contract-checkbox"
         value="{{ s.id }}">
 </td>
+
+<td data-col="Nuclide">{{ s.Nuclide }}</td>
+<td data-col="serial_number">{{ s.serial_number }}</td>
 <td data-col="Source_Type">{{ s.Source_Type }}</td>
-<td data-col="Sso_Code">{{ s.Sso_Code }}</td>
+
 <td data-col="Contract_Number">{{ s.contract_number }}</td>
 <td data-col="Is_Divisible">{{ s.is_divisible|yesno:_("Yes,No") }}</td>
 <td data-col="Source_Count">{{ s.source_count }}</td>
@@ -397,13 +405,13 @@
 <td data-col="Status">{{ s.Status }}</td>
 <td data-col="Status_Date">{{ s.Status_Date }}</td>
 <td data-col="Responsible_Person">{{ s.Responsible_Person }}</td>
-<td data-col="Nuclide">{{ s.Nuclide }}</td>
+
 <td data-col="activity_input">{{ s.activity_input }}</td>
 <td data-col="activity_unit">{{ s.activity_unit }}</td>
 <td data-col="Activity">{{ s.current_activity_mci_value|default:"-" }}</td>
 <td data-col="Category">{{ s.category_value|default:"N/A" }}</td>
 <td data-col="Activity_reference_date">{{ s.Activity_reference_date }}</td>
-<td data-col="serial_number">{{ s.serial_number }}</td>
+
 <td data-col="Dose_rate_surface_uSv">{{ s.Dose_rate_surface_uSv }}</td>
 <td data-col="Dose_rate_1m_uSv">{{ s.Dose_rate_1m_uSv }}</td>
 <td data-col="Dose_rate_measurement_date">{{ s.Dose_rate_measurement_date }}</td>
@@ -418,7 +426,7 @@
 <td data-col="Device_Serial_Number">{{ s.Device_Serial_Number }}</td>
 <td data-col="Container_Type">{{ s.Container_Type }}</td>
 <td data-col="Dimension">{{ s.Dimension }}</td>
-
+<td data-col="Sso_Code">{{ s.Sso_Code }}</td>
 <td data-col="Attachments">
     {% for img in s.dsrs_images.all %}
         {% if img.file %}

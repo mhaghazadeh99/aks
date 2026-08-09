@@ -212,13 +212,30 @@
 {% for c in page_obj %}
 <tr>
     <td data-col="id">{{ c.id }}</td>
-    <td data-col="serial_number">{{ c.dsrs.serial_number }}</td>
-    <td data-col="nuclide">{{ c.dsrs.Nuclide }}</td>
-    <td data-col="source_type">{{ c.source_type }}</td>
-    <td data-col="facility">{{ c.facility }}</td>
-    <td data-col="status">
-        <span class="badge bg-success">{{ c.status }}</span>
+    <td>
+    {% for s in c.dsrs.all %}
+        {{ s.serial_number }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+</td>
+    <td>
+    {% for s in c.dsrs.all %}
+        {{ s.Nuclide }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+</td>
     </td>
+    <td>
+    {% for s in c.dsrs.all %}
+        {{ s.source_type }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+</td>
+    
+    <td data-col="facility">{{ c.facility }}</td>
+    
+    
+     <td>
+    {% for s in c.dsrs.all %}
+        {{ s.status }}{% if not forloop.last %}, {% endif %}
+    {% endfor %} </td>
     <td data-col="contract_number">{{ c.contract_number|default:"—" }}</td>
     <td data-col="contract_date">{{ c.contract_date|default:"—" }}</td>
     <td data-col="payment_done">

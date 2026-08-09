@@ -518,6 +518,7 @@ def license_specification(request, pk):
                         obj.activity_unit = dsrs_obj.activity_unit
                         obj.activity_date = dsrs_obj.Activity_reference_date
 
+                    obj.license = license_request
                     obj.save()
 
                 generate_specification(license_request, request.user)

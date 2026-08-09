@@ -293,6 +293,7 @@ def license_contract_update(request, pk):
         LicenseContract,
         pk=pk
     )
+    license_request = contract.license
 
 
     if request.method == "POST":
@@ -392,7 +393,7 @@ def contract_index(request):
 
     contracts = (
         Contract.objects
-        .select_related("dsrs__Nuclide", "dsrs__Facility", "dsrs__contract")
+        .prefetch_related("dsrs__Nuclide", "dsrs__Facility", "dsrs__contract")
         .order_by("-created_at")
     )
 
@@ -481,10 +482,8 @@ def create_contract_bulk(request):
                 }
         })
 
-    count = 0
-    for source in sources:
-        Contract.objects.create(dsrs=source)
-        count += 1
+    contract = Contract.objects.create()
+    contract.dsrs.set(sources)
 
     return JsonResponse({
         "success": True,

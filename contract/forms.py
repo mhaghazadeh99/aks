@@ -100,15 +100,15 @@ class LicenseIssueForm(forms.ModelForm):
 
     class Meta:
 
-        model = LicenseRequest
+        model = LicenseContract
 
         fields = [
-            "letter_number",
-            "letter_date",
+            "License_letter_number",
+            "License_letter_date",
         ]
 
         widgets = {
-            "letter_date": forms.DateInput(
+            "License_letter_date": forms.DateInput(
                 attrs={
                     "type": "text",
                     "class": "datepicker",

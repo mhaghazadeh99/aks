@@ -1259,24 +1259,15 @@ def license_sign(request, pk):
         # -----------------------------------------------
         # Sign the specification document
         # -----------------------------------------------
+        
+        tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
+        tmp.close() # r
 
-        tmp = tempfile.NamedTemporaryFile(
-            suffix=".docx",
-            delete=False,
-        )
+        signer = SpecificationSigner(specification.file.path,)
 
-        signer = SpecificationSigner(
-            specification.file.path,
-        )
+        signer.sign(profile,current_step.name,)
 
-        signer.sign(
-            profile,
-            current_step.name,
-        )
-
-        signer.save(
-            tmp.name,
-        )
+        signer.save(tmp.name,)
 
         with open(tmp.name, "rb") as f:
 

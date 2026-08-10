@@ -83,6 +83,7 @@ body {
 /* ======================
    SIDEBAR
 ====================== */
+
 .sidebar{
     position:fixed;
     top:0;
@@ -90,31 +91,34 @@ body {
     height:100vh;
     background:#fff;
     padding:20px;
-    
-    transition:.3s ease;
+
+    transition: transform .3s ease;
+    will-change: transform;
     z-index:1000;
     display: flex;
-  flex-direction: column;
+    flex-direction: column;
 }
 
 html.ltr .sidebar{
    box-shadow:5px 0 20px rgba(0,0,0,.12);
-    left:-280px;
+    left:0;
     right:auto;
+    transform: translateX(-100%);
 }
 
 html.ltr .sidebar.open{
-    left:0;
+    transform: translateX(0);
 }
 
 html.rtl .sidebar{
   box-shadow:-5px 0 20px rgba(0,0,0,.12);
-    right:-280px;
+    right:0;
     left:auto;
+    transform: translateX(100%);
 }
 
 html.rtl .sidebar.open{
-    right:0;
+    transform: translateX(0);
 }
 
 
@@ -277,36 +281,21 @@ html.rtl .logo{
 html.ltr .menu-btn{
     left:20px;
     right:auto;
-
     position: fixed;
-
     top: 20px;
-    
-
     width: 46px;
     height: 46px;
-
     border:none;
     border-radius:12px;
-
     background:#2563eb;
-
     display:flex;
     flex-direction:column;
     justify-content:center;
     align-items:center;
-
     gap:5px;
-
     cursor:pointer;
-
     z-index:1200;
-
-    transition:
-        left .3s ease,
-        transform .25s ease,
-        background .2s;
-
+    transition: transform .25s ease, background .2s;
 }
 
 
@@ -339,7 +328,7 @@ html.rtl .menu-btn{
     z-index:1200;
 
     transition:
-        right  .3s ease,
+       
         transform .25s ease,
         background .2s;
 

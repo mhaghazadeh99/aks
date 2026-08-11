@@ -24,7 +24,7 @@ class LicensePaymentForm(forms.ModelForm):
                 "payment_date": forms.DateInput(
                     attrs={
                         "type": "text",
-                        "class": "datepicker",
+                        "class": "form-control datepicker",
                         "autocomplete": "off",
                         "placeholder": _("Select payment date"),
                     }
@@ -64,12 +64,14 @@ class LicensePaymentForm(forms.ModelForm):
 
         )
 
-
+        
+        
+    
         for field in self.fields.values():
             existing = field.widget.attrs.get("class", "")
             field.widget.attrs["class"] = f"{existing} form-control".strip()
 
-        self.fields["payment_done"].widget.attrs["class"] = "form-check-input"
+        # self.fields["payment_done"].widget.attrs["class"] = "form-check-input"
 
 
       

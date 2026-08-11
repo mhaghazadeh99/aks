@@ -1,7 +1,11 @@
+from django.db.models import (
+    Count,
+    Sum,
+    Avg,
+    Min,
+    Max,
+)
 
-from django.db.models.functions import TruncMonth
-
-from django.db.models import Count, Sum, Avg, Min, Max
 
 AGGREGATIONS = {
     "count": Count,
@@ -12,24 +16,47 @@ AGGREGATIONS = {
 }
 
 
-def build_chart(qs, category, measure=None, aggregation="count"):
+def build_chart(
+    qs,
+    category,
+    measure=None,
+    aggregation="count",
+):
 
-    agg_func = AGGREGATIONS.get(aggregation, Count)
+    # ---------------------------------
+    # COUNT RECORDS
+    # ---------------------------------
 
-    # Count records
     if aggregation == "count" or not measure:
+
         data = (
-            qs.values(category)
-            .annotate(value=Count("id"))
+            qs
+            .values(category)
+            .annotate(
+                value=Count("id")
+            )
             .order_by(category)
         )
 
         return data, category, "value"
 
-    # Aggregate numeric measure
+    # ---------------------------------
+    # NUMERIC AGGREGATION
+    # ---------------------------------
+
+    agg_func = AGGREGATIONS.get(aggregation)
+
+    if agg_func is None:
+        raise ValueError(
+            f"Unsupported aggregation: {aggregation}"
+        )
+
     data = (
-        qs.values(category)
-        .annotate(value=agg_func(measure))
+        qs
+        .values(category)
+        .annotate(
+            value=agg_func(measure)
+        )
         .order_by(category)
     )
 

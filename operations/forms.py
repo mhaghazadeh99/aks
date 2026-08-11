@@ -1,5 +1,7 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field
+
+from crispy_forms.layout import Layout, Field, Row, Column
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.forms import modelformset_factory
@@ -39,89 +41,103 @@ class MultipleFileField(forms.FileField):
 
 class LicenseRequestForm(forms.ModelForm):
 
-    
-
     class Meta:
-
         model = LicenseRequest
 
         fields = [
-
             "letter_number",
-
             "letter_date",
             "description",
-
-            
-
         ]
 
         widgets = {
-           
             "letter_date": forms.DateInput(
                 attrs={
                     "type": "text",
-                    "class": "datepicker",
+                    "class": "form-control datepicker",
+                    "autocomplete": "off",
                     "placeholder": _("Select letter date"),
                 }
             ),
 
-           
-
+            "description": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         # Add * to required fields
         for name, field in self.fields.items():
-
             if field.required:
-
                 field.label = f"{field.label} *"
 
-        self.helper = FormHelper()
+        # Standardize Bootstrap form-control
+        for field in self.fields.values():
+            existing = field.widget.attrs.get("class", "")
+            if "form-control" not in existing:
+                field.widget.attrs["class"] = (
+                    f"{existing} form-control"
+                ).strip()
 
+        self.helper = FormHelper()
         self.helper.form_tag = False
 
         self.helper.layout = Layout(
+            Row(
+                Column(
+                    Field("letter_number"),
+                    css_class="col-md-2",
+                ),
+                Column(
+                    Field("letter_date"),
+                    css_class="col-md-2",
+                ),
+                css_class="g-3",
+            ),
 
-            Field("letter_number"),
-
-            Field("letter_date"),
-            Field("description"),
-
-            
-
+            Row(
+                Column(
+                    Field("description"),
+                    css_class="col-md-6",
+                ),
+                css_class="g-3",
+            ),
         )
+
 
 
 class LicenseFacilityForm(forms.Form):
 
     facility = forms.ModelChoiceField(
-
         queryset=FacilityModel.objects.order_by("name"),
-
         label=_("Facility"),
-
         empty_label=_("Select Facility"),
-
     )
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
-        self.helper = FormHelper()
+        self.fields["facility"].widget.attrs["class"] = "form-select"
 
+        self.helper = FormHelper()
         self.helper.form_tag = False
 
         self.helper.layout = Layout(
-
-            Field("facility"),
-
+            Row(
+                Column(
+                    Field("facility"),
+                    css_class="col-md-6",
+                ),
+                css_class="g-3",
+            ),
         )
+
+
 
 
 
@@ -130,59 +146,93 @@ class LicenseAttachmentForm(forms.Form):
     letter = MultipleFileField(
         required=False,
         label=_("Letter"),
-        widget=MultipleFileInput(),
+        widget=MultipleFileInput(
+            attrs={
+                "class": "form-control",
+            }
+        ),
     )
 
     commitment = MultipleFileField(
         required=False,
         label=_("Commitment"),
-        widget=MultipleFileInput(),
+        widget=MultipleFileInput(
+            attrs={
+                "class": "form-control",
+            }
+        ),
     )
 
     permit = MultipleFileField(
         required=False,
         label=_("Permit"),
-        widget=MultipleFileInput(),
+        widget=MultipleFileInput(
+            attrs={
+                "class": "form-control",
+            }
+        ),
     )
 
     inquiry = MultipleFileField(
         required=False,
         label=_("DSRS Inquiry Form"),
-        widget=MultipleFileInput(),
+        widget=MultipleFileInput(
+            attrs={
+                "class": "form-control",
+            }
+        ),
     )
 
     other = MultipleFileField(
         required=False,
         label=_("Other"),
-        widget=MultipleFileInput(),
+        widget=MultipleFileInput(
+            attrs={
+                "class": "form-control",
+            }
+        ),
     )
 
-    
-
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
 
         self.helper = FormHelper()
-
         self.helper.form_method = "post"
-
         self.helper.form_tag = False
 
         self.helper.layout = Layout(
+            Row(
+                Column(
+                    Field("letter"),
+                    css_class="col-md-6",
+                ),
+                Column(
+                    Field("commitment"),
+                    css_class="col-md-6",
+                ),
+                css_class="g-3",
+            ),
 
-            Field("letter"),
+            Row(
+                Column(
+                    Field("permit"),
+                    css_class="col-md-6",
+                ),
+                Column(
+                    Field("inquiry"),
+                    css_class="col-md-6",
+                ),
+                css_class="g-3",
+            ),
 
-            Field("commitment"),
-
-            Field("permit"),
-
-            Field("inquiry"),
-
-            Field("other"),
-
+            Row(
+                Column(
+                    Field("other"),
+                    css_class="col-md-6",
+                ),
+                css_class="g-3",
+            ),
         )
-
 
 
 
@@ -360,7 +410,7 @@ class LicenseSourceSpecificationForm(forms.ModelForm):
                 "activity_date": forms.DateInput(
                     attrs={
                         "type": "text",
-                        "class": "datepicker",
+                        "class": "form-control datepicker",
                         "placeholder": _("Select activity date"),
                     }
                 ),

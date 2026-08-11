@@ -28,7 +28,7 @@ msgstr ""
 #: contract/forms.py:13 templates/contract/license_contract_form.html:300
 
 msgid "Contract Document"
-msgstr " قرارداد"
+msgstr " نسخه قرارداد"
 
 #: contract/forms.py:35 contract/models.py:41
 msgid "Send to Financial"
@@ -36,7 +36,7 @@ msgstr "ارسال به امور مالی"
 
 
 msgid "License Letter"
-msgstr "شماره قرارداد "
+msgstr " نامه مجوز "
 
 #: contract/forms.py:134 contract/models.py:125 contract/views.py:574
 msgid "Payment Done"

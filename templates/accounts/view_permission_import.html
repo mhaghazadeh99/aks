@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="content">
+<h2>{% trans "Import View Permissions" %}</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn-blue">{% trans "Import" %}</button>
+</form>
+</div>
+{% endblock %}

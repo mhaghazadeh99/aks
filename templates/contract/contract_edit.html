@@ -1,22 +1,111 @@
+
 {% extends "base.html" %}
+
 {% load crispy_forms_tags %}
 {% load i18n %}
+
+{% block title %}
+    {% trans "Edit PI Record" %}
+{% endblock %}
+
 {% block content %}
 
-<h3>{% trans "Edit PI Record" %}</h3>
+<h3 class="mb-4">
+    {% trans "Edit PI Record" %}
+</h3>
 
-<table class="table table-bordered">
-    <tr><th>{% trans "Serial Number" %}</th><td>{{ source.serial_number }}</td></tr>
-    <tr><th>{% trans "Nuclide" %}</th><td>{{ source.Nuclide }}</td></tr>
-    <tr><th>{% trans "Facility" %}</th><td>{{ source.Facility }}</td></tr>
-    <tr><th>{% trans "Contract Number" %}</th><td>{{ contract.contract_number|default:"—" }}</td></tr>
-    <tr><th>{% trans "Contract Date" %}</th><td>{{ contract.contract_date|default:"—" }}</td></tr>
-</table>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button class="btn btn-success">{% trans "Save" %}</button>
-</form>
+<!-- =========================
+     Source Information
+     ========================= -->
+
+<div class="card mb-4">
+
+    <div class="card-header">
+        <h5 class="mb-0">
+            {% trans "Source Information" %}
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered mb-0">
+
+            <tr>
+                <th>{% trans "Serial Number" %}</th>
+                <td>{{ source.serial_number }}</td>
+            </tr>
+
+            <tr>
+                <th>{% trans "Nuclide" %}</th>
+                <td>{{ source.Nuclide }}</td>
+            </tr>
+
+            <tr>
+                <th>{% trans "Facility" %}</th>
+                <td>{{ source.Facility }}</td>
+            </tr>
+
+            <tr>
+                <th>{% trans "Contract Number" %}</th>
+                <td>{{ contract.contract_number|default:"—" }}</td>
+            </tr>
+
+            <tr>
+                <th>{% trans "Contract Date" %}</th>
+                <td>{{ contract.contract_date|default:"—" }}</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     Payment Information
+     ========================= -->
+
+<div class="card">
+
+    <div class="card-header">
+        <h5 class="mb-0">
+            {% trans "Payment Information" %}
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="row g-3">
+
+                <div class="col-md-2">
+                    {{ form.payment_done|as_crispy_field }}
+                </div>
+
+                <div class="col-md-2">
+                    {{ form.payment_date|as_crispy_field }}
+                </div>
+
+            </div>
+
+            <div class="form-actions mt-4">
+
+                <button type="submit" class="btn btn-success">
+                    {% trans "Save" %}
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
 
 {% endblock %}
+```

@@ -21,10 +21,10 @@ class DSRSForm(forms.ModelForm):
         ]
 
         widgets = {
-            "Date_received": forms.DateInput(attrs={"type": "text", "class": "datepicker"}),
-            "Activity_reference_date": forms.DateInput(attrs={"type": "text", "class": "datepicker"}),
-            "Status_Date": forms.DateInput(attrs={"type": "text", "class": "datepicker"}),
-            "Dose_rate_measurement_date": forms.DateInput(attrs={"type": "text", "class": "datepicker"}),
+            "Date_received": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker",}),
+            "Activity_reference_date": forms.DateInput(attrs={"type": "text", "class":"form-control datepicker",}),
+            "Status_Date": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker",}),
+            "Dose_rate_measurement_date": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker",}),
             "Comment": forms.Textarea(attrs={"rows": 3}),
         }
 
@@ -177,7 +177,7 @@ class SourceMovementForm(forms.ModelForm):
         }
 
         widgets = {
-            "movement_date": forms.DateInput(attrs={"type": "text", "class": "datepicker"}),
+            "movement_date": forms.DateInput(attrs={"type": "text",  "class": "form-control datepicker",}),
             "remarks": forms.Textarea(attrs={"rows": 3}),
         }
 

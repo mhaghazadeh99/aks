@@ -1,27 +1,34 @@
 def detect_roles(fields):
     """
-    Turns raw fields into BI meaning:
-    - dimensions
-    - measures
-    - time
+    Convert Django model fields into BI concepts.
+
+    dimensions:
+        text, boolean, foreign keys, etc.
+
+    measures:
+        numeric fields.
+
+    time:
+        date and datetime fields.
     """
 
     dimensions = []
     measures = []
     time_fields = []
 
-    for f in fields:
-        if f["is_date"]:
-            time_fields.append(f["name"])
+    for field in fields:
 
-        elif f["is_numeric"]:
-            measures.append(f["name"])
+        if field["is_date"]:
+            time_fields.append(field["name"])
+
+        elif field["is_numeric"]:
+            measures.append(field["name"])
 
         else:
-            dimensions.append(f["name"])
+            dimensions.append(field["name"])
 
     return {
         "dimensions": dimensions,
         "measures": measures,
-        "time": time_fields
+        "time": time_fields,
     }

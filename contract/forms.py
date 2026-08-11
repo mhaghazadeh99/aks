@@ -52,7 +52,7 @@ class LicenseContractForm(forms.ModelForm):
             "draft_sent_date": forms.DateInput(
                 attrs={
                     "type": "text",
-                    "class": "datepicker",
+                    "class": "form-control datepicker",
                     "autocomplete": "off",
                 }
             ),
@@ -60,7 +60,7 @@ class LicenseContractForm(forms.ModelForm):
             "draft_letter_date": forms.DateInput(
                 attrs={
                     "type": "text",
-                    "class": "datepicker",
+                    "class": "form-control datepicker",
                     "autocomplete": "off",
                 }
             ),
@@ -68,7 +68,7 @@ class LicenseContractForm(forms.ModelForm):
             "notification_letter_date": forms.DateInput(
                 attrs={
                     "type": "text",
-                    "class": "datepicker",
+                    "class": "form-control datepicker",
                     "autocomplete": "off",
                 }
             ),
@@ -82,11 +82,12 @@ class LicenseContractForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
-
         self.helper = FormHelper()
         self.helper.form_tag = False
+        for field in self.fields.values():
+            existing = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = f"{existing} form-control".strip()
 
 
 
@@ -111,18 +112,21 @@ class LicenseIssueForm(forms.ModelForm):
             "License_letter_date": forms.DateInput(
                 attrs={
                     "type": "text",
-                    "class": "datepicker",
+                    "class": "form-control datepicker",
                     "autocomplete": "off",
                 }
             ),
         }
-
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
-
         self.helper = FormHelper()
         self.helper.form_tag = False
+        for field in self.fields.values():
+            existing = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = f"{existing} form-control".strip()
+ 
+
+        
 
 
 
@@ -135,7 +139,7 @@ class ContractForm(forms.ModelForm):
 
         widgets = {
             "payment_date": forms.DateInput(
-                attrs={"type": "text", "class": "datepicker"}
+                attrs={"type": "text", "class": "form-control datepicker",}
             ),
         }
 

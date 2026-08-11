@@ -129,19 +129,12 @@ html.rtl .sidebar.open{
 
 
 .sidebar-header {
-
     display:flex;
-
     flex-direction:row;
-
     align-items:center;
-
     height:70px;
-
     border-bottom:1px solid #e5e7eb;
-
     padding-bottom:15px;
-
 }
 
 html.ltr .logo{
@@ -279,12 +272,14 @@ html.rtl .logo{
 ======================= */
 
 html.ltr .menu-btn{
-    left:20px;
+    top: 12px; 
+    left: 8px;
     right:auto;
     position: fixed;
-    top: 20px;
-    width: 46px;
-    height: 46px;
+    
+    width: 32px;
+     height: 32px;
+     padding: 5px;
     border:none;
     border-radius:12px;
     background:#2563eb;
@@ -423,7 +418,9 @@ tr:hover {
 /* =======================
    FORMS
 ======================= */
-input, select, textarea {
+input:not(.form-control),
+select:not(.form-select),
+textarea:not(.form-control) {
   width: 100%;
   padding: 9px;
   margin-top: 5px;
@@ -791,3 +788,5 @@ text-align:left;
     gap:10px;
 
 }
+
+

@@ -23,37 +23,21 @@ from django.conf.urls.i18n import i18n_patterns
 
 urlpatterns = [
 
-    path("i18n/", include("django.conf.urls.i18n")),
-    
+    path("i18n/", include("django.conf.urls.i18n")),   
     path('admin/', admin.site.urls),
-    
     path('', include('dashboard.urls')),
     path("contract/", include("contract.urls")),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/', include('accounts.urls')),
     # path('', include('dyn_dt.urls')),
     path("analytics/", include("analytics.urls")),
-    
-    path(
-        'waste/',
-        include('waste.urls')
-    ),
-
-    path(
-        'laboratory/',
-        include('laboratory.urls')
-    ),
-
-    path(
-        'operations/',
-        include('operations.urls')
-    ),
+    path('waste/',include('waste.urls')),
+    path('laboratory/',include('laboratory.urls')),
+    path('operations/',include('operations.urls')),
     path("facilities/", include("facilities.urls")),
 path("reference/", include("reference.urls")),
 path("financial/", include("financial.urls")),
-path(
-        "receive-source/",
-        include("receive_source.urls"),
-    ),
+path("receive-source/",include("receive_source.urls"),),
 ]
 
 

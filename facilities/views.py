@@ -263,96 +263,66 @@ def facility_import(request):
     if request.method == "POST":
 
         form = FacilityImportForm(request.POST, request.FILES)
-        
 
         if form.is_valid():
-            
+
             csv_file = form.cleaned_data["csv_file"]
-
             decoded_file = csv_file.read().decode("utf-8-sig").splitlines()
-
             reader = csv.DictReader(decoded_file)
-            
-
 
             count = 0
+            skipped = []
 
             for row in reader:
+
                 if None in row.values():
                     messages.error(
-                            request,
-                            _("Invalid CSV format near row: %(row)s") % {
-                                "row": row
-                            }
-                        )
+                        request,
+                        _("Invalid CSV format near row: %(row)s") % {"row": row}
+                    )
                     continue
+
+                name = (row.get("name") or "").strip()
+
+                if not name:
+                    skipped.append(_("Row with blank name — skipped"))
+                    continue
+
+                if FacilityModel.objects.filter(name__iexact=name).exists():
+                    skipped.append(name)
+                    continue
+
                 FacilityModel.objects.create(
-
-                    name=row.get("name"),
-
-                    responsible_person=row.get(
-                        "responsible_person"
-                    ),
-
-                    telephone=row.get(
-                        "telephone"
-                    ),
-
-                    email=row.get(
-                        "email"
-                    ),
-
-                    address1=row.get(
-                        "address1"
-                    ),
-
-                    address2=row.get(
-                        "address2"
-                    ),
-
-                    postal_code=row.get(
-                        "postal_code"
-                    ),
-
-                    national_id=row.get(
-                        "national_id"
-                    ),
-
-                    economic_code=row.get(
-                        "economic_code"
-                    ),
-
-                    
-
+                    name=name,
+                    responsible_person=row.get("responsible_person"),
+                    telephone=row.get("telephone"),
+                    email=row.get("email"),
+                    address1=row.get("address1"),
+                    address2=row.get("address2"),
+                    postal_code=row.get("postal_code") or None,
+                    national_id=row.get("national_id") or None,
+                    economic_code=row.get("economic_code") or None,
                 )
 
                 count += 1
 
-
             messages.success(
                 request,
-                _(
-                    "%(count)s facilities imported successfully."
-                ) % {
-                    "count": count
-                }
+                _("%(count)s facilities imported successfully.") % {"count": count}
             )
 
+            if skipped:
+                messages.warning(
+                    request,
+                    _("Skipped %(n)s duplicate/invalid name(s): %(names)s") % {
+                        "n": len(skipped),
+                        "names": ", ".join(skipped[:15]) + ("..." if len(skipped) > 15 else ""),
+                    }
+                )
 
-            return redirect(
-                "facility_list"
-            )
-
+            return redirect("facility_list")
 
     else:
-
         form = FacilityImportForm()
 
-
-    return render(
-        request,
-        "facilities/facility_import.html",
-        {
-            "form": form
-        }
-    )
+    return render(request, "facilities/facility_import.html", {"form": form})

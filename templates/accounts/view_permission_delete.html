@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="content">
+<h3>{% trans "Delete this view permission?" %}</h3>
+<p>{{ permission.view_name }} → {{ permission.group.name }}</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn-blue">{% trans "Yes, Delete" %}</button>
+    <a href="{% url 'view_permission_list' %}">{% trans "Cancel" %}</a>
+</form>
+</div>
+{% endblock %}

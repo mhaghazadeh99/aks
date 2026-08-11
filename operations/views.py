@@ -1261,7 +1261,7 @@ def license_sign(request, pk):
         # -----------------------------------------------
         
         tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
-        tmp.close() # r
+        tmp.close() 
 
         signer = SpecificationSigner(specification.file.path,)
 

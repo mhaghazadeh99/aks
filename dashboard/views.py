@@ -112,8 +112,7 @@ def register_view(request):
 def add_source(request):
     
 
-    if not group_required(request.user, ["DSRS Users", "SRS Users"]):
-        return HttpResponseForbidden( "No access" )
+    
 
     if request.method == "POST":
 
@@ -210,9 +209,6 @@ def add_source(request):
 
 def edit_source(request, pk):
 
-    if not group_required(request.user, ["DSRS Users", "SRS Users"]):
-        return HttpResponseForbidden(_("No access"))
-
     obj = get_object_or_404(DSRS, pk=pk)
 
     user_groups = set(request.user.groups.values_list("name", flat=True))
@@ -225,8 +221,6 @@ def edit_source(request, pk):
 
     if is_dsrs_user and source_type == SOURCE_TYPE.NEW and not is_srs_user:
         return HttpResponseForbidden(_("No access to SRS records"))
-
-    
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -539,9 +533,6 @@ def export_csv(request):
 def import_csv(request):
     """Server-side CSV import. Accepts a multipart file upload directly."""
 
-    if not request.user.groups.filter(name="DSRS Users").exists():
-        return HttpResponseForbidden("No access")
-
     if request.method != "POST":
         return JsonResponse({"error": _("POST required")}, status=400)
 
@@ -707,9 +698,6 @@ def import_csv(request):
 def delete_dsrs_image(request, pk):
     img = get_object_or_404(DSRSImage, pk=pk)
 
-    # optional security check (recommended)
-    if not request.user.groups.filter(name="DSRS Users").exists():
-        return HttpResponseForbidden("No access")
 
     dsrs_id = img.dsrs.id
     img.delete()

@@ -1,9 +1,11 @@
+```html
 {% extends "base.html" %}
+
 {% load crispy_forms_tags %}
 {% load i18n %}
 
 {% block title %}
-{% trans "License Payment" %}
+    {% trans "License Payment" %}
 {% endblock %}
 
 {% block content %}
@@ -13,52 +15,79 @@
     <div class="card shadow-sm">
 
         <div class="card-header">
-
-            <h3>
-
+            <h3 class="mb-0">
                 {% trans "License Payment" %}
-
             </h3>
-
         </div>
 
         <div class="card-body">
 
-            <p>
+            <!-- =========================
+                 License Information
+                 ========================= -->
 
-                <strong>{% trans "Letter Number" %}:</strong>
+            <div class="mb-4">
 
-                {{ license_request.letter_number }}
+                <p class="mb-2">
+                    <strong>{% trans "Letter Number" %}:</strong>
+                    {{ license_request.letter_number }}
+                </p>
 
-            </p>
+                <p class="mb-0">
+                    <strong>{% trans "Facility" %}:</strong>
+                    {{ license_request.facility }}
+                </p>
 
-            <p>
+            </div>
 
-                <strong>{% trans "Facility" %}:</strong>
+            <hr class="my-4">
 
-                {{ license_request.facility }}
-
-            </p>
-
-            <hr>
+            <!-- =========================
+                 Payment Form
+                 ========================= -->
 
             <form method="post">
 
-    {% csrf_token %}
+                {% csrf_token %}
 
-    {% crispy form %}
+                <div class="row g-3">
 
-    <button type="submit" class="btn btn-primary">
-        {% trans "Save" %}
-    </button>
+                    <div class="col-md-2">
+                        {{ form.payment_done|as_crispy_field }}
+                    </div>
 
-    <a href="{% url 'license_payment_list' %}"
-       class="btn btn-secondary">
-        {% trans "Cancel" %}
-    </a>
+                    <div class="col-md-2">
+                        {{ form.payment_date|as_crispy_field }}
+                    </div>
 
-</form>
-</div>
+                    <div class="col-md-2">
+                        {{ form.amount_paid|as_crispy_field }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+
+                </div>
+
+                <!-- =========================
+                     Actions
+                     ========================= -->
+
+                <div class="form-actions mt-4">
+
+                    <button type="submit" class="btn btn-primary">
+                        {% trans "Save" %}
+                    </button>
+
+                    <a href="{% url 'license_payment_list' %}"
+                       class="btn btn-secondary">
+                        {% trans "Cancel" %}
+                    </a>
+
+                </div>
+
+            </form>
 
         </div>
 
@@ -67,3 +96,4 @@
 </div>
 
 {% endblock %}
+```

@@ -1,190 +1,183 @@
+
 {% extends "base.html" %}
 
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-
 {% block title %}
-{% trans "Issue License" %}
+    {% trans "Issue License" %}
 {% endblock %}
-
-
 
 {% block content %}
 
 <div class="container-fluid py-4">
 
+    <div class="row justify-content-center">
 
-<div class="row justify-content-center">
+        <div class="col-xl-10">
 
-<div class="col-xl-10">
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        {% trans "Issue License" %}
+                    </h3>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- =========================
+                         License Information
+                         ========================= -->
+
+                    <div class="mb-4">
+
+                        <p class="mb-2">
+                            <strong>
+                                {% trans "Facility:" %}
+                            </strong>
+
+                            {{ license_request.facility }}
+                        </p>
+
+                        <p class="mb-0">
+                            <strong>
+                                {% trans "Contract Number:" %}
+                            </strong>
+
+                            {% if license_request.contract %}
+                                {{ license_request.contract.contract_number }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </p>
+
+                    </div>
 
 
-<div class="card shadow-sm">
+                    <!-- =========================
+                         Requested Sources
+                         ========================= -->
+
+                    <h5 class="mt-4 mb-3">
+                        {% trans "Requested Sources" %}
+                    </h5>
+
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered table-hover">
+
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>{% trans "Type" %}</th>
+                                    <th>{% trans "Nuclide" %}</th>
+                                    <th>{% trans "Serial" %}</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for source in license_request.sources.all %}
+
+                                    <tr>
+                                        <td>
+                                            {{ forloop.counter }}
+                                        </td>
+
+                                        <td>
+                                            {{ source.get_source_type_display }}
+                                        </td>
+
+                                        <td>
+                                            {{ source.nuclide }}
+                                        </td>
+
+                                        <td>
+                                            {{ source.serial_number }}
+                                        </td>
+                                    </tr>
+
+                                {% empty %}
+
+                                    <tr>
+                                        <td colspan="4" class="text-center">
+                                            {% trans "No sources found." %}
+                                        </td>
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
 
 
-<div class="card-header">
+                    <hr class="my-4">
 
-<h3>
-{% trans "Issue License" %}
-</h3>
+
+                    <!-- =========================
+                         Issue License Form
+                         ========================= -->
+
+                    <form method="post" enctype="multipart/form-data">
+
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+
+                            <!-- License Letter Number -->
+                            <div class="col-md-2">
+                                {{ form.License_letter_number|as_crispy_field }}
+                            </div>
+
+                            <!-- License Letter Date -->
+                            <div class="col-md-2">
+                                {{ form.License_letter_date|as_crispy_field }}
+                            </div>
+
+                            <!-- License Attachment -->
+                            <div class="col-2">
+                                {{ form.license_attachment|as_crispy_field }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- =========================
+                             Actions
+                             ========================= -->
+
+                        <div class="form-actions mt-4">
+
+                            <a
+                                href="{% url 'ready_to_issue_list' %}"
+                                class="btn btn-secondary"
+                            >
+                                {% trans "Cancel" %}
+                            </a>
+
+                            <button
+                                class="btn btn-success"
+                                type="submit"
+                            >
+                                {% trans "Issue License" %}
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
-
-
-
-<div class="card-body">
-
-
-<p>
-<strong>
-{% trans "Facility:" %}
-</strong>
-
-{{ license_request.facility }}
-
-</p>
-
-
-
-<p>
-<strong>
-{% trans "Contract Number:" %}
-</strong>
-
-{% if license_request.contract %}
-
-{{ license_request.contract.contract_number }}
-
-{% endif %}
-
-</p>
-
-
-
-<h5 class="mt-4">
-{% trans "Requested Sources" %}
-</h5>
-
-
-
-<table class="table table-bordered table-hover">
-
-<thead class="table-light">
-
-<tr>
-
-<th>#</th>
-
-<th>{% trans "Type" %}</th>
-
-<th>{% trans "Nuclide" %}</th>
-
-<th>{% trans "Serial" %}</th>
-
-</tr>
-
-</thead>
-
-
-<tbody>
-
-
-{% for source in license_request.sources.all %}
-
-<tr>
-
-<td>
-{{ forloop.counter }}
-</td>
-
-
-<td>
-{{ source.get_source_type_display }}
-</td>
-
-
-<td>
-{{ source.nuclide }}
-</td>
-
-
-<td>
-{{ source.serial_number }}
-</td>
-
-
-</tr>
-
-
-{% empty %}
-
-<tr>
-
-<td colspan="4" class="text-center">
-
-{% trans "No sources found." %}
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-
-</tbody>
-
-</table>
-
-
-
-<hr>
-
-
-<form method="post" enctype="multipart/form-data">
-
-{% csrf_token %}
-
-{{ form|crispy }}
-
-
-<div class="mt-4">
-
-<a
-href="{% url 'ready_to_issue_list' %}"
-class="btn btn-secondary">
-
-{% trans "Cancel" %}
-
-</a>
-
-
-<button
-class="btn btn-success"
-type="submit">
-
-{% trans "Issue License" %}
-
-</button>
-
-
-</div>
-
-
-</form>
-
-
-</div>
-
-</div>
-
-
-</div>
-
-</div>
-
-
-</div>
-
 
 {% endblock %}

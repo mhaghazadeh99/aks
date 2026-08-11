@@ -160,19 +160,15 @@ document.addEventListener("change", function (e) {
 // =========================
 // DATE LOGIC (ROBUST VERSION)
 // =========================
-
 function isDateField(fieldName) {
-    if (!fieldMeta || !fieldMeta[fieldName]) return false;
 
-    const type = String(fieldMeta[fieldName]).toLowerCase();
+    if (!fieldMeta[fieldName]) {
+        return false;
+    }
 
-    return (
-        type.includes("date") ||
-        type.includes("time") ||
-        type.includes("datetime") ||
-        type.includes("timestamp")
-    );
+    return fieldMeta[fieldName].isDate;
 }
+
 
 function updateDateOptions() {
     const dimensionEl = document.getElementById("dimension");
@@ -194,30 +190,6 @@ function updateDateOptions() {
 }
 
 
-// =========================
-// AGGREGATION LOGIC
-// =========================
-function updateAggregationOptions() {
-
-    const measure =
-        document.getElementById("measure").value;
-
-    const aggregation =
-        document.getElementById("aggregation");
-
-    if (measure === "") {
-        aggregation.value = "count";
-
-        Array.from(aggregation.options).forEach(option => {
-            option.disabled = option.value !== "count";
-        });
-
-    } else {
-        Array.from(aggregation.options).forEach(option => {
-            option.disabled = false;
-        });
-    }
-}
 
 // =========================
 // LOAD FIELDS
@@ -240,7 +212,11 @@ function loadFields() {
         // DIMENSIONS
         data.fields.forEach(field => {
 
-            fieldMeta[field.name] = field.type;
+            fieldMeta[field.name] = {
+                type: field.type,
+                isDate: field.is_date,
+                isNumeric: field.is_numeric,
+            };
 
             const option = document.createElement("option");
             option.value = field.name;

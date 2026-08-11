@@ -1,0 +1,69 @@
+
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block content %}
+
+<div class="content">
+
+    <h2>{% trans "View Permissions" %}</h2>
+
+    <a href="{% url 'view_permission_import' %}" class="btn-blue">
+        {% trans "Import CSV" %}
+    </a>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>{% trans "View Name" %}</th>
+                <th>{% trans "Groups" %}</th>
+                <th>{% trans "Action" %}</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+        {% for p in permissions %}
+
+            <tr>
+
+                <td>
+                    {{ p.view_name }}
+                </td>
+
+                <td>
+                    {% for group in p.groups.all %}
+                        {{ group.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        {% trans "No groups assigned" %}
+                    {% endfor %}
+                </td>
+
+                <td>
+                    <a href="{% url 'view_permission_delete' p.pk %}">
+                        {% trans "Delete" %}
+                    </a>
+                </td>
+
+            </tr>
+
+        {% empty %}
+
+            <tr>
+                <td colspan="3">
+                    {% trans "No view permissions found." %}
+                </td>
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
+```

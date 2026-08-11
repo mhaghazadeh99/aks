@@ -72,10 +72,7 @@ class FacilityModel(models.Model):
         verbose_name = _("Facility")
         verbose_name_plural = _("Facilities")
         constraints = [
-            models.UniqueConstraint(
-                fields=["name"],
-                name="unique_facility_name",
-            ),
+            
             models.UniqueConstraint(
                 fields=["national_id"],
                 name="unique_facility_national_id",
@@ -85,6 +82,11 @@ class FacilityModel(models.Model):
                 fields=["postal_code"],
                 name="unique_facility_postal_code",
                 condition=models.Q(postal_code__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=["economic_code"],
+                name="unique_facility_economic_code",
+                condition=models.Q(economic_code__isnull=False),
             ),
         ]
 

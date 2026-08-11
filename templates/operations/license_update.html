@@ -1,99 +1,428 @@
-
 {% extends "base.html" %}
 {% load i18n %}
 {% load crispy_forms_tags %}
 
+{% block title %}
+{% trans "Edit License" %}
+{% endblock %}
+
 {% block content %}
 
-<h2>{% trans "Edit License" %}</h2>
+<div class="container-fluid py-4">
 
-<form method="post" enctype="multipart/form-data">
+```
+<div class="row justify-content-center">
 
-    {% csrf_token %}
+    <div class="col-xl-10">
 
-    <h4>{% trans "License Information" %}</h4>
-    {{ request_form.as_p }}
+        <div class="card shadow-sm">
 
-    <h4>{% trans "Facility" %}</h4>
-    {{ facility_form.as_p }}
+            <div class="card-header">
+                <h3 class="mb-0">
+                    {% trans "Edit License" %}
+                </h3>
+            </div>
 
-    <h4>{% trans "Contract" %}</h4>
-    {{ contract_form.as_p }}
+            <div class="card-body">
 
-    <h4>{% trans "Payment" %}</h4>
-    {{ payment_form.as_p }}
-    
+                <form method="post" enctype="multipart/form-data">
 
-<h4>{% trans "Attachments" %}</h4>
+                    {% csrf_token %}
 
-{% if existing_attachments %}
-<table class="table table-sm table-bordered">
-    <thead>
-        <tr>
-            <th>{% trans "Type" %}</th>
-            <th>{% trans "File" %}</th>
-            <th>{% trans "Delete" %}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for att in existing_attachments %}
-        <tr>
-            <td>{{ att.get_attachment_type_display }}</td>
-            <td><a href="{{ att.file.url }}" target="_blank">{{ att.file.name|slice:"-40:" }}</a></td>
-            <td>
-                <input type="checkbox" name="delete_attachments" value="{{ att.id }}">
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>{% trans "No attachments." %}</p>
-{% endif %}
+                    <!-- ===================================================== -->
+                    <!-- 1 LICENSE INFORMATION -->
+                    <!-- ===================================================== -->
 
-{{ attachment_form.as_p }}
+                    <div class="card mb-4">
 
-    <h4>{% trans "Sources" %}</h4>
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                ① {% trans "License Information" %}
+                            </h5>
+                        </div>
 
-    {{ source_formset.management_form }}
+                        <div class="card-body">
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>{% trans "Type" %}</th>
-                <th>{% trans "Existing DSRS Source" %}</th>
-                <th>{% trans "Serial Number" %}</th>
-                <th>{% trans "Nuclide" %}</th>
-                <th>{% trans "Activity" %}</th>
-                <th>{% trans "Unit" %}</th>
-                <th>{% trans "Activity Date" %}</th>
-                <th>{% trans "Description" %}</th>
-                <th>{% trans "Delete" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for form in source_formset %}
-            <tr>
-                <td>{{ form.id }}{{ form.source_type }}</td>
-                <td>{{ form.source_dsrs }}</td>
-                <td>{{ form.serial_number }}</td>
-                <td>{{ form.instance.nuclide|default:"" }}</td>
-                <td>{{ form.activity }}</td>
-                <td>{{ form.activity_unit }}</td>
-                <td>{{ form.activity_date }}</td>
-                <td>{{ form.description }}</td>
-                <td>{% if form.instance.pk %}{{ form.DELETE }}{% endif %}</td>
-            </tr>
-            {% if form.errors %}
-            <tr><td colspan="9" class="text-danger">{{ form.errors }}</td></tr>
-            {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
+                            <div class="row g-3">
 
-    <button type="submit" class="btn btn-primary">{% trans "Save Changes" %}</button>
-    <a href="{% url 'license_detail' license.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+                                <div class="col-md-6">
+                                    {{ request_form.letter_number|as_crispy_field }}
+                                </div>
 
-</form>
+                                <div class="col-md-6">
+                                    {{ request_form.letter_date|as_crispy_field }}
+                                </div>
+
+                                {% if request_form.description %}
+                                <div class="col-12">
+                                    {{ request_form.description|as_crispy_field }}
+                                </div>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ===================================================== -->
+                    <!-- 2 FACILITY -->
+                    <!-- ===================================================== -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                ② {% trans "Facility" %}
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+                                    {{ facility_form.facility|as_crispy_field }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ===================================================== -->
+                    <!-- 3 CONTRACT -->
+                    <!-- ===================================================== -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                ③ {% trans "Contract" %}
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row g-3">
+
+                                {% for field in contract_form %}
+                                <div class="col-md-6">
+                                    {{ field|as_crispy_field }}
+                                </div>
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ===================================================== -->
+                    <!-- 4 PAYMENT -->
+                    <!-- ===================================================== -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                ④ {% trans "Payment" %}
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row g-3">
+
+                                {% for field in payment_form %}
+                                <div class="col-md-6">
+                                    {{ field|as_crispy_field }}
+                                </div>
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ===================================================== -->
+                    <!-- 5 ATTACHMENTS -->
+                    <!-- ===================================================== -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                ⑤ {% trans "Attachments" %}
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            {% if existing_attachments %}
+
+                            <div class="table-responsive mb-4">
+
+                                <table class="table table-sm table-bordered table-hover">
+
+                                    <thead class="table-light">
+
+                                        <tr>
+                                            <th>{% trans "Type" %}</th>
+                                            <th>{% trans "File" %}</th>
+                                            <th class="text-center">
+                                                {% trans "Delete" %}
+                                            </th>
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for att in existing_attachments %}
+
+                                        <tr>
+
+                                            <td>
+                                                {{ att.get_attachment_type_display }}
+                                            </td>
+
+                                            <td>
+                                                <a
+                                                    href="{{ att.file.url }}"
+                                                    target="_blank"
+                                                >
+                                                    {{ att.file.name|slice:"-40:" }}
+                                                </a>
+                                            </td>
+
+                                            <td class="text-center">
+
+                                                <input
+                                                    type="checkbox"
+                                                    name="delete_attachments"
+                                                    value="{{ att.id }}"
+                                                    class="form-check-input"
+                                                >
+
+                                            </td>
+
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            {% else %}
+
+                            <p class="text-muted">
+                                {% trans "No attachments." %}
+                            </p>
+
+                            {% endif %}
+
+
+                            <div class="row g-3">
+
+                                {% for field in attachment_form %}
+
+                                <div class="col-md-6">
+                                    {{ field|as_crispy_field }}
+                                </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ===================================================== -->
+                    <!-- 6 SOURCES -->
+                    <!-- ===================================================== -->
+
+                    <div class="card mb-4">
+
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                ⑥ {% trans "Sources" %}
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            {{ source_formset.management_form }}
+
+                            <div class="table-responsive">
+
+                                <table class="table table-bordered table-hover align-middle">
+
+                                    <thead class="table-light">
+
+                                        <tr>
+
+                                            <th>
+                                                {% trans "Type" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Existing DSRS Source" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Serial Number" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Nuclide" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Activity" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Unit" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Activity Date" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Description" %}
+                                            </th>
+
+                                            <th>
+                                                {% trans "Delete" %}
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for form in source_formset %}
+
+                                        <tr>
+
+                                            <td>
+                                                {{ form.id }}
+                                                {{ form.source_type }}
+                                            </td>
+
+                                            <td>
+                                                {{ form.source_dsrs }}
+                                            </td>
+
+                                            <td>
+                                                {{ form.serial_number }}
+                                            </td>
+
+                                            <td>
+                                                {{ form.instance.nuclide|default:"" }}
+                                            </td>
+
+                                            <td>
+                                                {{ form.activity }}
+                                            </td>
+
+                                            <td>
+                                                {{ form.activity_unit }}
+                                            </td>
+
+                                            <td>
+                                                {{ form.activity_date }}
+                                            </td>
+
+                                            <td>
+                                                {{ form.description }}
+                                            </td>
+
+                                            <td class="text-center">
+
+                                                {% if form.instance.pk %}
+                                                    {{ form.DELETE }}
+                                                {% endif %}
+
+                                            </td>
+
+                                        </tr>
+
+                                        {% if form.errors %}
+
+                                        <tr>
+
+                                            <td
+                                                colspan="9"
+                                                class="text-danger"
+                                            >
+                                                {{ form.errors }}
+                                            </td>
+
+                                        </tr>
+
+                                        {% endif %}
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ===================================================== -->
+                    <!-- BUTTONS -->
+                    <!-- ===================================================== -->
+
+                    <div class="d-flex justify-content-end gap-2">
+
+                        <a
+                            href="{% url 'license_detail' license.pk %}"
+                            class="btn btn-secondary"
+                        >
+                            {% trans "Cancel" %}
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            {% trans "Save Changes" %}
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
 
 {% endblock %}

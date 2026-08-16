@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% trans "My Profile" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="content">
+
+    <h2 class="mb-4">{% trans "My Profile" %}</h2>
+
+    {% if form.instance.signature_image %}
+        <div class="mb-3">
+            <label class="form-label">{% trans "Current Signature" %}</label>
+            <br>
+            <img src="{{ form.instance.signature_image.url }}"
+                 alt="{% trans 'Signature' %}"
+                 style="max-width:300px; border:1px solid #ddd; border-radius:8px; padding:8px;">
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        {% crispy form %}
+
+        <button type="submit" class="btn btn-primary">
+            {% trans "Save" %}
+        </button>
+    </form>
+
+</div>
+
+{% endblock %}

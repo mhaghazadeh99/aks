@@ -1246,15 +1246,8 @@ def license_sign(request, pk):
         profile = request.user.profile
 
         if not profile.signature_image:
-
-            messages.error(
-                request,
-                _("Please upload your signature image first."),
-            )
-
-            return redirect(
-                "profile",
-            )
+            messages.error(request, _("Please upload your signature image first."))
+            return redirect(f"{reverse('profile')}?next={request.path}")
 
         # -----------------------------------------------
         # Sign the specification document

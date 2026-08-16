@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from django.utils.http import url_has_allowed_host_and_scheme
 # Create your views here.
 import csv
 
@@ -12,6 +12,9 @@ from django.utils.translation import gettext_lazy as _
 from .forms import ViewPermissionImportForm
 from .models import ViewPermission
 
+from django.contrib.auth.decorators import login_required
+from .models import UserProfile
+from .forms import UserProfileForm  # add this form below
 
 @staff_member_required
 def view_permission_list(request):
@@ -76,3 +79,37 @@ def view_permission_delete(request, pk):
         messages.success(request, _("View permission removed."))
         return redirect("view_permission_list")
     return render(request, "accounts/view_permission_delete.html", {"permission": permission})
+
+
+
+
+
+
+
+@login_required
+def profile(request):
+
+    user_profile, _created = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={"full_name": request.user.get_full_name() or request.user.username},
+    )
+
+    next_url = request.POST.get("next") or request.GET.get("next")
+
+    # Only follow next_url if it's a safe, same-site path — never redirect
+    # to an attacker-supplied external URL.
+    if next_url and not url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        next_url = None
+
+    if request.method == "POST":
+        form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Profile updated successfully."))
+            return redirect(next_url or "profile")
+    else:
+        form = UserProfileForm(instance=user_profile)
+
+    return render(request, "accounts/profile.html", {"form": form, "next": next_url})

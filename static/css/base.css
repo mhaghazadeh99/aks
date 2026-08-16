@@ -295,38 +295,27 @@ html.ltr .menu-btn{
 
 
 html.rtl .menu-btn{
-    right:20px;
-    left:auto;
-
     position: fixed;
+    top: 12px;
+    right: 8px;
 
-    top: 20px;
-    
+    width: 32px;
+    height: 32px;
+    padding: 5px;
 
-    width: 46px;
-    height: 46px;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
 
-    border:none;
-    border-radius:12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
 
-    background:#2563eb;
-
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-
-    gap:5px;
-
-    cursor:pointer;
-
-    z-index:1200;
-
-    transition:
-       
-        transform .25s ease,
-        background .2s;
-
+    cursor: pointer;
+    z-index: 1200;
+    transition: transform .25s ease, background .2s;
 }
 
 .menu-btn span{

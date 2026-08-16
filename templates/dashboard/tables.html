@@ -430,13 +430,13 @@
 <td data-col="Attachments">
     {% for img in s.dsrs_images.all %}
         {% if img.file %}
-            <a href="{{ img.file.url }}">Image {{ forloop.counter }}</a><br>
+            <a href="{{ img.file.url }}">{% trans "Image" %} {{ forloop.counter }}</a><br>
         {% endif %}
     {% endfor %}
 
     {% with last_movement=s.movements.last %}
         {% for att in last_movement.attachments.all %}
-            <a href="{{ att.file.url }}" target="_blank">Movement File {{ forloop.counter }}</a><br>
+            <a href="{{ att.file.url }}" target="_blank">{% trans "Movement File" %} {{ forloop.counter }}</a><br>
         {% endfor %}
     {% endwith %}
 </td>

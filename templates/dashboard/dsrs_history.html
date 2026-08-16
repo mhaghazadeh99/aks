@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+
+{% load i18n %}
+{% load static %}
 {% block extrastyle %}
 <style>
 .timeline {
@@ -66,7 +69,7 @@
 
 <div class="content">
 
-<h2>DSRS History: {{ dsrs.serial_number }}</h2>
+<h2>{% trans "DSRS History:" %} {{ dsrs.serial_number }}</h2>
 
 <div class="timeline">
 
@@ -85,15 +88,15 @@
             <div class="meta">
 
                 {% if h.history_type == '+' %}
-                    <span class="badge green">CREATED</span>
+                    <span class="badge green">{% trans "CREATED" %}</span>
                 {% elif h.history_type == '~' %}
-                    <span class="badge blue">UPDATED</span>
+                    <span class="badge blue">{% trans "UPDATED" %}</span>
                 {% elif h.history_type == '-' %}
-                    <span class="badge red">DELETED</span>
+                    <span class="badge red">{% trans "DELETED" %}</span>
                 {% endif %}
 
                 {% if h.history_user %}
-                    <span class="user">by {{ h.history_user }}</span>
+                    <span class="user">{% trans "by" %} {{ h.history_user }}</span>
                 {% endif %}
 
             </div>
@@ -101,21 +104,29 @@
             <div class="details">
 
             {% if h.history_type == '+' %}
-                <p>Record created.</p>
+                <p>{% trans "Record created." %}</p>
 
             {% elif h.history_type == '-' %}
-                <p>Record deleted.</p>
+                <p>{% trans "Record deleted." %}</p>
 
             {% elif item.delta %}
                 {% for change in item.delta.changes %}
                     <p>
                         <strong>{{ change.field }}</strong><br>
-                        {{ change.old|default:"(empty)" }}
+                        {% if change.old %}
+                            {{ change.old }}
+                        {% else %}
+                            {% trans "(empty)" %}
+                        {% endif %}
                         →
-                        <strong>{{ change.new|default:"(empty)" }}</strong>
+                        <strong>{% if change.new %}
+                            {{ change.new }}
+                        {% else %}
+                            {% trans "(empty)" %}
+                        {% endif %}</strong>
                     </p>
                 {% empty %}
-                    <p>No field changes.</p>
+                    <p>{% trans "No field changes." %}</p>
                 {% endfor %}
             {% endif %}
 

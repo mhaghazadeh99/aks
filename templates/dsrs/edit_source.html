@@ -54,7 +54,7 @@
                     <td>{{ m.remarks|default:"-" }}</td>
                     <td>
                         {% for att in m.attachments.all %}
-                            <a href="{{ att.file.url }}" target="_blank">File {{ forloop.counter }}</a><br>
+                            <a href="{{ att.file.url }}" target="_blank">{% trans "File" %} {{ forloop.counter }}</a><br>
                         {% empty %}
                             -
                         {% endfor %}
@@ -161,7 +161,7 @@
         📷 {% trans "Take Photo" %}
     </button>
     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInputEdit').click()">
-        🖼️  Choose from Gallery
+        🖼️  {% trans "Choose from Gallery" %}
     </button>
 </div>
 

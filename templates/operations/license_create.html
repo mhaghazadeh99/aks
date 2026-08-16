@@ -238,8 +238,9 @@
     <thead class="table-light">
         <tr>
             <th>#</th>
-            <th>Type</th>
-            <th>Source</th>
+            <th>{% trans "Type" %}</th>
+            <th>{% trans "Source" %}</th>
+            
             <th width="80">Remove</th>
         </tr>
     </thead>
@@ -268,7 +269,8 @@
                                 name="action" 
                                 value="draft"
                                 class="btn btn-secondary">
-                                Save Draft
+                                {% trans "Save Draft" %}
+                                
                             </button>
 
 
@@ -277,7 +279,8 @@
                                 name="action" 
                                 value="continue"
                                 class="btn btn-primary">
-                                Save and Continue
+                                {% trans "Save and Continue" %}
+                                
                             </button>
 
                         </div>
@@ -294,7 +297,12 @@
 
 </div>
 
-
+{% trans "Add at least one component first." as msg_add_component %}
+{% trans "Select the final nuclide for this recycled source." as msg_select_nuclide %}
+{% trans "Quantity exceeds this DSRS's available count" as msg_quantity_exceeds %}
+{% trans "Recycled from" as msg_recycled_from %}
+{% trans "component" as msg_component %}
+{% trans "components" as msg_components %}
 <script>
 let sourceCounter = 0;
 
@@ -405,7 +413,7 @@ function addRecycleComponent(){
     const alreadyUsed = recycleUsed[dsrsId] || 0;
 
     if(alreadyUsed + qty > available){
-        alert("Quantity exceeds this DSRS's available count (" + available + ").");
+        alert("{{ msg_quantity_exceeds }} (" + available + ").");
         return;
     }
 
@@ -425,7 +433,7 @@ function removeRecycleComponent(idx){
 function finalizeRecycledSource(){
 
     if(recycleComponents.length === 0){
-        alert("Add at least one component first.");
+        alert("{{ msg_add_component }}");
         return;
     }
 
@@ -433,14 +441,14 @@ function finalizeRecycledSource(){
     const nuclideId = nuclideSelect.value;
 
     if(!nuclideId){
-        alert("Select the final nuclide for this recycled source.");
+        alert("{{ msg_select_nuclide }}");
         return;
     }
 
     sourceCounter++;
     const uid = "src"+sourceCounter;
 
-    const text = `${nuclideSelect.selectedOptions[0].text} (Recycled from ${recycleComponents.length} component${recycleComponents.length > 1 ? "s" : ""})`;
+    const text = `${nuclideSelect.selectedOptions[0].text} ({{ msg_recycled_from }} ${recycleComponents.length} ${recycleComponents.length > 1 ? "{{ msg_components }}" : "{{ msg_component }}"})`;
 
     const row = document.createElement("tr");
     row.id = uid;
@@ -582,7 +590,7 @@ function prefillSources(sources){
         } else if(s.type === "REUSED"){
             text = s.dsrsLabel;
         } else if(s.type === "RECYCLED"){
-            text = `${s.nuclideLabel} (Recycled from ${s.components.length} component${s.components.length > 1 ? "s" : ""})`;
+            text = `${s.nuclideLabel} ({{ msg_recycled_from }} ${s.components.length} ${s.components.length > 1 ? "{{ msg_components }}" : "{{ msg_component }}"})`;
             recycledJson = JSON.stringify(s.components);
         }
 

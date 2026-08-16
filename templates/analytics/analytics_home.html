@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load i18n %}
 
 
 {% block extrastyle %}
@@ -53,57 +54,57 @@
 <div class="chart-toolbar">
 
     <div class="toolbar-group">
-        <label for="chartType">Chart</label>
+        <label for="chartType">{% trans "Chart" %}</label>
         <select id="chartType">
-            <option value="bar">Bar Chart</option>
-            <option value="line">Line Chart</option>
-            <option value="pie">Pie Chart</option>
-            <option value="doughnut">Doughnut Chart</option>
-            <option value="polarArea">Polar Area Chart</option>
-            <option value="radar">Radar Chart</option>
+            <option value="bar"> {% trans "Bar Chart" %}</option>
+            <option value="line"> {% trans "Line Chart" %}</option>
+            <option value="pie"> {% trans "Pie Chart" %}</option>
+            <option value="doughnut">  {% trans "Doughnut Chart" %}</option>
+            <option value="polarArea">{% trans "Polar Area Chart" %}</option>
+            <option value="radar"> {% trans "Radar Chart" %}</option>
         </select>
     </div>
 
     <div class="toolbar-group">
-        <label for="model">Table</label>
+        <label for="model">{% trans "Table" %}</label>
         <select id="model"></select>
     </div>
 
     <div class="toolbar-group">
-        <label for="dimension">Dimension</label>
+        <label for="dimension">{% trans "Dimension" %}</label>
         <select id="dimension"></select>
     </div>
 
     <div class="toolbar-group">
-        <label for="measure">Measure</label>
+        <label for="measure">{% trans "Measure" %}</label>
         <select id="measure"></select>
     </div>
 
     <div class="toolbar-group">
-        <label for="date_granularity">Date Grouping</label>
+        <label for="date_granularity">{% trans "Date Grouping" %}</label>
         <select id="date_granularity" disabled>
-            <option value="">None</option>
-            <option value="day">Day</option>
-            <option value="week">Week</option>
-            <option value="month">Month</option>
-            <option value="quarter">Quarter</option>
-            <option value="year">Year</option>
+            <option value="">{% trans "None" %}</option>
+            <option value="day">{% trans "Day" %}</option>
+            <option value="week">{% trans "Week" %}</option>
+            <option value="month">{% trans "Month" %}</option>
+            <option value="quarter">{% trans "Quarter" %}</option>
+            <option value="year">{% trans "Year" %}</option>
         </select>
     </div>
 
     <div class="toolbar-group">
-        <label for="aggregation">Aggregation</label>
+        <label for="aggregation">{% trans "Aggregation" %}</label>
         <select id="aggregation">
-            <option value="count">Count</option>
-            <option value="sum">Sum</option>
-            <option value="avg">Average</option>
-            <option value="min">Minimum</option>
-            <option value="max">Maximum</option>
+            <option value="count">{% trans "Count" %}</option>
+            <option value="sum">{% trans "Sum" %}</option>
+            <option value="avg">{% trans "Average" %}</option>
+            <option value="min">{% trans "Minimum" %}</option>
+            <option value="max">{% trans "Maximum" %}</option>
         </select>
     </div>
 
     <button type="button" class="generate-btn" onclick="generateChart()">
-        Generate Chart
+        {% trans "Generate Chart" %}
     </button>
 
 </div>
@@ -111,7 +112,8 @@
 <div class="chart-container">
     <canvas id="chart"></canvas>
 </div>
-
+{% trans "Record Count" as msg_record_count %}
+{% trans "Time Series" as msg_time_series %}
 <script>
 let fieldMeta = {};
 let chart = null;
@@ -226,7 +228,7 @@ function loadFields() {
         });
 
         // MEASURES
-        measureSelect.innerHTML = '<option value="">Record Count</option>';
+        measureSelect.innerHTML = '<option value="">{{ msg_record_count }}</option>';
 
 // normal numeric measures
         data.semantic.measures.forEach(field => {
@@ -289,7 +291,7 @@ function generateChart() {
 
     const label =
     isDateMeasure
-        ? `Time Series (${selectedMeasureOption.value})`
+        ? `{{ msg_time_series }} (${selectedMeasureOption.value})`
         : (measure ? `${aggregation.toUpperCase()} ${measure}` : "Record Count");
         
     fetch(

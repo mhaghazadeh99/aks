@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-16 09:39+0000\n"
+"POT-Creation-Date: 2026-08-17 04:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1466,80 +1466,68 @@ msgid "Chart"
 msgstr "نمودار"
 
 #: templates/analytics/analytics_home.html:59
-#, fuzzy
-#| msgid "Chart"
 msgid "Bar Chart"
-msgstr "نمودار"
+msgstr "نمودار میله‌ای"
 
 #: templates/analytics/analytics_home.html:60
-#, fuzzy
-#| msgid "Chart"
 msgid "Line Chart"
-msgstr "نمودار"
+msgstr "نمودار خطی"
 
 #: templates/analytics/analytics_home.html:61
-#, fuzzy
-#| msgid "Chart"
 msgid "Pie Chart"
-msgstr "نمودار"
+msgstr "نمودار دایره‌ای"
 
 #: templates/analytics/analytics_home.html:62
 msgid "Doughnut Chart"
-msgstr ""
+msgstr "نمودار دوناتی"
 
 #: templates/analytics/analytics_home.html:63
 msgid "Polar Area Chart"
-msgstr ""
+msgstr "نمودار قطبی"
 
 #: templates/analytics/analytics_home.html:64
-#, fuzzy
-#| msgid "Chart"
 msgid "Radar Chart"
-msgstr "نمودار"
+msgstr "نمودار راداری"
 
 #: templates/analytics/analytics_home.html:69
-#, fuzzy
-#| msgid "Tables"
 msgid "Table"
-msgstr "جداول"
+msgstr "جدول"
 
 #: templates/analytics/analytics_home.html:79
 msgid "Measure"
-msgstr ""
+msgstr "معیار"
 
 #: templates/analytics/analytics_home.html:84
 msgid "Date Grouping"
-msgstr ""
+msgstr "گروه‌بندی تاریخ"
 
 #: templates/analytics/analytics_home.html:86
 msgid "None"
-msgstr ""
+msgstr "هیچ‌کدام"
 
 #: templates/analytics/analytics_home.html:87
 msgid "Day"
-msgstr ""
+msgstr "روز"
 
 #: templates/analytics/analytics_home.html:88
 msgid "Week"
-msgstr ""
+msgstr "هفته"
 
 #: templates/analytics/analytics_home.html:89
 msgid "Month"
-msgstr ""
+msgstr "ماه"
 
 #: templates/analytics/analytics_home.html:90
 msgid "Quarter"
-msgstr ""
+msgstr "سه‌ماهه"
 
 #: templates/analytics/analytics_home.html:91
 msgid "Year"
-msgstr ""
+msgstr "سال"
 
 #: templates/analytics/analytics_home.html:96
-#, fuzzy
-#| msgid "Duration"
 msgid "Aggregation"
-msgstr "عملیات"
+msgstr "تجمیع"
 
 #: templates/analytics/analytics_home.html:98
 #: templates/dashboard/tables.html:575
@@ -1548,35 +1536,31 @@ msgstr "تعداد"
 
 #: templates/analytics/analytics_home.html:99
 msgid "Sum"
-msgstr ""
+msgstr "مجموع"
 
 #: templates/analytics/analytics_home.html:100
 msgid "Average"
-msgstr ""
+msgstr "میانگین"
 
 #: templates/analytics/analytics_home.html:101
 msgid "Minimum"
-msgstr ""
+msgstr "حداقل"
 
 #: templates/analytics/analytics_home.html:102
 msgid "Maximum"
-msgstr ""
+msgstr "حداکثر"
 
 #: templates/analytics/analytics_home.html:107
 msgid "Generate Chart"
-msgstr ""
+msgstr "ایجاد نمودار"
 
 #: templates/analytics/analytics_home.html:115
-#, fuzzy
-#| msgid "Record Movement"
 msgid "Record Count"
-msgstr "ثبت جابه‌جایی"
+msgstr "تعداد رکوردها"
 
 #: templates/analytics/analytics_home.html:116
-#, fuzzy
-#| msgid "Time (Years)"
 msgid "Time Series"
-msgstr "زمان (سال)"
+msgstr "سری زمانی"
 
 #: templates/base.html:60 templates/home.html:5
 msgid "Home"
@@ -1730,8 +1714,6 @@ msgid "Sources at PI Co for quality control."
 msgstr "چشمه‌های موجود در شرکت PI برای کنترل کیفیت."
 
 #: templates/contract/index.html:4
-#, fuzzy
-#| msgid "ُSold DSRS's"
 msgid "Sold DSRS's"
 msgstr "DSRSهای فروخته‌شده"
 
@@ -1979,47 +1961,41 @@ msgid "No licenses ready to issue."
 msgstr "هیچ مجوزی آماده صدور نیست."
 
 #: templates/dashboard/dsrs_history.html:72
-#, fuzzy
-#| msgid "History"
 msgid "DSRS History:"
 msgstr "تاریخچه"
 
 #: templates/dashboard/dsrs_history.html:91
 msgid "CREATED"
-msgstr ""
+msgstr "ایجاد شد"
 
 #: templates/dashboard/dsrs_history.html:93
 msgid "UPDATED"
-msgstr ""
+msgstr "به‌روزرسانی شد"
 
 #: templates/dashboard/dsrs_history.html:95
 msgid "DELETED"
-msgstr ""
+msgstr "حذف شد"
 
 #: templates/dashboard/dsrs_history.html:99
 msgid "by"
-msgstr ""
+msgstr "توسط"
 
 #: templates/dashboard/dsrs_history.html:107
-#, fuzzy
-#| msgid "Record Movement"
 msgid "Record created."
-msgstr "ثبت جابه‌جایی"
+msgstr "رکورد ایجاد شد."
 
 #: templates/dashboard/dsrs_history.html:110
-#, fuzzy
-#| msgid "Record Movement"
 msgid "Record deleted."
-msgstr "ثبت جابه‌جایی"
+msgstr "رکورد حذف شد."
 
 #: templates/dashboard/dsrs_history.html:119
 #: templates/dashboard/dsrs_history.html:125
 msgid "(empty)"
-msgstr ""
+msgstr "(خالی)"
 
 #: templates/dashboard/dsrs_history.html:129
 msgid "No field changes."
-msgstr ""
+msgstr "تغییری در فیلدها ایجاد نشده است."
 
 #: templates/dashboard/tables.html:6 templates/dsrs/source_list.html:6
 #: templates/operations/license_list.html:5
@@ -2117,13 +2093,11 @@ msgstr "بله،خیر"
 #: templates/dashboard/tables.html:433
 #: venv/lib/python3.12/site-packages/django/db/models/fields/files.py:420
 msgid "Image"
-msgstr ""
+msgstr "عکس"
 
 #: templates/dashboard/tables.html:439
-#, fuzzy
-#| msgid "Movement Type"
 msgid "Movement File"
-msgstr "نوع جابه‌جایی"
+msgstr "فایل جابه‌جایی"
 
 #: templates/dashboard/tables.html:459
 msgid "History"
@@ -2359,38 +2333,28 @@ msgid "Selected"
 msgstr "انتخاب‌شده"
 
 #: templates/dsrs/source_list.html:20
-#, fuzzy
-#| msgid "Sources"
 msgid "Source List"
-msgstr "چشمه‌ها"
+msgstr "فهرست چشمه‌ها"
 
 #: templates/dsrs/source_list.html:33
-#, fuzzy
-#| msgid "Items"
 msgid "10 items"
-msgstr "موارد"
+msgstr "۱۰ مورد"
 
 #: templates/dsrs/source_list.html:37
-#, fuzzy
-#| msgid "Items"
 msgid "25 items"
-msgstr "موارد"
+msgstr "۲۵ مورد"
 
 #: templates/dsrs/source_list.html:41
-#, fuzzy
-#| msgid "Items"
 msgid "50 items"
-msgstr "موارد"
+msgstr "۵۰ مورد"
 
 #: templates/dsrs/source_list.html:45
 msgid "All items"
-msgstr ""
+msgstr "همه موارد"
 
 #: templates/dsrs/source_list.html:54
-#, fuzzy
-#| msgid "Search..."
 msgid "Search sources..."
-msgstr "جستجو..."
+msgstr "جستجوی چشمه‌ها..."
 
 #: templates/dsrs/source_list.html:84
 msgid "SSO"
@@ -2593,49 +2557,39 @@ msgstr ""
 msgid "Finalize Recycled Source"
 msgstr "نهایی‌سازی چشمه بازیافت‌شده"
 
+#: templates/operations/license_create.html:244
+msgid "Remove"
+msgstr "حذف"
+
 #: templates/operations/license_create.html:272
-#, fuzzy
-#| msgid "Save Contract"
 msgid "Save Draft"
-msgstr "ذخیره قرارداد"
+msgstr "ذخیره پیش نویس"
 
 #: templates/operations/license_create.html:282
-#, fuzzy
-#| msgid "Continue"
 msgid "Save and Continue"
-msgstr "ادامه"
+msgstr "ذخیره و ادامه"
 
 #: templates/operations/license_create.html:300
 msgid "Add at least one component first."
-msgstr ""
+msgstr "حداقل یک مولفه افزوده شود."
 
 #: templates/operations/license_create.html:301
-#, fuzzy
-#| msgid "Row %(row)d: final nuclide is required for a Recycled source."
 msgid "Select the final nuclide for this recycled source."
 msgstr "ردیف %(row)d: برای چشمه بازیافت‌شده، رادیونوکلید نهایی الزامی است."
 
 #: templates/operations/license_create.html:302
-#, fuzzy
-#| msgid "Quantity exceeds this DSRS's available count."
 msgid "Quantity exceeds this DSRS's available count"
 msgstr "تعداد واردشده از تعداد موجود این DSRS بیشتر است."
 
 #: templates/operations/license_create.html:303
-#, fuzzy
-#| msgid "Recycled"
 msgid "Recycled from"
-msgstr "بازیافت‌شده"
+msgstr "بازیافت‌شده از"
 
 #: templates/operations/license_create.html:304
-#, fuzzy
-#| msgid "Components"
 msgid "component"
 msgstr "اجزا"
 
 #: templates/operations/license_create.html:305
-#, fuzzy
-#| msgid "Components"
 msgid "components"
 msgstr "اجزا"
 

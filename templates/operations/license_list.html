@@ -7,6 +7,59 @@
 {% block content %}
 {% block extrastyle %}
 <style>
+    .summary-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    padding:7px 14px;
+
+    border:none;
+
+    border-radius:25px;
+
+    cursor:pointer;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    transition:.2s;
+
+    white-space:nowrap;
+
+}
+
+.summary-badge:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:0 4px 10px rgba(0,0,0,.12);
+
+}
+
+.summary-badge.sources{
+
+    background:#eef5ff;
+    color:#0d6efd;
+
+}
+
+.summary-badge.letters{
+
+    background:#fff7e6;
+    color:#d48806;
+
+}
+
+.summary-badge.contracts{
+
+    background:#eef8f0;
+    color:#198754;
+
+}
     .action-icons {
     display: flex;
     gap: 8px;
@@ -336,93 +389,77 @@
 
     </td>
 
-    <td>
+ 
+<td>
+    <button
+        type="button"
+        class="summary-badge sources"
+        data-bs-toggle="modal"
+        data-bs-target="#sourcesModal{{ license.pk }}"
+    >
+        📦
+        {{ license.sources.count }}
 
-        {% for source in license.sources.all %}
-
-            <div>
-
-                <strong>
-
-                    {{ source.nuclide }}
-
-
-                </strong>
-
-                <br>
-
-                SN:
-
-                {{ source.serial_number|default:"-" }}
-
-                <br>
-
-                {{ source.activity|default:"-" }}
-
-            </div>
-
-            {% if not forloop.last %}
-                <hr>
-            {% endif %}
-
-        {% empty %}
-
-            -
-
-        {% endfor %}
-
-    </td>
-
-    <td>
-
-        {% for file in license.attachments.all %}
-
-            {% if file.attachment_type == "LETTER" %}
-
-                <a
-
-                    href="{{ file.file.url }}"
-
-                    target="_blank"
-
-                >
-
-                    {% trans "View" %}
-
-                </a>
-
-            {% endif %}
-
-        {% empty %}
-
-            -
-
-        {% endfor %}
-
-    </td>
-
-    <td>
-
-    {% for file in license.attachments.all %}
-
-        {% if file.attachment_type == "CONTRACT" %}
-
-            <a
-                href="{{ file.file.url }}"
-                target="_blank"
-                title="{% trans 'View Contract' %}"
-            >
-                📄
-            </a>
-
-        {% endif %}
-
-    {% empty %}
-        -
-    {% endfor %}
-
+        {% if license.sources.count == 1 %}
+            {% trans "Source" %}
+        {% else %}
+            {% trans "Sources" %}
+    {% endif %}
+    </button>
 </td>
 
+
+<td>
+    <button
+        type="button"
+        class="summary-badge letters"
+        data-bs-toggle="modal"
+        data-bs-target="#lettersModal{{ license.pk }}"
+    >
+        📨
+
+        {% with letter_count=0 %}
+        {% for attachment in license.attachments.all %}
+            {% if attachment.attachment_type == "LETTER" %}
+                {% with letter_count=letter_count|add:"1" %}
+                {% endwith %}
+            {% endif %}
+        {% endfor %}
+        {% endwith %}
+
+        <span class="letter-count">
+            {% for attachment in license.attachments.all %}
+                {% if attachment.attachment_type == "LETTER" %}
+                    {% if forloop.first %}{{ forloop.counter }}{% endif %}
+                {% endif %}
+            {% endfor %}
+        </span>
+
+        {% trans "Files" %}
+    </button>
+</td>
+
+
+<td>
+    <button
+        type="button"
+        class="summary-badge contracts"
+        data-bs-toggle="modal"
+        data-bs-target="#contractsModal{{ license.pk }}"
+    >
+        📄
+
+        <span class="contract-count">
+            {% for attachment in license.attachments.all %}
+                {% if attachment.attachment_type == "CONTRACT" %}
+                    {% if forloop.first %}{{ forloop.counter }}{% endif %}
+                {% endif %}
+            {% endfor %}
+        </span>
+
+        {% trans "Files" %}
+    </button>
+</td>
     <td>
 
         {{ license.get_status_display }}
@@ -516,6 +553,289 @@
 
 </div>
 </div>
+
+{% for license in page_obj %}
+
+<div
+    class="modal fade"
+    id="sourcesModal{{ license.pk }}"
+    tabindex="-1"
+    aria-labelledby="sourcesModalLabel{{ license.pk }}"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5
+                    class="modal-title"
+                    id="sourcesModalLabel{{ license.pk }}"
+                >
+                    📦 {% trans "Sources" %}
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="{% trans 'Close' %}"
+                ></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover">
+
+                        <thead>
+                            <tr>
+                                <th>{% trans "Nuclide" %}</th>
+                                <th>{% trans "Serial Number" %}</th>
+                                <th>{% trans "Activity" %}</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                        {% for source in license.sources.all %}
+
+                            <tr>
+
+                                <td>
+                                    {{ source.nuclide|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ source.serial_number|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ source.activity|default:"-" }}
+                                    {% if source.activity_unit %}
+                                        {{ source.activity_unit }}
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    {% trans "No sources found." %}
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    {% trans "Close" %}
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endfor %}
+
+{% for license in page_obj %}
+
+<div
+    class="modal fade"
+    id="lettersModal{{ license.pk }}"
+    tabindex="-1"
+    aria-labelledby="lettersModalLabel{{ license.pk }}"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5
+                    class="modal-title"
+                    id="lettersModalLabel{{ license.pk }}"
+                >
+                    📨 {% trans "Letter Attachments" %}
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="{% trans 'Close' %}"
+                ></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="list-group">
+
+                    {% for attachment in license.attachments.all %}
+
+                        {% if attachment.attachment_type == "LETTER" %}
+
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+
+                                <div>
+                                    📄
+                                    {{ attachment.file.name }}
+                                </div>
+
+                                {% if attachment.file %}
+
+                                    <a
+                                        href="{{ attachment.file.url }}"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        👁 {% trans "View" %}
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    {% trans "Close" %}
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endfor %}
+
+{% for license in page_obj %}
+
+<div
+    class="modal fade"
+    id="contractsModal{{ license.pk }}"
+    tabindex="-1"
+    aria-labelledby="contractsModalLabel{{ license.pk }}"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5
+                    class="modal-title"
+                    id="contractsModalLabel{{ license.pk }}"
+                >
+                    📄 {% trans "Contract Attachments" %}
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="{% trans 'Close' %}"
+                ></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="list-group">
+
+                    {% for attachment in license.attachments.all %}
+
+                        {% if attachment.attachment_type == "CONTRACT" %}
+
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+
+                                <div>
+                                    📄
+                                    {{ attachment.file.name }}
+                                </div>
+
+                                {% if attachment.file %}
+
+                                    <a
+                                        href="{{ attachment.file.url }}"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        👁 {% trans "View" %}
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    {% trans "Close" %}
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endfor %}
+
+
 <div class="pagination">
 
     {% if page_obj.has_previous %}

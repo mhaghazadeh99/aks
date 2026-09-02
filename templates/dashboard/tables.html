@@ -529,6 +529,42 @@
 </div>
 <!-- ================= JS ================= -->
 <script>
+function currentParams() {
+    return new URLSearchParams(window.location.search);
+}
+
+function runSearch() {
+    const p = currentParams();
+    const term = document.getElementById("searchInput").value.trim();
+    if (term) {
+        p.set("search", term);
+    } else {
+        p.delete("search");
+    }
+    p.delete("page");
+    window.location.search = p.toString();
+}
+
+document.getElementById("searchInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        runSearch();
+    }
+});
+
+document.querySelector(".header-group button").addEventListener("click", function (e) {
+    e.preventDefault();
+    runSearch();
+});
+
+// Keep the search box showing whatever's actually active after reload
+document.addEventListener("DOMContentLoaded", function () {
+    const existing = currentParams().get("search");
+    if (existing) {
+        document.getElementById("searchInput").value = existing;
+    }
+});
+
 function getCookie(name) {
     let cookieValue = null;
     document.cookie.split(';').forEach(c => {
@@ -540,13 +576,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// SEARCH
-document.getElementById("searchInput").addEventListener("keyup", function () {
-    let v = this.value.toLowerCase();
-    document.querySelectorAll("#tableBody tr").forEach(r => {
-        r.style.display = r.innerText.toLowerCase().includes(v) ? "" : "none";
-    });
-});
+
 
 // PAGE SIZE
 document.getElementById("pageSize").onchange = function () {
@@ -585,8 +615,7 @@ document.getElementById("addFilter").onclick = function () {
         <option value="Nuclide">{% trans "Nuclide" %}</option>
         <option value="activity_input">{% trans "Input" %}</option>
         <option value="activity_unit">{% trans "Unit" %}</option>
-        <option value="Activity">{% trans "Activity" %}</option>
-        <option value="Category">{% trans "Category" %}</option>
+        
         <option value="Activity_reference_date">{% trans "Reference Date" %}</option>
         <option value="serial_number">{% trans "Serial Number" %}</option>
         <option value="Dose_rate_surface_uSv">{% trans "Surface Dose" %}</option>
@@ -603,7 +632,7 @@ document.getElementById("addFilter").onclick = function () {
         <option value="Device_Serial_Number">{% trans "Device Serial Number" %}</option>
         <option value="Container_Type">{% trans "Container" %}</option>
         <option value="Dimension">{% trans "Dimension" %}</option>
-        <option value="Attachments">{% trans "Files" %}</option>
+        
         <option value="Comment">{% trans "Comment" %}</option>
         <option value="created_by">{% trans "User" %}</option>
         <option value="created_at">{% trans "Created" %}</option>

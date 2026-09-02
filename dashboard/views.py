@@ -302,9 +302,48 @@ def source_list(request):
     })
 
 
-
-
 def tables_view(request):
+
+    # Maps each filterable dropdown key to the ACTUAL Django lookup path.
+    # Foreign keys are traversed to their display field (name/username)
+    # instead of being filtered directly, which isn't valid. "Activity",
+    # "Category", and "Attachments" are deliberately left OUT — they're
+    # either Python-computed properties or come from related tables, not
+    # real columns, so they can never be filtered at the database level.
+    FIELD_FILTER_MAP = {
+        "Source_Type": "Source_Type",
+        "Sso_Code": "Sso_Code",
+        "Facility": "Facility__name",
+        "Origin_Type": "Origin_Type",
+        "Date_received": "Date_received",
+        "Origin_Facility": "movements__from_facility__name",
+        "Location": "Location",
+        "Status": "Status",
+        "Status_Date": "Status_Date",
+        "Responsible_Person": "Responsible_Person",
+        "Nuclide": "Nuclide__name",
+        "activity_input": "activity_input",
+        "activity_unit": "activity_unit",
+        "Activity_reference_date": "Activity_reference_date",
+        "serial_number": "serial_number",
+        "Dose_rate_surface_uSv": "Dose_rate_surface_uSv",
+        "Dose_rate_1m_uSv": "Dose_rate_1m_uSv",
+        "Dose_rate_measurement_date": "Dose_rate_measurement_date",
+        "source_state": "source_state",
+        "contamination_bq_cm2": "contamination_bq_cm2",
+        "Source_Physical_Form": "Source_Physical_Form",
+        "Source_Manufacturer": "Source_Manufacturer",
+        "Source_Model": "Source_Model",
+        "Source_Practice": "Source_Practice",
+        "Device_Manufacturer": "Device_Manufacturer",
+        "Device_Model": "Device_Model",
+        "Device_Serial_Number": "Device_Serial_Number",
+        "Container_Type": "Container_Type",
+        "Dimension": "Dimension",
+        "Comment": "Comment",
+        "created_by": "created_by__username",
+        "created_at": "created_at",
+    }
 
     queryset = DSRS.objects.select_related(
                 'Nuclide',
@@ -314,29 +353,38 @@ def tables_view(request):
                 'dsrs_images',
                 'movements__from_facility',
                 'movements__to_facility',
-                'movements__attachments',   # added
+                'movements__attachments',
             ).order_by("-created_at")
 
-    # 🔍 SEARCH
+    # 🔍 GLOBAL SEARCH — now actually queries the whole database (via a real
+    # page reload, see tables.html), across every mapped field, correctly
+    # traversing foreign keys instead of matching their raw ID.
     search = request.GET.get("search")
     if search:
-        queryset = queryset.filter(
-            Q(Facility__name__icontains=search) |
-            Q(Status__icontains=search) |
-            Q(Nuclide__name__icontains=search) |
-            Q(Source_Type__icontains=search) |
-            Q(Source_Model__icontains=search) |
-            Q(Device_Model__icontains=search) |
-            Q(Container_Type__icontains=search)
-        )
+        search_q = Q()
+        for lookup in set(FIELD_FILTER_MAP.values()):
+            search_q |= Q(**{f"{lookup}__icontains": search})
+        queryset = queryset.filter(search_q)
 
-    # 🎯 FILTERS
+    # 🎯 FILTERS — routed through the same map, so foreign-key fields no
+    # longer crash and unknown/unsupported keys are silently ignored
+    # instead of raising FieldError.
     keys = request.GET.getlist("key")
     values = request.GET.getlist("value")
 
     for k, v in zip(keys, values):
-        if v:
-            queryset = queryset.filter(**{f"{k}__icontains": v})
+        if not v:
+            continue
+        lookup = FIELD_FILTER_MAP.get(k)
+        if not lookup:
+            continue
+        queryset = queryset.filter(**{f"{lookup}__icontains": v})
+
+    if search or keys:
+        # Traversing movements__from_facility (a reverse FK, one-to-many)
+        # can duplicate rows when a DSRS has multiple matching movements —
+        # this collapses those back down to one row per DSRS.
+        queryset = queryset.distinct()
 
     # 📄 PAGE SIZE
     size = request.GET.get("size", "10")

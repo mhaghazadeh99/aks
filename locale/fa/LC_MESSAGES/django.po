@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 04:21+0000\n"
+"POT-Creation-Date: 2026-09-02 06:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -114,13 +114,13 @@ msgstr "تاریخ پرداخت"
 #: templates/dashboard/tables.html:223
 #: templates/financial/license_payment_list.html:39
 #: templates/operations/license_detail.html:51
-#: templates/operations/license_list.html:282
+#: templates/operations/license_list.html:335
 msgid "Contract Number"
 msgstr "شماره قرارداد"
 
 #: contract/models.py:27 contract/views.py:574
 #: templates/contract/contract_edit.html:55 templates/contract/index.html:204
-#: templates/operations/license_list.html:280
+#: templates/operations/license_list.html:333
 msgid "Contract Date"
 msgstr "تاریخ قرارداد"
 
@@ -175,7 +175,7 @@ msgstr "مسئول قرارداد"
 #: contract/models.py:114 contract/models.py:160 contract/views.py:577
 #: dashboard/models.py:437 facilities/models.py:61 financial/models.py:43
 #: operations/models.py:128 templates/dsrs/source_list.html:132
-#: templates/operations/license_list.html:611
+#: templates/operations/license_list.html:931
 msgid "Created At"
 msgstr "تاریخ ایجاد"
 
@@ -244,13 +244,14 @@ msgstr "شناسه"
 #: templates/contract/contract_edit.html:35 templates/contract/index.html:198
 #: templates/contract/index.html:342
 #: templates/contract/license_contract_form.html:122
-#: templates/dashboard/tables.html:213 templates/dashboard/tables.html:591
+#: templates/dashboard/tables.html:213 templates/dashboard/tables.html:620
 #: templates/operations/license_detail.html:87
-#: templates/operations/license_list.html:593
+#: templates/operations/license_list.html:597
+#: templates/operations/license_list.html:913
 #: templates/operations/license_sign.html:155
 #: templates/operations/license_specification.html:117
 #: templates/operations/license_update.html:285
-#: templates/receive_source/receive_list.html:212
+#: templates/receive_source/receive_list.html:211
 msgid "Serial Number"
 msgstr "شماره سریال"
 
@@ -259,26 +260,27 @@ msgstr "شماره سریال"
 #: templates/contract/contract_edit.html:40 templates/contract/index.html:199
 #: templates/contract/index.html:343
 #: templates/contract/license_contract_form.html:121
-#: templates/contract/license_issue.html:74 templates/dashboard/tables.html:585
+#: templates/contract/license_issue.html:74 templates/dashboard/tables.html:615
 #: templates/dsrs/source_list.html:116
 #: templates/operations/license_create.html:174
 #: templates/operations/license_create.html:538
 #: templates/operations/license_detail.html:83
-#: templates/operations/license_list.html:587
+#: templates/operations/license_list.html:596
+#: templates/operations/license_list.html:907
 #: templates/operations/license_sign.html:151
 #: templates/operations/license_specification.html:116
 #: templates/operations/license_update.html:289
-#: templates/receive_source/receive_list.html:216
+#: templates/receive_source/receive_list.html:215
 #: templates/reference/radionuclide_list.html:25
 msgid "Nuclide"
 msgstr "رادیونوکلید"
 
 #: contract/views.py:569 dashboard/models.py:90 operations/forms.py:281
 #: templates/contract/index.html:200 templates/contract/index.html:341
-#: templates/dashboard/tables.html:218 templates/dashboard/tables.html:571
+#: templates/dashboard/tables.html:218 templates/dashboard/tables.html:601
 #: templates/dsrs/source_list.html:80
 #: templates/operations/license_create.html:167
-#: templates/operations/license_list.html:574
+#: templates/operations/license_list.html:894
 msgid "Source Type"
 msgstr "نوع چشمه"
 
@@ -290,18 +292,18 @@ msgstr "نوع چشمه"
 #: templates/contract/license_contract_form.html:79
 #: templates/contract/license_contract_home.html:17
 #: templates/contract/ready_to_issue_list.html:38
-#: templates/dashboard/tables.html:577 templates/dsrs/source_list.html:88
+#: templates/dashboard/tables.html:607 templates/dsrs/source_list.html:88
 #: templates/financial/license_payment_form.html:37
 #: templates/financial/license_payment_list.html:35
 #: templates/operations/license_create.html:114
 #: templates/operations/license_detail.html:18
-#: templates/operations/license_list.html:272
-#: templates/operations/license_list.html:576
+#: templates/operations/license_list.html:325
+#: templates/operations/license_list.html:896
 #: templates/operations/license_queue.html:53
 #: templates/operations/license_sign.html:100
 #: templates/operations/license_specification.html:56
 #: templates/operations/license_update.html:77
-#: templates/receive_source/receive_list.html:208
+#: templates/receive_source/receive_list.html:207
 msgid "Facility"
 msgstr "مرکز"
 
@@ -309,33 +311,34 @@ msgstr "مرکز"
 #: templates/contract/index.html:202 templates/contract/index.html:345
 #: templates/contract/issued_license_list.html:21
 #: templates/contract/license_contract_form.html:29
-#: templates/dashboard/tables.html:259 templates/dashboard/tables.html:582
+#: templates/dashboard/tables.html:259 templates/dashboard/tables.html:612
 #: templates/dsrs/source_list.html:108
 #: templates/operations/license_detail.html:29
-#: templates/operations/license_list.html:290
-#: templates/operations/license_list.html:584
+#: templates/operations/license_list.html:343
+#: templates/operations/license_list.html:904
 #: templates/operations/license_queue.html:63
 #: templates/operations/license_sign.html:35
-#: templates/receive_source/receive_list.html:232
+#: templates/receive_source/receive_list.html:231
 msgid "Status"
 msgstr "وضعیت"
 
 #: contract/views.py:572 dashboard/models.py:115 operations/models.py:110
 #: templates/contract/index.html:346 templates/dashboard/tables.html:263
-#: templates/dashboard/tables.html:583
-#: templates/operations/license_list.html:585
+#: templates/dashboard/tables.html:613
+#: templates/operations/license_list.html:905
 msgid "Status Date"
 msgstr "تاریخ وضعیت"
 
 #: dashboard/forms.py:32 operations/models.py:246
 #: templates/contract/license_contract_form.html:123
-#: templates/dashboard/tables.html:588 templates/dsrs/source_list.html:120
+#: templates/dsrs/source_list.html:120
 #: templates/operations/license_detail.html:91
-#: templates/operations/license_list.html:590
+#: templates/operations/license_list.html:598
+#: templates/operations/license_list.html:910
 #: templates/operations/license_sign.html:159
 #: templates/operations/license_specification.html:118
 #: templates/operations/license_update.html:293
-#: templates/receive_source/receive_list.html:220
+#: templates/receive_source/receive_list.html:219
 msgid "Activity"
 msgstr "فعالیت"
 
@@ -360,7 +363,7 @@ msgid "Available Count"
 msgstr "تعداد موجود"
 
 #: dashboard/forms.py:38 templates/dashboard/tables.html:227
-#: templates/dashboard/tables.html:574
+#: templates/dashboard/tables.html:604
 msgid "Divisible"
 msgstr "قابل تفکیک"
 
@@ -400,9 +403,9 @@ msgstr "تعداد"
 msgid "Remarks"
 msgstr "توضیحات"
 
-#: dashboard/models.py:16 templates/dashboard/tables.html:579
+#: dashboard/models.py:16 templates/dashboard/tables.html:609
 #: templates/dsrs/source_list.html:96
-#: templates/operations/license_list.html:578
+#: templates/operations/license_list.html:898
 msgid "Received"
 msgstr "دریافت‌شده"
 
@@ -519,19 +522,19 @@ msgid "DSRS Sources"
 msgstr "چشمه‌های DSRS"
 
 #: dashboard/models.py:92 templates/dashboard/tables.html:350
-#: templates/dashboard/tables.html:572
-#: templates/operations/license_list.html:575
+#: templates/dashboard/tables.html:602
+#: templates/operations/license_list.html:895
 msgid "SSO Code"
 msgstr "کد SSO"
 
 #: dashboard/models.py:102 templates/dashboard/tables.html:243
-#: templates/operations/license_list.html:577
-#: templates/receive_source/receive_list.html:228
+#: templates/operations/license_list.html:897
+#: templates/receive_source/receive_list.html:227
 msgid "Origin Type"
 msgstr "نوع مبدأ"
 
 #: dashboard/models.py:104 templates/dashboard/tables.html:247
-#: templates/receive_source/receive_list.html:224
+#: templates/receive_source/receive_list.html:223
 msgid "Date Received"
 msgstr "تاریخ دریافت"
 
@@ -547,9 +550,9 @@ msgstr "تعداد چشمه"
 msgid "available count"
 msgstr "تعداد موجود"
 
-#: dashboard/models.py:110 templates/dashboard/tables.html:581
+#: dashboard/models.py:110 templates/dashboard/tables.html:611
 #: templates/dsrs/source_list.html:104
-#: templates/operations/license_list.html:580
+#: templates/operations/license_list.html:900
 msgid "Location"
 msgstr "محل نگهداری"
 
@@ -560,9 +563,9 @@ msgstr "وضعیت چشمه"
 #: dashboard/models.py:117 facilities/models.py:16
 #: templates/dashboard/tables.html:267
 #: templates/facilities/facility_list.html:255
-#: templates/operations/license_list.html:586
+#: templates/operations/license_list.html:906
 #: templates/operations/license_specification.html:66
-#: templates/receive_source/receive_list.html:236
+#: templates/receive_source/receive_list.html:235
 msgid "Responsible Person"
 msgstr "شخص مسئول"
 
@@ -602,68 +605,69 @@ msgstr "وضعیت چشمه"
 msgid "contamination bq/cm2"
 msgstr "آلودگی (Bq/cm²)"
 
-#: dashboard/models.py:143 templates/operations/license_list.html:599
+#: dashboard/models.py:143 templates/operations/license_list.html:919
 msgid "Source Physical Form"
 msgstr "شکل فیزیکی چشمه"
 
 #: dashboard/models.py:144 templates/dashboard/tables.html:318
-#: templates/dashboard/tables.html:598
-#: templates/operations/license_list.html:600
+#: templates/dashboard/tables.html:627
+#: templates/operations/license_list.html:920
 msgid "Source Manufacturer"
 msgstr "سازنده چشمه"
 
 #: dashboard/models.py:145 templates/dashboard/tables.html:322
-#: templates/dashboard/tables.html:599
-#: templates/operations/license_list.html:601
+#: templates/dashboard/tables.html:628
+#: templates/operations/license_list.html:921
 msgid "Source Model"
 msgstr "مدل چشمه"
 
-#: dashboard/models.py:146 templates/operations/license_list.html:602
+#: dashboard/models.py:146 templates/operations/license_list.html:922
 msgid "Source Practice"
 msgstr "کاربرد چشمه"
 
 #: dashboard/models.py:148 templates/dashboard/tables.html:330
-#: templates/dashboard/tables.html:601
-#: templates/operations/license_list.html:603
+#: templates/dashboard/tables.html:630
+#: templates/operations/license_list.html:923
 msgid "Device Manufacturer"
 msgstr "سازنده دستگاه"
 
 #: dashboard/models.py:149 templates/dashboard/tables.html:334
-#: templates/dashboard/tables.html:602
-#: templates/operations/license_list.html:604
+#: templates/dashboard/tables.html:631
+#: templates/operations/license_list.html:924
 msgid "Device Model"
 msgstr "مدل دستگاه"
 
 #: dashboard/models.py:150 templates/dashboard/tables.html:338
-#: templates/dashboard/tables.html:603
-#: templates/operations/license_list.html:605
+#: templates/dashboard/tables.html:632
+#: templates/operations/license_list.html:925
 msgid "Device Serial Number"
 msgstr "شماره سریال دستگاه"
 
 #: dashboard/models.py:152 templates/dashboard/tables.html:342
-#: templates/operations/license_list.html:606
+#: templates/operations/license_list.html:926
 msgid "Container Type"
 msgstr "نوع محفظه"
 
 #: dashboard/models.py:154 templates/analytics/analytics_home.html:74
-#: templates/dashboard/tables.html:605
-#: templates/operations/license_list.html:607
+#: templates/dashboard/tables.html:634
+#: templates/operations/license_list.html:927
 msgid "Dimension"
 msgstr "ابعاد"
 
-#: dashboard/models.py:158 templates/dashboard/tables.html:607
-#: templates/operations/license_list.html:609
+#: dashboard/models.py:158 templates/dashboard/tables.html:636
+#: templates/operations/license_list.html:929
 #: templates/operations/license_sign.html:323
 msgid "Comment"
 msgstr "توضیحات"
 
 #: dashboard/models.py:383 templates/operations/license_create.html:242
+#: templates/operations/license_list.html:404
 msgid "Source"
 msgstr "چشمه"
 
 #: dashboard/models.py:423 operations/models.py:156
-#: templates/dashboard/tables.html:573
-#: templates/operations/license_list.html:288
+#: templates/dashboard/tables.html:603
+#: templates/operations/license_list.html:341
 #: templates/operations/license_update.html:104
 msgid "Contract"
 msgstr "قرارداد"
@@ -721,7 +725,7 @@ msgid "Hide/Show Filters"
 msgstr "نمایش/مخفی کردن فیلترها"
 
 #: dashboard/models.py:524 templates/contract/index.html:351
-#: templates/dashboard/tables.html:611
+#: templates/dashboard/tables.html:640
 msgid "Value"
 msgstr "مقدار"
 
@@ -753,42 +757,42 @@ msgstr "جابه‌جایی با موفقیت ثبت شد."
 msgid "Source updated successfully."
 msgstr "چشمه با موفقیت به‌روزرسانی شد."
 
-#: dashboard/views.py:411
+#: dashboard/views.py:459
 msgid "Missing nuclide data"
 msgstr "اطلاعات رادیونوکلید موجود نیست"
 
-#: dashboard/views.py:422
+#: dashboard/views.py:470
 msgid "No current activity available"
 msgstr "فعالیت فعلی موجود نیست"
 
-#: dashboard/views.py:464
+#: dashboard/views.py:512
 msgid "Model updated successfully"
 msgstr "مدل با موفقیت به‌روزرسانی شد"
 
-#: dashboard/views.py:537
+#: dashboard/views.py:585
 msgid "POST required"
 msgstr "درخواست POST الزامی است"
 
-#: dashboard/views.py:541
+#: dashboard/views.py:589
 msgid "No file uploaded"
 msgstr "هیچ فایلی بارگذاری نشده است"
 
-#: dashboard/views.py:602
+#: dashboard/views.py:650
 #, python-format
 msgid "Facility '%(name)s' not found"
 msgstr "مرکز «%(name)s» یافت نشد"
 
-#: dashboard/views.py:610
+#: dashboard/views.py:658
 #, python-format
 msgid "Origin Facility '%(name)s' not found"
 msgstr "مرکز مبدأ «%(name)s» یافت نشد"
 
-#: dashboard/views.py:617
+#: dashboard/views.py:665
 #, python-format
 msgid "Nuclide '%(name)s' not found"
 msgstr "رادیونوکلید «%(name)s» یافت نشد"
 
-#: dashboard/views.py:626
+#: dashboard/views.py:674
 #, python-format
 msgid "Contract '%(number)s' not found"
 msgstr "قرارداد «%(number)s» یافت نشد"
@@ -959,7 +963,7 @@ msgid "Select Facility"
 msgstr "مرکز را انتخاب کنید"
 
 #: operations/forms.py:148 operations/models.py:152
-#: templates/operations/license_list.html:286
+#: templates/operations/license_list.html:339
 msgid "Letter"
 msgstr "نامه"
 
@@ -1071,14 +1075,14 @@ msgstr "ردشده"
 #: templates/contract/ready_to_issue_list.html:34
 #: templates/financial/license_payment_form.html:32
 #: templates/operations/license_detail.html:40
-#: templates/operations/license_list.html:274
+#: templates/operations/license_list.html:327
 #: templates/operations/license_sign.html:105
 #: templates/operations/license_specification.html:32
 msgid "Letter Number"
 msgstr "شماره نامه"
 
 #: operations/models.py:98 templates/contract/license_contract_form.html:89
-#: templates/operations/license_list.html:276
+#: templates/operations/license_list.html:329
 #: templates/operations/license_queue.html:57
 #: templates/operations/license_sign.html:110
 #: templates/operations/license_specification.html:42
@@ -1100,7 +1104,7 @@ msgstr "توضیحات"
 #: operations/models.py:124 templates/dashboard/tables.html:362
 #: templates/dsrs/source_list.html:128
 #: templates/operations/license_detail.html:62
-#: templates/operations/license_list.html:610
+#: templates/operations/license_list.html:930
 #: templates/operations/license_queue.html:61
 msgid "Created By"
 msgstr "ایجادشده توسط"
@@ -1162,7 +1166,7 @@ msgid "Recycled Source"
 msgstr "چشمه بازیافت‌شده"
 
 #: operations/models.py:254 templates/dashboard/tables.html:277
-#: templates/operations/license_list.html:589
+#: templates/operations/license_list.html:909
 msgid "Activity Unit"
 msgstr "واحد فعالیت"
 
@@ -1201,7 +1205,7 @@ msgstr "جزء چشمه"
 msgid "Source Components"
 msgstr "اجزای چشمه"
 
-#: operations/models.py:330 templates/dashboard/tables.html:608
+#: operations/models.py:330 templates/dashboard/tables.html:637
 msgid "User"
 msgstr "کاربر"
 
@@ -1232,7 +1236,7 @@ msgstr "مدیر"
 #: operations/models.py:368 operations/views.py:1491
 #: templates/operations/operation_home.html:122
 msgid "Deputy Manager"
-msgstr "معاون مدیر"
+msgstr "معاون"
 
 #: operations/models.py:374
 msgid "Pending"
@@ -1364,10 +1368,7 @@ msgstr "لطفاً ابتدا تصویر امضای خود را بارگذاری
 msgid "Specification signed successfully."
 msgstr "مشخصات فنی با موفقیت امضا شد."
 
-#: operations/views.py:1423 templates/operations/control_home.html:5
-#: templates/operations/control_home.html:10
-#: templates/operations/deputy_home.html:5
-#: templates/operations/manager_home.html:5
+#: operations/views.py:1423 templates/operations/manager_home.html:5
 #: templates/operations/operation_home.html:138
 msgid "Operations Manager"
 msgstr "مدیر عملیات"
@@ -1423,7 +1424,7 @@ msgstr "وارد کردن"
 #: templates/facilities/facility_create.html:38
 #: templates/facilities/facility_import.html:10
 #: templates/facilities/facility_import.html:45
-#: templates/operations/license_list.html:233
+#: templates/operations/license_list.html:286
 #: templates/reference/radionuclide_list.html:13
 msgid "Import CSV"
 msgstr "وارد کردن CSV"
@@ -1436,9 +1437,9 @@ msgstr "گروه‌ها"
 #: templates/contract/license_contract_home.html:29
 #: templates/contract/ready_to_issue_list.html:46
 #: templates/financial/license_payment_list.html:59
-#: templates/operations/license_list.html:292
+#: templates/operations/license_list.html:345
 #: templates/operations/license_queue.html:65
-#: templates/receive_source/receive_list.html:244
+#: templates/receive_source/receive_list.html:243
 msgid "Action"
 msgstr "عملیات"
 
@@ -1449,7 +1450,7 @@ msgstr "هیچ گروهی اختصاص داده نشده است"
 #: templates/accounts/view_permission_list.html:46
 #: templates/dsrs/edit_source.html:142
 #: templates/facilities/facility_delete.html:56
-#: templates/operations/license_list.html:485
+#: templates/operations/license_list.html:522
 #: templates/operations/license_update.html:180
 #: templates/operations/license_update.html:309
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:499
@@ -1530,7 +1531,7 @@ msgid "Aggregation"
 msgstr "تجمیع"
 
 #: templates/analytics/analytics_home.html:98
-#: templates/dashboard/tables.html:575
+#: templates/dashboard/tables.html:605
 msgid "Count"
 msgstr "تعداد"
 
@@ -1719,9 +1720,9 @@ msgstr "DSRSهای فروخته‌شده"
 
 #: templates/contract/index.html:146 templates/dashboard/tables.html:147
 #: templates/facilities/facility_list.html:114
-#: templates/operations/license_list.html:150
+#: templates/operations/license_list.html:203
 #: templates/operations/license_queue.html:31
-#: templates/receive_source/receive_list.html:116
+#: templates/receive_source/receive_list.html:115
 msgid "Search..."
 msgstr "جستجو..."
 
@@ -1777,7 +1778,7 @@ msgstr "خیر"
 #: templates/contract/index.html:250 templates/dashboard/tables.html:451
 #: templates/dsrs/source_list.html:212
 #: templates/financial/license_payment_list.html:165
-#: templates/operations/license_list.html:471
+#: templates/operations/license_list.html:508
 msgid "Edit"
 msgstr "ویرایش"
 
@@ -1803,9 +1804,10 @@ msgstr[1] ""
 "    "
 
 #: templates/contract/issued_license_list.html:46
-#: templates/operations/license_list.html:390
-#: templates/operations/license_list.html:442
-#: templates/receive_source/receive_list.html:365
+#: templates/operations/license_list.html:479
+#: templates/operations/license_list.html:716
+#: templates/operations/license_list.html:804
+#: templates/receive_source/receive_list.html:364
 msgid "View"
 msgstr "مشاهده"
 
@@ -1841,6 +1843,8 @@ msgstr "اطلاعات مجوز"
 
 #: templates/contract/license_contract_form.html:108
 #: templates/operations/license_detail.html:75
+#: templates/operations/license_list.html:406
+#: templates/operations/license_list.html:576
 #: templates/operations/license_queue.html:59
 #: templates/operations/license_sign.html:133
 #: templates/operations/license_update.html:260
@@ -1857,7 +1861,7 @@ msgstr "هیچ چشمه‌ای وجود ندارد."
 #: templates/dsrs/edit_source.html:42 templates/dsrs/edit_source.html:89
 #: templates/operations/license_create.html:76
 #: templates/operations/license_detail.html:133
-#: templates/operations/license_list.html:608
+#: templates/operations/license_list.html:928
 #: templates/operations/license_sign.html:216
 #: templates/operations/license_update.html:162
 msgid "Attachments"
@@ -1921,7 +1925,7 @@ msgid "Contracts Waiting"
 msgstr "قراردادهای در انتظار"
 
 #: templates/contract/license_contract_home.html:69
-#: templates/operations/license_list.html:456
+#: templates/operations/license_list.html:493
 msgid "Continue"
 msgstr "ادامه"
 
@@ -1949,6 +1953,7 @@ msgid "Serial"
 msgstr "سریال"
 
 #: templates/contract/license_issue.html:105
+#: templates/operations/license_list.html:629
 msgid "No sources found."
 msgstr "هیچ چشمه‌ای یافت نشد."
 
@@ -2046,14 +2051,13 @@ msgstr "فعالیت واردشده"
 msgid "Current Activity"
 msgstr "فعالیت فعلی"
 
-#: templates/dashboard/tables.html:285 templates/dashboard/tables.html:589
-#: templates/dsrs/source_list.html:124
-#: templates/operations/license_list.html:591
+#: templates/dashboard/tables.html:285 templates/dsrs/source_list.html:124
+#: templates/operations/license_list.html:911
 msgid "Category"
 msgstr "دسته‌بندی"
 
 #: templates/dashboard/tables.html:289
-#: templates/operations/license_list.html:592
+#: templates/operations/license_list.html:912
 msgid "Activity Reference Date"
 msgstr "تاریخ مرجع فعالیت"
 
@@ -2066,7 +2070,7 @@ msgid "Dose Measurement Date"
 msgstr "تاریخ اندازه‌گیری دز"
 
 #: templates/dashboard/tables.html:306
-#: templates/operations/license_list.html:597
+#: templates/operations/license_list.html:917
 msgid "Source State"
 msgstr "وضعیت چشمه"
 
@@ -2074,7 +2078,7 @@ msgstr "وضعیت چشمه"
 msgid "Physical Form"
 msgstr "شکل فیزیکی"
 
-#: templates/dashboard/tables.html:326 templates/dashboard/tables.html:600
+#: templates/dashboard/tables.html:326 templates/dashboard/tables.html:629
 msgid "Practice"
 msgstr "کاربرد"
 
@@ -2104,20 +2108,20 @@ msgid "History"
 msgstr "تاریخچه"
 
 #: templates/dashboard/tables.html:478
-#: templates/operations/license_list.html:523
-#: templates/receive_source/receive_list.html:410
+#: templates/operations/license_list.html:843
+#: templates/receive_source/receive_list.html:409
 msgid "Previous"
 msgstr "قبلی"
 
 #: templates/dashboard/tables.html:516
-#: templates/operations/license_list.html:561
-#: templates/receive_source/receive_list.html:476
+#: templates/operations/license_list.html:881
+#: templates/receive_source/receive_list.html:475
 msgid "Next"
 msgstr "بعدی"
 
 #: templates/dashboard/tables.html:523
-#: templates/operations/license_list.html:568
-#: templates/receive_source/receive_list.html:488
+#: templates/operations/license_list.html:888
+#: templates/receive_source/receive_list.html:487
 msgid "of"
 msgstr "از"
 
@@ -2136,78 +2140,74 @@ msgstr[1] ""
 "\n"
 "(%(total)s رکورد)\n"
 
-#: templates/dashboard/tables.html:576
+#: templates/dashboard/tables.html:606
 msgid "Available"
 msgstr "موجود"
 
-#: templates/dashboard/tables.html:578 templates/dsrs/source_list.html:92
+#: templates/dashboard/tables.html:608 templates/dsrs/source_list.html:92
 msgid "Origin"
 msgstr "مبدأ"
 
-#: templates/dashboard/tables.html:580 templates/dsrs/source_list.html:100
-#: templates/operations/license_list.html:579
+#: templates/dashboard/tables.html:610 templates/dsrs/source_list.html:100
+#: templates/operations/license_list.html:899
 msgid "Origin Facility"
 msgstr "مرکز مبدأ"
 
-#: templates/dashboard/tables.html:584 templates/dsrs/source_list.html:112
+#: templates/dashboard/tables.html:614 templates/dsrs/source_list.html:112
 msgid "Responsible"
 msgstr "مسئول"
 
-#: templates/dashboard/tables.html:586
+#: templates/dashboard/tables.html:616
 msgid "Input"
 msgstr "ورودی"
 
-#: templates/dashboard/tables.html:587
+#: templates/dashboard/tables.html:617
 #: templates/operations/license_specification.html:119
 #: templates/operations/license_update.html:297
 msgid "Unit"
 msgstr "واحد"
 
-#: templates/dashboard/tables.html:590
+#: templates/dashboard/tables.html:619
 #: templates/operations/license_specification.html:120
 msgid "Reference Date"
 msgstr "تاریخ مرجع"
 
-#: templates/dashboard/tables.html:592
+#: templates/dashboard/tables.html:621
 msgid "Surface Dose"
 msgstr "دز سطحی"
 
-#: templates/dashboard/tables.html:593
+#: templates/dashboard/tables.html:622
 msgid "1 m Dose"
 msgstr "دز در فاصله ۱ متر"
 
-#: templates/dashboard/tables.html:594
+#: templates/dashboard/tables.html:623
 msgid "Dose Date"
 msgstr "تاریخ دز"
 
-#: templates/dashboard/tables.html:595
+#: templates/dashboard/tables.html:624
 msgid "State"
 msgstr "وضعیت"
 
-#: templates/dashboard/tables.html:596
-#: templates/operations/license_list.html:598
+#: templates/dashboard/tables.html:625
+#: templates/operations/license_list.html:918
 msgid "Contamination"
 msgstr "آلودگی"
 
-#: templates/dashboard/tables.html:597
+#: templates/dashboard/tables.html:626
 msgid "Form"
 msgstr "فرم"
 
-#: templates/dashboard/tables.html:604
+#: templates/dashboard/tables.html:633
 msgid "Container"
 msgstr "محفظه"
 
-#: templates/dashboard/tables.html:606
-msgid "Files"
-msgstr "فایل‌ها"
-
-#: templates/dashboard/tables.html:609
+#: templates/dashboard/tables.html:638
 #: templates/reference/radionuclide_import.html:27
 msgid "Created"
 msgstr "ایجادشده"
 
-#: templates/dashboard/tables.html:722
-#: templates/operations/license_list.html:828
+#: templates/dashboard/tables.html:751
+#: templates/operations/license_list.html:1148
 msgid "Please select at least one DSRS record."
 msgstr "لطفاً حداقل یک رکورد DSRS انتخاب کنید."
 
@@ -2402,8 +2402,8 @@ msgid "Search"
 msgstr "جستجو"
 
 #: templates/facilities/facility_list.html:154
-#: templates/operations/license_list.html:176
-#: templates/receive_source/receive_list.html:142
+#: templates/operations/license_list.html:229
+#: templates/receive_source/receive_list.html:141
 msgid "Items"
 msgstr "موارد"
 
@@ -2488,10 +2488,21 @@ msgstr "مدیریت پرداخت‌های مجوز"
 msgid "Reports and analytics"
 msgstr "گزارش‌ها و تحلیل‌ها"
 
+#: templates/operations/control_home.html:5
+#: templates/operations/control_home.html:10
+
+msgid "Operations Control Manager"
+msgstr "مدیر کنترل عملیات"
+
+#: templates/operations/deputy_home.html:5
+
+msgid "Operations Deputy Manager"
+msgstr "معاونت عملیات"
+
 #: templates/operations/deputy_home.html:104
-#: templates/operations/manager_home.html:104
-msgid "Operation manager"
-msgstr "مدیر عملیات"
+
+msgid "Operation Deputy manager"
+msgstr "معاونت عملیات"
 
 #: templates/operations/deputy_home.html:110
 #: templates/operations/manager_home.html:110
@@ -2650,56 +2661,76 @@ msgstr ""
 "نام فایل‌های درج‌شده در ستون‌های attachment_* فایل CSV باید با فایل‌های موجود در "
 "این ZIP مطابقت داشته باشند."
 
-#: templates/operations/license_list.html:246
+#: templates/operations/license_list.html:299
 msgid "+ Start New License"
 msgstr "+ شروع مجوز جدید"
 
-#: templates/operations/license_list.html:278
+#: templates/operations/license_list.html:331
 msgid "Cost"
 msgstr "هزینه"
 
-#: templates/operations/license_list.html:284
+#: templates/operations/license_list.html:337
 msgid "DSRSs"
 msgstr "DSRSها"
 
-#: templates/operations/license_list.html:413
-msgid "View Contract"
-msgstr "مشاهده قرارداد"
+#: templates/operations/license_list.html:438
+#: templates/operations/license_list.html:460
+msgid "Files"
+msgstr "فایل‌ها"
 
-#: templates/operations/license_list.html:505
+#: templates/operations/license_list.html:542
 msgid "No license requests found."
 msgstr "هیچ درخواست مجوزی یافت نشد."
 
-#: templates/operations/license_list.html:569
-#: templates/receive_source/receive_list.html:492
+#: templates/operations/license_list.html:583
+#: templates/operations/license_list.html:650
+#: templates/operations/license_list.html:688
+#: templates/operations/license_list.html:738
+#: templates/operations/license_list.html:776
+#: templates/operations/license_list.html:826
+msgid "Close"
+msgstr ""
+
+#: templates/operations/license_list.html:681
+
+msgid "Letter Attachments"
+msgstr "نامه های پیوست"
+
+#: templates/operations/license_list.html:769
+
+msgid "Contract Attachments"
+msgstr "سند قرارداد"
+
+#: templates/operations/license_list.html:889
+#: templates/receive_source/receive_list.html:491
 msgid "records"
 msgstr "رکورد"
 
-#: templates/operations/license_list.html:581
+#: templates/operations/license_list.html:901
 msgid "Location 1"
 msgstr "محل ۱"
 
-#: templates/operations/license_list.html:582
+#: templates/operations/license_list.html:902
 msgid "Location 2"
 msgstr "محل ۲"
 
-#: templates/operations/license_list.html:583
+#: templates/operations/license_list.html:903
 msgid "Number"
 msgstr "شماره"
 
-#: templates/operations/license_list.html:588
+#: templates/operations/license_list.html:908
 msgid "Input Activity"
 msgstr "فعالیت ورودی"
 
-#: templates/operations/license_list.html:594
+#: templates/operations/license_list.html:914
 msgid "Surface Dose Rate"
 msgstr "نرخ دز سطحی"
 
-#: templates/operations/license_list.html:595
+#: templates/operations/license_list.html:915
 msgid "Dose Rate at 1m"
 msgstr "نرخ دز در فاصله ۱ متر"
 
-#: templates/operations/license_list.html:596
+#: templates/operations/license_list.html:916
 msgid "Dose Rate Measurement Date"
 msgstr "تاریخ اندازه‌گیری نرخ دز"
 
@@ -2735,6 +2766,10 @@ msgstr "تولید فرم مشخصات فنی DSRS"
 #: templates/operations/license_update.html:22
 msgid "Edit License"
 msgstr "ویرایش مجوز"
+
+#: templates/operations/manager_home.html:104
+msgid "Operation manager"
+msgstr "مدیر عملیات"
 
 #: templates/operations/operation_home.html:126
 msgid "Review and approve license specifications waiting for deputy approval."
@@ -2792,15 +2827,15 @@ msgstr "مشاهده مجوزهای صادرشده برای چشمه‌های پ
 msgid "Receive Sources"
 msgstr "دریافت چشمه‌ها"
 
-#: templates/receive_source/receive_list.html:189
+#: templates/receive_source/receive_list.html:188
 msgid "+ Receive Source"
 msgstr "+ دریافت چشمه"
 
-#: templates/receive_source/receive_list.html:240
+#: templates/receive_source/receive_list.html:239
 msgid "Last Movement"
 msgstr "آخرین جابه‌جایی"
 
-#: templates/receive_source/receive_list.html:383
+#: templates/receive_source/receive_list.html:382
 msgid "No received sources found."
 msgstr "هیچ چشمه دریافت‌شده‌ای یافت نشد."
 
@@ -4123,6 +4158,9 @@ msgstr ""
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:236
 msgid "Connect, get help, or contribute"
 msgstr ""
+
+#~ msgid "View Contract"
+#~ msgstr "مشاهده قرارداد"
 
 #~ msgid "No access"
 #~ msgstr "دسترسی ندارید"

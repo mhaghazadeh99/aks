@@ -39,7 +39,7 @@ from ..models import ReceiveAttachment, ReceiveAttachmentType
 TEMPLATE_PATH = getattr(
     settings,
     "RECEIVE_SPECIFICATION_TEMPLATE_PATH",
-    os.path.join(settings.BASE_DIR, "receiving", "templates_docx", "receive_specification_template.docx"),
+    os.path.join(settings.BASE_DIR, "receive_source", "templates_docx", "receive_specification_template.docx"),
 )
 
 

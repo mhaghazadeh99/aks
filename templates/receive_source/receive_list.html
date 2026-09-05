@@ -1,742 +1,183 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
-
-
-{% block title %}
-
-{% trans "Receive Requests" %}
-
-{% endblock %}
-
-
-
-
+{% block title %}{% trans "Receive Requests" %}{% endblock %}
 
 {% block content %}
+{% block extrastyle %}
+<style>
+.summary-badge{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:7px 14px; border:none; border-radius:25px; cursor:pointer;
+    font-size:13px; font-weight:600; transition:.2s; white-space:nowrap;
+}
+.summary-badge:hover{ transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.12); }
+.summary-badge.sources{ background:#eef5ff; color:#0d6efd; }
+.summary-badge.contracts{ background:#eef8f0; color:#198754; }
+.action-icons{ display:flex; gap:8px; align-items:center; }
+.icon-btn{
+    display:inline-flex; justify-content:center; align-items:center;
+    width:34px; height:34px; border-radius:8px; text-decoration:none; font-size:16px;
+    background:#f5f6f8; color:#444; transition:.2s ease; border:1px solid transparent;
+}
+.icon-btn:hover{ transform:translateY(-2px); background:#fff; border-color:#ddd; box-shadow:0 3px 10px rgba(0,0,0,.08); }
+.icon-btn.edit:hover{ color:#d39e00; }
+.pagination{ display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; }
+.pagination a, .pagination span{ padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; }
+.pagination .current{ background:#0d6efd; color:#fff; border-color:#0d6efd; }
+.page-info{ text-align:center; margin-top:10px; color:#666; }
+</style>
+{% endblock extrastyle %}
 
+<div class="content">
 
+<div class="table-header">
 
-<div class="container-fluid py-4">
+    <div class="header-group">
+        <form method="get">
+            <input type="text" name="search" placeholder="{% trans 'Search...' %}" value="{{ search }}">
+            <button type="submit">🔍</button>
+        </form>
+    </div>
 
+    <div class="header-group">
+        <form method="get">
+            <input type="hidden" name="search" value="{{ search }}">
+            <label>{% trans "Items" %}</label>
+            <select name="page_size" onchange="this.form.submit()">
+                <option value="10" {% if page_size == 10 %}selected{% endif %}>10</option>
+                <option value="25" {% if page_size == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
+            </select>
+        </form>
+    </div>
 
-
-<div class="card shadow-sm">
-
-
-
-
-
-<div class="card-header d-flex justify-content-between align-items-center">
-
-
-<h3 class="mb-0">
-
-{% trans "Receive Requests" %}
-
-</h3>
-
-
-
-<a href="{% url 'receive_create' %}"
-
-class="btn btn-primary">
-
-
-{% trans "New Receive Request" %}
-
-
-</a>
-
-
-</div>
-
-
-
-
-
-
-<div class="card-body">
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- TOOLBAR -->
-<!-- ============================= -->
-
-
-<form method="get">
-
-
-<div class="row g-2 mb-4">
-
-
-
-<div class="col-md-5">
-
-
-<input
-
-type="text"
-
-name="search"
-
-value="{{ search }}"
-
-class="form-control"
-
-placeholder="{% trans 'Search facility, letter, serial number...' %}">
-
+    <div class="header-group">
+        <a href="{% url 'receive_create' %}" class="btn-blue">
+            {% trans "+ Start New Receive Request" %}
+        </a>
+    </div>
 
 </div>
 
-
-
-
-
-<div class="col-md-2">
-
-
-<select
-
-name="page_size"
-
-class="form-select"
-
-onchange="this.form.submit()">
-
-
-
-<option value="10"
-{% if page_size == 10 %}selected{% endif %}>
-
-10 {% trans "items" %}
-
-</option>
-
-
-
-<option value="25"
-{% if page_size == 25 %}selected{% endif %}>
-
-25 {% trans "items" %}
-
-</option>
-
-
-
-<option value="50"
-{% if page_size == 50 %}selected{% endif %}>
-
-50 {% trans "items" %}
-
-</option>
-
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-<div class="col-md-2">
-
-
-<button
-
-class="btn btn-secondary w-100">
-
-
-{% trans "Search" %}
-
-
-</button>
-
-
-</div>
-
-
-
-</div>
-
-
-</form>
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- TABLE -->
-<!-- ============================= -->
-
-
-
-<div class="table-responsive">
-
-
-
-<table class="table table-bordered table-striped align-middle">
-
-
-
-<thead class="table-light">
-
-
+<div class="table-scroll">
+<table id="mainTable">
+<thead>
 <tr>
-
-
-<th>
-#
-</th>
-
-
-<th>
-{% trans "Facility" %}
-</th>
-
-
-<th>
-{% trans "Letter No." %}
-</th>
-
-
-<th>
-{% trans "Sources" %}
-</th>
-
-
-<th>
-{% trans "Attachments" %}
-</th>
-
-
-<th>
-{% trans "Contract" %}
-</th>
-
-
-<th>
-{% trans "Payment" %}
-</th>
-
-
-<th>
-{% trans "Status" %}
-</th>
-
-
-<th>
-{% trans "Actions" %}
-</th>
-
-
+    <th>{% trans "Facility" %}</th>
+    <th>{% trans "Inquiry Letter Number" %}</th>
+    <th>{% trans "Inquiry Letter Date" %}</th>
+    <th>{% trans "Contract Number" %}</th>
+    <th>{% trans "Payment" %}</th>
+    <th>{% trans "Sources" %}</th>
+    <th>{% trans "Status" %}</th>
+    <th>{% trans "Action" %}</th>
 </tr>
-
-
 </thead>
-
-
-
-
-
-
-
 <tbody>
 
-
-
-
-{% for request in page_obj %}
-
-
-
-
+{% for req in page_obj %}
 <tr>
-
-
-
-<td>
-
-{{ forloop.counter }}
-
-</td>
-
-
-
-
-
-<td>
-
-
-<strong>
-
-{{ request.facility.name }}
-
-</strong>
-
-
-</td>
-
-
-
-
-
-
-
-<td>
-
-{{ request.inquiry_letter_number|default:"-" }}
-
-
-</td>
-
-
-
-
-
-
-
-
-<!-- SOURCES -->
-
-
-<td>
-
-
-<span class="badge bg-primary">
-
-
-{{ request.sources.count }}
-
-{% trans "Sources" %}
-
-
-</span>
-
-
-
-</td>
-
-
-
-
-
-
-
-
-
-<!-- ATTACHMENTS -->
-
-
-<td>
-
-
-<span class="badge bg-secondary">
-
-
-{{ request.attachments.count }}
-
-{% trans "Files" %}
-
-
-</span>
-
-
-
-</td>
-
-
-
-
-
-
-
-
-
-
-<!-- CONTRACT -->
-
-
-<td>
-
-
-
-{% if request.contract %}
-
-
-
-<span class="badge bg-success">
-
-
-{% trans "Created" %}
-
-
-</span>
-
-
-
-{% else %}
-
-
-
-<span class="badge bg-warning text-dark">
-
-
-{% trans "Pending" %}
-
-
-</span>
-
-
-
-{% endif %}
-
-
-
-</td>
-
-
-
-
-
-
-
-
-
-<!-- PAYMENT -->
-
-
-<td>
-
-
-
-{% if request.payment and request.payment.payment_done %}
-
-
-
-<span class="badge bg-success">
-
-
-{% trans "Paid" %}
-
-
-</span>
-
-
-
-{% else %}
-
-
-
-<span class="badge bg-danger">
-
-
-{% trans "Not Paid" %}
-
-
-</span>
-
-
-
-{% endif %}
-
-
-
-</td>
-
-
-
-
-
-
-
-
-
-<!-- STATUS -->
-
-
-<td>
-
-
-
-<span class="badge bg-info">
-
-
-{{ request.get_status_display }}
-
-
-</span>
-
-
-
-</td>
-
-
-
-
-
-
-
-
-
-<!-- ACTION -->
-
-
-<td>
-
-
-
-<div class="d-flex gap-1">
-
-
-
-<a
-
-href="{% url 'receive_detail' request.pk %}"
-
-class="btn btn-sm btn-primary">
-
-
-{% trans "View" %}
-
-
-</a>
-
-
-
-
-
-{% if request.status == "DRAFT" %}
-
-
-
-<a
-
-href="{% url 'receive_create_edit' request.pk %}"
-
-class="btn btn-sm btn-warning">
-
-
-{% trans "Edit" %}
-
-
-</a>
-
-
-
-{% endif %}
-
-
-
-
-</div>
-
-
-
-</td>
-
-
-
-
-
+    <td>{{ req.facility.name }}</td>
+    <td>{{ req.inquiry_letter_number|default:"-" }}</td>
+    <td>{{ req.inquiry_letter_date|default:"-" }}</td>
+    <td>{{ req.contract.contract_number|default:"-" }}</td>
+    <td>
+        {% if req.payment.payment_done %}
+            <span class="text-success">{% trans "Paid" %}</span>
+        {% else %}
+            <span class="text-muted">{% trans "Pending" %}</span>
+        {% endif %}
+    </td>
+    <td>
+        <button type="button" class="summary-badge sources" data-bs-toggle="modal" data-bs-target="#sourcesModal{{ req.pk }}">
+            📦 {{ req.sources.count }}
+            {% if req.sources.count == 1 %}{% trans "Source" %}{% else %}{% trans "Sources" %}{% endif %}
+        </button>
+    </td>
+    <td>{{ req.get_status_display }}</td>
+    <td>
+        <div class="action-icons">
+            <a href="{% url 'receive_detail' req.pk %}" class="icon-btn" title="{% trans 'View' %}">👁</a>
+            {% if req.status == "DRAFT" %}
+                <a href="{% url 'receive_create_edit' req.pk %}" class="icon-btn edit" title="{% trans 'Continue Draft' %}">✏️</a>
+            {% endif %}
+        </div>
+    </td>
 </tr>
-
-
-
-
-
 {% empty %}
-
-
-
 <tr>
-
-
-<td colspan="9"
-
-class="text-center text-muted">
-
-
-{% trans "No receive requests found." %}
-
-
-
-</td>
-
-
+    <td colspan="8" class="text-center">{% trans "No receive requests found." %}</td>
 </tr>
-
-
-
-
 {% endfor %}
 
-
-
-
 </tbody>
-
-
-
 </table>
-
-
-
+</div>
 </div>
 
-
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- PAGINATION -->
-<!-- ============================= -->
-
-
-
-{% if page_obj.has_other_pages %}
-
-
-
-<nav>
-
-
-<ul class="pagination justify-content-center">
-
-
-
-
-
-{% if page_obj.has_previous %}
-
-
-<li class="page-item">
-
-
-<a
-
-class="page-link"
-
-href="?page={{ page_obj.previous_page_number }}&search={{ search }}&page_size={{ page_size }}">
-
-
-{% trans "Previous" %}
-
-
-</a>
-
-
-</li>
-
-
-
-{% endif %}
-
-
-
-
-
-
-
-
-<li class="page-item active">
-
-
-<span class="page-link">
-
-
-{{ page_obj.number }}
-
-/
-
-{{ page_obj.paginator.num_pages }}
-
-
-</span>
-
-
-</li>
-
-
-
-
-
-
-
-
-
-{% if page_obj.has_next %}
-
-
-<li class="page-item">
-
-
-<a
-
-class="page-link"
-
-href="?page={{ page_obj.next_page_number }}&search={{ search }}&page_size={{ page_size }}">
-
-
-{% trans "Next" %}
-
-
-</a>
-
-
-</li>
-
-
-
-{% endif %}
-
-
-
-
-
-
-</ul>
-
-
-</nav>
-
-
-
-{% endif %}
-
-
-
-
-
-
+{% for req in page_obj %}
+<div class="modal fade" id="sourcesModal{{ req.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📦 {% trans "Sources" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Nuclide" %}</th>
+                            <th>{% trans "Item Type" %}</th>
+                            <th>{% trans "Activity (mCi)" %}</th>
+                            <th>{% trans "Quantity" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for source in req.sources.all %}
+                        <tr>
+                            <td>{{ source.nuclide|default:"-" }}</td>
+                            <td>{{ source.get_item_type_display }}</td>
+                            <td>{{ source.average_activity_mci|default:"-" }}</td>
+                            <td>{{ source.quantity }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center">{% trans "No sources found." %}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&page_size={{ page_size }}{% endif %}">{% trans "Previous" %}</a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}{% if page_size %}&page_size={{ page_size }}{% endif %}">{{ num }}</a>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&page_size={{ page_size }}{% endif %}">{% trans "Next" %}</a>
+    {% endif %}
 </div>
 
-
-
+<div class="page-info">
+    {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+    ({{ page_obj.paginator.count }} {% trans "records" %})
 </div>
-
-
-
-</div>
-
-
-
-
 
 {% endblock %}

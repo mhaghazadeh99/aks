@@ -115,6 +115,14 @@ def _queue(request, status, page_title):
     )
 
 
+def manager_input_queue(request):
+    """Both Operation Manager and Operation Control Manager work from here
+    during data entry — before either of them has anything to SIGN, they
+    have data to FILL IN. This is distinct from manager_queue/control_queue
+    below, which are for the later signature step."""
+    return _queue(request, ReceiveStatus.WAITING_MANAGER_INPUT, _("Manager Data Entry"))
+
+
 def manager_queue(request):
     return _queue(request, ReceiveStatus.WAITING_MANAGER, _("Operation Manager"))
 
@@ -140,7 +148,7 @@ def finance_queue(request):
 
 
 def receiving_queue(request):
-    return _queue(request, ReceiveStatus.RECEIVING, _("receive_source / Characterization"))
+    return _queue(request, ReceiveStatus.RECEIVING, _("Receiving / Characterization"))
 
 
 # =====================================================================
@@ -239,7 +247,8 @@ def receive_add_sources(request, pk):
 
     sources = receive_request.sources.select_related("nuclide", "matched_license_dsrs").order_by("specification_order")
 
-    pending_match = request.session.get("pending_match")  # {"nuclide_id", "serial_number", ...}
+    session_key = f"receive_pending_match_{pk}"
+    pending_match = request.session.get(session_key)
     candidates = []
     match_form = None
 
@@ -257,7 +266,7 @@ def receive_add_sources(request, pk):
                     item_type=pending_match["item_type"],
                     nuclide_id=pending_match["nuclide_id"],
                     serial_number=pending_match["serial_number"],
-                    average_activity_mci=pending_match["average_activity_mci"],
+                    average_activity_mci=pending_match["average_activity_mci"] or None,
                     quantity=pending_match["quantity"],
                     specification_order=sources.count() + 1,
                 )
@@ -267,17 +276,39 @@ def receive_add_sources(request, pk):
                     chosen_dsrs = get_object_or_404(DSRS, pk=int(choice))
                     confirm_match(source, chosen_dsrs)
 
-                del request.session["pending_match"]
+                del request.session[session_key]
                 messages.success(request, _("Source added."))
                 return redirect("receive_add_sources", pk=pk)
 
         else:
 
-            source_form = ReceiveSourceForm(request.POST)
+            source_form = ReceiveSourceForm(request.POST, facility=receive_request.facility)
 
             if source_form.is_valid():
 
                 data = source_form.cleaned_data
+
+                if data["source_origin"] == ReceiveSourceForm.SOURCE_ORIGIN_INVENTORY:
+
+                    # Picked directly from the facility's contracted
+                    # inventory — already an exact, certain match. No need
+                    # to run the fuzzy-match check at all.
+                    dsrs = data["inventory_dsrs"]
+
+                    source = ReceiveSource.objects.create(
+                        receive_request=receive_request,
+                        item_type=data["item_type"],
+                        nuclide=data["nuclide"],
+                        serial_number=data["serial_number"],
+                        average_activity_mci=data["average_activity_mci"],
+                        quantity=data["quantity"],
+                        specification_order=sources.count() + 1,
+                    )
+                    snapshot_half_life(source)
+                    confirm_match(source, dsrs)  # matched_license_dsrs + description note
+
+                    messages.success(request, _("Source added from inventory."))
+                    return redirect("receive_add_sources", pk=pk)
 
                 result = find_license_contract_match(
                     facility=receive_request.facility,
@@ -307,7 +338,7 @@ def receive_add_sources(request, pk):
                 else:
                     # Fuzzy candidates found — stash the row's data in the
                     # session and ask the creator to confirm before creating it.
-                    request.session["pending_match"] = {
+                    request.session[session_key] = {
                         "item_type": data["item_type"],
                         "nuclide_id": data["nuclide"].pk,
                         "serial_number": data["serial_number"],
@@ -318,7 +349,7 @@ def receive_add_sources(request, pk):
                     candidates = result["candidates"]
                     match_form = LicenseMatchChoiceForm(candidates=candidates)
 
-    source_form = ReceiveSourceForm()
+    source_form = ReceiveSourceForm(facility=receive_request.facility)
 
     if pending_match and match_form is None:
         candidates = _rehydrate_candidates(pending_match)

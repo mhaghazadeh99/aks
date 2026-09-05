@@ -1,302 +1,44 @@
 {% extends "base.html" %}
-
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-
-{% block title %}
-{% trans "DSRS Characterization" %}
-{% endblock %}
-
-
+{% block title %}{% trans "Characterization" %}{% endblock %}
 
 {% block content %}
-
 <div class="container-fluid py-4">
-
     <div class="row justify-content-center">
-
-        <div class="col-xl-10">
-
+        <div class="col-xl-8">
 
             <div class="card shadow-sm">
-
-
                 <div class="card-header">
-
-                    <h3 class="mb-0">
-
-                        {% trans "DSRS Characterization" %}
-
-                    </h3>
-
-                    <small class="text-muted">
-
-                        {{ receive_request.facility.name }}
-
-                        -
-
-                        {{ dsrs.nuclide.name }}
-
-                    </small>
-
+                    <h3>{% trans "Characterization" %} — {{ dsrs.Nuclide }} ({{ dsrs.serial_number|default:"-" }})</h3>
                 </div>
-
-
-
                 <div class="card-body">
 
-
                     <form method="post" enctype="multipart/form-data">
-
                         {% csrf_token %}
 
+                        <h5 class="mb-3">{% trans "Physical Characterization" %}</h5>
+                        {% crispy form %}
 
+                        <hr class="my-4">
 
-                        <!-- ============================= -->
-                        <!-- SOURCE INFORMATION -->
-                        <!-- ============================= -->
+                        <h5 class="mb-3">{% trans "Documents / Photos" %}</h5>
+                        {% crispy doc_form %}
 
-                        <div class="card mb-4">
-
-
-                            <div class="card-header">
-
-                                <h5 class="mb-0">
-
-                                    ① {% trans "Source Information" %}
-
-                                </h5>
-
-                            </div>
-
-
-                            <div class="card-body">
-
-
-                                <div class="row">
-
-
-                                    <div class="col-md-4">
-
-                                        <label class="form-label">
-                                            {% trans "Nuclide" %}
-                                        </label>
-
-                                        <input 
-                                            class="form-control"
-                                            value="{{ dsrs.nuclide }}"
-                                            disabled>
-
-                                    </div>
-
-
-
-                                    <div class="col-md-4">
-
-                                        <label class="form-label">
-                                            {% trans "Serial Number" %}
-                                        </label>
-
-                                        <input 
-                                            class="form-control"
-                                            value="{{ dsrs.serial_number }}"
-                                            disabled>
-
-                                    </div>
-
-
-
-                                    <div class="col-md-4">
-
-                                        <label class="form-label">
-                                            {% trans "Activity" %}
-                                        </label>
-
-                                        <input 
-                                            class="form-control"
-                                            value="{{ dsrs.activity }}"
-                                            disabled>
-
-                                    </div>
-
-
-                                </div>
-
-
-                            </div>
-
-
-                        </div>
-
-
-
-
-                        <!-- ============================= -->
-                        <!-- CHARACTERIZATION DATA -->
-                        <!-- ============================= -->
-
-                        <div class="card mb-4">
-
-
-                            <div class="card-header">
-
-                                <h5 class="mb-0">
-
-                                    ② {% trans "Physical Characterization" %}
-
-                                </h5>
-
-
-                            </div>
-
-
-                            <div class="card-body">
-
-
-                                {% crispy form %}
-
-
-                            </div>
-
-
-                        </div>
-
-
-
-
-
-                        <!-- ============================= -->
-                        <!-- DOCUMENTS -->
-                        <!-- ============================= -->
-
-                        <div class="card mb-4">
-
-
-                            <div class="card-header">
-
-                                <h5 class="mb-0">
-
-                                    ③ {% trans "Photos and Documents" %}
-
-                                </h5>
-
-
-                            </div>
-
-
-
-                            <div class="card-body">
-
-
-                                {% crispy doc_form %}
-
-
-                                {% if receive_request.attachments.all %}
-
-                                <hr>
-
-
-                                <h6>
-
-                                    {% trans "Existing Documents" %}
-
-                                </h6>
-
-
-
-                                <ul>
-
-                                {% for att in receive_request.attachments.all %}
-
-                                    {% if att.attachment_type == "CHARACTERIZATION" %}
-
-                                    <li>
-
-                                        <a 
-                                        href="{{ att.file.url }}"
-                                        target="_blank">
-
-                                            {{ att.file.name }}
-
-                                        </a>
-
-
-                                    </li>
-
-
-                                    {% endif %}
-
-
-                                {% endfor %}
-
-
-                                </ul>
-
-
-                                {% endif %}
-
-
-
-                            </div>
-
-
-                        </div>
-
-
-
-
-
-                        <!-- ============================= -->
-                        <!-- BUTTONS -->
-                        <!-- ============================= -->
-
-                        <div class="d-flex justify-content-between">
-
-
-                            <a 
-                            href="{% url 'receive_characterization' receive_request.pk %}"
-                            class="btn btn-secondary">
-
-                                {% trans "Back" %}
-
-                            </a>
-
-
-
-                            <button 
-                            type="submit"
-                            class="btn btn-primary">
-
-
-                                {% trans "Save Characterization" %}
-
-
-                            </button>
-
-
-
-                        </div>
-
-
-
+                        <button type="submit" class="btn btn-primary mt-3">{% trans "Save" %}</button>
                     </form>
 
-
-
                 </div>
-
-
             </div>
 
+            <div class="mt-3">
+                <a href="{% url 'receive_characterization' receive_request.pk %}" class="btn btn-secondary">
+                    {% trans "Back" %}
+                </a>
+            </div>
 
         </div>
-
-
     </div>
-
-
 </div>
-
-
 {% endblock %}

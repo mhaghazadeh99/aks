@@ -1,586 +1,149 @@
 {% extends "base.html" %}
-
 {% load i18n %}
 
-
-{% block title %}
-{% trans "Receive Request Details" %}
-{% endblock %}
-
-
+{% block title %}{% trans "Receive Request" %}{% endblock %}
 
 {% block content %}
-
-
 <div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
 
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        {{ receive_request.facility.name }} — {{ receive_request.inquiry_letter_number|default:"-" }}
+                    </h3>
+                    <span class="badge bg-primary">{{ receive_request.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>{% trans "Inquiry Letter Date" %}:</strong>
+                            {{ receive_request.inquiry_letter_date|default:"-" }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>{% trans "Distance to Tehran (km)" %}:</strong>
+                            {{ receive_request.distance_to_tehran_km|default:"-" }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>{% trans "Created By" %}:</strong>
+                            {{ receive_request.created_by }}
+                        </div>
+                    </div>
 
-<div class="row justify-content-center">
+                    {% if receive_request.status == "SPECIFICATION" %}
+                        <a href="{% url 'receive_add_sources' receive_request.pk %}" class="btn btn-primary mt-3">
+                            {% trans "Add Sources" %}
+                        </a>
+                    {% elif receive_request.status == "WAITING_MANAGER_INPUT" %}
+                        <a href="{% url 'receive_manager_input' receive_request.pk %}" class="btn btn-primary mt-3">
+                            {% trans "Manager Data Entry" %}
+                        </a>
+                    {% elif receive_request.status == "WAITING_CREATOR" or receive_request.status == "WAITING_MANAGER" or receive_request.status == "WAITING_CONTROL" or receive_request.status == "WAITING_DEPUTY" or receive_request.status == "WAITING_CEO" %}
+                        <a href="{% url 'receive_sign' receive_request.pk %}" class="btn btn-primary mt-3">
+                            {% trans "Sign" %}
+                        </a>
+                    {% elif receive_request.status == "CONTRACTS" %}
+                        <a href="{% url 'receive_contract_create' receive_request.pk %}" class="btn btn-primary mt-3">
+                            {% trans "Contract" %}
+                        </a>
+                    {% elif receive_request.status == "FINANCE" %}
+                        <a href="{% url 'receive_payment_update' receive_request.pk %}" class="btn btn-primary mt-3">
+                            {% trans "Payment" %}
+                        </a>
+                    {% elif receive_request.status == "RECEIVING" %}
+                        <a href="{% url 'receive_characterization' receive_request.pk %}" class="btn btn-primary mt-3">
+                            {% trans "Characterization" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
 
-<div class="col-xl-11">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><h5 class="mb-0">{% trans "Sources / Waste" %}</h5></div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Nuclide" %}</th>
+                                <th>{% trans "Serial Number" %}</th>
+                                <th>{% trans "Activity (mCi)" %}</th>
+                                <th>{% trans "Quantity" %}</th>
+                                <th>{% trans "DSRS" %}</th>
+                                <th>{% trans "Description" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for source in receive_request.sources.all %}
+                            <tr>
+                                <td>{{ source.get_item_type_display }}</td>
+                                <td>{{ source.nuclide }}</td>
+                                <td>{{ source.serial_number|default:"-" }}</td>
+                                <td>{{ source.average_activity_mci|default:"-" }}</td>
+                                <td>{{ source.quantity }}</td>
+                                <td>
+                                    {% if source.result_dsrs %}
+                                        {{ source.result_dsrs.get_Status_display }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ source.description|default:"-"|linebreaksbr }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="7" class="text-center">{% trans "No sources found." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><h5 class="mb-0">{% trans "Approvals" %}</h5></div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Step" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Approver" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in receive_request.approvals.all %}
+                            <tr>
+                                <td>{{ item.get_step_display }}</td>
+                                <td>{{ item.get_status_display }}</td>
+                                <td>{{ item.approver|default:"-" }}</td>
+                                <td>{{ item.approved_at|default:"-" }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-<div class="card shadow-sm">
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">{% trans "Attachments" %}</h5></div>
+                <div class="card-body">
+                    <ul class="list-group">
+                    {% for att in receive_request.attachments.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ att.get_attachment_type_display }}
+                            <a href="{{ att.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                {% trans "View" %}
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-center text-muted">{% trans "No attachments." %}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
 
-
-<div class="card-header d-flex justify-content-between align-items-center">
-
-
-<h3 class="mb-0">
-
-{% trans "Receive Request Details" %}
-
-</h3>
-
-
-<a 
-href="{% url 'receive_list' %}"
-class="btn btn-secondary">
-
-{% trans "Back to List" %}
-
-</a>
-
-
+        </div>
+    </div>
 </div>
-
-
-
-
-<div class="card-body">
-
-
-
-<!-- ============================= -->
-<!-- GENERAL INFORMATION -->
-<!-- ============================= -->
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-<h5 class="mb-0">
-
-① {% trans "General Information" %}
-
-</h5>
-
-</div>
-
-
-
-<div class="card-body">
-
-
-<div class="row">
-
-
-<div class="col-md-4">
-
-<strong>
-{% trans "Facility" %}
-</strong>
-
-<p>
-{{ receive_request.facility.name }}
-</p>
-
-</div>
-
-
-
-<div class="col-md-4">
-
-<strong>
-{% trans "Inquiry Letter Number" %}
-</strong>
-
-<p>
-{{ receive_request.inquiry_letter_number|default:"-" }}
-</p>
-
-</div>
-
-
-
-<div class="col-md-4">
-
-<strong>
-{% trans "Status" %}
-</strong>
-
-<p>
-
-<span class="badge bg-primary">
-
-{{ receive_request.get_status_display }}
-
-</span>
-
-</p>
-
-</div>
-
-
-</div>
-
-
-
-<div class="row">
-
-
-<div class="col-md-4">
-
-<strong>
-{% trans "Created By" %}
-</strong>
-
-<p>
-{{ receive_request.created_by }}
-</p>
-
-
-</div>
-
-
-
-<div class="col-md-4">
-
-<strong>
-{% trans "Created Date" %}
-</strong>
-
-<p>
-{{ receive_request.created_at }}
-</p>
-
-
-</div>
-
-
-
-<div class="col-md-4">
-
-<strong>
-{% trans "Letter Date" %}
-</strong>
-
-<p>
-{{ receive_request.inquiry_letter_date|default:"-" }}
-</p>
-
-
-</div>
-
-
-
-</div>
-
-
-
-{% if receive_request.description %}
-
-<hr>
-
-
-<strong>
-{% trans "Description" %}
-</strong>
-
-
-<p>
-
-{{ receive_request.description }}
-
-</p>
-
-
-{% endif %}
-
-
-
-</div>
-
-</div>
-
-
-
-
-
-<!-- ============================= -->
-<!-- SOURCES -->
-<!-- ============================= -->
-
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-<h5 class="mb-0">
-
-② {% trans "Sources" %}
-
-</h5>
-
-
-</div>
-
-
-
-<div class="card-body">
-
-
-<table class="table table-bordered table-striped">
-
-
-<thead class="table-light">
-
-
-<tr>
-
-<th>
-#
-</th>
-
-<th>
-{% trans "Type" %}
-</th>
-
-
-<th>
-{% trans "Nuclide" %}
-</th>
-
-
-<th>
-{% trans "Serial Number" %}
-</th>
-
-
-<th>
-{% trans "Activity" %}
-</th>
-
-
-<th>
-{% trans "DSRS" %}
-</th>
-
-
-</tr>
-
-
-</thead>
-
-
-
-<tbody>
-
-
-{% for source in receive_request.sources.all %}
-
-
-<tr>
-
-
-<td>
-{{ forloop.counter }}
-</td>
-
-
-<td>
-{{ source.get_item_type_display }}
-</td>
-
-
-<td>
-{{ source.nuclide }}
-</td>
-
-
-<td>
-{{ source.serial_number|default:"-" }}
-</td>
-
-
-<td>
-{{ source.average_activity_mci|default:"-" }}
-</td>
-
-
-
-<td>
-
-{% if source.result_dsrs %}
-
-<a 
-href="{% url 'receive_characterization' receive_request.pk %}"
-class="btn btn-sm btn-success">
-
-{% trans "View" %}
-
-</a>
-
-{% else %}
-
--
-
-{% endif %}
-
-
-</td>
-
-
-</tr>
-
-
-{% empty %}
-
-
-<tr>
-
-<td colspan="6" class="text-center">
-
-{% trans "No sources added." %}
-
-</td>
-
-
-</tr>
-
-
-{% endfor %}
-
-
-
-</tbody>
-
-
-</table>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- ATTACHMENTS -->
-<!-- ============================= -->
-
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-<h5 class="mb-0">
-
-③ {% trans "Attachments" %}
-
-</h5>
-
-
-</div>
-
-
-
-<div class="card-body">
-
-
-<ul>
-
-
-{% for att in receive_request.attachments.all %}
-
-
-<li>
-
-
-<a 
-href="{{ att.file.url }}"
-target="_blank">
-
-
-{{ att.get_attachment_type_display }}
-
-</a>
-
-
-</li>
-
-
-{% empty %}
-
-
-<li>
-
-{% trans "No attachments." %}
-
-</li>
-
-
-{% endfor %}
-
-
-</ul>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- APPROVAL HISTORY -->
-<!-- ============================= -->
-
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-<h5 class="mb-0">
-
-④ {% trans "Approval History" %}
-
-</h5>
-
-
-</div>
-
-
-<div class="card-body">
-
-
-<table class="table table-bordered">
-
-
-<thead class="table-light">
-
-
-<tr>
-
-<th>
-{% trans "Step" %}
-</th>
-
-
-<th>
-{% trans "Status" %}
-</th>
-
-
-<th>
-{% trans "User" %}
-</th>
-
-
-<th>
-{% trans "Date" %}
-</th>
-
-
-</tr>
-
-
-</thead>
-
-
-
-<tbody>
-
-
-{% for approval in receive_request.approvals.all %}
-
-
-<tr>
-
-
-<td>
-{{ approval.get_step_display }}
-</td>
-
-
-<td>
-
-{{ approval.get_status_display }}
-
-</td>
-
-
-<td>
-
-{{ approval.approver|default:"-" }}
-
-</td>
-
-
-<td>
-
-{{ approval.approved_at|default:"-" }}
-
-</td>
-
-
-</tr>
-
-
-{% empty %}
-
-
-<tr>
-
-<td colspan="4" class="text-center">
-
-{% trans "No approval history." %}
-
-</td>
-
-</tr>
-
-
-{% endfor %}
-
-
-</tbody>
-
-
-</table>
-
-
-</div>
-
-
-</div>
-
-
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
 {% endblock %}

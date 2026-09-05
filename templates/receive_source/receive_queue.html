@@ -1,460 +1,92 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% load i18n %}
 
+{% block title %}{{ page_title }}{% endblock %}
 
-
-{% block title %}
-
-{{ page_title }}
-
+{% block extrastyle %}
+<style>
+.pagination{ display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; }
+.pagination a, .pagination span{ padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; }
+.pagination .current{ background:#0d6efd; color:#fff; border-color:#0d6efd; }
+.icon-btn{
+    display:inline-flex; justify-content:center; align-items:center;
+    width:34px; height:34px; border-radius:8px; text-decoration:none; font-size:16px;
+    background:#f5f6f8; color:#444; border:1px solid transparent;
+}
+.icon-btn:hover{ background:#fff; border-color:#ddd; }
+</style>
 {% endblock %}
 
-
-
-
-
 {% block content %}
+<div class="content">
 
-
-
-<div class="container-fluid py-4">
-
-
-
-<div class="card shadow-sm">
-
-
-
-
-
-<div class="card-header d-flex justify-content-between align-items-center">
-
-
-<h3 class="mb-0">
-
-{{ page_title }}
-
-</h3>
-
-
+<div class="table-header">
+    <div class="header-group">
+        <form method="get">
+            <input type="text" name="search" placeholder="{% trans 'Search...' %}" value="{{ search }}">
+            <button type="submit">🔍</button>
+        </form>
+    </div>
 </div>
 
+<h3 class="mb-3">{{ page_title }}</h3>
 
-
-
-
-<div class="card-body">
-
-
-
-
-
-<!-- ============================= -->
-<!-- SEARCH -->
-<!-- ============================= -->
-
-
-<form method="get" class="mb-4">
-
-
-<div class="row g-2">
-
-
-<div class="col-md-6">
-
-
-<input
-
-type="text"
-
-name="search"
-
-value="{{ search }}"
-
-class="form-control"
-
-placeholder="{% trans 'Search facility or letter number...' %}">
-
-
-</div>
-
-
-
-<div class="col-md-2">
-
-
-<button
-
-class="btn btn-primary w-100"
-
-type="submit">
-
-
-{% trans "Search" %}
-
-
-</button>
-
-
-</div>
-
-
-</div>
-
-
-
-</form>
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- TABLE -->
-<!-- ============================= -->
-
-
-
-<div class="table-responsive">
-
-
-
-<table class="table table-bordered table-striped align-middle">
-
-
-
+<div class="table-scroll">
+<table class="table table-bordered table-striped">
 <thead class="table-light">
-
-
 <tr>
-
-
-<th>
-#
-</th>
-
-
-<th>
-{% trans "Facility" %}
-</th>
-
-
-<th>
-{% trans "Inquiry Letter" %}
-</th>
-
-
-<th>
-{% trans "Sources" %}
-</th>
-
-
-<th>
-{% trans "Created By" %}
-</th>
-
-
-<th>
-{% trans "Created Date" %}
-</th>
-
-
-<th>
-{% trans "Action" %}
-</th>
-
-
+    <th>{% trans "Facility" %}</th>
+    <th>{% trans "Inquiry Letter Number" %}</th>
+    <th>{% trans "Sources" %}</th>
+    <th>{% trans "Created By" %}</th>
+    <th>{% trans "Status" %}</th>
+    <th>{% trans "Action" %}</th>
 </tr>
-
-
 </thead>
-
-
-
-
-
-
 <tbody>
 
-
-
-{% for item in page_obj %}
-
-
-
+{% for req in page_obj %}
 <tr>
-
-
-
-<td>
-
-{{ forloop.counter }}
-
-</td>
-
-
-
-
-<td>
-
-{{ item.facility.name }}
-
-</td>
-
-
-
-
-<td>
-
-{{ item.inquiry_letter_number|default:"-" }}
-
-</td>
-
-
-
-
-
-<td>
-
-
-<span class="badge bg-info">
-
-
-{{ item.sources.count }}
-
-{% trans "Sources" %}
-
-
-</span>
-
-
-</td>
-
-
-
-
-
-
-<td>
-
-{{ item.created_by }}
-
-</td>
-
-
-
-
-
-
-<td>
-
-{{ item.created_at|date:"Y-m-d" }}
-
-</td>
-
-
-
-
-
-
-<td>
-
-
-<a
-
-href="{% url 'receive_detail' item.pk %}"
-
-class="btn btn-sm btn-primary">
-
-
-{% trans "View" %}
-
-
-</a>
-
-
-</td>
-
-
-
-
+    <td>{{ req.facility.name }}</td>
+    <td>{{ req.inquiry_letter_number|default:"-" }}</td>
+    <td>{{ req.sources.count }}</td>
+    <td>{{ req.created_by }}</td>
+    <td>{{ req.get_status_display }}</td>
+    <td>
+        <div class="d-flex gap-2">
+            <a href="{% url 'receive_detail' req.pk %}" class="icon-btn" title="{% trans 'View' %}">👁</a>
+
+            {% if req.status == "WAITING_MANAGER_INPUT" %}
+                <a href="{% url 'receive_manager_input' req.pk %}" class="btn btn-sm btn-warning">{% trans "Fill In Data" %}</a>
+            {% elif req.status == "WAITING_MANAGER" or req.status == "WAITING_CONTROL" or req.status == "WAITING_DEPUTY" or req.status == "WAITING_CEO" %}
+                <a href="{% url 'receive_sign' req.pk %}" class="btn btn-sm btn-primary">{% trans "Sign" %}</a>
+            {% elif req.status == "CONTRACTS" %}
+                <a href="{% url 'receive_contract_create' req.pk %}" class="btn btn-sm btn-success">{% trans "Contract" %}</a>
+            {% elif req.status == "FINANCE" %}
+                <a href="{% url 'receive_payment_update' req.pk %}" class="btn btn-sm btn-success">{% trans "Payment" %}</a>
+            {% elif req.status == "RECEIVING" %}
+                <a href="{% url 'receive_characterization' req.pk %}" class="btn btn-sm btn-warning">{% trans "Characterize" %}</a>
+            {% endif %}
+        </div>
+    </td>
 </tr>
-
-
-
 {% empty %}
-
-
-
-
-<tr>
-
-
-<td colspan="7"
-
-class="text-center text-muted">
-
-
-{% trans "No requests found." %}
-
-
-</td>
-
-
-</tr>
-
-
-
-
+<tr><td colspan="6" class="text-center">{% trans "Nothing here right now." %}</td></tr>
 {% endfor %}
 
-
-
-
-
 </tbody>
-
-
 </table>
-
-
 </div>
 
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- PAGINATION -->
-<!-- ============================= -->
-
-
-
-{% if page_obj.has_other_pages %}
-
-
-
-<nav>
-
-
-
-<ul class="pagination justify-content-center">
-
-
-
-
-
-{% if page_obj.has_previous %}
-
-
-<li class="page-item">
-
-
-<a
-
-class="page-link"
-
-href="?page={{ page_obj.previous_page_number }}&search={{ search }}">
-
-
-{% trans "Previous" %}
-
-
-</a>
-
-
-</li>
-
-
-{% endif %}
-
-
-
-
-
-<li class="page-item active">
-
-
-<span class="page-link">
-
-
-{{ page_obj.number }}
-
-/
-
-{{ page_obj.paginator.num_pages }}
-
-
-</span>
-
-
-</li>
-
-
-
-
-
-
-{% if page_obj.has_next %}
-
-
-
-<li class="page-item">
-
-
-<a
-
-class="page-link"
-
-href="?page={{ page_obj.next_page_number }}&search={{ search }}">
-
-
-{% trans "Next" %}
-
-
-</a>
-
-
-</li>
-
-
-
-{% endif %}
-
-
-
-
-
-</ul>
-
-
-</nav>
-
-
-
-{% endif %}
-
-
-
-
-
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>
+    {% endif %}
+    <span class="current">{{ page_obj.number }}</span>
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>
+    {% endif %}
 </div>
 
-
 </div>
-
-
-
-
-</div>
-
-
-
-
 {% endblock %}

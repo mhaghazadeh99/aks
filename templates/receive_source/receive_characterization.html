@@ -1,499 +1,68 @@
 {% extends "base.html" %}
-
 {% load i18n %}
 
-
-
-
-
-{% block title %}
-
-{% trans "Source Receiving and Characterization" %}
-
-{% endblock %}
-
-
-
-
-
+{% block title %}{% trans "Receiving / Characterization" %}{% endblock %}
 
 {% block content %}
-
-
-
-
-
 <div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
 
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3>{% trans "Receiving / Characterization" %} — {{ receive_request.facility.name }}</h3>
+                </div>
+                <div class="card-body">
 
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Nuclide" %}</th>
+                                <th>{% trans "Serial Number" %}</th>
+                                <th>{% trans "DSRS Status" %}</th>
+                                <th>{% trans "Action" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for source in sources %}
+                            <tr>
+                                <td>{{ source.nuclide }}</td>
+                                <td>{{ source.result_dsrs.serial_number|default:"-" }}</td>
+                                <td>
+                                    {% if source.result_dsrs %}
+                                        {{ source.result_dsrs.get_Status_display }}
+                                    {% else %}
+                                        <span class="text-muted">{% trans "Not created yet" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if source.result_dsrs %}
+                                        <a href="{% url 'dsrs_characterization_update' receive_request.pk source.result_dsrs.pk %}" class="btn btn-sm btn-outline-primary">
+                                            {% trans "Characterize" %}
+                                        </a>
+                                        {% if source.result_dsrs.Status != "Stored" %}
+                                        <form method="post" action="{% url 'dsrs_mark_stored' receive_request.pk source.result_dsrs.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                {% trans "Mark Stored" %}
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="badge bg-success">{% trans "Stored" %}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center">{% trans "No sources found." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
 
+                </div>
+            </div>
 
-
-
-<div class="card shadow-sm">
-
-
-
-
-
-<div class="card-header">
-
-
-<h3 class="mb-0">
-
-{% trans "Receiving / Characterization" %}
-
-</h3>
-
-
+        </div>
+    </div>
 </div>
-
-
-
-
-
-
-<div class="card-body">
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- REQUEST INFO -->
-<!-- ============================= -->
-
-
-
-<div class="alert alert-info">
-
-
-<strong>
-
-{% trans "Facility" %}
-
-:
-
-</strong>
-
-
-{{ receive_request.facility.name }}
-
-
-
-
-<br>
-
-
-
-
-<strong>
-
-{% trans "Inquiry Letter" %}
-
-:
-
-</strong>
-
-
-{{ receive_request.inquiry_letter_number }}
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- SOURCES TABLE -->
-<!-- ============================= -->
-
-
-
-<div class="table-responsive">
-
-
-
-
-
-<table class="table table-bordered table-striped align-middle">
-
-
-
-
-
-
-<thead class="table-light">
-
-
-<tr>
-
-
-<th>
-#
-</th>
-
-
-<th>
-{% trans "Nuclide" %}
-</th>
-
-
-<th>
-{% trans "Serial Number" %}
-</th>
-
-
-<th>
-{% trans "Activity" %}
-</th>
-
-
-<th>
-{% trans "DSRS Status" %}
-</th>
-
-
-<th>
-{% trans "Actions" %}
-</th>
-
-
-
-</tr>
-
-
-
-</thead>
-
-
-
-
-
-
-
-
-
-<tbody>
-
-
-
-
-
-{% for source in sources %}
-
-
-
-
-
-<tr>
-
-
-
-<td>
-
-{{ forloop.counter }}
-
-</td>
-
-
-
-
-
-<td>
-
-{{ source.nuclide.name }}
-
-</td>
-
-
-
-
-
-
-
-<td>
-
-{{ source.serial_number|default:"-" }}
-
-</td>
-
-
-
-
-
-
-
-<td>
-
-{{ source.average_activity_mci|default:"-" }}
-
-</td>
-
-
-
-
-
-
-
-
-<td>
-
-
-
-
-{% if source.result_dsrs %}
-
-
-
-
-
-<span class="badge bg-success">
-
-
-{{ source.result_dsrs.get_source_status_display }}
-
-
-</span>
-
-
-
-
-
-{% else %}
-
-
-
-
-
-<span class="badge bg-warning text-dark">
-
-
-{% trans "Not Created" %}
-
-
-</span>
-
-
-
-
-
-{% endif %}
-
-
-
-
-
-</td>
-
-
-
-
-
-
-
-
-<td>
-
-
-
-
-
-{% if source.result_dsrs %}
-
-
-
-
-
-<div class="d-flex gap-2">
-
-
-
-
-
-<a
-
-href="{% url 'dsrs_characterization_update' receive_request.pk source.result_dsrs.pk %}"
-
-class="btn btn-sm btn-primary">
-
-
-{% trans "Characterize" %}
-
-
-</a>
-
-
-
-
-
-
-
-
-<form method="post"
-
-action="{% url 'dsrs_mark_stored' receive_request.pk source.result_dsrs.pk %}">
-
-
-{% csrf_token %}
-
-
-
-<button
-
-type="submit"
-
-class="btn btn-sm btn-success">
-
-
-{% trans "Mark Stored" %}
-
-
-</button>
-
-
-
-</form>
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-{% else %}
-
-
-
-
-
-<span class="text-muted">
-
-
-{% trans "Waiting for DSRS creation" %}
-
-
-</span>
-
-
-
-
-
-{% endif %}
-
-
-
-
-
-
-</td>
-
-
-
-
-
-
-
-</tr>
-
-
-
-
-
-
-
-{% empty %}
-
-
-
-
-
-
-<tr>
-
-
-<td colspan="6"
-
-class="text-center text-muted">
-
-
-{% trans "No sources available." %}
-
-
-
-</td>
-
-
-</tr>
-
-
-
-
-
-
-{% endfor %}
-
-
-
-
-
-
-</tbody>
-
-
-
-
-
-
-</table>
-
-
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
-
-</div>
-
-
-
-
-
 {% endblock %}

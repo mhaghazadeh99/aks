@@ -142,7 +142,32 @@ class ReceiveSourceForm(forms.Form):
     The "add source/waste" picker. nuclide is required (per the printed
     form); serial_number is optional and app-only — used only for the
     license-contract inventory check.
+
+    If the facility has ANY existing license-contract DSRS records (for
+    any nuclide — not just the one being added), the creator gets a
+    choice: pick the item directly from that facility's contracted
+    inventory (guarantees an exact match, no fuzzy confirmation needed),
+    or add it as a new/uncontracted item. Facilities with no contract
+    history at all skip straight to the "new" behavior — full nuclide
+    list, freeform serial number.
     """
+
+    SOURCE_ORIGIN_NEW = "NEW"
+    SOURCE_ORIGIN_INVENTORY = "INVENTORY"
+
+    source_origin = forms.ChoiceField(
+        choices=[(SOURCE_ORIGIN_NEW, _("New / Not in Inventory"))],
+        initial=SOURCE_ORIGIN_NEW,
+        label=_("Source Origin"),
+        widget=forms.RadioSelect,
+    )
+
+    inventory_dsrs = forms.ModelChoiceField(
+        queryset=DSRS.objects.none(),
+        required=False,
+        empty_label=_("Select from inventory"),
+        label=_("Existing Contracted Source"),
+    )
 
     item_type = forms.ChoiceField(
         choices=ReceiveItemType.choices,
@@ -152,6 +177,7 @@ class ReceiveSourceForm(forms.Form):
 
     nuclide = forms.ModelChoiceField(
         queryset=Nuclides.objects.order_by("name"),
+        required=False,
         empty_label=_("Select Nuclide"),
         label=_("Nuclide"),
     )
@@ -170,18 +196,72 @@ class ReceiveSourceForm(forms.Form):
         initial=1, min_value=1, label=_("Quantity"),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, facility=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.facility = facility
+        self.has_contract_inventory = False
+
+        if facility is not None:
+            contracted_qs = (
+                DSRS.objects.filter(contract__isnull=False, contract__license__facility=facility)
+                .select_related("Nuclide", "contract")
+                .order_by("Nuclide__name", "serial_number")
+            )
+            if contracted_qs.exists():
+                self.has_contract_inventory = True
+                self.fields["inventory_dsrs"].queryset = contracted_qs
+                self.fields["inventory_dsrs"].label_from_instance = lambda d: (
+                    f"{d.Nuclide} — {d.serial_number or '-'} "
+                    f"({d.activity_input or '?'} {d.activity_unit or ''}, contract {d.contract.contract_number or '-'})"
+                )
+                self.fields["source_origin"].choices = [
+                    (self.SOURCE_ORIGIN_INVENTORY, _("Select From Facility's Contracted Inventory")),
+                    (self.SOURCE_ORIGIN_NEW, _("New / Not in Inventory")),
+                ]
+                self.fields["source_origin"].initial = self.SOURCE_ORIGIN_INVENTORY
+
+        # Nuclide is NEVER restricted by contract — a facility can have a
+        # contract for some nuclides and still receive uncontracted ones.
+        # The inventory picker above is the only contract-aware narrowing.
+
         _bootstrap(self.fields)
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
+            Field("source_origin"),
+            Field("inventory_dsrs"),
             Field("item_type"),
             Field("nuclide"),
             Field("serial_number"),
             Field("average_activity_mci"),
             Field("quantity"),
         )
+
+    def clean(self):
+        cleaned = super().clean()
+        origin = cleaned.get("source_origin")
+
+        if origin == self.SOURCE_ORIGIN_INVENTORY:
+
+            dsrs = cleaned.get("inventory_dsrs")
+            if not dsrs:
+                self.add_error("inventory_dsrs", _("Please select an item from the inventory."))
+                return cleaned
+
+            # Derive everything from the chosen DSRS — freeform fields are
+            # ignored/overwritten for this origin.
+            cleaned["nuclide"] = dsrs.Nuclide
+            cleaned["serial_number"] = dsrs.serial_number
+            cleaned["average_activity_mci"] = dsrs.activity_input
+            cleaned["quantity"] = 1
+            cleaned.setdefault("item_type", ReceiveItemType.SOURCE)
+
+        else:
+            if not cleaned.get("nuclide"):
+                self.add_error("nuclide", _("Please select a nuclide."))
+
+        return cleaned
 
 
 class LicenseMatchChoiceForm(forms.Form):
@@ -212,6 +292,13 @@ class LicenseMatchChoiceForm(forms.Form):
         choices.append((self.NONE_VALUE, _("None of these")))
 
         self.fields["choice"].choices = choices
+
+        # Without this, {% crispy %} auto-generates a helper with
+        # form_tag=True and renders its OWN <form> — nesting it inside the
+        # template's <form> produces invalid HTML that breaks submission
+        # (the Confirm button ends up outside any real form).
+        self.helper = FormHelper()
+        self.helper.form_tag = False
 
 
 # =====================================================================
@@ -286,7 +373,6 @@ class ReceiveManagerInputForm(forms.ModelForm):
 
     class Meta:
         model = ReceiveRequest
-        
         fields = [
             "pre_operation_visit_needed",
             "visit_expert_count",

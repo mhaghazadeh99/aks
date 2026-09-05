@@ -1,506 +1,63 @@
 {% extends "base.html" %}
-
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-
-
-
-{% block title %}
-
-{{ page_title }}
-
-{% endblock %}
-
-
-
-
-
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-
-
-
-
-
 <div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
 
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h3>{{ page_title }} — {{ receive_request.facility.name }}</h3>
+                </div>
+                <div class="card-body">
 
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% crispy form %}
 
+                        <div class="alert alert-info mt-3">
+                            {% trans "Checking \"Discount Requested\" routes this request to the CEO for signature before Finance. Otherwise it goes straight to Finance." %}
+                        </div>
 
+                        <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
+                    </form>
 
-<div class="row justify-content-center">
+                </div>
+            </div>
 
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Approval History" %}</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Step" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Approver" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in history %}
+                            <tr>
+                                <td>{{ item.get_step_display }}</td>
+                                <td>{{ item.get_status_display }}</td>
+                                <td>{{ item.approver|default:"-" }}</td>
+                                <td>{{ item.approved_at|default:"-" }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-
-
-
-<div class="col-xl-9">
-
-
-
-
-
-<div class="card shadow-sm">
-
-
-
-
-
-
-<div class="card-header">
-
-
-<h3 class="mb-0">
-
-{{ page_title }}
-
-</h3>
-
-
+        </div>
+    </div>
 </div>
-
-
-
-
-
-
-
-
-
-<div class="card-body">
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- REQUEST INFORMATION -->
-<!-- ============================= -->
-
-
-
-<div class="alert alert-info">
-
-
-<strong>
-
-{% trans "Facility" %}
-
-:
-
-</strong>
-
-
-{{ receive_request.facility.name }}
-
-
-
-<br>
-
-
-
-<strong>
-
-{% trans "Inquiry Letter" %}
-
-:
-
-</strong>
-
-
-{{ receive_request.inquiry_letter_number }}
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<form method="post" enctype="multipart/form-data">
-
-
-{% csrf_token %}
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- CONTRACT INFORMATION -->
-<!-- ============================= -->
-
-
-
-<div class="card mb-4">
-
-
-
-<div class="card-header">
-
-
-<h5 class="mb-0">
-
-
-① {% trans "Contract Information" %}
-
-
-</h5>
-
-
-</div>
-
-
-
-
-
-
-<div class="card-body">
-
-
-
-
-
-{% crispy form %}
-
-
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- BUTTONS -->
-<!-- ============================= -->
-
-
-
-<div class="d-flex justify-content-end gap-2">
-
-
-
-
-
-<a
-
-href="{% url 'receive_contracts_queue' %}"
-
-class="btn btn-secondary">
-
-
-{% trans "Cancel" %}
-
-
-</a>
-
-
-
-
-
-
-<button
-
-type="submit"
-
-class="btn btn-primary">
-
-
-{{ submit_text }}
-
-
-</button>
-
-
-
-
-
-
-</div>
-
-
-
-
-
-
-</form>
-
-
-
-
-
-
-
-
-<!-- ============================= -->
-<!-- APPROVAL HISTORY -->
-<!-- ============================= -->
-
-
-
-{% if history %}
-
-
-
-
-<div class="card mt-5">
-
-
-
-<div class="card-header">
-
-
-<h5 class="mb-0">
-
-
-② {% trans "Approval History" %}
-
-
-</h5>
-
-
-</div>
-
-
-
-
-
-
-<div class="card-body">
-
-
-
-
-
-<table class="table table-bordered table-striped">
-
-
-
-<thead class="table-light">
-
-
-<tr>
-
-
-<th>
-
-{% trans "Step" %}
-
-</th>
-
-
-<th>
-
-{% trans "Status" %}
-
-</th>
-
-
-<th>
-
-{% trans "User" %}
-
-</th>
-
-
-<th>
-
-{% trans "Date" %}
-
-</th>
-
-
-
-</tr>
-
-
-</thead>
-
-
-
-
-
-<tbody>
-
-
-
-
-
-{% for item in history %}
-
-
-
-
-<tr>
-
-
-
-<td>
-
-{{ item.get_step_display }}
-
-</td>
-
-
-
-
-<td>
-
-
-
-{% if item.status == "APPROVED" %}
-
-
-<span class="badge bg-success">
-
-{% trans "Approved" %}
-
-</span>
-
-
-
-{% elif item.status == "REJECTED" %}
-
-
-
-<span class="badge bg-danger">
-
-{% trans "Rejected" %}
-
-</span>
-
-
-
-{% else %}
-
-
-
-<span class="badge bg-secondary">
-
-{{ item.get_status_display }}
-
-</span>
-
-
-
-{% endif %}
-
-
-
-</td>
-
-
-
-
-
-
-
-<td>
-
-{{ item.approver|default:"-" }}
-
-</td>
-
-
-
-
-
-
-<td>
-
-{{ item.approved_at|date:"Y-m-d H:i"|default:"-" }}
-
-</td>
-
-
-
-
-
-</tr>
-
-
-
-
-
-
-{% endfor %}
-
-
-
-
-
-</tbody>
-
-
-</table>
-
-
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-{% endif %}
-
-
-
-
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
 {% endblock %}

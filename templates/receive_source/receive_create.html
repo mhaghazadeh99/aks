@@ -1,319 +1,134 @@
 {% extends "base.html" %}
-
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-
 {% block title %}
-
-{% if instance %}
-{% trans "Continue Draft Receive Request" %}
-{% else %}
 {% trans "New Receive Request" %}
-{% endif %}
-
 {% endblock %}
-
-
-
-
 
 {% block content %}
 
-
 <div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="card shadow-sm">
 
+                <div class="card-header">
+                    <h3>
+                        {% if instance %}
+                            {% trans "Continue Draft" %}
+                        {% else %}
+                            {% trans "New Receive Request" %}
+                        {% endif %}
+                    </h3>
+                </div>
 
-<div class="row justify-content-center">
+                <div class="card-body">
 
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
 
-<div class="col-xl-10">
+                        <!-- ============================= -->
+                        <!-- 1 GENERAL INFORMATION -->
+                        <!-- ============================= -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">① {% trans "General Information" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                {% crispy request_form %}
+                            </div>
+                        </div>
 
+                        <!-- ============================= -->
+                        <!-- 2 ATTACHMENTS -->
+                        <!-- ============================= -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">② {% trans "Attachments" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                {% crispy attachment_form %}
+                                {% if existing_attachments %}
+                                <hr>
+                                <h6>{% trans "Already Uploaded" %}</h6>
+                                <ul>
+                                    {% for att in existing_attachments %}
+                                        <li>
+                                            {{ att.get_attachment_type_display }} —
+                                            <a href="{{ att.file.url }}" target="_blank">{{ att.file.name|slice:"-40:" }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                <p class="text-muted small">{% trans "Uploading a file above adds to this list — it doesn't replace it." %}</p>
+                                {% endif %}
+                            </div>
+                        </div>
 
-<div class="card shadow-sm">
+                        <!-- ============================= -->
+                        <!-- 3 FACILITY -->
+                        <!-- ============================= -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">③ {% trans "Delivering Facility" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-end">
+                                    <div class="col-lg-8">
+                                        {% crispy facility_form %}
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <a id="editFacilityBtn" class="btn btn-warning w-100" target="_self" href="#">
+                                            {% trans "Edit Selected Facility" %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mt-2">
+                                    {% trans "You'll add the source/waste rows on the next page, once the facility is saved — that lets us show only that facility's contracted nuclides, if any." %}
+                                </p>
+                            </div>
+                        </div>
 
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'receive_list' %}" class="btn btn-secondary">
+                                {% trans "Cancel" %}
+                            </a>
+                            <button type="submit" name="action" value="draft" class="btn btn-secondary">
+                                {% trans "Save Draft" %}
+                            </button>
+                            <button type="submit" name="action" value="continue" class="btn btn-primary">
+                                {% trans "Save and Continue to Sources" %}
+                            </button>
+                        </div>
 
+                    </form>
 
-<div class="card-header">
-
-<h3 class="mb-0">
-
-{% if instance %}
-
-{% trans "Continue Draft Receive Request" %}
-
-{% else %}
-
-{% trans "New Receive Request" %}
-
-{% endif %}
-
-
-</h3>
-
-
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-
-
-
-<div class="card-body">
-
-
-
-<form method="post"
-enctype="multipart/form-data">
-
-
-{% csrf_token %}
-
-
-
-
-
-<!-- ===================================================== -->
-<!-- 1 GENERAL INFORMATION -->
-<!-- ===================================================== -->
-
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-<h5 class="mb-0">
-
-① {% trans "General Information" %}
-
-</h5>
-
-
-</div>
-
-
-
-<div class="card-body">
-
-
-{% crispy request_form %}
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-<!-- ===================================================== -->
-<!-- 2 FACILITY -->
-<!-- ===================================================== -->
-
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-
-<h5 class="mb-0">
-
-② {% trans "Delivering Facility" %}
-
-</h5>
-
-
-</div>
-
-
-
-
-<div class="card-body">
-
-
-{% crispy facility_form %}
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-<!-- ===================================================== -->
-<!-- 3 ATTACHMENTS -->
-<!-- ===================================================== -->
-
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-
-<h5 class="mb-0">
-
-③ {% trans "Attachments" %}
-
-</h5>
-
-
-</div>
-
-
-
-
-<div class="card-body">
-
-
-{% crispy attachment_form %}
-
-
-
-{% if existing_attachments %}
-
-<hr>
-
-
-<h6>
-
-{% trans "Existing Attachments" %}
-
-</h6>
-
-
-<ul>
-
-
-{% for att in existing_attachments %}
-
-
-<li>
-
-{{ att.get_attachment_type_display }}
-
--
-
-<a href="{{ att.file.url }}"
-target="_blank">
-
-{{ att.file.name|slice:"-40:" }}
-
-</a>
-
-
-</li>
-
-
-{% endfor %}
-
-
-</ul>
-
-
-
-{% endif %}
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-<!-- BUTTONS -->
-
-
-<div class="d-flex justify-content-end gap-2">
-
-
-<a href="{% url 'receive_list' %}"
-class="btn btn-secondary">
-
-
-{% trans "Cancel" %}
-
-
-</a>
-
-
-
-
-<button
-type="submit"
-name="action"
-value="draft"
-class="btn btn-secondary">
-
-
-{% trans "Save Draft" %}
-
-
-</button>
-
-
-
-
-
-<button
-type="submit"
-name="action"
-value="continue"
-class="btn btn-primary">
-
-
-{% trans "Save and Continue" %}
-
-
-</button>
-
-
-
-
-</div>
-
-
-
-
-
-</form>
-
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-{% endblock content %}
+<script>
+const facilitySelect = document.getElementById("id_facility");
+const editFacilityBtn = document.getElementById("editFacilityBtn");
+
+function updateFacilityLink(){
+    if(!facilitySelect){ return; }
+    const id = facilitySelect.value;
+    if(!id){
+        editFacilityBtn.href = "#";
+        editFacilityBtn.classList.add("disabled");
+        return;
+    }
+    editFacilityBtn.classList.remove("disabled");
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    editFacilityBtn.href = `/facilities/${id}/edit/?next=${next}`;
+}
+
+if(facilitySelect){
+    facilitySelect.addEventListener("change", updateFacilityLink);
+    updateFacilityLink();
+}
+</script>
+{% endblock %}

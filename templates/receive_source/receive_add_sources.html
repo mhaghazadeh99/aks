@@ -2,490 +2,130 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-
-{% block title %}
-{% trans "Add Received Sources" %}
-{% endblock %}
-
+{% block title %}{% trans "Add Sources" %}{% endblock %}
 
 {% block content %}
-
 <div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
 
-<div class="row justify-content-center">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h3>④ {% trans "Sources / Waste" %} — {{ receive_request.facility.name }}</h3>
+                </div>
+                <div class="card-body">
 
-<div class="col-xl-10">
+                    {% if match_form %}
+                    <!-- ============================= -->
+                    <!-- FUZZY MATCH CONFIRMATION -->
+                    <!-- ============================= -->
+                    <div class="alert alert-warning">
+                        <p class="mb-2">
+                            {% trans "This facility has an existing license contract for this nuclide, but the serial number you typed didn't match exactly. Does this item match one of these?" %}
+                        </p>
+                        <form method="post">
+                            {% csrf_token %}
+                            {% crispy match_form %}
+                            <button type="submit" name="confirm_match" value="1" class="btn btn-primary mt-2">
+                                {% trans "Confirm" %}
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <!-- ============================= -->
+                    <!-- ADD SOURCE FORM -->
+                    <!-- ============================= -->
+                    <form method="post">
+                        {% csrf_token %}
+                        {% crispy source_form %}
+                        <button type="submit" class="btn btn-success mt-2">{% trans "Add" %}</button>
+                    </form>
 
+                    <script>
+                    (function(){
+                        const originRadios = document.querySelectorAll('input[name="source_origin"]');
+                        const inventoryField = document.getElementById('div_id_inventory_dsrs');
+                        const nuclideField = document.getElementById('div_id_nuclide');
+                        const serialField = document.getElementById('div_id_serial_number');
+                        const activityField = document.getElementById('div_id_average_activity_mci');
+                        const quantityField = document.getElementById('div_id_quantity');
 
-<div class="card shadow-sm">
+                        function applyOrigin(){
+                            const checked = document.querySelector('input[name="source_origin"]:checked');
+                            const isInventory = checked && checked.value === "INVENTORY";
+                            if(inventoryField) inventoryField.style.display = isInventory ? "" : "none";
+                            [nuclideField, serialField, activityField, quantityField].forEach(el => {
+                                if(el) el.style.display = isInventory ? "none" : "";
+                            });
+                        }
 
+                        originRadios.forEach(r => r.addEventListener("change", applyOrigin));
+                        applyOrigin();
+                    })();
+                    </script>
+                    {% endif %}
 
-<div class="card-header">
+                </div>
+            </div>
 
-<h3 class="mb-0">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Added Rows" %}</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Nuclide" %}</th>
+                                <th>{% trans "Serial Number" %}</th>
+                                <th>{% trans "Activity (mCi)" %}</th>
+                                <th>{% trans "Quantity" %}</th>
+                                <th>{% trans "License Match" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for source in sources %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ source.get_item_type_display }}</td>
+                                <td>{{ source.nuclide }}</td>
+                                <td>{{ source.serial_number|default:"-" }}</td>
+                                <td>{{ source.average_activity_mci|default:"-" }}</td>
+                                <td>{{ source.quantity }}</td>
+                                <td>
+                                    {% if source.matched_license_dsrs %}
+                                        <span class="badge bg-success">
+                                            {{ source.matched_license_dsrs.contract.contract_number }}
+                                            {% if source.serial_matched_exactly %}({% trans "exact" %}){% else %}({% trans "confirmed" %}){% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center">{% trans "No sources added yet." %}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-{% trans "Add Sources" %}
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'receive_detail' receive_request.pk %}" class="btn btn-secondary">
+                    {% trans "Back" %}
+                </a>
+                <form method="post" action="{% url 'receive_finish_sources' receive_request.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        {% trans "Finish Adding Sources — Send to Managers" %}
+                    </button>
+                </form>
+            </div>
 
-</h3>
-
+        </div>
+    </div>
 </div>
-
-
-
-<div class="card-body">
-
-
-
-<div class="alert alert-info">
-
-<strong>
-{% trans "Facility" %}
-:</strong>
-
-{{ receive_request.facility.name }}
-
-<br>
-
-<strong>
-{% trans "Inquiry Letter" %}
-:</strong>
-
-{{ receive_request.inquiry_letter_number }}
-
-</div>
-
-
-
-
-<!-- ============================= -->
-<!-- ADD SOURCE FORM -->
-<!-- ============================= -->
-
-
-<div class="card mb-4">
-
-
-<div class="card-header">
-
-<h5 class="mb-0">
-
-① {% trans "Add Source / Waste Item" %}
-
-</h5>
-
-</div>
-
-
-
-<div class="card-body">
-
-
-<form method="post">
-
-{% csrf_token %}
-
-
-<div class="row g-3 align-items-end">
-
-
-<div class="col-md-2">
-
-<label class="form-label">
-
-{% trans "Item Type" %}
-
-</label>
-
-{{ source_form.item_type }}
-
-</div>
-
-
-
-<div class="col-md-3">
-
-<label class="form-label">
-
-{% trans "Nuclide" %}
-
-</label>
-
-{{ source_form.nuclide }}
-
-</div>
-
-
-
-
-<div class="col-md-3">
-
-<label class="form-label">
-
-{% trans "Serial Number" %}
-
-</label>
-
-{{ source_form.serial_number }}
-
-</div>
-
-
-
-<div class="col-md-2">
-
-<label class="form-label">
-
-{% trans "Activity (mCi)" %}
-
-</label>
-
-{{ source_form.average_activity_mci }}
-
-</div>
-
-
-
-<div class="col-md-1">
-
-<label class="form-label">
-
-{% trans "Qty" %}
-
-</label>
-
-{{ source_form.quantity }}
-
-</div>
-
-
-
-<div class="col-md-1 d-grid">
-
-<button 
-type="submit"
-class="btn btn-success">
-
-{% trans "Add" %}
-
-</button>
-
-</div>
-
-
-</div>
-
-
-</form>
-
-
-</div>
-
-</div>
-
-
-
-
-
-<!-- ============================= -->
-<!-- MATCH WARNING -->
-<!-- ============================= -->
-
-
-{% if match_form %}
-
-
-<div class="card border-warning mb-4">
-
-
-<div class="card-header bg-warning">
-
-<h5 class="mb-0">
-
-{% trans "Existing Licensed Source Found" %}
-
-</h5>
-
-</div>
-
-
-<div class="card-body">
-
-
-<p>
-
-{% trans "The entered source may match an existing licensed source. Please select:" %}
-
-</p>
-
-
-<form method="post">
-
-{% csrf_token %}
-
-
-{{ match_form|crispy }}
-
-
-
-<button
-type="submit"
-name="confirm_match"
-class="btn btn-primary">
-
-{% trans "Confirm Selection" %}
-
-</button>
-
-
-</form>
-
-
-</div>
-
-</div>
-
-
-{% endif %}
-
-
-
-
-
-<!-- ============================= -->
-<!-- SOURCE LIST -->
-<!-- ============================= -->
-
-
-<div class="card">
-
-
-<div class="card-header">
-
-<h5 class="mb-0">
-
-② {% trans "Added Sources" %}
-
-</h5>
-
-
-</div>
-
-
-
-<div class="card-body">
-
-
-
-<table class="table table-bordered table-striped">
-
-
-<thead class="table-light">
-
-
-<tr>
-
-<th>
-#
-</th>
-
-
-<th>
-{% trans "Type" %}
-</th>
-
-
-<th>
-{% trans "Nuclide" %}
-</th>
-
-
-<th>
-{% trans "Serial Number" %}
-</th>
-
-
-<th>
-{% trans "Activity" %}
-</th>
-
-
-<th>
-{% trans "License Match" %}
-</th>
-
-
-</tr>
-
-
-</thead>
-
-
-<tbody>
-
-
-{% for source in sources %}
-
-
-<tr>
-
-
-<td>
-
-{{ forloop.counter }}
-
-</td>
-
-
-<td>
-
-{{ source.get_item_type_display }}
-
-</td>
-
-
-<td>
-
-{{ source.nuclide.name }}
-
-</td>
-
-
-<td>
-
-{{ source.serial_number|default:"-" }}
-
-</td>
-
-
-<td>
-
-{{ source.average_activity_mci|default:"-" }}
-
-</td>
-
-
-<td>
-
-
-{% if source.matched_license_dsrs %}
-
-<span class="badge bg-success">
-
-{% trans "Matched" %}
-
-</span>
-
-
-{% else %}
-
-<span class="badge bg-secondary">
-
-{% trans "No Match" %}
-
-</span>
-
-
-{% endif %}
-
-
-</td>
-
-
-</tr>
-
-
-{% empty %}
-
-
-<tr>
-
-<td colspan="6"
-class="text-center text-muted">
-
-
-{% trans "No sources added yet." %}
-
-
-</td>
-
-</tr>
-
-
-{% endfor %}
-
-
-</tbody>
-
-
-</table>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<!-- ============================= -->
-<!-- ACTIONS -->
-<!-- ============================= -->
-
-
-<div class="d-flex justify-content-end gap-2 mt-4">
-
-
-<a
-href="{% url 'receive_list' %}"
-class="btn btn-secondary">
-
-
-{% trans "Save Draft / Exit" %}
-
-
-</a>
-
-
-
-<form method="post"
-action="{% url 'receive_finish_sources' receive_request.pk %}">
-
-
-{% csrf_token %}
-
-
-<button
-type="submit"
-class="btn btn-primary">
-
-
-{% trans "Finish Sources" %}
-
-
-</button>
-
-
-</form>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-</div>
-
-</div>
-
-
 {% endblock %}

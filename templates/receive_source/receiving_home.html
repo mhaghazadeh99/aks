@@ -1,255 +1,97 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-
 {% block title %}
-{% trans "Receiving" %}
-{% endblock %}
-
-
+{% trans "Receive Source" %}
+{% endblock title %}
 
 {% block extrastyle %}
-
 <style>
-
-.receive-container{
-    padding:30px;
+.home-container{ padding:30px; }
+.home-title{ font-size:28px; font-weight:700; margin-bottom:10px; }
+.home-subtitle{ color:#777; margin-bottom:30px; }
+.home-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:25px; }
+.home-card{
+    background:white; border-radius:16px; padding:25px; text-decoration:none; color:inherit;
+    box-shadow:0 5px 15px rgba(0,0,0,.08); transition:.25s; display:flex; flex-direction:column;
+    justify-content:center; min-height:130px;
 }
-
-
-.receive-title{
-    font-size:28px;
-    font-weight:700;
-    margin-bottom:10px;
-}
-
-
-.receive-subtitle{
-    color:#777;
-    margin-bottom:30px;
-}
-
-
-.receive-grid{
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(220px,1fr));
-
-    gap:25px;
-
-}
-
-
-.receive-card{
-
-    background:white;
-
-    border-radius:16px;
-
-    padding:25px;
-
-    text-decoration:none;
-
-    color:inherit;
-
-    box-shadow:
-    0 5px 15px rgba(0,0,0,.08);
-
-    transition:.25s;
-
-    min-height:140px;
-
-}
-
-
-.receive-card:hover{
-
-    transform:translateY(-5px);
-
-    box-shadow:
-    0 10px 25px rgba(0,0,0,.15);
-
-}
-
-
-.receive-icon{
-
-    font-size:35px;
-
-    margin-bottom:15px;
-
-}
-
-
-.receive-card h3{
-
-    font-size:20px;
-
-    margin:0;
-
-}
-
-
-.receive-card p{
-
-    margin-top:10px;
-
-    color:#777;
-
-}
-
-
+.home-card:hover{ transform:translateY(-5px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
+.home-icon{ font-size:35px; margin-bottom:15px; }
+.home-card h3{ margin:0; font-size:20px; }
+.home-card p{ margin-top:8px; color:#777; }
 </style>
-
-{% endblock %}
-
-
-
-
+{% endblock extrastyle %}
 
 {% block content %}
+<div class="home-container">
 
+    <h1 class="home-title">{% trans "Receive Source" %}</h1>
+    <p class="home-subtitle">{% trans "Select a queue to continue" %}</p>
 
-<div class="receive-container">
+    <div class="home-grid">
 
+        <a href="{% url 'receive_list' %}" class="home-card">
+            <div class="home-icon">📥</div>
+            <h3>{% trans "All Requests" %}</h3>
+            <p>{% trans "View and start receive requests" %}</p>
+        </a>
 
-<h1 class="receive-title">
+        <a href="{% url 'receive_manager_input_queue' %}" class="home-card">
+            <div class="home-icon">📝</div>
+            <h3>{% trans "Manager Data Entry" %}</h3>
+            <p>{% trans "Requests waiting for logistics/characterization fields" %}</p>
+        </a>
 
-{% trans "Receiving Management" %}
+        <a href="{% url 'receive_manager_queue' %}" class="home-card">
+            <div class="home-icon">🧑‍💼</div>
+            <h3>{% trans "Operation Manager" %}</h3>
+            <p>{% trans "Requests waiting for manager signature" %}</p>
+        </a>
 
-</h1>
+        <a href="{% url 'receive_control_queue' %}" class="home-card">
+            <div class="home-icon">🧾</div>
+            <h3>{% trans "Operation Control" %}</h3>
+            <p>{% trans "Requests waiting for control signature" %}</p>
+        </a>
 
+        <a href="{% url 'receive_deputy_queue' %}" class="home-card">
+            <div class="home-icon">🖋</div>
+            <h3>{% trans "Deputy Manager" %}</h3>
+            <p>{% trans "Requests waiting for deputy signature" %}</p>
+        </a>
 
-<p class="receive-subtitle">
+        <a href="{% url 'receive_ceo_queue' %}" class="home-card">
+            <div class="home-icon">🏛</div>
+            <h3>{% trans "CEO" %}</h3>
+            <p>{% trans "Discount-requested requests awaiting CEO" %}</p>
+        </a>
 
-{% trans "Manage radioactive source receiving workflow" %}
+        <a href="{% url 'receive_contracts_queue' %}" class="home-card">
+            <div class="home-icon">📑</div>
+            <h3>{% trans "Contracts" %}</h3>
+            <p>{% trans "Requests ready for contract entry" %}</p>
+        </a>
 
-</p>
+        <a href="{% url 'receive_finance_queue' %}" class="home-card">
+            <div class="home-icon">💳</div>
+            <h3>{% trans "Finance" %}</h3>
+            <p>{% trans "Requests waiting on payment" %}</p>
+        </a>
 
+        <a href="{% url 'receive_receiving_queue' %}" class="home-card">
+            <div class="home-icon">📦</div>
+            <h3>{% trans "Receiving / Characterization" %}</h3>
+            <p>{% trans "Sources awaiting characterization" %}</p>
+        </a>
 
+        <a href="{% url 'receive_create' %}" class="home-card">
+            <div class="home-icon">➕</div>
+            <h3>{% trans "New Receive Request" %}</h3>
+            <p>{% trans "Start from a DSRS Inquiry letter" %}</p>
+        </a>
 
-<div class="receive-grid">
-
-
-
-<a href="{% url 'receive_create' %}" class="receive-card">
-
-<div class="receive-icon">
-➕
-</div>
-
-<h3>
-{% trans "New Receive Request" %}
-</h3>
-
-<p>
-{% trans "Create a new radioactive source receiving request" %}
-</p>
-
-</a>
-
-
-
-<a href="{% url 'receive_list' %}" class="receive-card">
-
-<div class="receive-icon">
-📋
-</div>
-
-<h3>
-{% trans "Receive Requests" %}
-</h3>
-
-<p>
-{% trans "View and manage receiving requests" %}
-</p>
-
-</a>
-
-
-
-
-<a href="{% url 'receive_manager_queue' %}" class="receive-card">
-
-<div class="receive-icon">
-👷
-</div>
-
-<h3>
-{% trans "Manager Queue" %}
-</h3>
-
-<p>
-{% trans "Operation manager data entry" %}
-</p>
-
-</a>
-
-
-
-
-<a href="{% url 'receive_contracts_queue' %}" class="receive-card">
-
-<div class="receive-icon">
-📑
-</div>
-
-<h3>
-{% trans "Contracts" %}
-</h3>
-
-<p>
-{% trans "Manage receiving contracts" %}
-</p>
-
-</a>
-
-
-
-
-<a href="{% url 'receive_finance_queue' %}" class="receive-card">
-
-<div class="receive-icon">
-💳
-</div>
-
-<h3>
-{% trans "Finance" %}
-</h3>
-
-<p>
-{% trans "Manage payments" %}
-</p>
-
-</a>
-
-
-
-
-<a href="{% url 'receive_receiving_queue' %}" class="receive-card">
-
-<div class="receive-icon">
-☢
-</div>
-
-<h3>
-{% trans "Characterization" %}
-</h3>
-
-<p>
-{% trans "Receive and characterize sources" %}
-</p>
-
-</a>
-
-
+    </div>
 
 </div>
-
-
-</div>
-
-
-{% endblock %}
+{% endblock content %}

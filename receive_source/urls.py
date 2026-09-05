@@ -7,6 +7,7 @@ urlpatterns = [
     path("list/", views.receive_list, name="receive_list"),
 
     # Queues
+    path("queue/manager-input/", views.manager_input_queue, name="receive_manager_input_queue"),
     path("queue/manager/", views.manager_queue, name="receive_manager_queue"),
     path("queue/control/", views.control_queue, name="receive_control_queue"),
     path("queue/deputy/", views.deputy_queue, name="receive_deputy_queue"),

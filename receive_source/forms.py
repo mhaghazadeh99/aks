@@ -286,6 +286,7 @@ class ReceiveManagerInputForm(forms.ModelForm):
 
     class Meta:
         model = ReceiveRequest
+        
         fields = [
             "pre_operation_visit_needed",
             "visit_expert_count",

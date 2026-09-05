@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+
+{% block title %}
+{% trans "Sign Receive Specification" %}
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="container-fluid py-4">
+
+
+<div class="row justify-content-center">
+
+
+<div class="col-xl-10">
+
+
+<div class="card shadow-sm">
+
+
+
+<div class="card-header">
+
+
+<h3 class="mb-0">
+
+{% trans "Sign Receive Specification" %}
+
+</h3>
+
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+
+<!-- ============================= -->
+<!-- REQUEST INFORMATION -->
+<!-- ============================= -->
+
+<div class="card mb-4">
+
+
+<div class="card-header">
+
+<h5 class="mb-0">
+
+① {% trans "Request Information" %}
+
+</h5>
+
+</div>
+
+
+
+<div class="card-body">
+
+
+<div class="row">
+
+
+<div class="col-md-4">
+
+<strong>
+{% trans "Facility" %}
+</strong>
+
+<p>
+{{ receive_request.facility.name }}
+</p>
+
+</div>
+
+
+
+<div class="col-md-4">
+
+<strong>
+{% trans "Letter Number" %}
+</strong>
+
+<p>
+{{ receive_request.inquiry_letter_number|default:"-" }}
+</p>
+
+</div>
+
+
+
+<div class="col-md-4">
+
+<strong>
+{% trans "Current Status" %}
+</strong>
+
+<p>
+
+<span class="badge bg-primary">
+
+{{ receive_request.get_status_display }}
+
+</span>
+
+</p>
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- ============================= -->
+<!-- SPECIFICATION FILE -->
+<!-- ============================= -->
+
+
+<div class="card mb-4">
+
+
+<div class="card-header">
+
+
+<h5 class="mb-0">
+
+② {% trans "Specification Document" %}
+
+</h5>
+
+
+</div>
+
+
+
+<div class="card-body">
+
+
+<p>
+
+{% trans "The signed specification document will be updated with your signature." %}
+
+</p>
+
+
+
+<a 
+href="{{ specification.file.url }}"
+target="_blank"
+class="btn btn-outline-primary">
+
+📄 {% trans "Open Specification" %}
+
+</a>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- ============================= -->
+<!-- APPROVAL HISTORY -->
+<!-- ============================= -->
+
+
+<div class="card mb-4">
+
+
+<div class="card-header">
+
+
+<h5 class="mb-0">
+
+③ {% trans "Approval History" %}
+
+</h5>
+
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+<table class="table table-bordered">
+
+
+<thead class="table-light">
+
+
+<tr>
+
+<th>
+{% trans "Step" %}
+</th>
+
+
+<th>
+{% trans "Status" %}
+</th>
+
+
+<th>
+{% trans "Approver" %}
+</th>
+
+
+<th>
+{% trans "Date" %}
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody>
+
+
+{% for item in history %}
+
+
+<tr>
+
+
+<td>
+
+{{ item.get_step_display }}
+
+</td>
+
+
+<td>
+
+
+{% if item.status == "APPROVED" %}
+
+<span class="badge bg-success">
+
+{{ item.get_status_display }}
+
+</span>
+
+
+{% elif item.status == "REJECTED" %}
+
+<span class="badge bg-danger">
+
+{{ item.get_status_display }}
+
+</span>
+
+
+{% else %}
+
+<span class="badge bg-warning">
+
+{{ item.get_status_display }}
+
+</span>
+
+
+{% endif %}
+
+
+</td>
+
+
+
+<td>
+
+{{ item.approver|default:"-" }}
+
+</td>
+
+
+
+<td>
+
+{{ item.approved_at|default:"-" }}
+
+</td>
+
+
+</tr>
+
+
+
+{% empty %}
+
+
+<tr>
+
+<td colspan="4" class="text-center">
+
+{% trans "No approval history available." %}
+
+</td>
+
+</tr>
+
+
+{% endfor %}
+
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<!-- ============================= -->
+<!-- SIGN ACTION -->
+<!-- ============================= -->
+
+
+<div class="card mb-3">
+
+
+<div class="card-header">
+
+
+<h5 class="mb-0">
+
+④ {% trans "Approval Action" %}
+
+</h5>
+
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+
+<form method="post">
+
+
+{% csrf_token %}
+
+
+
+<p>
+
+{% trans "By clicking sign, you confirm that you have reviewed the specification document." %}
+
+</p>
+
+
+
+
+<div class="d-flex justify-content-between">
+
+
+<a 
+href="{% url 'receive_detail' receive_request.pk %}"
+class="btn btn-secondary">
+
+{% trans "Back" %}
+
+</a>
+
+
+
+<button 
+type="submit"
+class="btn btn-success">
+
+✍ {% trans "Sign Specification" %}
+
+</button>
+
+
+
+</div>
+
+
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+{% endblock %}

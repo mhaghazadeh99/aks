@@ -154,6 +154,9 @@ class ReceiveRequest(models.Model):
 
     # ---- "Rest of the form" — filled by either manager, after sources
     # are added by the coordinator and before signatures begin. ----
+    # The form has TWO separate dispatched-personnel blocks: one for the
+    # pre-operation SITE VISIT, one for the actual RECEIVING OPERATION.
+    # Only the operation block's counts are Control-Manager, add-only.
 
     pre_operation_visit_needed = models.BooleanField(
         _("Pre-Operation Visit Needed"),
@@ -161,26 +164,25 @@ class ReceiveRequest(models.Model):
         blank=True,
     )
 
-    dispatched_expert_count = models.PositiveIntegerField(
-        _("Dispatched Experts"), null=True, blank=True,
-    )
-    dispatched_technician_count = models.PositiveIntegerField(
-        _("Dispatched Technicians"), null=True, blank=True,
-    )
-    dispatched_driver_count = models.PositiveIntegerField(
-        _("Dispatched Drivers"), null=True, blank=True,
-    )
-
-    mission_days = models.PositiveIntegerField(
-        _("Mission Days"), null=True, blank=True,
+    # -- Visit team (بازدید قبل از عملیات) --
+    visit_expert_count = models.PositiveIntegerField(_("Visit: Experts"), null=True, blank=True)
+    visit_technician_count = models.PositiveIntegerField(_("Visit: Technicians"), null=True, blank=True)
+    visit_driver_count = models.PositiveIntegerField(_("Visit: Drivers"), null=True, blank=True)
+    visit_mission_days = models.PositiveIntegerField(_("Visit: Mission Days"), null=True, blank=True)
+    visit_vehicle_type = models.CharField(
+        _("Visit: Vehicle Type"), max_length=10, choices=VehicleType.choices, blank=True, null=True,
     )
 
-    vehicle_type = models.CharField(
-        _("Vehicle Type"),
-        max_length=10,
-        choices=VehicleType.choices,
-        blank=True,
-        null=True,
+    # -- Operation team (مشخصات تکمیلی جهت انجام عملیات) --
+    # Control Manager can only ever INCREASE these three counts (see
+    # forms.AddOnlyIntegerField) — never remove/reduce.
+    operation_expert_count = models.PositiveIntegerField(_("Operation: Experts"), default=0)
+    operation_technician_count = models.PositiveIntegerField(_("Operation: Technicians"), default=0)
+    operation_driver_count = models.PositiveIntegerField(_("Operation: Drivers"), default=0)
+
+    operation_mission_days = models.PositiveIntegerField(_("Operation: Mission Days"), null=True, blank=True)
+    operation_vehicle_type = models.CharField(
+        _("Operation: Vehicle Type"), max_length=10, choices=VehicleType.choices, blank=True, null=True,
     )
 
     route_difficulty = models.CharField(
@@ -205,6 +207,7 @@ class ReceiveRequest(models.Model):
 
     other_costs = models.CharField(
         _("Other Costs"), max_length=255, blank=True, null=True,
+        help_text=_("Also where the cost of an unmatched/no-license item gets folded in, per current policy."),
     )
 
     logistics_notes = models.TextField(
@@ -343,7 +346,11 @@ class ReceiveSource(models.Model):
         max_length=50,
         blank=True,
         null=True,
-        help_text=_("Prefilled from the nuclide record; editable if needed."),
+        help_text=_(
+            "Auto-formatted from nuclide.half_life (stored in seconds) at "
+            "save time — not user-entered. Kept as a display snapshot since "
+            "the printed form shows it as static text."
+        ),
     )
 
     needs_shield = models.BooleanField(_("Needs Shield"), null=True, blank=True)
@@ -360,7 +367,31 @@ class ReceiveSource(models.Model):
     description = models.TextField(
         _("Description"),
         blank=True,
-        help_text=_("Auto-annotated with license-contract match, if any."),
+        help_text=_("Auto-annotated with a license-contract match, if any (see below)."),
+    )
+
+    # ---- License-contract match (facility + nuclide + serial) ----
+    # Populated by receiving.services.license_check when the coordinator
+    # adds this row. `serial_matched_exactly=True` means an exact
+    # facility+nuclide+serial hit was found automatically. If the serial
+    # didn't match exactly but the facility does have contract(s) for this
+    # nuclide, `matched_license_dsrs` records whichever candidate the
+    # creator manually confirmed (or stays null if they picked "none of
+    # these"). Either way this is informational only — it never sets
+    # `DSRS.contract` on the newly-created record; see result_dsrs below.
+    matched_license_dsrs = models.ForeignKey(
+        "dashboard.DSRS",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("Matched Existing Licensed Source"),
+        help_text=_("Set automatically on an exact serial match, or manually confirmed by the creator on a fuzzy match."),
+    )
+
+    serial_matched_exactly = models.BooleanField(
+        _("Serial Matched Exactly"),
+        default=False,
     )
 
     specification_order = models.PositiveIntegerField(
@@ -368,6 +399,10 @@ class ReceiveSource(models.Model):
     )
 
     # Set once payment clears and the physical DSRS record is created.
+    # Deliberately NOT linked to any LicenseContract (DSRS.contract stays
+    # null) — a ReceiveContract, if any, is tracked separately above, and
+    # per current policy a received item with no matched license simply
+    # has its cost folded into ReceiveRequest.other_costs instead.
     result_dsrs = models.ForeignKey(
         "dashboard.DSRS",
         null=True,

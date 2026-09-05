@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}
+
+{% if instance %}
+{% trans "Continue Draft Receive Request" %}
+{% else %}
+{% trans "New Receive Request" %}
+{% endif %}
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+
+<div class="container-fluid py-4">
+
+
+<div class="row justify-content-center">
+
+
+<div class="col-xl-10">
+
+
+<div class="card shadow-sm">
+
+
+
+<div class="card-header">
+
+<h3 class="mb-0">
+
+{% if instance %}
+
+{% trans "Continue Draft Receive Request" %}
+
+{% else %}
+
+{% trans "New Receive Request" %}
+
+{% endif %}
+
+
+</h3>
+
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+
+<form method="post"
+enctype="multipart/form-data">
+
+
+{% csrf_token %}
+
+
+
+
+
+<!-- ===================================================== -->
+<!-- 1 GENERAL INFORMATION -->
+<!-- ===================================================== -->
+
+
+<div class="card mb-4">
+
+
+<div class="card-header">
+
+<h5 class="mb-0">
+
+① {% trans "General Information" %}
+
+</h5>
+
+
+</div>
+
+
+
+<div class="card-body">
+
+
+{% crispy request_form %}
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+<!-- ===================================================== -->
+<!-- 2 FACILITY -->
+<!-- ===================================================== -->
+
+
+<div class="card mb-4">
+
+
+<div class="card-header">
+
+
+<h5 class="mb-0">
+
+② {% trans "Delivering Facility" %}
+
+</h5>
+
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+{% crispy facility_form %}
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- ===================================================== -->
+<!-- 3 ATTACHMENTS -->
+<!-- ===================================================== -->
+
+
+<div class="card mb-4">
+
+
+<div class="card-header">
+
+
+<h5 class="mb-0">
+
+③ {% trans "Attachments" %}
+
+</h5>
+
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+{% crispy attachment_form %}
+
+
+
+{% if existing_attachments %}
+
+<hr>
+
+
+<h6>
+
+{% trans "Existing Attachments" %}
+
+</h6>
+
+
+<ul>
+
+
+{% for att in existing_attachments %}
+
+
+<li>
+
+{{ att.get_attachment_type_display }}
+
+-
+
+<a href="{{ att.file.url }}"
+target="_blank">
+
+{{ att.file.name|slice:"-40:" }}
+
+</a>
+
+
+</li>
+
+
+{% endfor %}
+
+
+</ul>
+
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<!-- BUTTONS -->
+
+
+<div class="d-flex justify-content-end gap-2">
+
+
+<a href="{% url 'receive_list' %}"
+class="btn btn-secondary">
+
+
+{% trans "Cancel" %}
+
+
+</a>
+
+
+
+
+<button
+type="submit"
+name="action"
+value="draft"
+class="btn btn-secondary">
+
+
+{% trans "Save Draft" %}
+
+
+</button>
+
+
+
+
+
+<button
+type="submit"
+name="action"
+value="continue"
+class="btn btn-primary">
+
+
+{% trans "Save and Continue" %}
+
+
+</button>
+
+
+
+
+</div>
+
+
+
+
+
+</form>
+
+
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+{% endblock content %}

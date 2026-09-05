@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+
+
+
+
+{% block title %}
+
+{% trans "Receive Payment" %}
+
+{% endblock %}
+
+
+
+
+
+
+
+{% block content %}
+
+
+
+
+
+<div class="container-fluid py-4">
+
+
+
+
+
+<div class="row justify-content-center">
+
+
+
+
+
+<div class="col-xl-8">
+
+
+
+
+
+<div class="card shadow-sm">
+
+
+
+
+
+
+<div class="card-header">
+
+
+<h3 class="mb-0">
+
+{% trans "Payment Information" %}
+
+</h3>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<div class="card-body">
+
+
+
+
+
+
+
+<!-- ============================= -->
+<!-- REQUEST SUMMARY -->
+<!-- ============================= -->
+
+
+
+<div class="alert alert-info">
+
+
+<strong>
+
+{% trans "Facility" %}
+
+:
+
+</strong>
+
+
+{{ receive_request.facility.name }}
+
+
+
+
+<br>
+
+
+
+<strong>
+
+{% trans "Inquiry Letter" %}
+
+:
+
+</strong>
+
+
+{{ receive_request.inquiry_letter_number }}
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<form method="post">
+
+
+{% csrf_token %}
+
+
+
+
+
+
+<div class="card mb-4">
+
+
+
+<div class="card-header">
+
+
+<h5 class="mb-0">
+
+
+① {% trans "Payment Details" %}
+
+
+</h5>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="card-body">
+
+
+{% crispy form %}
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- ============================= -->
+<!-- PAYMENT STATUS HELP -->
+<!-- ============================= -->
+
+
+
+{% if receive_request.payment.payment_done %}
+
+
+
+<div class="alert alert-success">
+
+
+<i>
+
+✓
+
+</i>
+
+
+{% trans "Payment has been completed. Sources can now enter the receiving stage." %}
+
+
+
+</div>
+
+
+
+{% else %}
+
+
+
+<div class="alert alert-warning">
+
+
+{% trans "Payment completion is required before receiving and characterization." %}
+
+
+
+</div>
+
+
+
+{% endif %}
+
+
+
+
+
+
+
+
+
+<!-- ============================= -->
+<!-- BUTTONS -->
+<!-- ============================= -->
+
+
+
+<div class="d-flex justify-content-end gap-2">
+
+
+
+
+
+<a
+
+href="{% url 'receive_finance_queue' %}"
+
+class="btn btn-secondary">
+
+
+{% trans "Cancel" %}
+
+
+</a>
+
+
+
+
+
+
+
+<button
+
+type="submit"
+
+class="btn btn-primary">
+
+
+{% trans "Save Payment" %}
+
+
+</button>
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+</form>
+
+
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+{% endblock %}

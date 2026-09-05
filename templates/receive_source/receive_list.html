@@ -1,496 +1,742 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
 {% load i18n %}
-{% load static %}
+
+
 
 {% block title %}
-{% trans "Receive Sources" %}
+
+{% trans "Receive Requests" %}
+
 {% endblock %}
+
+
+
+
 
 {% block content %}
 
-{% block extrastyle %}
-
-<style>
-
-    .action-icons {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-
-    .icon-btn {
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-
-        width: 34px;
-        height: 34px;
-
-        border-radius: 8px;
-
-        text-decoration: none;
-        font-size: 16px;
-
-        background: #f5f6f8;
-        color: #444;
-
-        transition: all 0.2s ease;
-        border: 1px solid transparent;
-    }
-
-    .icon-btn:hover {
-        transform: translateY(-2px);
-        background: #ffffff;
-        border-color: #ddd;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-    }
-
-    .icon-btn.edit:hover {
-        color: #d39e00;
-    }
-
-    .icon-btn.view:hover {
-        color: #0d6efd;
-    }
-
-    .icon-btn.history:hover {
-        color: #6c757d;
-    }
-
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 6px;
-        margin-top: 15px;
-    }
-
-    .pagination a,
-    .pagination span {
-        padding: 6px 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        text-decoration: none;
-    }
-
-    .pagination .current {
-        background: #0d6efd;
-        color: #fff;
-        border-color: #0d6efd;
-    }
-
-    .page-info {
-        text-align: center;
-        margin-top: 10px;
-        color: #666;
-    }
-
-    .source-info {
-        line-height: 1.5;
-    }
-
-    .source-info strong {
-        font-weight: 600;
-    }
-
-</style>
-
-{% endblock extrastyle %}
-
-<div class="content">
-
-<!-- ================= HEADER TOOLBAR ================= -->
-
-<div class="table-header">
-
-    <!-- Search -->
-
-    <div class="header-group">
-
-        <form method="get">
-
-            <input
-                type="text"
-                name="search"
-                placeholder="{% trans 'Search...' %}"
-                value="{{ search }}"
-            >
-
-            <button type="submit">
-                🔍
-            </button>
-
-        </form>
-
-    </div>
 
 
-    <!-- Page Size -->
-
-    <div class="header-group">
-
-        <form method="get">
-
-            <input
-                type="hidden"
-                name="search"
-                value="{{ search }}"
-            >
-
-            <label>
-                {% trans "Items" %}
-            </label>
-
-            <select
-                name="page_size"
-                onchange="this.form.submit()"
-            >
-
-                <option value="10"
-                    {% if page_size == 10 %}
-                        selected
-                    {% endif %}
-                >
-                    10
-                </option>
-
-                <option value="25"
-                    {% if page_size == 25 %}
-                        selected
-                    {% endif %}
-                >
-                    25
-                </option>
-
-                <option value="50"
-                    {% if page_size == 50 %}
-                        selected
-                    {% endif %}
-                >
-                    50
-                </option>
-
-            </select>
-
-        </form>
-
-    </div>
+<div class="container-fluid py-4">
 
 
-    <!-- Create -->
 
-    <div class="header-group">
+<div class="card shadow-sm">
 
-        <a
-            href="{% url 'receive_source_create' %}"
-            class="btn-blue"
-        >
-            {% trans "+ Receive Source" %}
-        </a>
 
-    </div>
+
+
+
+<div class="card-header d-flex justify-content-between align-items-center">
+
+
+<h3 class="mb-0">
+
+{% trans "Receive Requests" %}
+
+</h3>
+
+
+
+<a href="{% url 'receive_create' %}"
+
+class="btn btn-primary">
+
+
+{% trans "New Receive Request" %}
+
+
+</a>
+
 
 </div>
 
 
-<!-- ================= TABLE ================= -->
 
-<div class="table-scroll">
 
-    <table id="mainTable">
 
-        <thead>
 
-            <tr>
+<div class="card-body">
 
-                <th>
-                    {% trans "Facility" %}
-                </th>
 
-                <th>
-                    {% trans "Serial Number" %}
-                </th>
 
-                <th>
-                    {% trans "Nuclide" %}
-                </th>
 
-                <th>
-                    {% trans "Activity" %}
-                </th>
 
-                <th>
-                    {% trans "Date Received" %}
-                </th>
 
-                <th>
-                    {% trans "Origin Type" %}
-                </th>
+<!-- ============================= -->
+<!-- TOOLBAR -->
+<!-- ============================= -->
 
-                <th>
-                    {% trans "Status" %}
-                </th>
 
-                <th>
-                    {% trans "Responsible Person" %}
-                </th>
+<form method="get">
 
-                <th>
-                    {% trans "Last Movement" %}
-                </th>
 
-                <th>
-                    {% trans "Action" %}
-                </th>
+<div class="row g-2 mb-4">
 
-            </tr>
 
-        </thead>
 
+<div class="col-md-5">
 
-        <tbody>
 
-            {% for source in page_obj %}
+<input
 
-            <tr>
+type="text"
 
-                <!-- Facility -->
+name="search"
 
-                <td>
-                    {{ source.Facility.name|default:"-" }}
-                </td>
+value="{{ search }}"
 
+class="form-control"
 
-                <!-- Serial -->
+placeholder="{% trans 'Search facility, letter, serial number...' %}">
 
-                <td>
-
-                    <strong>
-                        {{ source.serial_number|default:"-" }}
-                    </strong>
-
-                </td>
-
-
-                <!-- Nuclide -->
-
-                <td>
-                    {{ source.Nuclide|default:"-" }}
-                </td>
-
-
-                <!-- Activity -->
-
-                <td>
-
-                    {% if source.activity_input %}
-                        {{ source.activity_input }}
-                        {{ source.get_activity_unit_display }}
-                    {% else %}
-                        -
-                    {% endif %}
-
-                </td>
-
-
-                <!-- Date Received -->
-
-                <td>
-                    {{ source.Date_received|default:"-" }}
-                </td>
-
-
-                <!-- Origin -->
-
-                <td>
-                    {{ source.get_Origin_Type_display|default:"-" }}
-                </td>
-
-
-                <!-- Status -->
-
-                <td>
-                    {{ source.get_Status_display|default:"-" }}
-                </td>
-
-
-                <!-- Responsible -->
-
-                <td>
-                    {{ source.Responsible_Person|default:"-" }}
-                </td>
-
-
-                <!-- Last Movement -->
-
-                <td>
-
-                    {% with movement=source.last_movement %}
-
-                        {% if movement %}
-
-                            <div class="source-info">
-
-                                <strong>
-                                    {{ movement.get_movement_type_display }}
-                                </strong>
-
-                                <br>
-
-                                {{ movement.movement_date }}
-
-                            </div>
-
-                        {% else %}
-
-                            -
-
-                        {% endif %}
-
-                    {% endwith %}
-
-                </td>
-
-
-                <!-- Actions -->
-
-                <td>
-
-                    <div class="action-icons">
-
-                        <a
-                            href="{% url 'receive_source_detail' source.pk %}"
-                            class="icon-btn view"
-                            title="{% trans 'View' %}"
-                        >
-                            👁
-                        </a>
-
-                    </div>
-
-                </td>
-
-            </tr>
-
-
-            {% empty %}
-
-            <tr>
-
-                <td colspan="10" class="text-center">
-
-                    {% trans "No received sources found." %}
-
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</div>
-```
 
 </div>
 
-<!-- ================= PAGINATION ================= -->
 
-<div class="pagination">
 
-```
-{% if page_obj.has_previous %}
 
-    <a
-        href="?page={{ page_obj.previous_page_number }}&page_size={{ page_size }}{% if search %}&search={{ search|urlencode }}{% endif %}"
-    >
-        {% trans "Previous" %}
-    </a>
+
+<div class="col-md-2">
+
+
+<select
+
+name="page_size"
+
+class="form-select"
+
+onchange="this.form.submit()">
+
+
+
+<option value="10"
+{% if page_size == 10 %}selected{% endif %}>
+
+10 {% trans "items" %}
+
+</option>
+
+
+
+<option value="25"
+{% if page_size == 25 %}selected{% endif %}>
+
+25 {% trans "items" %}
+
+</option>
+
+
+
+<option value="50"
+{% if page_size == 50 %}selected{% endif %}>
+
+50 {% trans "items" %}
+
+</option>
+
+
+
+</select>
+
+
+</div>
+
+
+
+
+
+
+<div class="col-md-2">
+
+
+<button
+
+class="btn btn-secondary w-100">
+
+
+{% trans "Search" %}
+
+
+</button>
+
+
+</div>
+
+
+
+</div>
+
+
+</form>
+
+
+
+
+
+
+
+<!-- ============================= -->
+<!-- TABLE -->
+<!-- ============================= -->
+
+
+
+<div class="table-responsive">
+
+
+
+<table class="table table-bordered table-striped align-middle">
+
+
+
+<thead class="table-light">
+
+
+<tr>
+
+
+<th>
+#
+</th>
+
+
+<th>
+{% trans "Facility" %}
+</th>
+
+
+<th>
+{% trans "Letter No." %}
+</th>
+
+
+<th>
+{% trans "Sources" %}
+</th>
+
+
+<th>
+{% trans "Attachments" %}
+</th>
+
+
+<th>
+{% trans "Contract" %}
+</th>
+
+
+<th>
+{% trans "Payment" %}
+</th>
+
+
+<th>
+{% trans "Status" %}
+</th>
+
+
+<th>
+{% trans "Actions" %}
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+
+
+
+
+<tbody>
+
+
+
+
+{% for request in page_obj %}
+
+
+
+
+<tr>
+
+
+
+<td>
+
+{{ forloop.counter }}
+
+</td>
+
+
+
+
+
+<td>
+
+
+<strong>
+
+{{ request.facility.name }}
+
+</strong>
+
+
+</td>
+
+
+
+
+
+
+
+<td>
+
+{{ request.inquiry_letter_number|default:"-" }}
+
+
+</td>
+
+
+
+
+
+
+
+
+<!-- SOURCES -->
+
+
+<td>
+
+
+<span class="badge bg-primary">
+
+
+{{ request.sources.count }}
+
+{% trans "Sources" %}
+
+
+</span>
+
+
+
+</td>
+
+
+
+
+
+
+
+
+
+<!-- ATTACHMENTS -->
+
+
+<td>
+
+
+<span class="badge bg-secondary">
+
+
+{{ request.attachments.count }}
+
+{% trans "Files" %}
+
+
+</span>
+
+
+
+</td>
+
+
+
+
+
+
+
+
+
+
+<!-- CONTRACT -->
+
+
+<td>
+
+
+
+{% if request.contract %}
+
+
+
+<span class="badge bg-success">
+
+
+{% trans "Created" %}
+
+
+</span>
+
+
+
+{% else %}
+
+
+
+<span class="badge bg-warning text-dark">
+
+
+{% trans "Pending" %}
+
+
+</span>
+
+
 
 {% endif %}
 
 
-{% if page_obj.number > 3 %}
 
-    <a
-        href="?page=1&page_size={{ page_size }}{% if search %}&search={{ search|urlencode }}{% endif %}"
-    >
-        1
-    </a>
+</td>
 
-    {% if page_obj.number > 4 %}
-        <span>...</span>
-    {% endif %}
+
+
+
+
+
+
+
+
+<!-- PAYMENT -->
+
+
+<td>
+
+
+
+{% if request.payment and request.payment.payment_done %}
+
+
+
+<span class="badge bg-success">
+
+
+{% trans "Paid" %}
+
+
+</span>
+
+
+
+{% else %}
+
+
+
+<span class="badge bg-danger">
+
+
+{% trans "Not Paid" %}
+
+
+</span>
+
+
 
 {% endif %}
 
 
-{% for num in page_obj.paginator.page_range %}
 
-    {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+</td>
 
-        {% if page_obj.number == num %}
 
-            <span class="current">
-                {{ num }}
-            </span>
 
-        {% else %}
 
-            <a
-                href="?page={{ num }}&page_size={{ page_size }}{% if search %}&search={{ search|urlencode }}{% endif %}"
-            >
-                {{ num }}
-            </a>
 
-        {% endif %}
 
-    {% endif %}
+
+
+
+<!-- STATUS -->
+
+
+<td>
+
+
+
+<span class="badge bg-info">
+
+
+{{ request.get_status_display }}
+
+
+</span>
+
+
+
+</td>
+
+
+
+
+
+
+
+
+
+<!-- ACTION -->
+
+
+<td>
+
+
+
+<div class="d-flex gap-1">
+
+
+
+<a
+
+href="{% url 'receive_detail' request.pk %}"
+
+class="btn btn-sm btn-primary">
+
+
+{% trans "View" %}
+
+
+</a>
+
+
+
+
+
+{% if request.status == "DRAFT" %}
+
+
+
+<a
+
+href="{% url 'receive_create_edit' request.pk %}"
+
+class="btn btn-sm btn-warning">
+
+
+{% trans "Edit" %}
+
+
+</a>
+
+
+
+{% endif %}
+
+
+
+
+</div>
+
+
+
+</td>
+
+
+
+
+
+</tr>
+
+
+
+
+
+{% empty %}
+
+
+
+<tr>
+
+
+<td colspan="9"
+
+class="text-center text-muted">
+
+
+{% trans "No receive requests found." %}
+
+
+
+</td>
+
+
+</tr>
+
+
+
 
 {% endfor %}
 
 
-{% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
 
-    {% if page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
-        <span>...</span>
-    {% endif %}
 
-    <a
-        href="?page={{ page_obj.paginator.num_pages }}&page_size={{ page_size }}{% if search %}&search={{ search|urlencode }}{% endif %}"
-    >
-        {{ page_obj.paginator.num_pages }}
-    </a>
+</tbody>
+
+
+
+</table>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- ============================= -->
+<!-- PAGINATION -->
+<!-- ============================= -->
+
+
+
+{% if page_obj.has_other_pages %}
+
+
+
+<nav>
+
+
+<ul class="pagination justify-content-center">
+
+
+
+
+
+{% if page_obj.has_previous %}
+
+
+<li class="page-item">
+
+
+<a
+
+class="page-link"
+
+href="?page={{ page_obj.previous_page_number }}&search={{ search }}&page_size={{ page_size }}">
+
+
+{% trans "Previous" %}
+
+
+</a>
+
+
+</li>
+
+
 
 {% endif %}
+
+
+
+
+
+
+
+
+<li class="page-item active">
+
+
+<span class="page-link">
+
+
+{{ page_obj.number }}
+
+/
+
+{{ page_obj.paginator.num_pages }}
+
+
+</span>
+
+
+</li>
+
+
+
+
+
+
+
 
 
 {% if page_obj.has_next %}
 
-    <a
-        href="?page={{ page_obj.next_page_number }}&page_size={{ page_size }}{% if search %}&search={{ search|urlencode }}{% endif %}"
-    >
-        {% trans "Next" %}
-    </a>
+
+<li class="page-item">
+
+
+<a
+
+class="page-link"
+
+href="?page={{ page_obj.next_page_number }}&search={{ search }}&page_size={{ page_size }}">
+
+
+{% trans "Next" %}
+
+
+</a>
+
+
+</li>
+
+
 
 {% endif %}
 
 
+
+
+
+
+</ul>
+
+
+</nav>
+
+
+
+{% endif %}
+
+
+
+
+
+
 </div>
 
-<div class="page-info">
-
-
-{{ page_obj.number }}
-{% trans "of" %}
-{{ page_obj.paginator.num_pages }}
-
-({{ page_obj.paginator.count }}
-{% trans "records" %})
 
 
 </div>
+
+
+
+</div>
+
+
+
+
 
 {% endblock %}

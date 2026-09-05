@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block title %}
+{% trans "Receiving" %}
+{% endblock %}
+
+
+
+{% block extrastyle %}
+
+<style>
+
+.receive-container{
+    padding:30px;
+}
+
+
+.receive-title{
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+
+.receive-subtitle{
+    color:#777;
+    margin-bottom:30px;
+}
+
+
+.receive-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:25px;
+
+}
+
+
+.receive-card{
+
+    background:white;
+
+    border-radius:16px;
+
+    padding:25px;
+
+    text-decoration:none;
+
+    color:inherit;
+
+    box-shadow:
+    0 5px 15px rgba(0,0,0,.08);
+
+    transition:.25s;
+
+    min-height:140px;
+
+}
+
+
+.receive-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.15);
+
+}
+
+
+.receive-icon{
+
+    font-size:35px;
+
+    margin-bottom:15px;
+
+}
+
+
+.receive-card h3{
+
+    font-size:20px;
+
+    margin:0;
+
+}
+
+
+.receive-card p{
+
+    margin-top:10px;
+
+    color:#777;
+
+}
+
+
+</style>
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+
+<div class="receive-container">
+
+
+<h1 class="receive-title">
+
+{% trans "Receiving Management" %}
+
+</h1>
+
+
+<p class="receive-subtitle">
+
+{% trans "Manage radioactive source receiving workflow" %}
+
+</p>
+
+
+
+<div class="receive-grid">
+
+
+
+<a href="{% url 'receive_create' %}" class="receive-card">
+
+<div class="receive-icon">
+➕
+</div>
+
+<h3>
+{% trans "New Receive Request" %}
+</h3>
+
+<p>
+{% trans "Create a new radioactive source receiving request" %}
+</p>
+
+</a>
+
+
+
+<a href="{% url 'receive_list' %}" class="receive-card">
+
+<div class="receive-icon">
+📋
+</div>
+
+<h3>
+{% trans "Receive Requests" %}
+</h3>
+
+<p>
+{% trans "View and manage receiving requests" %}
+</p>
+
+</a>
+
+
+
+
+<a href="{% url 'receive_manager_queue' %}" class="receive-card">
+
+<div class="receive-icon">
+👷
+</div>
+
+<h3>
+{% trans "Manager Queue" %}
+</h3>
+
+<p>
+{% trans "Operation manager data entry" %}
+</p>
+
+</a>
+
+
+
+
+<a href="{% url 'receive_contracts_queue' %}" class="receive-card">
+
+<div class="receive-icon">
+📑
+</div>
+
+<h3>
+{% trans "Contracts" %}
+</h3>
+
+<p>
+{% trans "Manage receiving contracts" %}
+</p>
+
+</a>
+
+
+
+
+<a href="{% url 'receive_finance_queue' %}" class="receive-card">
+
+<div class="receive-icon">
+💳
+</div>
+
+<h3>
+{% trans "Finance" %}
+</h3>
+
+<p>
+{% trans "Manage payments" %}
+</p>
+
+</a>
+
+
+
+
+<a href="{% url 'receive_receiving_queue' %}" class="receive-card">
+
+<div class="receive-icon">
+☢
+</div>
+
+<h3>
+{% trans "Characterization" %}
+</h3>
+
+<p>
+{% trans "Receive and characterize sources" %}
+</p>
+
+</a>
+
+
+
+</div>
+
+
+</div>
+
+
+{% endblock %}

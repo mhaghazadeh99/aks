@@ -414,6 +414,8 @@ def receive_manager_input(request, pk):
 
             messages.success(request, _("Saved."))
             return redirect("receive_manager_input", pk=pk)
+        else:
+            messages.error(request, _("Please correct the errors below."))
 
     else:
         manager_form = ReceiveManagerInputForm(instance=receive_request)
@@ -526,17 +528,15 @@ def receive_sign(request, pk):
             messages.error(request, _("Please upload your signature image first."))
             return redirect(f"{reverse('profile')}?next={request.path}")
 
-        # NOTE: SpecificationSigner is generic (path + profile + step name) —
-        # reused as-is from operations.services.signature_service. Your
-        # receive-specification .docx template needs placeholder text for
-        # the CONTROL and CEO steps too, matching how CREATOR/MANAGER/DEPUTY
-        # placeholders already work for the license specification.
-        from operations.services.signature_service import SpecificationSigner
+        # Receive-specific signer — the license app's SpecificationSigner is
+        # hardcoded to a different template layout (row 15/16, only 3 steps)
+        # and is NOT reusable here. See services/signature_service.py.
+        from .services.signature_service import ReceiveSpecificationSigner
 
         tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
         tmp.close()
 
-        signer = SpecificationSigner(specification.file.path)
+        signer = ReceiveSpecificationSigner(specification.file.path)
         signer.sign(profile, current_step.name)
         signer.save(tmp.name)
 

@@ -73,7 +73,7 @@ from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 
-from ..models import ReceiveAttachment, ReceiveAttachmentType
+from receive_source.models import ReceiveAttachment, ReceiveAttachmentType
 
 
 TEMPLATE_PATH = getattr(
@@ -237,7 +237,7 @@ def _fill_sources(table, sources):
             _to_persian_digits(source.average_activity_mci) if source.average_activity_mci is not None else "",
         )
         _set_cell_value(table.cell(row, 5), _to_persian_digits(source.quantity))
-        _set_cell_value(table.cell(row, 7), source.half_life_display or "")
+        _set_cell_value(table.cell(row, 7), _to_persian_digits(source.half_life_display) if source.half_life_display else "")
 
         _mark_yes_no(table, row, 8, 9, source.needs_shield)
         _mark_yes_no(table, row, 12, 13, source.needs_burial)

@@ -339,6 +339,13 @@ class ReceiveSourceSpecificationForm(forms.ModelForm):
         _bootstrap(self.fields)
 
         self.helper.layout = Layout(
+            Field("id"),  # REQUIRED for modelformset row-matching — an explicit
+                           # crispy Layout renders ONLY what's listed, so without
+                           # this the hidden pk never reaches the browser and
+                           # Django can't tell which existing row each submitted
+                           # form belongs to (this was silently breaking every
+                           # save of needs_shield/needs_burial/storage_duration/
+                           # sale_probability/description).
             Field("item_type"),
             Field("nuclide"),
             Field("average_activity_mci"),

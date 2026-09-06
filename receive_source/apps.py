@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 
 
-class ReceiveSourceConfig(AppConfig):
+class ReceivingConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
     name = "receive_source"

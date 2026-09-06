@@ -740,58 +740,33 @@ document.addEventListener("change", function (e) {
 document.getElementById("createContractBtn").onclick = function(){
 
     let selected = [];
-
-    document.querySelectorAll(".contract-checkbox:checked")
-    .forEach(cb => {
-        selected.push(cb.value);
-    });
-
+    document.querySelectorAll(".contract-checkbox:checked").forEach(cb => selected.push(cb.value));
 
     if(selected.length === 0){
-        alert("{% trans 'Please select at least one DSRS record.' %}");
+        alert("Please select at least one DSRS record.");
         return;
     }
 
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "{% url 'contract_send_to_pi' %}";
 
-    fetch("{% url 'create_contract_bulk' %}", {
+    const csrfInput = document.createElement("input");
+    csrfInput.type = "hidden";
+    csrfInput.name = "csrfmiddlewaretoken";
+    csrfInput.value = getCookie("csrftoken");
+    form.appendChild(csrfInput);
 
-        method:"POST",
-
-        headers:{
-            "Content-Type":"application/json",
-            "X-CSRFToken":getCookie("csrftoken")
-        },
-
-        body:JSON.stringify({
-            ids:selected
-        })
-
-    })
-
-    .then(response => response.json())
-
-    .then(data=>{
-
-        if(data.success){
-
-            alert(
-              data.message
-            );
-
-            location.reload();
-
-        }
-        else{
-
-            alert(
-              data.message
-            );
-
-        }
-
+    selected.forEach(id => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "ids";
+        input.value = id;
+        form.appendChild(input);
     });
 
-
+    document.body.appendChild(form);
+    form.submit();
 };
 </script>
 

@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from dashboard.models import DSRS, SOURCE_TYPE, SOURCE_STATUS, MovementType
 
-from ..models import ReceiveApproval, ReceiveStatus
+from receive_source.models import ReceiveApproval, ReceiveStatus
 
 
 # =====================================================================

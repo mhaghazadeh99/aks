@@ -24,6 +24,12 @@ from .forms import LicenseContractForm,LicenseIssueForm
 from django.utils import timezone
 from operations.services.fulfillment import fulfill_license_sources
 from django.db.models import Q
+from dashboard.models import MovementType, MovementAttachment
+from facilities.models import FacilityModel
+from dashboard.forms import SourceMovementForm
+
+
+
 
 def issued_license_list(request):
 
@@ -453,45 +459,54 @@ def contract_index(request):
 
 
 
+def create_contract_for_sources(sources):
+    contract = Contract.objects.create()
+    contract.dsrs.set(sources)
+    return contract
+
+
 
 @login_required
 def create_contract_bulk(request):
-    """Despite the name (kept for URL/JS compatibility), this sends each
-    selected DSRS to PI individually — one Contract row per source, not
-    one shared record across all of them."""
-
     if request.method != "POST":
-        return JsonResponse({"success": False, "message": _("Invalid request")})
+        return JsonResponse({
+            "success": False,
+            "message": _("Invalid request")
+        })
 
     data = json.loads(request.body)
     ids = data.get("ids", [])
 
     if not ids:
-        return JsonResponse({"success": False, "message": _("No sources selected")})
+        return JsonResponse({
+            "success": False,
+            "message": _("No sources selected")
+        })
 
     sources = DSRS.objects.filter(id__in=ids)
 
     duplicate = sources.filter(pi_record__isnull=False)
 
     if duplicate.exists():
-        serials = list(duplicate.values_list("serial_number", flat=True))
+        serials = list(
+            duplicate.values_list("serial_number", flat=True)
+        )
+
         return JsonResponse({
             "success": False,
             "message": _("Already sent to PI: %(serials)s") % {
-                    "serials": ", ".join(serials)
-                }
+                "serials": ", ".join(serials)
+            }
         })
 
-    contract = Contract.objects.create()
-    contract.dsrs.set(sources)
+    contract = create_contract_for_sources(sources)
 
     return JsonResponse({
         "success": True,
         "message": _("%(count)s source(s) sent to PI") % {
-            "count": count
+            "count": sources.count()
         }
     })
-
 
 
 def contract_edit(request, pk):
@@ -594,3 +609,88 @@ def export_contracts_csv(request):
         ])
 
     return response
+
+
+
+
+
+
+def contract_send_to_pi(request):
+    print("contract_send_to_pi called", request.method)
+    if request.method != "POST":
+        return redirect("tables")
+
+    ids = request.POST.getlist("ids")
+    if not ids:
+        messages.error(request, _("No sources selected"))
+        return redirect("tables")
+
+    sources = DSRS.objects.filter(id__in=ids).select_related("Nuclide", "Facility")
+
+    if not sources.exists():
+        messages.error(request, _("No sources selected"))
+        return redirect("tables")
+
+    is_confirm_step = request.POST.get("confirm") == "1"
+
+    if is_confirm_step:
+
+        movement_form = SourceMovementForm(request.POST)
+
+        if movement_form.is_valid():
+
+            duplicate = sources.filter(pi_record__isnull=False)
+            if duplicate.exists():
+                serials = list(duplicate.values_list("serial_number", flat=True))
+                messages.error(
+                    request,
+                    _("Already sent to PI: %(serials)s") % {"serials": ", ".join(serials)},
+                )
+                return redirect("tables")
+            contract = create_contract_for_sources(sources)
+            movement_attachments = request.FILES.getlist("movement_attachments")
+            count = 0
+            
+            for source in sources:
+
+                movement = source.register_movement(
+                    movement_type=movement_form.cleaned_data["movement_type"],
+                    to_facility=movement_form.cleaned_data["to_facility"],
+                    from_facility=movement_form.cleaned_data.get("from_facility") or source.Facility,
+                    contract=source.contract,
+                    performed_by=request.user,
+                    quantity=1,
+                    remarks=movement_form.cleaned_data.get("remarks", ""),
+                    movement_date=movement_form.cleaned_data["movement_date"],
+                )
+
+                for f in movement_attachments:
+                    f.seek(0)
+                    MovementAttachment.objects.create(movement=movement, file=f)
+
+                
+                count += 1
+
+            messages.success(request, _("%(count)s source(s) sent to PI") % {"count": count})
+            return redirect("contract_index")
+        else:
+            print(movement_form.errors)
+
+    else:
+
+        pi_facility = FacilityModel.objects.filter(name="پارس ایزوتوپ").first()
+
+        movement_form = SourceMovementForm(initial={
+            "movement_type": MovementType.QUALITY_CONTROL,
+            "to_facility": pi_facility,
+        })
+
+    return render(
+        request,
+        "contract/bulk_form.html",
+        {
+            "sources": sources,
+            "movement_form": movement_form,
+            "ids": ids,
+        },
+    )

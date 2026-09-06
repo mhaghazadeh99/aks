@@ -48,4 +48,5 @@ path(
     views.issued_license_list,
     name="issued_license_list",
 ),
+path("send-to-pi/", views.contract_send_to_pi, name="contract_send_to_pi"),
     ]

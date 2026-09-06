@@ -154,7 +154,7 @@ class ContractSelect(forms.Select):
 
 
 class SourceMovementForm(forms.ModelForm):
-
+    source_count = forms.IntegerField(required=False, initial=1)
     class Meta:
         model = SourceMovement
 
@@ -183,6 +183,7 @@ class SourceMovementForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
 
         self.helper = FormHelper()
         self.helper.form_tag = False

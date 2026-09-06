@@ -2,85 +2,346 @@
 Fills the "فرم مشخصات چشمه‌ها/پسماندهای پرتوزا" template with data from a
 ReceiveRequest and saves it as a ReceiveAttachment(SPECIFICATION).
 
-IMPORTANT — this was built directly against the docx you attached, but
-docx cell layout is fragile: if your live template differs even slightly
-(extra/merged cells, reordered rows), the label-matching below may need
-adjusting. Verify against a real generated file before relying on it.
+REWRITE NOTE: the first version of this generator searched for cells by
+label text and appended the answer into whatever cell it found. That was
+wrong for several rows — the template actually has a SEPARATE blank
+answer cell right next to the label (confirmed by dumping the raw XML:
+row 1's facility-name label is a 2-column-wide cell, immediately
+followed by an 8-column-wide BLANK cell, which is where the answer
+belongs — not squeezed into the label cell itself). This version targets
+exact (row, column) grid positions instead, derived directly from the
+template's XML (gridSpan values), the same approach your license app's
+specification_generator.py uses (_fill_facility / _fill_sources with
+table.cell(row, col)).
 
-Design: rather than assuming fixed row/column indices (risky — merged
-cells make python-docx's row.cells indices easy to miscount), this finds
-each target cell by matching a snippet of its label text and appends the
-value as a new BOLD run right after the label, since the paper form has
-no separate blank "answer" cell — the label cell itself is where the
-value goes (originally handwritten after the colon).
+Also ports, from that same license app generator:
+  - Jalali (Solar Hijri) date rendering + Persian-digit numerals,
+    since this form is filled out in Persian like the rest of the app.
+  - Forcing font name/size on every new run (B Nazanin / 12pt) — cells
+    store their Persian/RTL formatting on the paragraph mark, which a
+    run added via add_run() does NOT inherit automatically.
+  - Relaxing fixed-height rows (hRule="exact" -> "atLeast") before
+    writing into them, since EVERY row in this template has an exact
+    height sized for the original blank/dotted placeholder text; if the
+    real answer is longer, it gets silently clipped instead of growing
+    the row.
 
-Also note: your docx uses SpecificationSigner (imported in views.py) for
-the actual signature stamping — that part is untouched/reused as-is. You
-will need placeholder text in the template for the CONTROL and CEO
-signature rows, matching whatever pattern SpecificationSigner looks for
-on CREATOR/MANAGER/DEPUTY today (it works off `current_step.name`, i.e.
-literally "CONTROL" / "CEO").
+CELL MAP (0-indexed grid columns, out of 21 total; verified against the
+attached blank template's raw XML — re-verify if the template changes):
+
+  row 1:  facility name label cols(0-1), ANSWER cols(2-9), letter label+answer cols(10-20)
+  row 2:  address label cols(0-1), ANSWER cols(2-20)
+  row 3:  postal code cols(0-5) [label+answer combined],
+          national id cols(6-13) [combined], economic code cols(14-20) [combined]
+  row 4:  distance, single cell cols(0-20) [combined]
+  rows 6-7: column headers — not filled
+  rows 8-10: up to 3 data rows. Per row:
+          col0 row number (pre-filled "1"/"2"/"3" — don't touch)
+          col1-3 nuclide name (ANSWER)
+          col4 activity (ANSWER)
+          col5-6 quantity (ANSWER)
+          col7 half-life (ANSWER)
+          col8 "needs shield: yes" mark cell / col9-11 "no" mark cell
+          col12 "needs burial: yes" mark cell / col13-14 "no" mark cell
+          col15-18 storage duration (ANSWER)
+          col19 sale probability (ANSWER)
+          col20 description (ANSWER)
+  row 11: single cell, "pre-op visit needed: <لازم است> <لازم نیست>" — append choice marker
+  row 12: col0-10 visit personnel (single combined cell, append counts),
+          col11-20 visit mission days (combined, append)
+  row 13: single cell, visit vehicle type options — append choice marker
+  row 15: col0-2 label / col3-10 ANSWER (operation personnel),
+          col11-15 label / col16-20 ANSWER (operation mission days)
+  row 16: col0-2 label / col3-10 ANSWER (operation vehicle options),
+          col11-15 label / col16-20 ANSWER (route difficulty options)
+  row 17: col0-2 label / col3-10 ANSWER (accommodation days),
+          col11-17 label / col18-20 ANSWER (food cost days)
+  row 18: col0-2 label / col3-10 ANSWER (peripheral equipment),
+          col11-17 label / col18-20 ANSWER (other costs)
+  row 19: col0-2 label / col3-20 ANSWER (logistics notes)
+
+Signature rows (20-22) are untouched here — SpecificationSigner (reused
+from operations.services.signature_service) handles those separately.
 """
 
 import os
-import shutil
+from io import BytesIO
 
 from django.conf import settings
-from django.utils import timezone
-from django.utils.translation import gettext as _
-
+from django.core.files.base import ContentFile
 from docx import Document
+from docx.shared import Pt
+from docx.oxml.ns import qn
 
 from ..models import ReceiveAttachment, ReceiveAttachmentType
 
 
-# Configure this to wherever the blank template lives in your project,
-# e.g. BASE_DIR / "receiving" / "templates_docx" / "receive_specification_template.docx"
 TEMPLATE_PATH = getattr(
     settings,
     "RECEIVE_SPECIFICATION_TEMPLATE_PATH",
     os.path.join(settings.BASE_DIR, "receive_source", "templates_docx", "receive_specification_template.docx"),
 )
 
-
-def _iter_cells(document):
-    for table in document.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                yield table, row, cell
+MAIN_TABLE_ROWS = 3  # only 3 data rows exist in the template; the rest go to an appendix
 
 
-def _append_value(cell, value, bold=True):
-    """Appends ' <value>' as a new run at the end of the cell's first
-    paragraph — safe for merged cells since python-docx resolves them to
-    the same underlying <w:tc>."""
+# =====================================================================
+# Jalali date / Persian digits (ported from operations' specification_generator.py)
+# =====================================================================
+
+_PERSIAN_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+
+
+def _to_persian_digits(text):
+    if text is None:
+        return ""
+    return str(text).translate(_PERSIAN_DIGITS)
+
+
+def _gregorian_to_jalali(gy, gm, gd):
+    g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
+    if gy > 1600:
+        jy = 979
+        gy -= 1600
+    else:
+        jy = 0
+        gy -= 621
+    gy2 = gy + 1 if gm > 2 else gy
+    days = (
+        365 * gy
+        + (gy2 + 3) // 4
+        - (gy2 + 99) // 100
+        + (gy2 + 399) // 400
+        - 80
+        + gd
+        + g_d_m[gm - 1]
+    )
+    jy += 33 * (days // 12053)
+    days %= 12053
+    jy += 4 * (days // 1461)
+    days %= 1461
+    if days > 365:
+        jy += (days - 1) // 365
+        days = (days - 1) % 365
+    if days < 186:
+        jm = 1 + days // 31
+        jd = 1 + (days % 31)
+    else:
+        jm = 7 + (days - 186) // 30
+        jd = 1 + ((days - 186) % 30)
+    return jy, jm, jd
+
+
+def _format_jalali_date(date_obj):
+    if date_obj is None:
+        return ""
+    jy, jm, jd = _gregorian_to_jalali(date_obj.year, date_obj.month, date_obj.day)
+    return _to_persian_digits(f"{jy:04d}/{jm:02d}/{jd:02d}")
+
+
+# =====================================================================
+# Cell-writing helpers (ported: forced font, row-growth fix)
+# =====================================================================
+
+def _allow_row_to_grow(cell):
+    """Every row in this template has a fixed (hRule="exact") height sized
+    for the original placeholder text. Relax it to "atLeast" so appended
+    real data isn't silently clipped."""
+    tr = cell._tc.getparent()
+    trPr = tr.find(qn("w:trPr"))
+    if trPr is None:
+        return
+    trHeight = trPr.find(qn("w:trHeight"))
+    if trHeight is not None and trHeight.get(qn("w:hRule")) == "exact":
+        trHeight.set(qn("w:hRule"), "atLeast")
+
+
+def _append_value(cell, value, sep="  ", bold=False):
+    """Appends to the cell's existing text (label + answer share one cell)."""
     if value in (None, ""):
         return
-    paragraph = cell.paragraphs[0]
-    run = paragraph.add_run(f"  {value}")
+    _allow_row_to_grow(cell)
+    paragraph = cell.paragraphs[-1] if cell.paragraphs else cell.add_paragraph()
+    run = paragraph.add_run(f"{sep}{value}")
+    run.font.name = "B Nazanin"
+    run.font.size = Pt(12)
     run.bold = bold
 
 
-def _find_and_fill(document, label_snippet, value, seen_cells, bold=True):
-    """
-    Finds the FIRST cell (in document order) containing `label_snippet`
-    that hasn't already been filled in this pass, and appends `value` to
-    it. `seen_cells` (a set of cell `_tc` element ids) prevents filling
-    the same merged cell twice when multiple duplicate-label rows exist
-    (e.g. the two "تعداد پرسنل اعزامی" blocks — caller must disambiguate
-    those by passing distinct, more specific snippets, e.g. including a
-    row-specific neighboring word).
-    """
-    for _table, _row, cell in _iter_cells(document):
-        tc_id = id(cell._tc)
-        if tc_id in seen_cells:
-            continue
-        if label_snippet in cell.text:
-            _append_value(cell, value, bold=bold)
-            seen_cells.add(tc_id)
-            return True
-    return False
+def _set_cell_value(cell, value, bold=False):
+    """Overwrites a genuinely BLANK answer cell (no label to preserve)."""
+    if value is None:
+        value = ""
+    _allow_row_to_grow(cell)
+    paragraph = cell.paragraphs[0] if cell.paragraphs else cell.add_paragraph()
+    for run in list(paragraph.runs):
+        run._r.getparent().remove(run._r)
+    run = paragraph.add_run(str(value))
+    run.font.name = "B Nazanin"
+    run.font.size = Pt(12)
+    run.bold = bold
 
+
+def _mark_yes_no(table, row, yes_col, no_col, value):
+    """value: True/False/None -> writes a check mark into whichever of the
+    two small دارد/ندارد cells applies."""
+    if value is True:
+        _set_cell_value(table.cell(row, yes_col), "✓")
+    elif value is False:
+        _set_cell_value(table.cell(row, no_col), "✓")
+
+
+def _yes_no_label(value):
+    if value is True:
+        return "لازم است"
+    if value is False:
+        return "لازم نیست"
+    return ""
+
+
+# =====================================================================
+# Section fillers
+# =====================================================================
+
+def _fill_facility(table, receive_request):
+    facility = receive_request.facility
+
+    _set_cell_value(table.cell(1, 2), facility.name or "")
+
+    letter_ref = ""
+    if receive_request.inquiry_letter_number or receive_request.inquiry_letter_date:
+        letter_ref = " / ".join(filter(None, [
+            receive_request.inquiry_letter_number,
+            _format_jalali_date(receive_request.inquiry_letter_date),
+        ]))
+    _append_value(table.cell(1, 10), letter_ref)
+
+    address = " - ".join(filter(None, [facility.address1, facility.address2, facility.telephone]))
+    _set_cell_value(table.cell(2, 2), address)
+
+    _append_value(table.cell(3, 0), facility.postal_code)
+    _append_value(table.cell(3, 6), facility.national_id)
+    _append_value(table.cell(3, 14), facility.economic_code)
+
+    if receive_request.distance_to_tehran_km is not None:
+        _append_value(table.cell(4, 0), _to_persian_digits(receive_request.distance_to_tehran_km))
+
+
+def _fill_sources(table, sources):
+    for i, source in enumerate(sources[:MAIN_TABLE_ROWS]):
+        row = 8 + i  # data rows start at index 8
+
+        _set_cell_value(table.cell(row, 1), str(source.nuclide) if source.nuclide else "")
+        _set_cell_value(
+            table.cell(row, 4),
+            _to_persian_digits(source.average_activity_mci) if source.average_activity_mci is not None else "",
+        )
+        _set_cell_value(table.cell(row, 5), _to_persian_digits(source.quantity))
+        _set_cell_value(table.cell(row, 7), source.half_life_display or "")
+
+        _mark_yes_no(table, row, 8, 9, source.needs_shield)
+        _mark_yes_no(table, row, 12, 13, source.needs_burial)
+
+        _set_cell_value(table.cell(row, 15), source.storage_duration or "")
+        _set_cell_value(table.cell(row, 19), source.sale_probability or "")
+        _set_cell_value(table.cell(row, 20), source.description or "")
+
+
+def _fill_logistics(table, receive_request):
+    r = receive_request
+
+    if r.pre_operation_visit_needed is not None:
+        _append_value(table.cell(11, 0), f"⇦ {_yes_no_label(r.pre_operation_visit_needed)}", bold=True)
+
+    visit_personnel = _to_persian_digits(
+        f"کارشناس: {r.visit_expert_count or 0}  تکنسین: {r.visit_technician_count or 0}  راننده: {r.visit_driver_count or 0}"
+    )
+    _append_value(table.cell(12, 0), visit_personnel)
+
+    if r.visit_mission_days is not None:
+        _append_value(table.cell(12, 11), _to_persian_digits(r.visit_mission_days))
+
+    if r.visit_vehicle_type:
+        _append_value(table.cell(13, 0), f"⇦ {r.get_visit_vehicle_type_display()}", bold=True)
+
+    operation_personnel = _to_persian_digits(
+        f"کارشناس: {r.operation_expert_count}  تکنسین: {r.operation_technician_count}  راننده: {r.operation_driver_count}"
+    )
+    _append_value(table.cell(15, 3), operation_personnel)
+
+    if r.operation_mission_days is not None:
+        _append_value(table.cell(15, 16), _to_persian_digits(r.operation_mission_days))
+
+    if r.operation_vehicle_type:
+        _append_value(table.cell(16, 3), f"⇦ {r.get_operation_vehicle_type_display()}", bold=True)
+
+    if r.route_difficulty:
+        _append_value(table.cell(16, 16), f"⇦ {r.get_route_difficulty_display()}", bold=True)
+
+    if r.accommodation_days is not None:
+        _append_value(table.cell(17, 3), _to_persian_digits(r.accommodation_days))
+
+    if r.food_cost_days is not None:
+        _append_value(table.cell(17, 18), _to_persian_digits(r.food_cost_days))
+
+    _append_value(table.cell(18, 3), r.peripheral_equipment)
+    _append_value(table.cell(18, 18), r.other_costs)
+    _append_value(table.cell(19, 3), r.logistics_notes)
+
+
+# =====================================================================
+# Overflow appendix (>3 sources) — mirrors operations' _build_overflow_document
+# =====================================================================
+
+def _build_overflow_document(overflow_sources, receive_request):
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    doc = Document()
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = title.add_run(
+        _to_persian_digits(f"پیوست - ادامه فهرست چشمه‌ها/پسماندها ({receive_request.facility})")
+    )
+    run.font.name = "B Nazanin"
+    run.font.size = Pt(14)
+    run.bold = True
+
+    doc.add_paragraph()
+
+    headers = ["ردیف", "نام چشمه/پسماند", "اکتیویته (mCi)", "تعداد", "نیمه عمر", "نیاز به شیلد", "نیاز به دفن", "مدت نگهداری", "احتمال فروش", "توضیحات"]
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = "Table Grid"
+
+    for col, text in enumerate(headers):
+        cell = table.rows[0].cells[col]
+        _set_cell_value(cell, text, bold=True)
+        for p in cell.paragraphs:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    for i, source in enumerate(overflow_sources):
+        row_cells = table.add_row().cells
+        values = [
+            _to_persian_digits(i + MAIN_TABLE_ROWS + 1),
+            str(source.nuclide) if source.nuclide else "",
+            _to_persian_digits(source.average_activity_mci) if source.average_activity_mci is not None else "",
+            _to_persian_digits(source.quantity),
+            source.half_life_display or "",
+            _yes_no_label(source.needs_shield),
+            _yes_no_label(source.needs_burial),
+            source.storage_duration or "",
+            source.sale_probability or "",
+            source.description or "",
+        ]
+        for col, value in enumerate(values):
+            _set_cell_value(row_cells[col], value)
+
+    return doc
+
+
+# =====================================================================
+# Entry point
+# =====================================================================
 
 def generate_receive_specification(receive_request, user):
 
@@ -91,115 +352,64 @@ def generate_receive_specification(receive_request, user):
         )
 
     document = Document(TEMPLATE_PATH)
-    seen_cells = set()
+    table = document.tables[1]
 
-    facility = receive_request.facility
+    _fill_facility(table, receive_request)
 
-    # ---- Section 1: facility info ----
-    _find_and_fill(document, "نام مرکز تحویل دهنده", facility.name, seen_cells)
-    _find_and_fill(
-        document, "شماره و تاریخ نامه",
-        f"{receive_request.inquiry_letter_number or '-'} / {receive_request.inquiry_letter_date or '-'}",
-        seen_cells,
+    all_sources = list(receive_request.sources.select_related("nuclide").order_by("specification_order"))
+    main_sources = all_sources[:MAIN_TABLE_ROWS]
+    overflow_sources = all_sources[MAIN_TABLE_ROWS:]
+
+    _fill_sources(table, main_sources)
+    _fill_logistics(table, receive_request)
+
+    # -------------------------------------------------
+    # Replace any previous SPECIFICATION attachment rather than leaving
+    # orphaned old versions around (same fix as the license app's generator).
+    # -------------------------------------------------
+    old_specification = ReceiveAttachment.objects.filter(
+        receive_request=receive_request,
+        attachment_type=ReceiveAttachmentType.SPECIFICATION,
+    ).first()
+    if old_specification:
+        old_specification.file.delete(save=False)
+        old_specification.delete()
+
+    buffer = BytesIO()
+    document.save(buffer)
+    buffer.seek(0)
+
+    attachment = ReceiveAttachment.objects.create(
+        receive_request=receive_request,
+        attachment_type=ReceiveAttachmentType.SPECIFICATION,
+        uploaded_by=user,
     )
-    address = " ".join(filter(None, [facility.address1, facility.address2, facility.telephone]))
-    _find_and_fill(document, "آدرس و شماره تلفن", address, seen_cells)
-    _find_and_fill(document, "کد پستی", facility.postal_code, seen_cells)
-    _find_and_fill(document, "شناسه ملی", facility.national_id, seen_cells)
-    _find_and_fill(document, "کد اقتصادی", facility.economic_code, seen_cells)
-    _find_and_fill(document, "برآورد مسافت", receive_request.distance_to_tehran_km, seen_cells)
+    attachment.file.save("receive_specification.docx", ContentFile(buffer.read()), save=True)
 
-    # ---- Section 2: sources/waste table — fill by row number cells ----
-    # The template's data rows start with a bare "1", "2", "3" cell.
-    sources = list(receive_request.sources.select_related("nuclide").order_by("specification_order"))
+    # -------------------------------------------------
+    # Overflow appendix
+    # -------------------------------------------------
+    old_appendix = ReceiveAttachment.objects.filter(
+        receive_request=receive_request,
+        attachment_type=ReceiveAttachmentType.SPECIFICATION_APPENDIX,
+    ).first()
+    if old_appendix:
+        old_appendix.file.delete(save=False)
+        old_appendix.delete()
 
-    for table in document.tables:
-        for row in table.rows:
-            first_cell_text = row.cells[0].text.strip()
-            if first_cell_text.isdigit():
-                idx = int(first_cell_text) - 1
-                if 0 <= idx < len(sources):
-                    source = sources[idx]
-                    cells = row.cells
-                    # Column order per the template: #, name(x3 merged),
-                    # activity, qty(x2), half-life, shield(x4), burial(x3),
-                    # storage(x4), sale prob, description
-                    try:
-                        cells[1].paragraphs[0].add_run(str(source.nuclide))
-                        cells[4].paragraphs[0].add_run(
-                            str(source.average_activity_mci) if source.average_activity_mci else ""
-                        )
-                        cells[5].paragraphs[0].add_run(str(source.quantity))
-                        cells[7].paragraphs[0].add_run(source.half_life_display or "")
-                        cells[11].paragraphs[0].add_run(_yes_no(source.needs_shield))
-                        cells[14].paragraphs[0].add_run(_yes_no(source.needs_burial))
-                        cells[15].paragraphs[0].add_run(source.storage_duration or "")
-                        cells[19].paragraphs[0].add_run(source.sale_probability or "")
-                        cells[20].paragraphs[0].add_run(source.description or "")
-                    except IndexError:
-                        # Template column layout differs from what was
-                        # inspected — fall back to a single dumped cell so
-                        # data isn't silently lost.
-                        cells[-1].paragraphs[0].add_run(
-                            f"{source.nuclide} | {source.average_activity_mci} mCi | "
-                            f"qty {source.quantity} | {source.description or ''}"
-                        )
+    if overflow_sources:
+        overflow_doc = _build_overflow_document(overflow_sources, receive_request)
+        overflow_buffer = BytesIO()
+        overflow_doc.save(overflow_buffer)
+        overflow_buffer.seek(0)
 
-    # ---- Section 3: logistics (both visit + operation blocks) ----
-    if receive_request.pre_operation_visit_needed is not None:
-        _find_and_fill(
-            document, "بازدید قبل از عملیات",
-            _("لازم است") if receive_request.pre_operation_visit_needed else _("لازم نیست"),
-            seen_cells,
-        )
-
-    # These two blocks share identical label text in the template, so we
-    # rely on fill order: first occurrence = visit team, second = operation
-    # team, matching the template's top-to-bottom layout.
-    visit_personnel = (
-        f"کارشناس: {receive_request.visit_expert_count or 0}  "
-        f"تکنسین: {receive_request.visit_technician_count or 0}  "
-        f"راننده: {receive_request.visit_driver_count or 0}"
-    )
-    _find_and_fill(document, "تعداد پرسنل اعزامی", visit_personnel, seen_cells)
-
-    operation_personnel = (
-        f"کارشناس: {receive_request.operation_expert_count}  "
-        f"تکنسین: {receive_request.operation_technician_count}  "
-        f"راننده: {receive_request.operation_driver_count}"
-    )
-    _find_and_fill(document, "تعداد پرسنل اعزامی", operation_personnel, seen_cells)
-
-    if receive_request.route_difficulty:
-        _find_and_fill(document, "سختی مسیر", receive_request.get_route_difficulty_display(), seen_cells)
-
-    _find_and_fill(document, "تعداد روز اسکان", receive_request.accommodation_days, seen_cells)
-    _find_and_fill(document, "هزینه غذا", receive_request.food_cost_days, seen_cells)
-    _find_and_fill(document, "وسایل جانبی مورد استفاده", receive_request.peripheral_equipment, seen_cells)
-    _find_and_fill(document, "سایر هزینه", receive_request.other_costs, seen_cells)
-    _find_and_fill(document, "توضیحات", receive_request.logistics_notes, seen_cells)
-
-    # ---- Save as a new attachment ----
-    tmp_dir = os.path.join(settings.MEDIA_ROOT if hasattr(settings, "MEDIA_ROOT") else "/tmp", "tmp_receive_spec")
-    os.makedirs(tmp_dir, exist_ok=True)
-    tmp_path = os.path.join(tmp_dir, f"receive_spec_{receive_request.pk}_{int(timezone.now().timestamp())}.docx")
-    document.save(tmp_path)
-
-    with open(tmp_path, "rb") as f:
-        attachment = ReceiveAttachment.objects.create(
+        overflow_attachment = ReceiveAttachment.objects.create(
             receive_request=receive_request,
-            attachment_type=ReceiveAttachmentType.SPECIFICATION,
+            attachment_type=ReceiveAttachmentType.SPECIFICATION_APPENDIX,
             uploaded_by=user,
         )
-        attachment.file.save(os.path.basename(tmp_path), f, save=True)
+        overflow_attachment.file.save(
+            "receive_specification_appendix.docx", ContentFile(overflow_buffer.read()), save=True,
+        )
 
-    os.remove(tmp_path)
     return attachment
-
-
-def _yes_no(value):
-    if value is True:
-        return "دارد"
-    if value is False:
-        return "ندارد"
-    return ""

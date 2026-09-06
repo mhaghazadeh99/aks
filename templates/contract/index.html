@@ -209,6 +209,7 @@
 </thead>
 
 <tbody id="tableBody">
+    
 {% for c in page_obj %}
 <tr>
     <td data-col="id">{{ c.id }}</td>
@@ -222,20 +223,21 @@
         {{ s.Nuclide }}{% if not forloop.last %}, {% endif %}
     {% endfor %}
 </td>
-    </td>
-    <td>
+
+    <td data-col="source_type">
     {% for s in c.dsrs.all %}
-        {{ s.source_type }}{% if not forloop.last %}, {% endif %}
+        {{ s.get_Source_Type_display }}{% if not forloop.last %}, {% endif %}
     {% endfor %}
 </td>
     
     <td data-col="facility">{{ c.facility }}</td>
     
     
-     <td>
+    <td data-col="status">
     {% for s in c.dsrs.all %}
-        {{ s.status }}{% if not forloop.last %}, {% endif %}
-    {% endfor %} </td>
+        {{ s.get_Status_display }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+</td>
     <td data-col="contract_number">{{ c.contract_number|default:"—" }}</td>
     <td data-col="contract_date">{{ c.contract_date|default:"—" }}</td>
     <td data-col="payment_done">

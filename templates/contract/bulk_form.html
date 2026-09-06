@@ -1,20 +1,18 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 {% load i18n %}
+
 {% block content %}
+<div class="content">
 
-<h3>{% trans "Create Contracts" %}</h3>
-
-<p>
+<h3>
 {% blocktrans count counter=sources.count %}
 The following 1 source will receive a contract:
 {% plural %}
 The following {{ counter }} sources will receive a contract:
 {% endblocktrans %}
-</p>
+</h3>
 
 <table class="table table-bordered">
-
 <thead>
 <tr>
     <th>{% trans "Serial Number" %}</th>
@@ -22,9 +20,7 @@ The following {{ counter }} sources will receive a contract:
     <th>{% trans "Facility" %}</th>
 </tr>
 </thead>
-
 <tbody>
-
 {% for s in sources %}
 <tr>
     <td>{{ s.serial_number }}</td>
@@ -32,21 +28,58 @@ The following {{ counter }} sources will receive a contract:
     <td>{{ s.Facility }}</td>
 </tr>
 {% endfor %}
-
 </tbody>
-
 </table>
 
-<form method="post">
-
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    <input type="hidden" name="confirm" value="1">
+    {% for id in ids %}
+    <input type="hidden" name="ids" value="{{ id }}">
+    {% endfor %}
 
-    {{ form|crispy }}
+    <h4 class="mt-4">{% trans "Movement Details" %}</h4>
+    <p class="text-muted small">
+        {% trans "This will be applied identically to every selected source above." %}
+    </p>
 
-    <button class="btn btn-success">
-    {% trans "Create Contracts" %}
-</button>
+    <div class="mb-3">
+        <label class="form-label">{{ movement_form.movement_type.label }}</label>
+        {{ movement_form.movement_type }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">{{ movement_form.from_facility.label }}</label>
+        {{ movement_form.from_facility }}
+        <div class="form-text">{% trans "Leave blank to use each source's current facility." %}</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">{{ movement_form.to_facility.label }}</label>
+        {{ movement_form.to_facility }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">{{ movement_form.movement_date.label }}</label>
+        {{ movement_form.movement_date }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">{{ movement_form.remarks.label }}</label>
+        {{ movement_form.remarks }}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">{% trans "Attachments" %}</label>
+        <input class="form-control" type="file" name="movement_attachments" multiple>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-success">{% trans "Send to PI" %}</button>
+        <a href="{% url 'tables' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+    </div>
 
 </form>
 
+</div>
 {% endblock %}

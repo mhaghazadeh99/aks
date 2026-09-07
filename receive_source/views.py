@@ -57,7 +57,7 @@ from .services.license_check import (
 # =====================================================================
 
 def receiving_home(request):
-    return render(request, "receive_source/receiving_home.html")
+    return render(request, "receiving/receiving_home.html")
 
 
 def receive_list(request):
@@ -85,7 +85,7 @@ def receive_list(request):
 
     return render(
         request,
-        "receive_source/receive_list.html",
+        "receiving/receive_list.html",
         {"page_obj": page_obj, "search": search, "page_size": int(page_size)},
     )
 
@@ -110,7 +110,7 @@ def _queue(request, status, page_title):
 
     return render(
         request,
-        "receive_source/receive_queue.html",
+        "receiving/receive_queue.html",
         {"page_title": page_title, "page_obj": page_obj, "search": search},
     )
 
@@ -230,7 +230,7 @@ def receive_create(request, pk=None):
         forms["existing_attachments"] = instance.attachments.all()
 
     forms["instance"] = instance
-    return render(request, "receive_source/receive_create.html", forms)
+    return render(request, "receiving/receive_create.html", forms)
 
 
 # =====================================================================
@@ -357,7 +357,7 @@ def receive_add_sources(request, pk):
 
     return render(
         request,
-        "receive_source/receive_add_sources.html",
+        "receiving/receive_add_sources.html",
         {
             "receive_request": receive_request,
             "sources": sources,
@@ -423,7 +423,7 @@ def receive_manager_input(request, pk):
 
     return render(
         request,
-        "receive_source/receive_manager_input.html",
+        "receiving/receive_manager_input.html",
         {
             "receive_request": receive_request,
             "manager_form": manager_form,
@@ -451,7 +451,7 @@ def receive_control_add(request, pk):
 
     return render(
         request,
-        "receive_source/receive_control_add.html",
+        "receiving/receive_control_add.html",
         {"receive_request": receive_request, "form": form},
     )
 
@@ -560,7 +560,7 @@ def receive_sign(request, pk):
 
     return render(
         request,
-        "receive_source/receive_sign.html",
+        "receiving/receive_sign.html",
         {
             "receive_request": receive_request,
             "specification": specification,
@@ -583,7 +583,7 @@ def receive_contract_create(request, pk):
 
     if request.method == "POST":
 
-        form = ReceiveContractForm(request.POST, request.FILES)
+        form = ReceiveContractForm(request.POST)
 
         if form.is_valid():
 
@@ -591,34 +591,27 @@ def receive_contract_create(request, pk):
             contract.receive_request = receive_request
             contract.save()
 
-            uploaded_file = form.cleaned_data.get("contract_attachment")
-            if uploaded_file:
-                ReceiveAttachment.objects.create(
-                    receive_request=receive_request,
-                    attachment_type=ReceiveAttachmentType.CONTRACT,
-                    file=uploaded_file,
-                    uploaded_by=request.user,
-                )
-
             maybe_add_ceo_step(receive_request)
 
-            messages.success(request, _("Contract created successfully."))
+            messages.success(request, _("Cost declaration saved."))
             return redirect("receive_contracts_queue")
 
     else:
         form = ReceiveContractForm()
 
     history = ReceiveApproval.objects.filter(receive_request=receive_request).order_by("order")
+    sources = receive_request.sources.select_related("nuclide", "matched_license_dsrs").all()
 
     return render(
         request,
-        "receive_source/receive_contract_form.html",
+        "receiving/receive_contract_form.html",
         {
             "form": form,
             "receive_request": receive_request,
             "history": history,
-            "page_title": _("Create Receive Contract"),
-            "submit_text": _("Create Contract"),
+            "sources": sources,
+            "page_title": _("Declare Waste Management Cost"),
+            "submit_text": _("Save"),
         },
     )
 
@@ -630,49 +623,34 @@ def receive_contract_update(request, pk):
 
     if request.method == "POST":
 
-        form = ReceiveContractForm(request.POST, request.FILES, instance=contract)
+        form = ReceiveContractForm(request.POST, instance=contract)
 
         if form.is_valid():
 
             contract = form.save()
 
-            uploaded_file = form.cleaned_data.get("contract_attachment")
-            if uploaded_file:
-                attachment = receive_request.attachments.filter(
-                    attachment_type=ReceiveAttachmentType.CONTRACT
-                ).first()
-                if attachment:
-                    attachment.file = uploaded_file
-                    attachment.uploaded_by = request.user
-                    attachment.save()
-                else:
-                    ReceiveAttachment.objects.create(
-                        receive_request=receive_request,
-                        attachment_type=ReceiveAttachmentType.CONTRACT,
-                        file=uploaded_file,
-                        uploaded_by=request.user,
-                    )
-
             if receive_request.status == ReceiveStatus.CONTRACTS:
                 maybe_add_ceo_step(receive_request)
 
-            messages.success(request, _("Contract updated."))
+            messages.success(request, _("Cost declaration updated."))
             return redirect("receive_contracts_queue")
 
     else:
         form = ReceiveContractForm(instance=contract)
 
     history = ReceiveApproval.objects.filter(receive_request=receive_request).order_by("order")
+    sources = receive_request.sources.select_related("nuclide", "matched_license_dsrs").all()
 
     return render(
         request,
-        "receive_source/receive_contract_form.html",
+        "receiving/receive_contract_form.html",
         {
             "form": form,
             "contract": contract,
             "receive_request": receive_request,
             "history": history,
-            "page_title": _("Update Receive Contract"),
+            "sources": sources,
+            "page_title": _("Update Waste Management Cost"),
             "submit_text": _("Save Changes"),
         },
     )
@@ -712,7 +690,7 @@ def receive_payment_update(request, pk):
 
     return render(
         request,
-        "receive_source/receive_payment_form.html",
+        "receiving/receive_payment_form.html",
         {"form": form, "receive_request": receive_request},
     )
 
@@ -723,24 +701,27 @@ def receive_payment_update(request, pk):
 
 def receive_characterization(request, pk):
 
-    receive_request = get_object_or_404(ReceiveRequest, pk=pk, status=ReceiveStatus.RECEIVING)
+    # No status filter here — marking the last source stored can complete
+    # the whole request mid-visit (see dsrs_mark_stored below), and this
+    # page should still render (read-only-ish) rather than 404.
+    receive_request = get_object_or_404(ReceiveRequest, pk=pk)
 
     sources = (
         receive_request.sources
-        .select_related("result_dsrs", "nuclide")
+        .select_related("result_dsrs", "nuclide", "matched_license_dsrs")
         .order_by("specification_order")
     )
 
     return render(
         request,
-        "receive_source/receive_characterization.html",
+        "receiving/receive_characterization.html",
         {"receive_request": receive_request, "sources": sources},
     )
 
 
 def dsrs_characterization_update(request, pk, dsrs_pk):
 
-    receive_request = get_object_or_404(ReceiveRequest, pk=pk, status=ReceiveStatus.RECEIVING)
+    receive_request = get_object_or_404(ReceiveRequest, pk=pk)
     dsrs = get_object_or_404(DSRS, pk=dsrs_pk)
 
     if request.method == "POST":
@@ -769,19 +750,24 @@ def dsrs_characterization_update(request, pk, dsrs_pk):
 
     return render(
         request,
-        "receive_source/dsrs_characterization_form.html",
+        "receiving/dsrs_characterization_form.html",
         {"receive_request": receive_request, "dsrs": dsrs, "form": form, "doc_form": doc_form},
     )
 
 
 def dsrs_mark_stored(request, pk, dsrs_pk):
 
-    receive_request = get_object_or_404(ReceiveRequest, pk=pk, status=ReceiveStatus.RECEIVING)
+    receive_request = get_object_or_404(ReceiveRequest, pk=pk)
     dsrs = get_object_or_404(DSRS, pk=dsrs_pk)
 
     if request.method == "POST":
         mark_source_stored(dsrs, receive_request, performed_by=request.user)
         messages.success(request, _("Source marked as stored."))
+
+        receive_request.refresh_from_db(fields=["status"])
+        if receive_request.status == ReceiveStatus.COMPLETED:
+            messages.success(request, _("All sources stored — this request is now complete."))
+            return redirect("receive_detail", pk=pk)
 
     return redirect("receive_characterization", pk=pk)
 
@@ -799,4 +785,4 @@ def receive_detail(request, pk):
         pk=pk,
     )
 
-    return render(request, "receive_source/receive_detail.html", {"receive_request": receive_request})
+    return render(request, "receiving/receive_detail.html", {"receive_request": receive_request})

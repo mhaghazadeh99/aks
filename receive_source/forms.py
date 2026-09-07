@@ -486,28 +486,24 @@ class ReceiveControlAddForm(forms.Form):
 # =====================================================================
 
 class ReceiveContractForm(forms.ModelForm):
-
-    contract_attachment = forms.FileField(required=False, label=_("Contract Document"))
+    """
+    Per your clarification: we're NOT creating an actual contract at this
+    stage — this is just where the Contract Manager declares the waste
+    management cost (and whether a discount applies, which is what
+    routes to CEO). contract_number/date/accountable/amendment_notes
+    still exist on the model for schema compatibility but are
+    deliberately not exposed here.
+    """
 
     class Meta:
         model = ReceiveContract
         fields = [
-            "contract_number",
-            "contract_date",
             "contract_cost",
             "discount_requested",
             "discount_notes",
-            "contract_accountable",
-            "amendment_notes",
-            "contract_attachment",
-            "send_to_financial",
         ]
         widgets = {
-            "contract_date": forms.DateInput(
-                attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}
-            ),
             "discount_notes": forms.Textarea(attrs={"rows": 2}),
-            "amendment_notes": forms.Textarea(attrs={"rows": 2}),
         }
 
     def __init__(self, *args, **kwargs):

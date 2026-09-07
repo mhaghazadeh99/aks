@@ -3,7 +3,21 @@ from django.utils.translation import gettext_lazy as _
 
 from dashboard.models import DSRS, SOURCE_TYPE, SOURCE_STATUS, MovementType
 
-from receive_source.models import ReceiveApproval, ReceiveStatus
+from ..models import ReceiveApproval, ReceiveStatus
+
+
+def get_irwa_facility():
+    """The company's own facility record — matched (contracted) sources
+    move straight here on payment, and newly-created sources move here
+    once characterization is finished and they're marked stored."""
+    from facilities.models import FacilityModel
+    try:
+        return FacilityModel.objects.get(name="IRWA")
+    except FacilityModel.DoesNotExist:
+        raise FacilityModel.DoesNotExist(
+            "No FacilityModel record named 'IRWA' found. This is required as "
+            "the destination facility for stored receive sources."
+        )
 
 
 # =====================================================================
@@ -46,11 +60,11 @@ def create_receive_workflow(receive_request):
 
 def maybe_add_ceo_step(receive_request):
     """
-    Call this when the ReceiveContract is saved. If discount_requested
-    is True and a CEO approval row doesn't exist yet, create it and move
-    status to WAITING_CEO. Otherwise (no discount), skip straight to
-    FINANCE — same pattern as license_contract_create/update's
-    send_to_financial check.
+    Call this when the ReceiveContract (really just a cost/discount
+    declaration, not an actual contract) is saved. discount_requested
+    True -> CEO signs before Finance. Otherwise -> straight to Finance,
+    unconditionally (no separate "send to financial" flag anymore since
+    there's no real contract to hold back on).
     """
 
     contract = receive_request.contract
@@ -67,7 +81,7 @@ def maybe_add_ceo_step(receive_request):
         receive_request.status_date = timezone.now()
         receive_request.save(update_fields=["status", "status_date"])
 
-    elif contract.send_to_financial:
+    else:
 
         receive_request.status = ReceiveStatus.FINANCE
         receive_request.status_date = timezone.now()
@@ -118,34 +132,52 @@ def snapshot_half_life(receive_source, save=True):
 def create_dsrs_for_receive_request(receive_request, performed_by):
     """
     Called once ReceivePayment.payment_done flips True (mirrors
-    operations.services.fulfillment.fulfill_license_sources). Creates one
-    DSRS per ReceiveSource row (quantity expanded into that many rows).
+    operations.services.fulfillment.fulfill_license_sources).
 
-    Status is intentionally SOURCE_STATUS.IN_USE, not blank — per current
-    policy the source is still considered "in use"/in transit until the
-    physical receiving + characterization is finished and it's explicitly
-    marked stored (see mark_source_stored below), at which point
-    register_movement(RECEIVE) flips it to STORED.
+    Two cases per ReceiveSource:
 
-    DSRS.contract is left null regardless of any license-contract match
-    found earlier (see services.license_check) — that match is purely
-    informational for this workflow.
+    1. matched_license_dsrs is set — this is already an "In Use" DSRS
+       record in our own inventory, under an existing license contract.
+       We do NOT create a new record for it. It's already fully
+       characterized, so there's nothing left to do except bring it
+       home: Status -> Stored, Facility -> IRWA, right now (no trip
+       through the RECEIVING/characterization stage at all).
+
+    2. No match — a genuinely new item. Create one DSRS per unit
+       (Status starts IN_USE, still logically "out" at the delivering
+       facility) and it goes through the normal characterization ->
+       mark-stored flow, which is when it actually moves to IRWA.
     """
 
     facility = receive_request.facility
+    irwa = get_irwa_facility()
     today = timezone.now().date()
 
-    for source in receive_request.sources.select_related("nuclide").all():
+    for source in receive_request.sources.select_related("nuclide", "matched_license_dsrs").all():
 
         if source.result_dsrs_id:
-            continue  # already created (e.g. re-running after a partial failure)
+            continue  # already handled (e.g. re-running after a partial failure)
+
+        if source.matched_license_dsrs_id:
+
+            existing = source.matched_license_dsrs
+
+            existing.register_movement(
+                movement_type=MovementType.RETURN,
+                to_facility=irwa,
+                performed_by=performed_by,
+                quantity=1,
+                remarks=_("Returned to IRWA via %(req)s") % {"req": str(receive_request)},
+            )
+
+            source.result_dsrs = existing
+            source.save(update_fields=["result_dsrs"])
+            continue
 
         for _i in range(source.quantity or 1):
 
             dsrs = DSRS.objects.create(
-                Source_Type=(
-                    SOURCE_TYPE.DSRS if source.item_type == "SOURCE" else SOURCE_TYPE.DSRS
-                ),
+                Source_Type=SOURCE_TYPE.DSRS,
                 Facility=facility,
                 Origin_Type="Received",
                 Date_received=today,
@@ -164,10 +196,6 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
                 created_by=performed_by,
             )
 
-            # Only the FIRST created DSRS is linked back for a multi-quantity
-            # row — matches the "one row can expand to N DSRS" pattern used
-            # in operations' CSV import; if you need all N linked, this is
-            # the spot to change to a M2M or a separate join table instead.
             if not source.result_dsrs_id:
                 source.result_dsrs = dsrs
                 source.save(update_fields=["result_dsrs"])
@@ -175,6 +203,10 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
     receive_request.status = ReceiveStatus.RECEIVING
     receive_request.status_date = timezone.now()
     receive_request.save(update_fields=["status", "status_date"])
+
+    # If every source turned out to be a matched/inventory item, there's
+    # nothing left to characterize — this request may already be done.
+    check_and_complete_receive_request(receive_request)
 
 
 # =====================================================================
@@ -184,15 +216,16 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
 def mark_source_stored(dsrs, receive_request, performed_by, remarks=""):
     """
     Called per-DSRS once its characterization (dose rate, physical form,
-    container, photos/docs) is complete. Reuses the existing movement
-    machinery — MOVEMENT_TO_STATUS[RECEIVE] == STORED — instead of
-    setting Status directly, so SourceMovement history stays consistent
-    with every other status change in the system.
+    container, photos/docs) is complete. Moves it to IRWA (final storage
+    location) and STORED via the RECEIVE movement type, reusing the
+    existing movement machinery for consistent history.
     """
+
+    irwa = get_irwa_facility()
 
     dsrs.register_movement(
         movement_type=MovementType.RECEIVE,
-        to_facility=receive_request.facility,
+        to_facility=irwa,
         performed_by=performed_by,
         quantity=1,
         remarks=remarks or _("Received via %(req)s") % {"req": str(receive_request)},

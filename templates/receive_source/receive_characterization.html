@@ -37,10 +37,10 @@
                                 </td>
                                 <td>
                                     {% if source.result_dsrs %}
+                                        {% if source.result_dsrs.Status != "Stored" %}
                                         <a href="{% url 'dsrs_characterization_update' receive_request.pk source.result_dsrs.pk %}" class="btn btn-sm btn-outline-primary">
                                             {% trans "Characterize" %}
                                         </a>
-                                        {% if source.result_dsrs.Status != "Stored" %}
                                         <form method="post" action="{% url 'dsrs_mark_stored' receive_request.pk source.result_dsrs.pk %}" class="d-inline">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-success">
@@ -49,6 +49,9 @@
                                         </form>
                                         {% else %}
                                         <span class="badge bg-success">{% trans "Stored" %}</span>
+                                        {% if source.matched_license_dsrs %}
+                                            <span class="badge bg-info">{% trans "From existing inventory" %}</span>
+                                        {% endif %}
                                         {% endif %}
                                     {% endif %}
                                 </td>

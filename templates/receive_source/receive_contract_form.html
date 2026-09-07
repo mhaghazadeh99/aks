@@ -15,7 +15,38 @@
                 </div>
                 <div class="card-body">
 
-                    <form method="post" enctype="multipart/form-data">
+                    <p class="text-muted">
+                        {% trans "This is not a legal contract — just where the cost of receiving these items is declared. Whether each item already has an existing license contract affects that cost." %}
+                    </p>
+
+                    <table class="table table-sm table-bordered mb-4">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Nuclide" %}</th>
+                                <th>{% trans "Item Type" %}</th>
+                                <th>{% trans "Quantity" %}</th>
+                                <th>{% trans "License Match" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for source in sources %}
+                            <tr>
+                                <td>{{ source.nuclide }}</td>
+                                <td>{{ source.get_item_type_display }}</td>
+                                <td>{{ source.quantity }}</td>
+                                <td>
+                                    {% if source.matched_license_dsrs %}
+                                        <span class="badge bg-success">{% trans "Existing contract" %}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{% trans "No contract" %}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <form method="post">
                         {% csrf_token %}
                         {% crispy form %}
 

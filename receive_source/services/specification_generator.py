@@ -212,6 +212,11 @@ def _fill_sources(table, sources):
     purpose: per current policy the creator fills those by hand in
     Word after downloading this generated doc, then signs — none of
     that is modeled in the DB anymore.
+
+    EXCEPTION: if the source matched an existing license-contract
+    inventory record, the description cell gets a short pre-filled
+    note ("دارای قرارداد مجوز") so the creator sees it at a glance and
+    doesn't need to know/re-type it — they can still add to it by hand.
     """
     for i, source in enumerate(sources[:MAIN_TABLE_ROWS]):
         row = 8 + i  # data rows start at index 8
@@ -224,9 +229,14 @@ def _fill_sources(table, sources):
         _set_cell_value(table.cell(row, 5), _to_persian_digits(source.quantity))
         _set_cell_value(table.cell(row, 7), _to_persian_digits(source.half_life_display) if source.half_life_display else "")
 
+        if source.matched_license_dsrs_id:
+            contract_number = getattr(getattr(source.matched_license_dsrs, "contract", None), "contract_number", None)
+            note = f"دارای قرارداد مجوز ({contract_number})" if contract_number else "دارای قرارداد مجوز"
+            _set_cell_value(table.cell(row, 20), note, bold=True)
+
         # cols 8/9 (shield), 12/13 (burial), 15 (storage duration),
-        # 19 (sale probability), 20 (description) intentionally left
-        # untouched — blank cells for the creator to fill by hand.
+        # 19 (sale probability) intentionally left untouched — blank
+        # cells for the creator to fill by hand.
 
 
 # =====================================================================

@@ -19,9 +19,7 @@ from .forms import (
     ReceiveAttachmentForm,
     ReceiveSourceForm,
     LicenseMatchChoiceForm,
-    ReceiveSourceSpecificationFormSet,
-    ReceiveManagerInputForm,
-    ReceiveControlAddForm,
+    SpecificationUploadForm,
     ReceiveContractForm,
     ReceivePaymentForm,
     DSRSCharacterizationForm,
@@ -374,7 +372,10 @@ def _rehydrate_candidates(pending_match):
 
 
 def receive_finish_sources(request, pk):
-    """Coordinator is done adding sources -> move to manager data-entry stage."""
+    """Coordinator is done adding sources -> generate the specification
+    doc now (identity fields filled; characterization columns + the
+    whole logistics section left blank for hand-filling) and move to
+    the creator's own fill-in-Word-then-sign stage."""
 
     receive_request = get_object_or_404(ReceiveRequest, pk=pk, status=ReceiveStatus.SPECIFICATION)
 
@@ -382,98 +383,84 @@ def receive_finish_sources(request, pk):
         messages.error(request, _("Add at least one source before continuing."))
         return redirect("receive_add_sources", pk=pk)
 
-    receive_request.status = ReceiveStatus.WAITING_MANAGER_INPUT
+    from .services.specification_generator import generate_receive_specification
+    generate_receive_specification(receive_request, request.user)
+
+    receive_request.status = ReceiveStatus.WAITING_CREATOR
     receive_request.status_date = timezone.now()
     receive_request.specification_completed = True
     receive_request.save(update_fields=["status", "status_date", "specification_completed"])
 
-    messages.success(request, _("Specification finished — now with the managers."))
-    return redirect("receive_detail", pk=pk)
+    messages.success(request, _("Specification generated — download it, fill in the source details, then sign."))
+    return redirect("receive_sign", pk=pk)
 
 
 # =====================================================================
-# STEP 4 — MANAGER DATA ENTRY (both managers, but Control is add-only)
+# STEP 4 — MANAGER DATA ENTRY: fill the logistics section directly in
+# the docx (shared access — either manager can upload), then move on
+# to the Operation Manager's own signature. Nothing here is stored in
+# the DB; the docx is the only record.
 # =====================================================================
 
 def receive_manager_input(request, pk):
 
     receive_request = get_object_or_404(ReceiveRequest, pk=pk, status=ReceiveStatus.WAITING_MANAGER_INPUT)
 
-    sources_qs = receive_request.sources.select_related("nuclide").order_by("specification_order")
+    specification = receive_request.attachments.filter(
+        attachment_type=ReceiveAttachmentType.SPECIFICATION
+    ).first()
 
     if request.method == "POST":
 
-        manager_form = ReceiveManagerInputForm(request.POST, instance=receive_request)
-        source_formset = ReceiveSourceSpecificationFormSet(request.POST, queryset=sources_qs, prefix="sources")
+        upload_form = SpecificationUploadForm(request.POST, request.FILES)
 
-        if manager_form.is_valid() and source_formset.is_valid():
+        if upload_form.is_valid():
 
-            with transaction.atomic():
-                manager_form.save()
-                source_formset.save()
+            if specification:
+                specification.file.delete(save=False)
+                specification.delete()
 
-            messages.success(request, _("Saved."))
+            ReceiveAttachment.objects.create(
+                receive_request=receive_request,
+                attachment_type=ReceiveAttachmentType.SPECIFICATION,
+                file=upload_form.cleaned_data["file"],
+                uploaded_by=request.user,
+            )
+
+            messages.success(request, _("Updated specification uploaded."))
             return redirect("receive_manager_input", pk=pk)
-        else:
-            messages.error(request, _("Please correct the errors below."))
 
     else:
-        manager_form = ReceiveManagerInputForm(instance=receive_request)
-        source_formset = ReceiveSourceSpecificationFormSet(queryset=sources_qs, prefix="sources")
+        upload_form = SpecificationUploadForm()
 
     return render(
         request,
         "receive_source/receive_manager_input.html",
         {
             "receive_request": receive_request,
-            "manager_form": manager_form,
-            "source_formset": source_formset,
+            "specification": specification,
+            "upload_form": upload_form,
         },
     )
 
 
-def receive_control_add(request, pk):
-    """Control Manager's ADD-ONLY view for the operation personnel counts."""
-
-    receive_request = get_object_or_404(ReceiveRequest, pk=pk, status=ReceiveStatus.WAITING_MANAGER_INPUT)
-
-    if request.method == "POST":
-
-        form = ReceiveControlAddForm(request.POST)
-
-        if form.is_valid():
-            form.apply(receive_request)
-            messages.success(request, _("Personnel counts updated."))
-            return redirect("receive_control_add", pk=pk)
-
-    else:
-        form = ReceiveControlAddForm()
-
-    return render(
-        request,
-        "receive_source/receive_control_add.html",
-        {"receive_request": receive_request, "form": form},
-    )
-
-
 def receive_manager_input_done(request, pk):
-    """Either manager can advance the workflow into signing once data entry is complete."""
+    """Either manager marks the logistics section done -> Operation
+    Manager's own signature step."""
 
     receive_request = get_object_or_404(ReceiveRequest, pk=pk, status=ReceiveStatus.WAITING_MANAGER_INPUT)
 
-    from .services.specification_generator import generate_receive_specification
-    generate_receive_specification(receive_request, request.user)
-
-    receive_request.status = ReceiveStatus.WAITING_CREATOR
+    receive_request.status = ReceiveStatus.WAITING_MANAGER
     receive_request.status_date = timezone.now()
     receive_request.save(update_fields=["status", "status_date"])
 
-    messages.success(request, _("Ready for signatures — starting with the Creator/Coordinator."))
+    messages.success(request, _("Data entry complete — ready for the Operation Manager's signature."))
     return redirect("receive_detail", pk=pk)
 
 
 # =====================================================================
-# STEP 5 — SIGNATURES (Creator -> Manager -> Control -> Deputy -> [CEO])
+# STEP 5 — SIGNATURES (Creator -> [manager data entry] -> Manager ->
+# Control -> Deputy -> [CEO])
 # =====================================================================
 
 STATUS_TO_STEP = {
@@ -484,8 +471,11 @@ STATUS_TO_STEP = {
     ReceiveStatus.WAITING_CEO: ReceiveApproval.ApprovalStep.CEO,
 }
 
+# Creator signs -> managers get the docx to fill logistics into BEFORE
+# the Operation Manager's own signature (WAITING_MANAGER_INPUT sits
+# between CREATOR and MANAGER, not before CREATOR like before).
 NEXT_STATUS = {
-    ReceiveApproval.ApprovalStep.CREATOR: ReceiveStatus.WAITING_MANAGER,
+    ReceiveApproval.ApprovalStep.CREATOR: ReceiveStatus.WAITING_MANAGER_INPUT,
     ReceiveApproval.ApprovalStep.MANAGER: ReceiveStatus.WAITING_CONTROL,
     ReceiveApproval.ApprovalStep.CONTROL: ReceiveStatus.WAITING_DEPUTY,
     ReceiveApproval.ApprovalStep.DEPUTY: ReceiveStatus.CONTRACTS,
@@ -493,7 +483,7 @@ NEXT_STATUS = {
 }
 
 QUEUE_REDIRECT = {
-    ReceiveApproval.ApprovalStep.CREATOR: "receive_list",
+    ReceiveApproval.ApprovalStep.CREATOR: "receive_manager_input_queue",
     ReceiveApproval.ApprovalStep.MANAGER: "receive_manager_queue",
     ReceiveApproval.ApprovalStep.CONTROL: "receive_control_queue",
     ReceiveApproval.ApprovalStep.DEPUTY: "receive_deputy_queue",
@@ -520,43 +510,65 @@ def receive_sign(request, pk):
     approval = get_object_or_404(ReceiveApproval, receive_request=receive_request, step=current_step)
     history = ReceiveApproval.objects.filter(receive_request=receive_request).order_by("order")
 
+    upload_form = SpecificationUploadForm()
+
     if request.method == "POST":
 
-        profile = request.user.profile
+        if request.POST.get("action") == "upload":
 
-        if not profile.signature_image:
-            messages.error(request, _("Please upload your signature image first."))
-            return redirect(f"{reverse('profile')}?next={request.path}")
+            upload_form = SpecificationUploadForm(request.POST, request.FILES)
 
-        # Receive-specific signer — the license app's SpecificationSigner is
-        # hardcoded to a different template layout (row 15/16, only 3 steps)
-        # and is NOT reusable here. See services/signature_service.py.
-        from .services.signature_service import ReceiveSpecificationSigner
+            if upload_form.is_valid():
+                specification.file.delete(save=False)
+                specification.delete()
 
-        tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
-        tmp.close()
+                specification = ReceiveAttachment.objects.create(
+                    receive_request=receive_request,
+                    attachment_type=ReceiveAttachmentType.SPECIFICATION,
+                    file=upload_form.cleaned_data["file"],
+                    uploaded_by=request.user,
+                )
 
-        signer = ReceiveSpecificationSigner(specification.file.path)
-        signer.sign(profile, current_step.name)
-        signer.save(tmp.name)
+                messages.success(request, _("Updated specification uploaded."))
+                return redirect("receive_sign", pk=pk)
 
-        with open(tmp.name, "rb") as f:
-            specification.file.save(os.path.basename(specification.file.name), File(f), save=False)
-        specification.save()
-        os.remove(tmp.name)
+        else:
 
-        with transaction.atomic():
-            approval.status = ReceiveApproval.ApprovalStatus.APPROVED
-            approval.approver = request.user
-            approval.approved_at = timezone.now()
-            approval.save()
+            profile = request.user.profile
 
-            receive_request.status = NEXT_STATUS[current_step]
-            receive_request.status_date = timezone.now()
-            receive_request.save(update_fields=["status", "status_date"])
+            if not profile.signature_image:
+                messages.error(request, _("Please upload your signature image first."))
+                return redirect(f"{reverse('profile')}?next={request.path}")
 
-        messages.success(request, _("Specification signed successfully."))
-        return redirect(QUEUE_REDIRECT[current_step])
+            # Receive-specific signer — the license app's SpecificationSigner is
+            # hardcoded to a different template layout (row 15/16, only 3 steps)
+            # and is NOT reusable here. See services/signature_service.py.
+            from .services.signature_service import ReceiveSpecificationSigner
+
+            tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
+            tmp.close()
+
+            signer = ReceiveSpecificationSigner(specification.file.path)
+            signer.sign(profile, current_step.name)
+            signer.save(tmp.name)
+
+            with open(tmp.name, "rb") as f:
+                specification.file.save(os.path.basename(specification.file.name), File(f), save=False)
+            specification.save()
+            os.remove(tmp.name)
+
+            with transaction.atomic():
+                approval.status = ReceiveApproval.ApprovalStatus.APPROVED
+                approval.approver = request.user
+                approval.approved_at = timezone.now()
+                approval.save()
+
+                receive_request.status = NEXT_STATUS[current_step]
+                receive_request.status_date = timezone.now()
+                receive_request.save(update_fields=["status", "status_date"])
+
+            messages.success(request, _("Specification signed successfully."))
+            return redirect(QUEUE_REDIRECT[current_step])
 
     return render(
         request,
@@ -566,6 +578,7 @@ def receive_sign(request, pk):
             "specification": specification,
             "approval": approval,
             "history": history,
+            "upload_form": upload_form,
         },
     )
 
@@ -601,6 +614,7 @@ def receive_contract_create(request, pk):
 
     history = ReceiveApproval.objects.filter(receive_request=receive_request).order_by("order")
     sources = receive_request.sources.select_related("nuclide", "matched_license_dsrs").all()
+    specification = receive_request.attachments.filter(attachment_type=ReceiveAttachmentType.SPECIFICATION).first()
 
     return render(
         request,
@@ -610,6 +624,7 @@ def receive_contract_create(request, pk):
             "receive_request": receive_request,
             "history": history,
             "sources": sources,
+            "specification": specification,
             "page_title": _("Declare Waste Management Cost"),
             "submit_text": _("Save"),
         },
@@ -640,6 +655,7 @@ def receive_contract_update(request, pk):
 
     history = ReceiveApproval.objects.filter(receive_request=receive_request).order_by("order")
     sources = receive_request.sources.select_related("nuclide", "matched_license_dsrs").all()
+    specification = receive_request.attachments.filter(attachment_type=ReceiveAttachmentType.SPECIFICATION).first()
 
     return render(
         request,
@@ -650,6 +666,7 @@ def receive_contract_update(request, pk):
             "receive_request": receive_request,
             "history": history,
             "sources": sources,
+            "specification": specification,
             "page_title": _("Update Waste Management Cost"),
             "submit_text": _("Save Changes"),
         },

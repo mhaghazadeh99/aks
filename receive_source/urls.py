@@ -24,9 +24,8 @@ urlpatterns = [
     path("<int:pk>/sources/", views.receive_add_sources, name="receive_add_sources"),
     path("<int:pk>/sources/finish/", views.receive_finish_sources, name="receive_finish_sources"),
 
-    # Manager data entry
+    # Manager data entry (docx fill-in-hand, shared access)
     path("<int:pk>/manager-input/", views.receive_manager_input, name="receive_manager_input"),
-    path("<int:pk>/manager-input/control-add/", views.receive_control_add, name="receive_control_add"),
     path("<int:pk>/manager-input/done/", views.receive_manager_input_done, name="receive_manager_input_done"),
 
     # Signing

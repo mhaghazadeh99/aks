@@ -35,30 +35,22 @@ attached blank template's raw XML — re-verify if the template changes):
           national id cols(6-13) [combined], economic code cols(14-20) [combined]
   row 4:  distance, single cell cols(0-20) [combined]
   rows 6-7: column headers — not filled
-  rows 8-10: up to 3 data rows. Per row:
+  rows 8-10: up to 3 data rows. Per row, ONLY these are filled from DB:
           col0 row number (pre-filled "1"/"2"/"3" — don't touch)
           col1-3 nuclide name (ANSWER)
           col4 activity (ANSWER)
           col5-6 quantity (ANSWER)
           col7 half-life (ANSWER)
-          col8 "needs shield: yes" mark cell / col9-11 "no" mark cell
-          col12 "needs burial: yes" mark cell / col13-14 "no" mark cell
-          col15-18 storage duration (ANSWER)
-          col19 sale probability (ANSWER)
-          col20 description (ANSWER)
-  row 11: single cell, "pre-op visit needed: <لازم است> <لازم نیست>" — append choice marker
-  row 12: col0-10 visit personnel (single combined cell, append counts),
-          col11-20 visit mission days (combined, append)
-  row 13: single cell, visit vehicle type options — append choice marker
-  row 15: col0-2 label / col3-10 ANSWER (operation personnel),
-          col11-15 label / col16-20 ANSWER (operation mission days)
-  row 16: col0-2 label / col3-10 ANSWER (operation vehicle options),
-          col11-15 label / col16-20 ANSWER (route difficulty options)
-  row 17: col0-2 label / col3-10 ANSWER (accommodation days),
-          col11-17 label / col18-20 ANSWER (food cost days)
-  row 18: col0-2 label / col3-10 ANSWER (peripheral equipment),
-          col11-17 label / col18-20 ANSWER (other costs)
-  row 19: col0-2 label / col3-20 ANSWER (logistics notes)
+          Everything else on these rows (shield/burial cols 8-14,
+          storage duration cols 15-18, sale probability col19,
+          description col20) is left BLANK — the creator fills those
+          by hand in Word, then signs. Not modeled in the DB.
+
+  rows 11-19 (the whole logistics section: pre-op visit, personnel,
+          vehicle, route difficulty, accommodation/food days,
+          peripheral equipment, other costs, notes) are likewise left
+          entirely BLANK — managers fill this section by hand before
+          their signatures. Not modeled in the DB.
 
 Signature rows (20-22) are untouched here — SpecificationSigner (reused
 from operations.services.signature_service) handles those separately.
@@ -73,7 +65,7 @@ from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 
-from receive_source.models import ReceiveAttachment, ReceiveAttachmentType
+from ..models import ReceiveAttachment, ReceiveAttachmentType
 
 
 TEMPLATE_PATH = getattr(
@@ -182,23 +174,6 @@ def _set_cell_value(cell, value, bold=False):
     run.bold = bold
 
 
-def _mark_yes_no(table, row, yes_col, no_col, value):
-    """value: True/False/None -> writes a check mark into whichever of the
-    two small دارد/ندارد cells applies."""
-    if value is True:
-        _set_cell_value(table.cell(row, yes_col), "✓")
-    elif value is False:
-        _set_cell_value(table.cell(row, no_col), "✓")
-
-
-def _yes_no_label(value):
-    if value is True:
-        return "لازم است"
-    if value is False:
-        return "لازم نیست"
-    return ""
-
-
 # =====================================================================
 # Section fillers
 # =====================================================================
@@ -228,6 +203,16 @@ def _fill_facility(table, receive_request):
 
 
 def _fill_sources(table, sources):
+    """
+    Only identity fields (nuclide, activity, quantity, half-life) come
+    from the DB — these are needed elsewhere in the system (DSRS
+    creation, license-contract checks) so they stay structured data.
+    The characterization columns (needs shield/burial, storage
+    duration, sale probability, description) are left BLANK here on
+    purpose: per current policy the creator fills those by hand in
+    Word after downloading this generated doc, then signs — none of
+    that is modeled in the DB anymore.
+    """
     for i, source in enumerate(sources[:MAIN_TABLE_ROWS]):
         row = 8 + i  # data rows start at index 8
 
@@ -239,54 +224,9 @@ def _fill_sources(table, sources):
         _set_cell_value(table.cell(row, 5), _to_persian_digits(source.quantity))
         _set_cell_value(table.cell(row, 7), _to_persian_digits(source.half_life_display) if source.half_life_display else "")
 
-        _mark_yes_no(table, row, 8, 9, source.needs_shield)
-        _mark_yes_no(table, row, 12, 13, source.needs_burial)
-
-        _set_cell_value(table.cell(row, 15), source.storage_duration or "")
-        _set_cell_value(table.cell(row, 19), source.sale_probability or "")
-        _set_cell_value(table.cell(row, 20), source.description or "")
-
-
-def _fill_logistics(table, receive_request):
-    r = receive_request
-
-    if r.pre_operation_visit_needed is not None:
-        _append_value(table.cell(11, 0), f"⇦ {_yes_no_label(r.pre_operation_visit_needed)}", bold=True)
-
-    visit_personnel = _to_persian_digits(
-        f"کارشناس: {r.visit_expert_count or 0}  تکنسین: {r.visit_technician_count or 0}  راننده: {r.visit_driver_count or 0}"
-    )
-    _append_value(table.cell(12, 0), visit_personnel)
-
-    if r.visit_mission_days is not None:
-        _append_value(table.cell(12, 11), _to_persian_digits(r.visit_mission_days))
-
-    if r.visit_vehicle_type:
-        _append_value(table.cell(13, 0), f"⇦ {r.get_visit_vehicle_type_display()}", bold=True)
-
-    operation_personnel = _to_persian_digits(
-        f"کارشناس: {r.operation_expert_count}  تکنسین: {r.operation_technician_count}  راننده: {r.operation_driver_count}"
-    )
-    _append_value(table.cell(15, 3), operation_personnel)
-
-    if r.operation_mission_days is not None:
-        _append_value(table.cell(15, 16), _to_persian_digits(r.operation_mission_days))
-
-    if r.operation_vehicle_type:
-        _append_value(table.cell(16, 3), f"⇦ {r.get_operation_vehicle_type_display()}", bold=True)
-
-    if r.route_difficulty:
-        _append_value(table.cell(16, 16), f"⇦ {r.get_route_difficulty_display()}", bold=True)
-
-    if r.accommodation_days is not None:
-        _append_value(table.cell(17, 3), _to_persian_digits(r.accommodation_days))
-
-    if r.food_cost_days is not None:
-        _append_value(table.cell(17, 18), _to_persian_digits(r.food_cost_days))
-
-    _append_value(table.cell(18, 3), r.peripheral_equipment)
-    _append_value(table.cell(18, 18), r.other_costs)
-    _append_value(table.cell(19, 3), r.logistics_notes)
+        # cols 8/9 (shield), 12/13 (burial), 15 (storage duration),
+        # 19 (sale probability), 20 (description) intentionally left
+        # untouched — blank cells for the creator to fill by hand.
 
 
 # =====================================================================
@@ -294,6 +234,9 @@ def _fill_logistics(table, receive_request):
 # =====================================================================
 
 def _build_overflow_document(overflow_sources, receive_request):
+    """Same blank-characterization-columns policy as _fill_sources above
+    — only identity fields are pre-filled; the rest is left for the
+    creator to write in by hand."""
     from docx.enum.text import WD_ALIGN_PARAGRAPH
 
     doc = Document()
@@ -327,11 +270,11 @@ def _build_overflow_document(overflow_sources, receive_request):
             _to_persian_digits(source.average_activity_mci) if source.average_activity_mci is not None else "",
             _to_persian_digits(source.quantity),
             source.half_life_display or "",
-            _yes_no_label(source.needs_shield),
-            _yes_no_label(source.needs_burial),
-            source.storage_duration or "",
-            source.sale_probability or "",
-            source.description or "",
+            "",  # needs shield — fill by hand
+            "",  # needs burial — fill by hand
+            "",  # storage duration — fill by hand
+            "",  # sale probability — fill by hand
+            "",  # description — fill by hand
         ]
         for col, value in enumerate(values):
             _set_cell_value(row_cells[col], value)
@@ -361,7 +304,7 @@ def generate_receive_specification(receive_request, user):
     overflow_sources = all_sources[MAIN_TABLE_ROWS:]
 
     _fill_sources(table, main_sources)
-    _fill_logistics(table, receive_request)
+    # Logistics section intentionally left blank — filled by hand.
 
     # -------------------------------------------------
     # Replace any previous SPECIFICATION attachment rather than leaving

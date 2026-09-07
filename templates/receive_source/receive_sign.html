@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load crispy_forms_tags %}
 
 {% block title %}{% trans "Sign Specification" %}{% endblock %}
 
@@ -21,12 +22,28 @@
 
                     <p>
                         <a href="{{ specification.file.url }}" target="_blank" class="btn btn-outline-primary">
-                            📄 {% trans "View Specification Document" %}
+                            📄 {% trans "Download Specification Document" %}
                         </a>
                     </p>
 
+                    {% if approval.step == "CREATOR" %}
+                    <div class="alert alert-info">
+                        {% trans "Fill in the source/waste characterization columns (shield, burial, storage duration, sale probability, description) directly in the document above, upload it below, then sign." %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" class="mb-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="upload">
+                        {% crispy upload_form %}
+                        <button type="submit" class="btn btn-outline-secondary mt-2">
+                            {% trans "Upload Filled Document" %}
+                        </button>
+                    </form>
+
                     <form method="post">
                         {% csrf_token %}
+                        <input type="hidden" name="action" value="sign">
                         <button type="submit" class="btn btn-success">
                             {% trans "Sign and Continue" %}
                         </button>

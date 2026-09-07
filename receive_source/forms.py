@@ -1,5 +1,4 @@
 from django import forms
-from django.forms import modelformset_factory
 from django.utils.translation import gettext_lazy as _
 
 from crispy_forms.helper import FormHelper
@@ -302,155 +301,21 @@ class LicenseMatchChoiceForm(forms.Form):
 
 
 # =====================================================================
-# STEP 3 — PER-ROW CHARACTERIZATION FIELDS (both managers, full edit)
+# STEP 3/4 — DOCX FILL-IN-HAND (replaces the old per-source /
+# manager-input Django forms). Creator fills source characterization
+# columns directly in the generated docx and signs; managers then fill
+# the logistics section the same way, before their own signatures.
+# None of this data is modeled in the DB — the docx is the only record.
 # =====================================================================
 
-class ReceiveSourceSpecificationForm(forms.ModelForm):
+class SpecificationUploadForm(forms.Form):
+    """Used on both the creator's sign page and the manager data-entry
+    page to let them replace the current SPECIFICATION attachment with
+    their filled-in version."""
 
-    class Meta:
-        model = ReceiveSource
-        fields = [
-            "item_type",
-            "nuclide",
-            "average_activity_mci",
-            "quantity",
-            "half_life_display",
-            "needs_shield",
-            "needs_burial",
-            "storage_duration",
-            "sale_probability",
-            "description",
-        ]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 2}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-
-        # Fixed at creation time by the coordinator — never editable here.
-        self.fields["item_type"].disabled = True
-        self.fields["nuclide"].disabled = True
-        self.fields["quantity"].disabled = True
-        self.fields["half_life_display"].disabled = True
-
-        _bootstrap(self.fields)
-
-        self.helper.layout = Layout(
-            Field("id"),  # REQUIRED for modelformset row-matching — an explicit
-                           # crispy Layout renders ONLY what's listed, so without
-                           # this the hidden pk never reaches the browser and
-                           # Django can't tell which existing row each submitted
-                           # form belongs to (this was silently breaking every
-                           # save of needs_shield/needs_burial/storage_duration/
-                           # sale_probability/description).
-            Field("item_type"),
-            Field("nuclide"),
-            Field("average_activity_mci"),
-            Field("quantity"),
-            Field("half_life_display"),
-            Field("needs_shield"),
-            Field("needs_burial"),
-            Field("storage_duration"),
-            Field("sale_probability"),
-            Field("description"),
-        )
-
-
-ReceiveSourceSpecificationFormSet = modelformset_factory(
-    ReceiveSource,
-    form=ReceiveSourceSpecificationForm,
-    extra=0,
-    can_delete=False,  # rows are fixed once added by the coordinator
-)
-
-
-# =====================================================================
-# STEP 4 — "REST OF THE FORM" (managers)
-# =====================================================================
-
-class ReceiveManagerInputForm(forms.ModelForm):
-    """
-    Everything the Operation Manager can fill EXCEPT the operation
-    personnel counts (Control Manager owns those, add-only — see
-    ReceiveControlAddForm below).
-    """
-
-    class Meta:
-        model = ReceiveRequest
-        fields = [
-            "pre_operation_visit_needed",
-            "visit_expert_count",
-            "visit_technician_count",
-            "visit_driver_count",
-            "visit_mission_days",
-            "visit_vehicle_type",
-            "operation_mission_days",
-            "operation_vehicle_type",
-            "route_difficulty",
-            "accommodation_days",
-            "food_cost_days",
-            "peripheral_equipment",
-            "other_costs",
-            "logistics_notes",
-        ]
-        widgets = {
-            "logistics_notes": forms.Textarea(attrs={"rows": 3}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        _bootstrap(self.fields)
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-        self.helper.layout = Layout(
-            Field("pre_operation_visit_needed"),
-            Row(
-                Column(Field("visit_expert_count"), css_class="col-md-4"),
-                Column(Field("visit_technician_count"), css_class="col-md-4"),
-                Column(Field("visit_driver_count"), css_class="col-md-4"),
-                css_class="g-3",
-            ),
-            Row(
-                Column(Field("visit_mission_days"), css_class="col-md-6"),
-                Column(Field("visit_vehicle_type"), css_class="col-md-6"),
-                css_class="g-3",
-            ),
-            Row(
-                Column(Field("operation_mission_days"), css_class="col-md-6"),
-                Column(Field("operation_vehicle_type"), css_class="col-md-6"),
-                css_class="g-3",
-            ),
-            Field("route_difficulty"),
-            Row(
-                Column(Field("accommodation_days"), css_class="col-md-6"),
-                Column(Field("food_cost_days"), css_class="col-md-6"),
-                css_class="g-3",
-            ),
-            Field("peripheral_equipment"),
-            Field("other_costs"),
-            Field("logistics_notes"),
-        )
-
-
-class ReceiveControlAddForm(forms.Form):
-    """
-    Control Manager's ONLY editable fields on the whole request: how many
-    MORE experts/technicians/drivers to add to the operation team. Pure
-    increment — the view adds these to the existing counts and this form
-    never shows/accepts an absolute value, so there's no way to reduce.
-    """
-
-    add_experts = forms.IntegerField(
-        required=False, min_value=0, initial=0, label=_("Add Experts"),
-    )
-    add_technicians = forms.IntegerField(
-        required=False, min_value=0, initial=0, label=_("Add Technicians"),
-    )
-    add_drivers = forms.IntegerField(
-        required=False, min_value=0, initial=0, label=_("Add Drivers"),
+    file = forms.FileField(
+        label=_("Upload Filled Specification (.docx)"),
+        help_text=_("Download the current version below, fill it in Word, then upload it here to replace it."),
     )
 
     def __init__(self, *args, **kwargs):
@@ -458,27 +323,6 @@ class ReceiveControlAddForm(forms.Form):
         _bootstrap(self.fields)
         self.helper = FormHelper()
         self.helper.form_tag = False
-        self.helper.layout = Layout(
-            Row(
-                Column(Field("add_experts"), css_class="col-md-4"),
-                Column(Field("add_technicians"), css_class="col-md-4"),
-                Column(Field("add_drivers"), css_class="col-md-4"),
-                css_class="g-3",
-            ),
-        )
-
-    def apply(self, receive_request, save=True):
-        data = self.cleaned_data
-        receive_request.operation_expert_count += data.get("add_experts") or 0
-        receive_request.operation_technician_count += data.get("add_technicians") or 0
-        receive_request.operation_driver_count += data.get("add_drivers") or 0
-        if save:
-            receive_request.save(update_fields=[
-                "operation_expert_count",
-                "operation_technician_count",
-                "operation_driver_count",
-            ])
-        return receive_request
 
 
 # =====================================================================

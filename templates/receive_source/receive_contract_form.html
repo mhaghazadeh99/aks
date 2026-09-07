@@ -19,6 +19,14 @@
                         {% trans "This is not a legal contract — just where the cost of receiving these items is declared. Whether each item already has an existing license contract affects that cost." %}
                     </p>
 
+                    {% if specification %}
+                    <p>
+                        <a href="{{ specification.file.url }}" target="_blank" class="btn btn-outline-primary">
+                            📄 {% trans "View Filled & Signed Specification" %}
+                        </a>
+                    </p>
+                    {% endif %}
+
                     <table class="table table-sm table-bordered mb-4">
                         <thead class="table-light">
                             <tr>

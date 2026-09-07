@@ -7,38 +7,30 @@
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
-        <div class="col-xl-10">
+        <div class="col-xl-8">
 
             <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">{% trans "Manager Data Entry" %} — {{ receive_request.facility.name }}</h3>
-                    <a href="{% url 'receive_control_add' receive_request.pk %}" class="btn btn-outline-secondary btn-sm">
-                        {% trans "Control Manager: Add Personnel" %}
-                    </a>
+                <div class="card-header">
+                    <h3>{% trans "Manager Data Entry" %} — {{ receive_request.facility.name }}</h3>
                 </div>
                 <div class="card-body">
 
-                    <form method="post">
+                    <p class="text-muted">
+                        {% trans "Fill in the logistics section (pre-op visit, personnel, vehicle, route difficulty, accommodation/food days, other costs) directly in the document below — both the Operation Manager and the Operation Control Manager can download, fill in, and re-upload it." %}
+                    </p>
+
+                    {% if specification %}
+                    <p>
+                        <a href="{{ specification.file.url }}" target="_blank" class="btn btn-outline-primary">
+                            📄 {% trans "Download Current Specification" %}
+                        </a>
+                    </p>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-
-                        <h5 class="mb-3">{% trans "Logistics" %}</h5>
-                        {% crispy manager_form %}
-
-                        <hr class="my-4">
-
-                        <h5 class="mb-3">{% trans "Per-Source Characterization" %}</h5>
-                        {{ source_formset.management_form }}
-                        {% for form in source_formset %}
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    {% crispy form %}
-                                </div>
-                            </div>
-                        {% endfor %}
-
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
-                        </div>
+                        {% crispy upload_form %}
+                        <button type="submit" class="btn btn-primary mt-2">{% trans "Upload Filled Document" %}</button>
                     </form>
 
                 </div>
@@ -48,7 +40,7 @@
                 <form method="post" action="{% url 'receive_manager_input_done' receive_request.pk %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success">
-                        {% trans "Data Entry Complete — Start Signatures" %}
+                        {% trans "Data Entry Complete — Ready for Operation Manager Signature" %}
                     </button>
                 </form>
             </div>

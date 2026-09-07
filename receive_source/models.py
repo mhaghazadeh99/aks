@@ -49,26 +49,6 @@ class ReceiveItemType(models.TextChoices):
     WASTE = "WASTE", _("Radioactive Waste")
 
 
-class YesNo(models.TextChoices):
-
-    YES = "YES", _("Needed") if False else _("Yes")
-    NO = "NO", _("No")
-
-
-class VehicleType(models.TextChoices):
-
-    GASOLINE = "GASOLINE", _("Gasoline")
-    DIESEL = "DIESEL", _("Diesel")
-    AIRPLANE = "AIRPLANE", _("Airplane")
-
-
-class RouteDifficulty(models.TextChoices):
-
-    NORMAL = "NORMAL", _("Normal")
-    MEDIUM = "MEDIUM", _("Medium")
-    HARD = "HARD", _("Hard")
-
-
 class ReceiveAttachmentType(models.TextChoices):
 
     INQUIRY = "INQUIRY", _("DSRS Inquiry Letter")
@@ -152,67 +132,13 @@ class ReceiveRequest(models.Model):
         default=False,
     )
 
-    # ---- "Rest of the form" — filled by either manager, after sources
-    # are added by the coordinator and before signatures begin. ----
-    # The form has TWO separate dispatched-personnel blocks: one for the
-    # pre-operation SITE VISIT, one for the actual RECEIVING OPERATION.
-    # Only the operation block's counts are Control-Manager, add-only.
-
-    pre_operation_visit_needed = models.BooleanField(
-        _("Pre-Operation Visit Needed"),
-        null=True,
-        blank=True,
-    )
-
-    # -- Visit team (بازدید قبل از عملیات) --
-    visit_expert_count = models.PositiveIntegerField(_("Visit: Experts"), null=True, blank=True)
-    visit_technician_count = models.PositiveIntegerField(_("Visit: Technicians"), null=True, blank=True)
-    visit_driver_count = models.PositiveIntegerField(_("Visit: Drivers"), null=True, blank=True)
-    visit_mission_days = models.PositiveIntegerField(_("Visit: Mission Days"), null=True, blank=True)
-    visit_vehicle_type = models.CharField(
-        _("Visit: Vehicle Type"), max_length=10, choices=VehicleType.choices, blank=True, null=True,
-    )
-
-    # -- Operation team (مشخصات تکمیلی جهت انجام عملیات) --
-    # Control Manager can only ever INCREASE these three counts (see
-    # forms.AddOnlyIntegerField) — never remove/reduce.
-    operation_expert_count = models.PositiveIntegerField(_("Operation: Experts"), default=0)
-    operation_technician_count = models.PositiveIntegerField(_("Operation: Technicians"), default=0)
-    operation_driver_count = models.PositiveIntegerField(_("Operation: Drivers"), default=0)
-
-    operation_mission_days = models.PositiveIntegerField(_("Operation: Mission Days"), null=True, blank=True)
-    operation_vehicle_type = models.CharField(
-        _("Operation: Vehicle Type"), max_length=10, choices=VehicleType.choices, blank=True, null=True,
-    )
-
-    route_difficulty = models.CharField(
-        _("Route Difficulty"),
-        max_length=10,
-        choices=RouteDifficulty.choices,
-        blank=True,
-        null=True,
-    )
-
-    accommodation_days = models.PositiveIntegerField(
-        _("Accommodation Days"), null=True, blank=True,
-    )
-
-    food_cost_days = models.PositiveIntegerField(
-        _("Food Cost Days"), null=True, blank=True,
-    )
-
-    peripheral_equipment = models.CharField(
-        _("Peripheral Equipment Used"), max_length=255, blank=True, null=True,
-    )
-
-    other_costs = models.CharField(
-        _("Other Costs"), max_length=255, blank=True, null=True,
-        help_text=_("Also where the cost of an unmatched/no-license item gets folded in, per current policy."),
-    )
-
-    logistics_notes = models.TextField(
-        _("Logistics Notes"), blank=True, null=True,
-    )
+    # NOTE: logistics fields (pre-op visit, personnel counts, vehicle,
+    # route difficulty, accommodation/food days, peripheral equipment,
+    # other costs, notes) are intentionally NOT modeled here anymore —
+    # per requirements, managers fill that section directly in the
+    # generated .docx (see services/specification_generator.py /
+    # services/signature_service.py), not through a Django form. The
+    # docx itself is the only record of that data.
 
     description = models.TextField(
         _("Description"),
@@ -353,21 +279,20 @@ class ReceiveSource(models.Model):
         ),
     )
 
-    needs_shield = models.BooleanField(_("Needs Shield"), null=True, blank=True)
-    needs_burial = models.BooleanField(_("Needs Burial"), null=True, blank=True)
-
-    storage_duration = models.CharField(
-        _("Storage Duration"), max_length=100, blank=True, null=True,
-    )
-
-    sale_probability = models.CharField(
-        _("Sale Probability"), max_length=100, blank=True, null=True,
-    )
+    # NOTE: needs_shield / needs_burial / storage_duration / sale_probability
+    # are intentionally NOT modeled here — per requirements, the creator
+    # fills the source/waste characterization table directly in the
+    # generated .docx (not a Django form), then signs. The docx is the
+    # only record of those specific columns; `description` below stays a
+    # DB field only because it doubles as the license-contract-match
+    # audit note (see services/license_check.py) — it is NOT written into
+    # the docx's per-source description column, which is left blank for
+    # the creator to fill by hand alongside the other characterization data.
 
     description = models.TextField(
         _("Description"),
         blank=True,
-        help_text=_("Auto-annotated with a license-contract match, if any (see below)."),
+        help_text=_("Auto-annotated with a license-contract match, if any (see below). NOT printed into the docx's per-source description column — that one is filled by hand."),
     )
 
     # ---- License-contract match (facility + nuclide + serial) ----

@@ -22,7 +22,7 @@ import difflib
 
 from django.utils.translation import gettext_lazy as _
 
-from dashboard.models import DSRS
+from dashboard.models import DSRS, SOURCE_STATUS
 
 
 def find_license_contract_match(facility, nuclide, serial_number=None, similarity_cutoff=0.4, max_candidates=5):
@@ -40,6 +40,7 @@ def find_license_contract_match(facility, nuclide, serial_number=None, similarit
             contract__license__facility=facility,
             Nuclide=nuclide,
         )
+        .exclude(Status=SOURCE_STATUS.STORED)  # already received back — not a candidate to match against
         .exclude(serial_number__isnull=True)
         .exclude(serial_number="")
         .select_related("contract", "contract__license")

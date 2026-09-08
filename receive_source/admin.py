@@ -48,9 +48,13 @@ class ReceivePaymentAdmin(admin.ModelAdmin):
 
 @admin.register(ReceiveSource)
 class ReceiveSourceAdmin(admin.ModelAdmin):
-    list_display = ("receive_request", "nuclide", "serial_number", "item_type", "result_dsrs")
+    list_display = ("receive_request", "nuclide", "serial_number", "item_type", "result_dsrs_count")
     list_filter = ("item_type",)
     search_fields = ("serial_number", "nuclide__name")
+
+    def result_dsrs_count(self, obj):
+        return obj.result_dsrs.count()
+    result_dsrs_count.short_description = "Result DSRS Count"
 
 
 @admin.register(ReceiveApproval)

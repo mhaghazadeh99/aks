@@ -55,7 +55,7 @@ from .services.license_check import (
 # =====================================================================
 
 def receiving_home(request):
-    return render(request, "receiving/receiving_home.html")
+    return render(request, "receive_source/receiving_home.html")
 
 
 def receive_list(request):
@@ -83,7 +83,7 @@ def receive_list(request):
 
     return render(
         request,
-        "receiving/receive_list.html",
+        "receive_source/receive_list.html",
         {"page_obj": page_obj, "search": search, "page_size": int(page_size)},
     )
 
@@ -108,7 +108,7 @@ def _queue(request, status, page_title):
 
     return render(
         request,
-        "receiving/receive_queue.html",
+        "receive_source/receive_queue.html",
         {"page_title": page_title, "page_obj": page_obj, "search": search},
     )
 
@@ -228,7 +228,7 @@ def receive_create(request, pk=None):
         forms["existing_attachments"] = instance.attachments.all()
 
     forms["instance"] = instance
-    return render(request, "receiving/receive_create.html", forms)
+    return render(request, "receive_source/receive_create.html", forms)
 
 
 # =====================================================================
@@ -355,7 +355,7 @@ def receive_add_sources(request, pk):
 
     return render(
         request,
-        "receiving/receive_add_sources.html",
+        "receive_source/receive_add_sources.html",
         {
             "receive_request": receive_request,
             "sources": sources,
@@ -435,7 +435,7 @@ def receive_manager_input(request, pk):
 
     return render(
         request,
-        "receiving/receive_manager_input.html",
+        "receive_source/receive_manager_input.html",
         {
             "receive_request": receive_request,
             "specification": specification,
@@ -572,7 +572,7 @@ def receive_sign(request, pk):
 
     return render(
         request,
-        "receiving/receive_sign.html",
+        "receive_source/receive_sign.html",
         {
             "receive_request": receive_request,
             "specification": specification,
@@ -597,7 +597,7 @@ def receive_contract_create(request, pk):
 
     if request.method == "POST":
 
-        form = ReceiveContractForm(request.POST)
+        form = ReceiveContractForm(request.POST, request.FILES)
 
         if form.is_valid():
 
@@ -619,7 +619,7 @@ def receive_contract_create(request, pk):
 
     return render(
         request,
-        "receiving/receive_contract_form.html",
+        "receive_source/receive_contract_form.html",
         {
             "form": form,
             "receive_request": receive_request,
@@ -639,7 +639,7 @@ def receive_contract_update(request, pk):
 
     if request.method == "POST":
 
-        form = ReceiveContractForm(request.POST, instance=contract)
+        form = ReceiveContractForm(request.POST, request.FILES, instance=contract)
 
         if form.is_valid():
 
@@ -660,7 +660,7 @@ def receive_contract_update(request, pk):
 
     return render(
         request,
-        "receiving/receive_contract_form.html",
+        "receive_source/receive_contract_form.html",
         {
             "form": form,
             "contract": contract,
@@ -685,7 +685,7 @@ def receive_payment_update(request, pk):
 
     if request.method == "POST":
 
-        form = ReceivePaymentForm(request.POST, instance=payment)
+        form = ReceivePaymentForm(request.POST, request.FILES, instance=payment)
 
         if form.is_valid():
 
@@ -708,8 +708,8 @@ def receive_payment_update(request, pk):
 
     return render(
         request,
-        "receiving/receive_payment_form.html",
-        {"form": form, "receive_request": receive_request, "contract": getattr(receive_request, "contract", None)},
+        "receive_source/receive_payment_form.html",
+        {"form": form, "receive_request": receive_request, "contract": getattr(receive_request, "contract", None), "payment": payment},
     )
 
 
@@ -726,14 +726,26 @@ def receive_characterization(request, pk):
 
     sources = (
         receive_request.sources
-        .select_related("result_dsrs", "nuclide", "matched_license_dsrs")
+        .select_related("nuclide", "matched_license_dsrs")
+        .prefetch_related("result_dsrs")
         .order_by("specification_order")
     )
 
+    # Flatten to one row per DSRS — a source with quantity > 1 has
+    # several independently-editable DSRS records, not one shared row.
+    rows = []
+    for source in sources:
+        dsrs_list = list(source.result_dsrs.all())
+        if dsrs_list:
+            for dsrs in dsrs_list:
+                rows.append({"source": source, "dsrs": dsrs})
+        else:
+            rows.append({"source": source, "dsrs": None})
+
     return render(
         request,
-        "receiving/receive_characterization.html",
-        {"receive_request": receive_request, "sources": sources},
+        "receive_source/receive_characterization.html",
+        {"receive_request": receive_request, "rows": rows},
     )
 
 
@@ -768,7 +780,7 @@ def dsrs_characterization_update(request, pk, dsrs_pk):
 
     return render(
         request,
-        "receiving/dsrs_characterization_form.html",
+        "receive_source/dsrs_characterization_form.html",
         {"receive_request": receive_request, "dsrs": dsrs, "form": form, "doc_form": doc_form},
     )
 
@@ -803,4 +815,4 @@ def receive_detail(request, pk):
         pk=pk,
     )
 
-    return render(request, "receiving/receive_detail.html", {"receive_request": receive_request})
+    return render(request, "receive_source/receive_detail.html", {"receive_request": receive_request})

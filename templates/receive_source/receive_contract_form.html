@@ -27,6 +27,14 @@
                     </p>
                     {% endif %}
 
+                    {% if contract.invoice %}
+                    <p>
+                        <a href="{{ contract.invoice.url }}" target="_blank" class="btn btn-outline-secondary">
+                            🧾 {% trans "View Current Invoice" %}
+                        </a>
+                    </p>
+                    {% endif %}
+
                     <table class="table table-sm table-bordered mb-4">
                         <thead class="table-light">
                             <tr>
@@ -54,7 +62,7 @@
                         </tbody>
                     </table>
 
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {% crispy form %}
 

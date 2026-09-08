@@ -83,11 +83,11 @@
                                 <td>{{ source.average_activity_mci|default:"-" }}</td>
                                 <td>{{ source.quantity }}</td>
                                 <td>
-                                    {% if source.result_dsrs %}
-                                        {{ source.result_dsrs.get_Status_display }}
-                                    {% else %}
+                                    {% for dsrs in source.result_dsrs.all %}
+                                        <div>{{ dsrs.serial_number|default:"-" }} — {{ dsrs.get_Status_display }}</div>
+                                    {% empty %}
                                         <span class="text-muted">-</span>
-                                    {% endif %}
+                                    {% endfor %}
                                 </td>
                                 <td>{{ source.description|default:"-"|linebreaksbr }}</td>
                             </tr>

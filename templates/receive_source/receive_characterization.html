@@ -14,6 +14,10 @@
                 </div>
                 <div class="card-body">
 
+                    <p class="text-muted small">
+                        {% trans "One row per physical unit — a source added with quantity > 1 gets a separate, independently-editable DSRS record per unit." %}
+                    </p>
+
                     <table class="table table-bordered table-striped">
                         <thead class="table-light">
                             <tr>
@@ -24,24 +28,24 @@
                             </tr>
                         </thead>
                         <tbody>
-                        {% for source in sources %}
+                        {% for row in rows %}
                             <tr>
-                                <td>{{ source.nuclide }}</td>
-                                <td>{{ source.result_dsrs.serial_number|default:"-" }}</td>
+                                <td>{{ row.source.nuclide }}</td>
+                                <td>{{ row.dsrs.serial_number|default:"-" }}</td>
                                 <td>
-                                    {% if source.result_dsrs %}
-                                        {{ source.result_dsrs.get_Status_display }}
+                                    {% if row.dsrs %}
+                                        {{ row.dsrs.get_Status_display }}
                                     {% else %}
                                         <span class="text-muted">{% trans "Not created yet" %}</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if source.result_dsrs %}
-                                        {% if source.result_dsrs.Status != "Stored" %}
-                                        <a href="{% url 'dsrs_characterization_update' receive_request.pk source.result_dsrs.pk %}" class="btn btn-sm btn-outline-primary">
+                                    {% if row.dsrs %}
+                                        {% if row.dsrs.Status != "Stored" %}
+                                        <a href="{% url 'dsrs_characterization_update' receive_request.pk row.dsrs.pk %}" class="btn btn-sm btn-outline-primary">
                                             {% trans "Characterize" %}
                                         </a>
-                                        <form method="post" action="{% url 'dsrs_mark_stored' receive_request.pk source.result_dsrs.pk %}" class="d-inline">
+                                        <form method="post" action="{% url 'dsrs_mark_stored' receive_request.pk row.dsrs.pk %}" class="d-inline">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-success">
                                                 {% trans "Mark Stored" %}
@@ -49,7 +53,7 @@
                                         </form>
                                         {% else %}
                                         <span class="badge bg-success">{% trans "Stored" %}</span>
-                                        {% if source.matched_license_dsrs %}
+                                        {% if row.source.matched_license_dsrs %}
                                             <span class="badge bg-info">{% trans "From existing inventory" %}</span>
                                         {% endif %}
                                         {% endif %}

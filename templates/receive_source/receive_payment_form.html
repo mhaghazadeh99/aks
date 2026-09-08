@@ -28,7 +28,15 @@
                     </div>
                     {% endif %}
 
-                    <form method="post">
+                    {% if payment.receipt %}
+                    <p>
+                        <a href="{{ payment.receipt.url }}" target="_blank" class="btn btn-outline-secondary">
+                            🧾 {% trans "View Current Receipt" %}
+                        </a>
+                    </p>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {% crispy form %}
                         <button type="submit" class="btn btn-primary mt-2">{% trans "Save" %}</button>

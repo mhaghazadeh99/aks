@@ -323,16 +323,17 @@ class ReceiveSource(models.Model):
         _("Specification Order"), default=1,
     )
 
-    # Set once payment clears and the physical DSRS record is created.
+    # Set once payment clears and the physical DSRS record(s) are
+    # created — a ManyToMany because `quantity` can be > 1: each unit
+    # gets its OWN DSRS record (own serial number, own characterization,
+    # own "mark stored"), not one shared record for the whole row.
     # Deliberately NOT linked to any LicenseContract (DSRS.contract stays
     # null) — a ReceiveContract, if any, is tracked separately above, and
     # per current policy a received item with no matched license simply
-    # has its cost folded into ReceiveRequest.other_costs instead.
-    result_dsrs = models.ForeignKey(
+    # has its cost folded into the contract's declared cost instead.
+    result_dsrs = models.ManyToManyField(
         "dashboard.DSRS",
-        null=True,
         blank=True,
-        on_delete=models.SET_NULL,
         related_name="created_by_receive_sources",
     )
 
@@ -367,6 +368,13 @@ class ReceiveContract(models.Model):
 
     contract_cost = models.DecimalField(
         _("Contract Cost"), max_digits=14, decimal_places=2, blank=True, null=True,
+    )
+
+    invoice = models.FileField(
+        _("Invoice"),
+        upload_to="receiving/invoices/",
+        blank=True,
+        null=True,
     )
 
     discount_requested = models.BooleanField(
@@ -418,6 +426,13 @@ class ReceivePayment(models.Model):
 
     amount_paid = models.DecimalField(
         _("Amount Paid"), max_digits=14, decimal_places=2, blank=True, null=True,
+    )
+
+    receipt = models.FileField(
+        _("Payment Receipt"),
+        upload_to="receiving/payment_receipts/",
+        blank=True,
+        null=True,
     )
 
     notes = models.TextField(_("Notes"), blank=True, null=True)

@@ -6,7 +6,7 @@ from crispy_forms.layout import Layout, Field, Row, Column
 
 from facilities.models import FacilityModel
 from reference.models import Nuclides
-from dashboard.models import DSRS
+from dashboard.models import DSRS, SOURCE_STATUS
 
 from .models import (
     ReceiveRequest,
@@ -204,6 +204,7 @@ class ReceiveSourceForm(forms.Form):
         if facility is not None:
             contracted_qs = (
                 DSRS.objects.filter(contract__isnull=False, contract__license__facility=facility)
+                .exclude(Status=SOURCE_STATUS.STORED)  # already back at IRWA — not "still out there" anymore
                 .select_related("Nuclide", "contract")
                 .order_by("Nuclide__name", "serial_number")
             )
@@ -334,15 +335,16 @@ class ReceiveContractForm(forms.ModelForm):
     Per your clarification: we're NOT creating an actual contract at this
     stage — this is just where the Contract Manager declares the waste
     management cost (and whether a discount applies, which is what
-    routes to CEO). contract_number/date/accountable/amendment_notes
-    still exist on the model for schema compatibility but are
-    deliberately not exposed here.
+    routes to CEO), along with the invoice for it. contract_number/date/
+    accountable/amendment_notes still exist on the model for schema
+    compatibility but are deliberately not exposed here.
     """
 
     class Meta:
         model = ReceiveContract
         fields = [
             "contract_cost",
+            "invoice",
             "discount_requested",
             "discount_notes",
         ]
@@ -361,7 +363,7 @@ class ReceivePaymentForm(forms.ModelForm):
 
     class Meta:
         model = ReceivePayment
-        fields = ["payment_done", "payment_date", "amount_paid", "notes"]
+        fields = ["payment_done", "payment_date", "amount_paid", "receipt", "notes"]
         widgets = {
             "payment_date": forms.DateInput(
                 attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}
@@ -381,11 +383,25 @@ class ReceivePaymentForm(forms.ModelForm):
 # =====================================================================
 
 class DSRSCharacterizationForm(forms.ModelForm):
-    """Fills in the physical characterization fields already on DSRS."""
+    """
+    Fills in (or completes/corrects) both the identity fields captured
+    when the source was originally added, AND the physical
+    characterization fields — per requirements, this page should be
+    able to add ALL the data for a source, not just dose-rate/container
+    details, since some of it may not have been known/confirmed yet at
+    add-source time.
+    """
 
     class Meta:
         model = DSRS
         fields = [
+            # Identity / "source add" fields — completable/correctable here
+            "Nuclide",
+            "serial_number",
+            "activity_input",
+            "activity_unit",
+            "Activity_reference_date",
+            # Physical characterization
             "Dose_rate_surface_uSv",
             "Dose_rate_1m_uSv",
             "Dose_rate_measurement_date",
@@ -403,6 +419,9 @@ class DSRSCharacterizationForm(forms.ModelForm):
             "Comment",
         ]
         widgets = {
+            "Activity_reference_date": forms.DateInput(
+                attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}
+            ),
             "Dose_rate_measurement_date": forms.DateInput(
                 attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}
             ),

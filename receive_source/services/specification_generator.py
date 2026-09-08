@@ -71,7 +71,7 @@ from ..models import ReceiveAttachment, ReceiveAttachmentType
 TEMPLATE_PATH = getattr(
     settings,
     "RECEIVE_SPECIFICATION_TEMPLATE_PATH",
-    os.path.join(settings.BASE_DIR, "receiving", "templates_docx", "receive_specification_template.docx"),
+    os.path.join(settings.BASE_DIR, "receive_source", "templates_docx", "receive_specification_template.docx"),
 )
 
 MAIN_TABLE_ROWS = 3  # only 3 data rows exist in the template; the rest go to an appendix
@@ -231,7 +231,7 @@ def _fill_sources(table, sources):
 
         if source.matched_license_dsrs_id:
             contract_number = getattr(getattr(source.matched_license_dsrs, "contract", None), "contract_number", None)
-            note = f"دارای قرارداد مجوز ({contract_number})" if contract_number else "دارای قرارداد مجوز"
+            note = f" قرارداد دارد ({contract_number})" if contract_number else " قرارداد دارد"
             _set_cell_value(table.cell(row, 20), note, bold=True)
 
         # cols 8/9 (shield), 12/13 (burial), 15 (storage duration),

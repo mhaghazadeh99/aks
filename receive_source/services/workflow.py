@@ -138,24 +138,26 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
 
     1. matched_license_dsrs is set — this is already an "In Use" DSRS
        record in our own inventory, under an existing license contract.
-       We do NOT create a new record for it. It's already fully
-       characterized, so there's nothing left to do except bring it
-       home: Status -> Stored, Facility -> IRWA, right now (no trip
-       through the RECEIVING/characterization stage at all).
+       We do NOT create a new record for it — we reuse it directly. It
+       moves to IRWA now via a TRANSFER movement (Status -> IN_USE, the
+       same "still being received" placeholder used for brand-new
+       items below), NOT straight to Stored — it still goes through the
+       normal characterization -> mark-stored step like everything
+       else, so it shows up in that list until explicitly finalized.
 
     2. No match — a genuinely new item. Create one DSRS per unit
        (Status starts IN_USE, still logically "out" at the delivering
-       facility) and it goes through the normal characterization ->
-       mark-stored flow, which is when it actually moves to IRWA.
+       facility) and it goes through the same characterization ->
+       mark-stored flow.
     """
 
     facility = receive_request.facility
     irwa = get_irwa_facility()
     today = timezone.now().date()
 
-    for source in receive_request.sources.select_related("nuclide", "matched_license_dsrs").all():
+    for source in receive_request.sources.select_related("nuclide", "matched_license_dsrs").prefetch_related("result_dsrs").all():
 
-        if source.result_dsrs_id:
+        if source.result_dsrs.exists():
             continue  # already handled (e.g. re-running after a partial failure)
 
         if source.matched_license_dsrs_id:
@@ -163,15 +165,14 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
             existing = source.matched_license_dsrs
 
             existing.register_movement(
-                movement_type=MovementType.RETURN,
+                movement_type=MovementType.TRANSFER,  # -> IN_USE, not STORED yet
                 to_facility=irwa,
                 performed_by=performed_by,
                 quantity=1,
-                remarks=_("Returned to IRWA via %(req)s") % {"req": str(receive_request)},
+                remarks=_("In transit to IRWA via %(req)s — pending characterization/confirmation") % {"req": str(receive_request)},
             )
 
-            source.result_dsrs = existing
-            source.save(update_fields=["result_dsrs"])
+            source.result_dsrs.add(existing)
             continue
 
         for _i in range(source.quantity or 1):
@@ -185,6 +186,9 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
                 activity_input=float(source.average_activity_mci) if source.average_activity_mci else None,
                 activity_unit="mCi",
                 Activity_reference_date=today,
+                # A shared serial number can't apply to more than one
+                # physical unit — left blank per-unit when quantity > 1,
+                # to be filled in individually during characterization.
                 serial_number=source.serial_number if (source.quantity or 1) == 1 else "",
                 source_count=1,
                 available_count=1,
@@ -196,9 +200,10 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
                 created_by=performed_by,
             )
 
-            if not source.result_dsrs_id:
-                source.result_dsrs = dsrs
-                source.save(update_fields=["result_dsrs"])
+            # EVERY unit gets linked — not just the first — so each one
+            # shows up as its own row in characterization and can be
+            # edited/marked-stored independently.
+            source.result_dsrs.add(dsrs)
 
     receive_request.status = ReceiveStatus.RECEIVING
     receive_request.status_date = timezone.now()
@@ -235,13 +240,15 @@ def mark_source_stored(dsrs, receive_request, performed_by, remarks=""):
 
 
 def check_and_complete_receive_request(receive_request):
-    """If every ReceiveSource's result_dsrs is now STORED, complete the request."""
+    """If every DSRS linked to every ReceiveSource (there can be several
+    per source now, one per unit) is Stored, complete the request."""
 
-    sources = receive_request.sources.select_related("result_dsrs")
+    sources = receive_request.sources.prefetch_related("result_dsrs")
 
     all_stored = all(
-        s.result_dsrs and s.result_dsrs.Status == SOURCE_STATUS.STORED
-        for s in sources
+        source.result_dsrs.exists()
+        and all(d.Status == SOURCE_STATUS.STORED for d in source.result_dsrs.all())
+        for source in sources
     )
 
     if all_stored and sources.exists():

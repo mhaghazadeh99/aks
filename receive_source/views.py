@@ -55,7 +55,7 @@ from .services.license_check import (
 # =====================================================================
 
 def receiving_home(request):
-    return render(request, "receive_source/receiving_home.html")
+    return render(request, "receiving/receiving_home.html")
 
 
 def receive_list(request):
@@ -83,7 +83,7 @@ def receive_list(request):
 
     return render(
         request,
-        "receive_source/receive_list.html",
+        "receiving/receive_list.html",
         {"page_obj": page_obj, "search": search, "page_size": int(page_size)},
     )
 
@@ -108,7 +108,7 @@ def _queue(request, status, page_title):
 
     return render(
         request,
-        "receive_source/receive_queue.html",
+        "receiving/receive_queue.html",
         {"page_title": page_title, "page_obj": page_obj, "search": search},
     )
 
@@ -228,7 +228,7 @@ def receive_create(request, pk=None):
         forms["existing_attachments"] = instance.attachments.all()
 
     forms["instance"] = instance
-    return render(request, "receive_source/receive_create.html", forms)
+    return render(request, "receiving/receive_create.html", forms)
 
 
 # =====================================================================
@@ -355,7 +355,7 @@ def receive_add_sources(request, pk):
 
     return render(
         request,
-        "receive_source/receive_add_sources.html",
+        "receiving/receive_add_sources.html",
         {
             "receive_request": receive_request,
             "sources": sources,
@@ -435,7 +435,7 @@ def receive_manager_input(request, pk):
 
     return render(
         request,
-        "receive_source/receive_manager_input.html",
+        "receiving/receive_manager_input.html",
         {
             "receive_request": receive_request,
             "specification": specification,
@@ -572,13 +572,14 @@ def receive_sign(request, pk):
 
     return render(
         request,
-        "receive_source/receive_sign.html",
+        "receiving/receive_sign.html",
         {
             "receive_request": receive_request,
             "specification": specification,
             "approval": approval,
             "history": history,
             "upload_form": upload_form,
+            "contract": getattr(receive_request, "contract", None),
         },
     )
 
@@ -618,7 +619,7 @@ def receive_contract_create(request, pk):
 
     return render(
         request,
-        "receive_source/receive_contract_form.html",
+        "receiving/receive_contract_form.html",
         {
             "form": form,
             "receive_request": receive_request,
@@ -659,7 +660,7 @@ def receive_contract_update(request, pk):
 
     return render(
         request,
-        "receive_source/receive_contract_form.html",
+        "receiving/receive_contract_form.html",
         {
             "form": form,
             "contract": contract,
@@ -707,8 +708,8 @@ def receive_payment_update(request, pk):
 
     return render(
         request,
-        "receive_source/receive_payment_form.html",
-        {"form": form, "receive_request": receive_request},
+        "receiving/receive_payment_form.html",
+        {"form": form, "receive_request": receive_request, "contract": getattr(receive_request, "contract", None)},
     )
 
 
@@ -731,7 +732,7 @@ def receive_characterization(request, pk):
 
     return render(
         request,
-        "receive_source/receive_characterization.html",
+        "receiving/receive_characterization.html",
         {"receive_request": receive_request, "sources": sources},
     )
 
@@ -767,7 +768,7 @@ def dsrs_characterization_update(request, pk, dsrs_pk):
 
     return render(
         request,
-        "receive_source/dsrs_characterization_form.html",
+        "receiving/dsrs_characterization_form.html",
         {"receive_request": receive_request, "dsrs": dsrs, "form": form, "doc_form": doc_form},
     )
 
@@ -802,4 +803,4 @@ def receive_detail(request, pk):
         pk=pk,
     )
 
-    return render(request, "receive_source/receive_detail.html", {"receive_request": receive_request})
+    return render(request, "receiving/receive_detail.html", {"receive_request": receive_request})

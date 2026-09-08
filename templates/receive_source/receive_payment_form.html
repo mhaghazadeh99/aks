@@ -15,6 +15,19 @@
                 </div>
                 <div class="card-body">
 
+                    {% if contract %}
+                    <div class="alert alert-info">
+                        <strong>{% trans "Declared Cost" %}:</strong>
+                        {{ contract.contract_cost|default:"-" }}
+                        {% if contract.discount_requested %}
+                            <br><strong>{% trans "Discount Requested" %}:</strong> {% trans "Yes" %}
+                            {% if contract.discount_notes %}
+                                <br><strong>{% trans "Discount Notes" %}:</strong> {{ contract.discount_notes }}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
                     <form method="post">
                         {% csrf_token %}
                         {% crispy form %}

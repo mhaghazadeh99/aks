@@ -71,7 +71,7 @@ from ..models import ReceiveAttachment, ReceiveAttachmentType
 TEMPLATE_PATH = getattr(
     settings,
     "RECEIVE_SPECIFICATION_TEMPLATE_PATH",
-    os.path.join(settings.BASE_DIR, "receive_source", "templates_docx", "receive_specification_template.docx"),
+    os.path.join(settings.BASE_DIR, "receiving", "templates_docx", "receive_specification_template.docx"),
 )
 
 MAIN_TABLE_ROWS = 3  # only 3 data rows exist in the template; the rest go to an appendix
@@ -274,6 +274,12 @@ def _build_overflow_document(overflow_sources, receive_request):
 
     for i, source in enumerate(overflow_sources):
         row_cells = table.add_row().cells
+
+        description = ""
+        if source.matched_license_dsrs_id:
+            contract_number = getattr(getattr(source.matched_license_dsrs, "contract", None), "contract_number", None)
+            description = f"دارای قرارداد مجوز ({contract_number})" if contract_number else "دارای قرارداد مجوز"
+
         values = [
             _to_persian_digits(i + MAIN_TABLE_ROWS + 1),
             str(source.nuclide) if source.nuclide else "",
@@ -284,7 +290,7 @@ def _build_overflow_document(overflow_sources, receive_request):
             "",  # needs burial — fill by hand
             "",  # storage duration — fill by hand
             "",  # sale probability — fill by hand
-            "",  # description — fill by hand
+            description,  # pre-filled only if matched; otherwise fill by hand
         ]
         for col, value in enumerate(values):
             _set_cell_value(row_cells[col], value)
@@ -309,7 +315,11 @@ def generate_receive_specification(receive_request, user):
 
     _fill_facility(table, receive_request)
 
-    all_sources = list(receive_request.sources.select_related("nuclide").order_by("specification_order"))
+    all_sources = list(
+        receive_request.sources
+        .select_related("nuclide", "matched_license_dsrs", "matched_license_dsrs__contract")
+        .order_by("specification_order")
+    )
     main_sources = all_sources[:MAIN_TABLE_ROWS]
     overflow_sources = all_sources[MAIN_TABLE_ROWS:]
 

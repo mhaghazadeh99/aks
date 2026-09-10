@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-
+{% load receiving_extras %}
 {% block title %}
 {% trans "Operations Deputy Manager" %}
 {% endblock %}
@@ -117,7 +117,7 @@
     <a href="{% url 'operation_deputy_license_list' %}" class="operation-card">
 
         <div class="operation-icon">
-            ✍️ 
+             🖋
         </div>
 
         <h3>
@@ -129,6 +129,26 @@
             {{ waiting_count }}
 
             {% trans "license(s) waiting for Signature and approval." %}
+
+        </p>
+
+    </a>
+
+    <a href="{% url 'receive_deputy_queue' %}" class="operation-card">
+{% receiving_queue_count "WAITING_DEPUTY" as deputy_count %}
+        <div class="operation-icon">
+            🖋
+        </div>
+
+        <h3>
+            {% trans "Source Delivery Requests" %}
+        </h3>
+
+        <p>
+
+            {{ deputy_count }}
+
+            {% trans "Requests waiting for deputy signature." %}
 
         </p>
 

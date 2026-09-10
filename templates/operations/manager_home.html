@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load receiving_extras %}
 
 {% block title %}
 {% trans "Operations Manager" %}
@@ -133,6 +134,46 @@
         </p>
 
     </a>
+
+      <a href="{% url 'receive_manager_input_queue' %}" class="operation-card">
+        {% receiving_queue_count "WAITING_MANAGER_INPUT" as manager_input_count %}
+        <div class="operation-icon">
+            📝
+        </div>
+
+        <h3>
+            {% trans "Manager Data Entry" %}
+        </h3>
+
+        <p>
+
+            {{ manager_input_count }}
+
+            {% trans "Source delivery requests waiting for logistics/characterization fields." %}
+
+        </p>
+
+    </a>
+    <a href="{% url 'receive_manager_queue' %}" class="operation-card">
+        {% receiving_queue_count "WAITING_MANAGER" as manager_count %}
+        <div class="operation-icon">
+            ✍️ 
+        </div>
+
+        <h3>
+            {% trans "Source Delivery Requests" %}
+        </h3>
+
+        <p>
+
+            {{ manager_count }}
+
+            {% trans "Source delivery requests waiting for manager signature." %}
+
+        </p>
+
+    </a>
+
 
 
 

@@ -20,6 +20,7 @@
 .home-icon{ font-size:35px; margin-bottom:15px; }
 .home-card h3{ margin:0; font-size:20px; }
 .home-card p{ margin-top:8px; color:#777; }
+.home-count{ margin-top:6px; font-weight:700; color:#0d6efd; font-size:14px; }
 </style>
 {% endblock extrastyle %}
 
@@ -37,58 +38,35 @@
             <p>{% trans "View and start receive requests" %}</p>
         </a>
 
-        <a href="{% url 'receive_manager_input_queue' %}" class="home-card">
-            <div class="home-icon">📝</div>
-            <h3>{% trans "Manager Data Entry" %}</h3>
-            <p>{% trans "Requests waiting for logistics/characterization fields" %}</p>
+        <a href="{% url 'received_sources_list' %}" class="home-card">
+            <div class="home-icon">📊</div>
+            <h3>{% trans "Received Sources" %}</h3>
+            <p>{% trans "Read-only overview: contract cost, invoice, payment, صورتجلسه, sources" %}</p>
         </a>
 
-        <a href="{% url 'receive_manager_queue' %}" class="home-card">
-            <div class="home-icon">🧑‍💼</div>
-            <h3>{% trans "Operation Manager" %}</h3>
-            <p>{% trans "Requests waiting for manager signature" %}</p>
-        </a>
+        
+        
 
-        <a href="{% url 'receive_control_queue' %}" class="home-card">
-            <div class="home-icon">🧾</div>
-            <h3>{% trans "Operation Control" %}</h3>
-            <p>{% trans "Requests waiting for control signature" %}</p>
-        </a>
+       
 
-        <a href="{% url 'receive_deputy_queue' %}" class="home-card">
-            <div class="home-icon">🖋</div>
-            <h3>{% trans "Deputy Manager" %}</h3>
-            <p>{% trans "Requests waiting for deputy signature" %}</p>
-        </a>
+        
+        
 
-        <a href="{% url 'receive_ceo_queue' %}" class="home-card">
-            <div class="home-icon">🏛</div>
-            <h3>{% trans "CEO" %}</h3>
-            <p>{% trans "Discount-requested requests awaiting CEO" %}</p>
-        </a>
+        
 
-        <a href="{% url 'receive_contracts_queue' %}" class="home-card">
-            <div class="home-icon">📑</div>
-            <h3>{% trans "Contracts" %}</h3>
-            <p>{% trans "Requests ready for contract entry" %}</p>
-        </a>
-
-        <a href="{% url 'receive_finance_queue' %}" class="home-card">
-            <div class="home-icon">💳</div>
-            <h3>{% trans "Finance" %}</h3>
-            <p>{% trans "Requests waiting on payment" %}</p>
-        </a>
+       
 
         <a href="{% url 'receive_receiving_queue' %}" class="home-card">
             <div class="home-icon">📦</div>
             <h3>{% trans "Receiving / Characterization" %}</h3>
             <p>{% trans "Sources awaiting characterization" %}</p>
+            <p class="home-count"># {{ receiving_count }} {% trans "Requests" %}</p>
         </a>
 
         <a href="{% url 'receive_create' %}" class="home-card">
             <div class="home-icon">➕</div>
             <h3>{% trans "New Receive Request" %}</h3>
-            <p>{% trans "Start from a DSRS Inquiry letter" %}</p>
+            <p>{% trans "Start from a DSRS Delivery letter" %}</p>
         </a>
 
     </div>

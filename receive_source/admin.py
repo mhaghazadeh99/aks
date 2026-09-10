@@ -29,7 +29,7 @@ class ReceiveApprovalInline(admin.TabularInline):
 class ReceiveRequestAdmin(admin.ModelAdmin):
     list_display = ("__str__", "facility", "status", "created_by", "created_at")
     list_filter = ("status", "facility")
-    search_fields = ("inquiry_letter_number", "facility__name")
+    search_fields = ("delivery_letter_number", "facility__name")
     inlines = [ReceiveSourceInline, ReceiveAttachmentInline, ReceiveApprovalInline]
 
 

@@ -35,6 +35,18 @@
                     </p>
                     {% endif %}
 
+                    {% if receive_request.discount_requested %}
+                    <div class="alert alert-success">
+                        <strong>{% trans "Discount: CEO-approved" %}</strong>
+                        {% if receive_request.discount_notes %}
+                            <br>{{ receive_request.discount_notes }}
+                        {% endif %}
+                        <p class="text-muted small mb-0 mt-1">
+                            {% trans "Factor this discount into the cost you declare below." %}
+                        </p>
+                    </div>
+                    {% endif %}
+
                     <table class="table table-sm table-bordered mb-4">
                         <thead class="table-light">
                             <tr>
@@ -65,11 +77,6 @@
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {% crispy form %}
-
-                        <div class="alert alert-info mt-3">
-                            {% trans "Checking \"Discount Requested\" routes this request to the CEO for signature before Finance. Otherwise it goes straight to Finance." %}
-                        </div>
-
                         <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
                     </form>
 

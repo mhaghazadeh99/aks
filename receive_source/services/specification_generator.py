@@ -184,10 +184,10 @@ def _fill_facility(table, receive_request):
     _set_cell_value(table.cell(1, 2), facility.name or "")
 
     letter_ref = ""
-    if receive_request.inquiry_letter_number or receive_request.inquiry_letter_date:
+    if receive_request.delivery_letter_number or receive_request.delivery_letter_date:
         letter_ref = " / ".join(filter(None, [
-            receive_request.inquiry_letter_number,
-            _format_jalali_date(receive_request.inquiry_letter_date),
+            receive_request.delivery_letter_number,
+            _format_jalali_date(receive_request.delivery_letter_date),
         ]))
     _append_value(table.cell(1, 10), letter_ref)
 
@@ -231,7 +231,7 @@ def _fill_sources(table, sources):
 
         if source.matched_license_dsrs_id:
             contract_number = getattr(getattr(source.matched_license_dsrs, "contract", None), "contract_number", None)
-            note = f" قرارداد دارد ({contract_number})" if contract_number else " قرارداد دارد"
+            note = f"دارای قرارداد مجوز ({contract_number})" if contract_number else "دارای قرارداد مجوز"
             _set_cell_value(table.cell(row, 20), note, bold=True)
 
         # cols 8/9 (shield), 12/13 (burial), 15 (storage duration),

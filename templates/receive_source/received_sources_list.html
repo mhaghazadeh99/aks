@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
-{% load static %}
 
-{% block title %}{% trans "Receive Requests" %}{% endblock %}
+{% block title %}{% trans "Received Sources" %}{% endblock %}
 
 {% block content %}
 {% block extrastyle %}
@@ -14,15 +13,6 @@
 }
 .summary-badge:hover{ transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.12); }
 .summary-badge.sources{ background:#eef5ff; color:#0d6efd; }
-.summary-badge.contracts{ background:#eef8f0; color:#198754; }
-.action-icons{ display:flex; gap:8px; align-items:center; }
-.icon-btn{
-    display:inline-flex; justify-content:center; align-items:center;
-    width:34px; height:34px; border-radius:8px; text-decoration:none; font-size:16px;
-    background:#f5f6f8; color:#444; transition:.2s ease; border:1px solid transparent;
-}
-.icon-btn:hover{ transform:translateY(-2px); background:#fff; border-color:#ddd; box-shadow:0 3px 10px rgba(0,0,0,.08); }
-.icon-btn.edit:hover{ color:#d39e00; }
 .pagination{ display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; }
 .pagination a, .pagination span{ padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; }
 .pagination .current{ background:#0d6efd; color:#fff; border-color:#0d6efd; }
@@ -33,14 +23,12 @@
 <div class="content">
 
 <div class="table-header">
-
     <div class="header-group">
         <form method="get">
             <input type="text" name="search" placeholder="{% trans 'Search...' %}" value="{{ search }}">
             <button type="submit">🔍</button>
         </form>
     </div>
-
     <div class="header-group">
         <form method="get">
             <input type="hidden" name="search" value="{{ search }}">
@@ -52,27 +40,25 @@
             </select>
         </form>
     </div>
-
-    <div class="header-group">
-        <a href="{% url 'receive_create' %}" class="btn-blue">
-            {% trans "+ Start New Receive Request" %}
-        </a>
-    </div>
-
 </div>
 
+<p class="text-muted">
+    {% trans "Read-only overview — facility, contract cost, invoice, payment, the filled/signed characterization document (صورتجلسه), and every source with a link to its DSRS record." %}
+</p>
+
 <div class="table-scroll">
-<table id="mainTable">
-<thead>
+<table id="mainTable" class="table table-bordered table-striped">
+<thead class="table-light">
 <tr>
     <th>{% trans "Facility" %}</th>
-    <th>{% trans "Delivery Letter Number" %}</th>
-    <th>{% trans "Delivery Letter Date" %}</th>
-    <!-- <th>{% trans "Contract Number" %}</th> -->
-    <th>{% trans "Payment" %}</th>
-    <th>{% trans "Sources" %}</th>
+    <th>{% trans "Delivery Letter" %}</th>
     <th>{% trans "Status" %}</th>
-    <th>{% trans "Action" %}</th>
+    <th>{% trans "Contract Cost" %}</th>
+    <th>{% trans "Invoice" %}</th>
+    <th>{% trans "Payment" %}</th>
+    <th>{% trans "Specification" %}</th>
+    <th>{% trans "صورتجلسه" %}</th>
+    <th>{% trans "Sources" %}</th>
 </tr>
 </thead>
 <tbody>
@@ -80,15 +66,42 @@
 {% for req in page_obj %}
 <tr>
     <td>{{ req.facility.name }}</td>
-    <td>{{ req.delivery_letter_number|default:"-" }}</td>
-    <td>{{ req.delivery_letter_date|default:"-" }}</td>
-    <!-- <td>{{ req.contract.contract_number|default:"-" }}</td> -->
+    <td>
+        {{ req.delivery_letter_number|default:"-" }}
+        {% if req.delivery_letter_date %}<br><small class="text-muted">{{ req.delivery_letter_date }}</small>{% endif %}
+    </td>
+    <td>{{ req.get_status_display }}</td>
+    <td>{{ req.contract.contract_cost|default:"-" }}</td>
+    <td>
+        {% if req.contract.invoice %}
+            <a href="{{ req.contract.invoice.url }}" target="_blank">🧾 {% trans "View" %}</a>
+        {% else %}
+            <span class="text-muted">-</span>
+        {% endif %}
+    </td>
     <td>
         {% if req.payment.payment_done %}
-            <span class="text-success">{% trans "Paid" %}</span>
+            <span class="text-success">{% trans "Paid" %}</span> — {{ req.payment.amount_paid|default:"-" }}
+            {% if req.payment.receipt %}
+                <br><a href="{{ req.payment.receipt.url }}" target="_blank">🧾 {% trans "Receipt" %}</a>
+            {% endif %}
         {% else %}
             <span class="text-muted">{% trans "Pending" %}</span>
         {% endif %}
+    </td>
+    <td>
+        {% if req.specification_attachment %}
+            <a href="{{ req.specification_attachment.file.url }}" target="_blank">📄 {% trans "View" %}</a>
+        {% else %}
+            <span class="text-muted">-</span>
+        {% endif %}
+    </td>
+    <td>
+        {% for att in req.minutes_attachments %}
+            <a href="{{ att.file.url }}" target="_blank">📎 {% trans "View" %}</a><br>
+        {% empty %}
+            <span class="text-muted">-</span>
+        {% endfor %}
     </td>
     <td>
         <button type="button" class="summary-badge sources" data-bs-toggle="modal" data-bs-target="#sourcesModal{{ req.pk }}">
@@ -96,25 +109,13 @@
             {% if req.sources.count == 1 %}{% trans "Source" %}{% else %}{% trans "Sources" %}{% endif %}
         </button>
     </td>
-    <td>{{ req.get_status_display }}</td>
-    <td>
-        <div class="action-icons">
-            <a href="{% url 'receive_detail' req.pk %}" class="icon-btn" title="{% trans 'View' %}">👁</a>
-            {% if req.status == "DRAFT" %}
-                <a href="{% url 'receive_create_edit' req.pk %}" class="icon-btn edit" title="{% trans 'Continue Draft' %}">✏️</a>
-            {% endif %}
-        </div>
-    </td>
 </tr>
 {% empty %}
-<tr>
-    <td colspan="8" class="text-center">{% trans "No receive requests found." %}</td>
-</tr>
+<tr><td colspan="8" class="text-center">{% trans "No receive requests found." %}</td></tr>
 {% endfor %}
 
 </tbody>
 </table>
-</div>
 </div>
 
 {% for req in page_obj %}
@@ -122,7 +123,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">📦 {% trans "Sources" %}</h5>
+                <h5 class="modal-title">📦 {% trans "Sources" %} — {{ req.facility.name }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -130,19 +131,26 @@
                     <thead>
                         <tr>
                             <th>{% trans "Nuclide" %}</th>
-                            <th>{% trans "Item Type" %}</th>
-                            <th>{% trans "Activity (mCi)" %}</th>
-                            <th>{% trans "Quantity" %}</th>
+                            <th>{% trans "Serial Number" %}</th>
+                            <th>{% trans "DSRS Status" %}</th>
+                            <th>{% trans "Link" %}</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for source in req.sources.all %}
+                        {% for dsrs in source.result_dsrs.all %}
                         <tr>
                             <td>{{ source.nuclide|default:"-" }}</td>
-                            <td>{{ source.get_item_type_display }}</td>
-                            <td>{{ source.average_activity_mci|default:"-" }}</td>
-                            <td>{{ source.quantity }}</td>
+                            <td>{{ dsrs.serial_number|default:"-" }}</td>
+                            <td>{{ dsrs.get_Status_display }}</td>
+                            <td><a href="{% url 'dsrs_history' dsrs.pk %}" target="_blank">{% trans "View Data" %}</a></td>
                         </tr>
+                        {% empty %}
+                        <tr>
+                            <td>{{ source.nuclide|default:"-" }}</td>
+                            <td colspan="3" class="text-muted">{% trans "Not created yet" %}</td>
+                        </tr>
+                        {% endfor %}
                     {% empty %}
                         <tr><td colspan="4" class="text-center">{% trans "No sources found." %}</td></tr>
                     {% endfor %}
@@ -180,4 +188,5 @@
     ({{ page_obj.paginator.count }} {% trans "records" %})
 </div>
 
+</div>
 {% endblock %}

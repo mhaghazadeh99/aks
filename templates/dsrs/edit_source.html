@@ -153,34 +153,59 @@
         </div>
 
        <label class="form-label">
-    {% trans "Upload additional images" %}
+    Upload additional images
 </label>
 
 <div class="d-flex gap-2 mt-2">
-    <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('cameraInputEdit').click()">
-        📷 {% trans "Take Photo" %}
+    <button type="button" class="btn btn-outline-primary btn-sm" onclick="openCamera()">
+        📷 Take Photo
     </button>
-    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInputEdit').click()">
-        🖼️  {% trans "Choose from Gallery" %}
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInput').click()">
+        🖼️ Choose from Gallery
     </button>
 </div>
 
 <input
-    id="cameraInputEdit"
+    id="cameraInput"
     type="file"
     name="dsrs_images"
     accept="image/*"
-    capture="environment"
     multiple
     style="display:none;">
 
 <input
-    id="galleryInputEdit"
+    id="galleryInput"
     type="file"
     name="dsrs_images"
     accept="image/*"
     multiple
     style="display:none;">
+
+<div id="imagePreviewList" class="mt-2 small text-muted"></div>
+
+<!-- ================= LIVE CAMERA MODAL ================= -->
+<div id="cameraModal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.85);
+    z-index:2000;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+">
+    <video id="cameraVideo" autoplay playsinline
+        style="max-width:92%; max-height:65vh; background:#000; border-radius:8px;"></video>
+    <canvas id="cameraCanvas" style="display:none;"></canvas>
+
+    <div id="capturedCount" class="text-white mt-2 small"></div>
+
+    <div style="margin-top:16px; display:flex; gap:10px;">
+        <button type="button" id="captureBtn" class="btn btn-primary">📸 Capture</button>
+        <button type="button" id="doneCameraBtn" class="btn btn-success">✔ Done</button>
+        <button type="button" id="closeCameraBtn" class="btn btn-secondary">Cancel</button>
+    </div>
+</div>
 
 <div id="imagePreviewListEdit" class="mt-2 small text-muted"></div>
 
@@ -233,21 +258,74 @@
 </div>
 
 <script>
-function updateImagePreviewEdit() {
-    const camFiles = document.getElementById('cameraInputEdit').files;
-    const galFiles = document.getElementById('galleryInputEdit').files;
+let cameraStream = null;
+let capturedCount = 0;
+
+async function openCamera(){
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraVideo');
+    capturedCount = 0;
+    document.getElementById('capturedCount').textContent = '';
+    modal.style.display = 'flex';
+
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
+        video.srcObject = cameraStream;
+    } catch (err) {
+        alert("Could not access camera: " + err.message);
+        closeCamera();
+    }
+}
+
+function closeCamera(){
+    document.getElementById('cameraModal').style.display = 'none';
+    if(cameraStream){
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+    }
+}
+
+function captureFromCamera(){
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+
+    canvas.toBlob(function(blob){
+        const file = new File([blob], `photo_${Date.now()}.jpg`, { type: "image/jpeg" });
+
+        const input = document.getElementById('cameraInput');
+        const dt = new DataTransfer();
+        Array.from(input.files || []).forEach(f => dt.items.add(f));
+        dt.items.add(file);
+        input.files = dt.files;
+
+        capturedCount++;
+        document.getElementById('capturedCount').textContent = `${capturedCount} photo(s) captured this session`;
+        updateImagePreview();
+    }, "image/jpeg", 0.85);
+}
+
+document.getElementById('captureBtn').addEventListener('click', captureFromCamera);
+document.getElementById('doneCameraBtn').addEventListener('click', closeCamera);
+document.getElementById('closeCameraBtn').addEventListener('click', closeCamera);
+
+function updateImagePreview() {
+    const camFiles = document.getElementById('cameraInput').files;
+    const galFiles = document.getElementById('galleryInput').files;
 
     const names = [
         ...Array.from(camFiles).map(f => f.name),
         ...Array.from(galFiles).map(f => f.name),
     ];
 
-    document.getElementById('imagePreviewListEdit').textContent =
-        names.length ? `{% trans "Selected" %}: ${names.join(', ')}` : '';
+    document.getElementById('imagePreviewList').textContent =
+        names.length ? `Selected: ${names.join(', ')}` : '';
 }
 
-document.getElementById('cameraInputEdit').addEventListener('change', updateImagePreviewEdit);
-document.getElementById('galleryInputEdit').addEventListener('change', updateImagePreviewEdit);
+document.getElementById('galleryInput').addEventListener('change', updateImagePreview);
 </script>
-
 {% endblock %}

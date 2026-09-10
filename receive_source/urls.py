@@ -4,7 +4,9 @@ from . import views
 urlpatterns = [
 
     path("", views.receiving_home, name="receiving_home"),
+    path("CEO/",views.ceo_home,name="ceo_home",),
     path("list/", views.receive_list, name="receive_list"),
+    path("received-sources/", views.received_sources_list, name="received_sources_list"),
 
     # Queues
     path("queue/manager-input/", views.manager_input_queue, name="receive_manager_input_queue"),

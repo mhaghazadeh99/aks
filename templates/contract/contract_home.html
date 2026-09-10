@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load receiving_extras %}
 
 {% block title %}
 {% trans "Contract Manager" %}
@@ -190,8 +191,24 @@
     </p>
 
 </a>
+<a href="{% url 'receive_contracts_queue' %}" class="operation-card">
+ {% receiving_queue_count "CONTRACTS" as contract_count %}
 
-  
+    <div class="operation-icon">
+        📑
+    </div>
+
+    <h3>
+        {% trans "Source Delivery Requests" %}
+    </h3>
+
+    <p>
+         {{ contract_count }}
+        {% trans "Source Delivery requests waiting for Cost declaration" %}
+    </p>
+
+</a>
+
 
 </div>
 

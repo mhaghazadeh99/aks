@@ -36,7 +36,7 @@
 <thead class="table-light">
 <tr>
     <th>{% trans "Facility" %}</th>
-    <th>{% trans "Inquiry Letter Number" %}</th>
+    <th>{% trans "Delivery Letter Number" %}</th>
     <th>{% trans "Sources" %}</th>
     <th>{% trans "Created By" %}</th>
     <th>{% trans "Status" %}</th>
@@ -48,7 +48,7 @@
 {% for req in page_obj %}
 <tr>
     <td>{{ req.facility.name }}</td>
-    <td>{{ req.inquiry_letter_number|default:"-" }}</td>
+    <td>{{ req.delivery_letter_number|default:"-" }}</td>
     <td>{{ req.sources.count }}</td>
     <td>{{ req.created_by }}</td>
     <td>{{ req.get_status_display }}</td>

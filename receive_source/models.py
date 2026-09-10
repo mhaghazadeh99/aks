@@ -51,13 +51,18 @@ class ReceiveItemType(models.TextChoices):
 
 class ReceiveAttachmentType(models.TextChoices):
 
-    INQUIRY = "INQUIRY", _("DSRS Inquiry Letter")
+    INQUIRY = "INQUIRY", _("DSRS Inquiry Form")
     LETTER = "LETTER", _("Letter")
     SPECIFICATION = "SPECIFICATION", _("Generated Specification")
     SPECIFICATION_APPENDIX = "SPECIFICATION_APPENDIX", _("Specification Appendix")
     CONTRACT = "CONTRACT", _("Contract")
     PAYMENT = "PAYMENT", _("Payment Receipt")
-    CHARACTERIZATION = "CHARACTERIZATION", _("Characterization Document")
+    # Reused as the صورتجلسه STAGING area: uploaded once per batch on the
+    # characterization list page (before any DSRS movement exists yet),
+    # then auto-copied to a MovementAttachment on each DSRS's single
+    # movement the moment that movement is created (see
+    # services/workflow.py: mark_source_stored).
+    CHARACTERIZATION = "CHARACTERIZATION", _("Characterization Document (صورتجلسه staging)")
     OTHER = "OTHER", _("Other")
 
 
@@ -93,15 +98,15 @@ class ReceiveRequest(models.Model):
     # name/address/postal_code/national_id/economic_code all come from
     # `facility` directly — not duplicated here.
 
-    inquiry_letter_number = models.CharField(
-        _("Inquiry Letter Number"),
+    delivery_letter_number = models.CharField(
+        _("Delivery Letter Number"),
         max_length=100,
         blank=True,
         null=True,
     )
 
-    inquiry_letter_date = models.DateField(
-        _("Inquiry Letter Date"),
+    delivery_letter_date = models.DateField(
+        _("Delivery Letter Date"),
         blank=True,
         null=True,
     )
@@ -130,6 +135,20 @@ class ReceiveRequest(models.Model):
     specification_completed = models.BooleanField(
         _("Specification Completed"),
         default=False,
+    )
+
+    # Set by the CREATOR (not the Contract Manager) — decides whether
+    # the workflow routes through the CEO (before Contracts now, not
+    # after) for approval. Contracts then sees this read-only when
+    # estimating cost.
+    discount_requested = models.BooleanField(
+        _("Discount Requested"),
+        default=False,
+    )
+    discount_notes = models.TextField(
+        _("Discount Notes"),
+        blank=True,
+        null=True,
     )
 
     # NOTE: logistics fields (pre-op visit, personnel counts, vehicle,
@@ -164,18 +183,22 @@ class ReceiveRequest(models.Model):
 
     def __str__(self):
         return (
-            self.inquiry_letter_number
+            self.delivery_letter_number
             or _("Receive Request #%(id)s") % {"id": self.pk}
         )
 
     @property
     def ceo_required(self):
-        """CEO only signs if the contract says a discount was requested."""
-        return bool(
-            hasattr(self, "contract")
-            and self.contract
-            and self.contract.discount_requested
-        )
+        """CEO signs (before Contracts now) only if the creator flagged
+        a discount request."""
+        return self.discount_requested
+
+    @property
+    def specification_attachment(self):
+        """The صورتجلسه — filled/signed source characterization doc. One
+        per request (regenerating replaces the previous one), so `.first()`
+        is safe."""
+        return self.attachments.filter(attachment_type=ReceiveAttachmentType.SPECIFICATION).first()
 
 
 class ReceiveAttachment(models.Model):
@@ -448,8 +471,8 @@ class ReceivePayment(models.Model):
         verbose_name_plural = _("Receive Payments")
 
     def __str__(self):
-        if self.receive_request.inquiry_letter_number:
-            return self.receive_request.inquiry_letter_number
+        if self.receive_request.delivery_letter_number:
+            return self.receive_request.delivery_letter_number
         return _("Payment %(id)s") % {"id": self.pk}
 
 

@@ -14,16 +14,20 @@ from operations.models import (
 
 PAYMENT_VISIBLE_STATUSES = [
     LicenseStatus.FINANCE,
-    LicenseStatus.READY_TO_ISSUE,
-    LicenseStatus.ISSUED,
-    LicenseStatus.COMPLETED,
+    # LicenseStatus.READY_TO_ISSUE,
+    # LicenseStatus.ISSUED,
+    # LicenseStatus.COMPLETED,
 ]
 
 
 def financial_home(request):
+    context = {
+        "license_Financial_count": (
+            LicenseRequest.objects.filter(status=LicenseStatus.FINANCE).count()
+        ),}
     return render(
         request,
-        "financial/financial_home.html",
+        "financial/financial_home.html",context,
     )
 
 

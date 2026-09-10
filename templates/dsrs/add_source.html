@@ -83,42 +83,55 @@ document.getElementById('csvFileInput').addEventListener('change', function(){
             {% trans "Upload DSRS Images" %}
         </label>
 
-        <div class="d-flex gap-2 mb-2">
-            <button type="button"
-        class="btn btn-outline-primary btn-sm"
-        onclick="document.getElementById('cameraInput').click()">
-    📷 {% trans "Take Photo" %}
-</button>
 
-<button type="button"
-        class="btn btn-outline-secondary btn-sm"
-        onclick="document.getElementById('galleryInput').click()">
-    🖼️ {% trans "Choose from Gallery" %}
-</button>
-        </div>
+<div class="d-flex gap-2 mt-2">
+    <button type="button" class="btn btn-outline-primary btn-sm" onclick="openCamera()">
+        📷 Take Photo
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('galleryInput').click()">
+        🖼️ Choose from Gallery
+    </button>
+</div>
 
-        <!-- Camera-hinted input -->
-        <input
-            id="cameraInput"
-            type="file"
-            name="dsrs_images"
-            accept="image/*"
-            capture="environment"
-            multiple
-            style="display:none;">
+<input
+    id="cameraInput"
+    type="file"
+    name="dsrs_images"
+    accept="image/*"
+    multiple
+    style="display:none;">
 
-        <!-- Plain gallery/file picker, no capture hint -->
-        <input
-            id="galleryInput"
-            type="file"
-            name="dsrs_images"
-            accept="image/*"
-            multiple
-            style="display:none;">
+<input
+    id="galleryInput"
+    type="file"
+    name="dsrs_images"
+    accept="image/*"
+    multiple
+    style="display:none;">
 
-        <!-- Shows what's been picked from either input, since browsers don't show filenames for hidden inputs -->
-        <div id="imagePreviewList" class="mt-2 small text-muted"></div>
+<div id="imagePreviewList" class="mt-2 small text-muted"></div>
 
+<!-- ================= LIVE CAMERA MODAL ================= -->
+<div id="cameraModal" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.85);
+    z-index:2000;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+">
+    <video id="cameraVideo" autoplay playsinline
+        style="max-width:92%; max-height:65vh; background:#000; border-radius:8px;"></video>
+    <canvas id="cameraCanvas" style="display:none;"></canvas>
+
+    <div id="capturedCount" class="text-white mt-2 small"></div>
+
+    <div style="margin-top:16px; display:flex; gap:10px;">
+        <button type="button" id="captureBtn" class="btn btn-primary">📸 Capture</button>
+        <button type="button" id="doneCameraBtn" class="btn btn-success">✔ Done</button>
+        <button type="button" id="closeCameraBtn" class="btn btn-secondary">Cancel</button>
     </div>
 </div>
 
@@ -229,6 +242,61 @@ function getCSRFToken() {
 }
 </script>
 <script>
+let cameraStream = null;
+let capturedCount = 0;
+
+async function openCamera(){
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraVideo');
+    capturedCount = 0;
+    document.getElementById('capturedCount').textContent = '';
+    modal.style.display = 'flex';
+
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
+        video.srcObject = cameraStream;
+    } catch (err) {
+        alert("Could not access camera: " + err.message);
+        closeCamera();
+    }
+}
+
+function closeCamera(){
+    document.getElementById('cameraModal').style.display = 'none';
+    if(cameraStream){
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+    }
+}
+
+function captureFromCamera(){
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+
+    canvas.toBlob(function(blob){
+        const file = new File([blob], `photo_${Date.now()}.jpg`, { type: "image/jpeg" });
+
+        const input = document.getElementById('cameraInput');
+        const dt = new DataTransfer();
+        Array.from(input.files || []).forEach(f => dt.items.add(f));
+        dt.items.add(file);
+        input.files = dt.files;
+
+        capturedCount++;
+        document.getElementById('capturedCount').textContent = `${capturedCount} photo(s) captured this session`;
+        updateImagePreview();
+    }, "image/jpeg", 0.85);
+}
+
+document.getElementById('captureBtn').addEventListener('click', captureFromCamera);
+document.getElementById('doneCameraBtn').addEventListener('click', closeCamera);
+document.getElementById('closeCameraBtn').addEventListener('click', closeCamera);
+
 function updateImagePreview() {
     const camFiles = document.getElementById('cameraInput').files;
     const galFiles = document.getElementById('galleryInput').files;
@@ -239,12 +307,9 @@ function updateImagePreview() {
     ];
 
     document.getElementById('imagePreviewList').textContent =
-    names.length
-        ? "{% trans 'Selected:' %} " + names.join(", ")
-        : "";
+        names.length ? `Selected: ${names.join(', ')}` : '';
 }
 
-document.getElementById('cameraInput').addEventListener('change', updateImagePreview);
 document.getElementById('galleryInput').addEventListener('change', updateImagePreview);
 </script>
 

@@ -1,9 +1,10 @@
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.files.base import ContentFile
 
 from dashboard.models import DSRS, SOURCE_TYPE, SOURCE_STATUS, MovementType
 
-from ..models import ReceiveApproval, ReceiveStatus
+from ..models import ReceiveApproval, ReceiveStatus, ReceiveAttachmentType
 
 
 def get_irwa_facility():
@@ -28,10 +29,13 @@ def create_receive_workflow(receive_request):
     """
     Called once, right after a ReceiveRequest is first saved (mirrors
     operations.services.workflow.create_license_workflow). Pre-creates
-    the four ALWAYS-required approval rows. The CEO row is deliberately
-    NOT created here — see maybe_add_ceo_step() below — since whether
-    it's required depends on the contract's discount_requested flag,
-    which doesn't exist yet at this point.
+    all FIVE approval rows, including CEO — the discount decision is now
+    made by the creator up front (see ReceiveDiscountForm), so unlike
+    before, whether CEO is actually needed doesn't depend on anything
+    that happens later. The CEO row simply stays PENDING/unused if
+    discount_requested never gets checked — routing (see receive_sign in
+    views.py) is still driven by receive_request.discount_requested at
+    the moment Deputy signs.
     """
 
     ReceiveApproval.objects.bulk_create([
@@ -55,37 +59,12 @@ def create_receive_workflow(receive_request):
             step=ReceiveApproval.ApprovalStep.DEPUTY,
             order=4,
         ),
-    ])
-
-
-def maybe_add_ceo_step(receive_request):
-    """
-    Call this when the ReceiveContract (really just a cost/discount
-    declaration, not an actual contract) is saved. discount_requested
-    True -> CEO signs before Finance. Otherwise -> straight to Finance,
-    unconditionally (no separate "send to financial" flag anymore since
-    there's no real contract to hold back on).
-    """
-
-    contract = receive_request.contract
-
-    if contract.discount_requested:
-
-        ReceiveApproval.objects.get_or_create(
+        ReceiveApproval(
             receive_request=receive_request,
             step=ReceiveApproval.ApprovalStep.CEO,
-            defaults={"order": 5},
-        )
-
-        receive_request.status = ReceiveStatus.WAITING_CEO
-        receive_request.status_date = timezone.now()
-        receive_request.save(update_fields=["status", "status_date"])
-
-    else:
-
-        receive_request.status = ReceiveStatus.FINANCE
-        receive_request.status_date = timezone.now()
-        receive_request.save(update_fields=["status", "status_date"])
+            order=5,
+        ),
+    ])
 
 
 # =====================================================================
@@ -140,19 +119,20 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
        record in our own inventory, under an existing license contract.
        We do NOT create a new record for it — we reuse it directly. It
        moves to IRWA now via a TRANSFER movement (Status -> IN_USE, the
-       same "still being received" placeholder used for brand-new
-       items below), NOT straight to Stored — it still goes through the
-       normal characterization -> mark-stored step like everything
-       else, so it shows up in that list until explicitly finalized.
+       still fully characterized, so its DSRS record doesn't change at
+       all until it's explicitly marked stored on the characterization
+       page — same single-movement path as brand-new items below.
 
     2. No match — a genuinely new item. Create one DSRS per unit
        (Status starts IN_USE, still logically "out" at the delivering
        facility) and it goes through the same characterization ->
        mark-stored flow.
+
+    Per current policy there is exactly ONE SourceMovement per DSRS for
+    this whole process — created at mark_source_stored time, not here.
     """
 
     facility = receive_request.facility
-    irwa = get_irwa_facility()
     today = timezone.now().date()
 
     for source in receive_request.sources.select_related("nuclide", "matched_license_dsrs").prefetch_related("result_dsrs").all():
@@ -161,18 +141,9 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
             continue  # already handled (e.g. re-running after a partial failure)
 
         if source.matched_license_dsrs_id:
-
-            existing = source.matched_license_dsrs
-
-            existing.register_movement(
-                movement_type=MovementType.TRANSFER,  # -> IN_USE, not STORED yet
-                to_facility=irwa,
-                performed_by=performed_by,
-                quantity=1,
-                remarks=_("In transit to IRWA via %(req)s — pending characterization/confirmation") % {"req": str(receive_request)},
-            )
-
-            source.result_dsrs.add(existing)
+            # Nothing to create or move yet — it's linked as-is and stays
+            # wherever it currently sits until "Mark Stored" is clicked.
+            source.result_dsrs.add(source.matched_license_dsrs)
             continue
 
         for _i in range(source.quantity or 1):
@@ -221,20 +192,42 @@ def create_dsrs_for_receive_request(receive_request, performed_by):
 def mark_source_stored(dsrs, receive_request, performed_by, remarks=""):
     """
     Called per-DSRS once its characterization (dose rate, physical form,
-    container, photos/docs) is complete. Moves it to IRWA (final storage
-    location) and STORED via the RECEIVE movement type, reusing the
-    existing movement machinery for consistent history.
+    container, photos/docs) is complete. This is the ONE AND ONLY
+    SourceMovement created for this DSRS in the whole receive process —
+    from wherever it currently sits (dsrs.Facility, captured BEFORE the
+    move — register_movement overwrites it internally) to IRWA, Status
+    -> Stored, via the RECEIVE movement type.
+
+    Also copies every staged صورتجلسه file (ReceiveAttachment,
+    attachment_type=CHARACTERIZATION, uploaded once for the whole batch
+    on the characterization list page) onto this movement as
+    MovementAttachment rows — reusing your existing model rather than a
+    new one. If صورتجلسه is uploaded before this DSRS is marked stored,
+    it lands on this movement automatically; if uploaded after, it
+    won't retroactively attach to already-stored units.
     """
 
     irwa = get_irwa_facility()
+    from_facility = dsrs.Facility  # capture BEFORE register_movement reassigns it
 
-    dsrs.register_movement(
+    movement = dsrs.register_movement(
         movement_type=MovementType.RECEIVE,
         to_facility=irwa,
+        from_facility=from_facility,
         performed_by=performed_by,
         quantity=1,
         remarks=remarks or _("Received via %(req)s") % {"req": str(receive_request)},
     )
+
+    from dashboard.models import MovementAttachment
+    for staged in receive_request.attachments.filter(attachment_type=ReceiveAttachmentType.CHARACTERIZATION):
+        staged.file.open("rb")
+        file_bytes = staged.file.read()
+        staged.file.close()
+        MovementAttachment.objects.create(
+            movement=movement,
+            file=ContentFile(file_bytes, name=staged.file.name.rsplit("/", 1)[-1]),
+        )
 
     check_and_complete_receive_request(receive_request)
 

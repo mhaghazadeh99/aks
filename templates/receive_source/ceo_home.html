@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 {% load i18n %}
-
-
+{% load receiving_extras %}
 
 {% block title %}
-{% trans "Home" %}
+{% trans "CEO" %}
 {% endblock title %}
 
 
@@ -30,8 +29,6 @@
 }
 
 
-/* Cards */
-
 .home-grid{
 
     display:grid;
@@ -41,7 +38,6 @@
     gap:25px;
 
 }
-
 
 
 .home-card{
@@ -72,7 +68,6 @@
 }
 
 
-
 .home-card:hover{
 
     transform:translateY(-5px);
@@ -81,7 +76,6 @@
     0 10px 25px rgba(0,0,0,.15);
 
 }
-
 
 
 .home-icon{
@@ -93,7 +87,6 @@
 }
 
 
-
 .home-card h3{
 
     margin:0;
@@ -101,7 +94,6 @@
     font-size:20px;
 
 }
-
 
 
 .home-card p{
@@ -113,11 +105,16 @@
 }
 
 
+.home-count{
+
+    font-weight:700;
+    color:#333 !important;
+
+}
 
 </style>
 
 {% endblock extrastyle %}
-
 
 
 
@@ -129,92 +126,76 @@
 
 <h1 class="home-title">
 
-{% trans "Welcome to IRWA" %}
+{% trans "CEO Dashboard" %}
 
 </h1>
 
 
 <p class="home-subtitle">
 
-{% trans "Select a service to continue" %}
+{% trans "Manage CEO approvals and decisions" %}
 
 </p>
 
 
 
 <div class="home-grid">
-   
-<a href="{% url 'ceo_home' %}" class="home-card">
-    <div class="home-icon">🏛</div>
-    <h3>{% trans "CEO" %}</h3>
-    <p>{% trans "CEO dashboard and approvals" %}</p>
+
+
+   {% receiving_queue_count "WAITING_CEO" as ceo_count %}
+<a href="{% url 'receive_ceo_queue' %}" class="home-card">
+    <div class="home-icon">💸</div>
+    <h3>{% trans "Source Delivery Discount Requests" %}</h3>
+    <p> {{ ceo_count }}
+        {% trans "Discount-requested requests awaiting CEO" %}</p>
+    
 </a>
 
-<a href="{% url 'operation_home' %}" class="home-card">
+
+
+<!-- Future CEO functions -->
+
+<a href="#" class="home-card">
 
 <div class="home-icon">
-📋
+📄
 </div>
 
-<h3>
-{% trans "Operations" %}
-</h3>
-
-<p>
-{% trans "Create and manage operational services" %}
-</p>
-
-</a>
-
-
-
-<a href="{% url 'contract_home' %}" class="home-card">
-
-<div class="home-icon">
-📑
-</div>
 
 <h3>
-{% trans "Contracts" %}
+{% trans "Decisions" %}
 </h3>
 
+
 <p>
-{% trans "Manage contracts" %}
+{% trans "CEO decisions and approvals history" %}
 </p>
 
-</a>
-
-<a href="{% url 'financial_home' %}" class="home-card">
-
-    <div class="home-icon">
-        💳
-    </div>
-
-    <h3>
-        {% trans "Financial" %}
-    </h3>
-
-    <p>
-        {% trans "Manage license payments" %}
-    </p>
 
 </a>
 
-<a href="{% url 'analytics_home' %}" class="home-card">
+
+
+<a href="#" class="home-card">
 
 <div class="home-icon">
 📊
 </div>
 
+
 <h3>
-{% trans "Reports" %}
+{% trans "CEO Reports" %}
 </h3>
 
+
 <p>
-{% trans "Reports and analytics" %}
+{% trans "Review CEO related reports" %}
 </p>
 
+
 </a>
+
+
 
 </div>
 

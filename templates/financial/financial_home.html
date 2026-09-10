@@ -1,5 +1,6 @@
  {% extends "base.html" %}
 {% load i18n %}
+{% load receiving_extras %}
 
 {% block title %}
 {% trans "Financial Management" %}
@@ -126,9 +127,30 @@
         {% trans "Approve license payments" %}
         </p>
 
+{% blocktrans count counter=license_Financial_count %}
+{{ counter }} license waiting for payment.
+{% plural %}
+{{ counter }} licenses waiting for payment.
+{% endblocktrans %}
+    </a>
+    <a href="{% url 'receive_finance_queue' %}" class="operation-card">
+        {% receiving_queue_count "FINANCE" as finance_count %}
+
+        <div class="operation-icon">
+            💳
+        </div>
+            
+        {% trans "Source Delivery Requests Payment" %}
+        <p>
+        {% trans "Approve Delivery Requests payments" %}
+        </p>
+        <p>
+            {{ finance_count }}
+        {% trans "Delivery Requests waiting for payment approval" %}
+        </p>
+
 
     </a>
-   
 
 </div>
 

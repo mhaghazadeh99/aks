@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load crispy_forms_tags %}
 
 {% block title %}{% trans "Receiving / Characterization" %}{% endblock %}
 
@@ -7,6 +8,36 @@
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
         <div class="col-xl-10">
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h3>{% trans "صورتجلسه" %}</h3>
+                </div>
+                <div class="card-body">
+
+                    <p class="text-muted small">
+                        {% trans "One shared document for the whole batch — uploading here attaches it to every source in this request, not just one." %}
+                    </p>
+
+                    {% if minutes_attachment %}
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ minutes_attachment.file.name|slice:"-40:" }}
+                            <a href="{{ minutes_attachment.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                {% trans "View" %}
+                            </a>
+                        </li>
+                    </ul>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% crispy minutes_form %}
+                        <button type="submit" class="btn btn-outline-secondary mt-2">{% trans "Upload صورتجلسه" %}</button>
+                    </form>
+
+                </div>
+            </div>
 
             <div class="card shadow-sm">
                 <div class="card-header">

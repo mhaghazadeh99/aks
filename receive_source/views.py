@@ -20,6 +20,7 @@ from .forms import (
     ReceiveSourceForm,
     LicenseMatchChoiceForm,
     SpecificationUploadForm,
+    ReceiveDiscountForm,
     ReceiveContractForm,
     ReceivePaymentForm,
     DSRSCharacterizationForm,
@@ -38,7 +39,6 @@ from .models import (
 )
 from .services.workflow import (
     create_receive_workflow,
-    maybe_add_ceo_step,
     snapshot_half_life,
     create_dsrs_for_receive_request,
     mark_source_stored,
@@ -50,12 +50,28 @@ from .services.license_check import (
 )
 
 
+def ceo_home(request):    
+    return render(
+        request,
+        "receive_source/ceo_home.html",
+        
+    )
 # =====================================================================
 # HOME / QUEUES
 # =====================================================================
 
 def receiving_home(request):
-    return render(request, "receive_source/receiving_home.html")
+    context = {
+        "manager_input_count": ReceiveRequest.objects.filter(status=ReceiveStatus.WAITING_MANAGER_INPUT).count(),
+        "manager_count": ReceiveRequest.objects.filter(status=ReceiveStatus.WAITING_MANAGER).count(),
+        "control_count": ReceiveRequest.objects.filter(status=ReceiveStatus.WAITING_CONTROL).count(),
+        "deputy_count": ReceiveRequest.objects.filter(status=ReceiveStatus.WAITING_DEPUTY).count(),
+        "ceo_count": ReceiveRequest.objects.filter(status=ReceiveStatus.WAITING_CEO).count(),
+        "contracts_count": ReceiveRequest.objects.filter(status=ReceiveStatus.CONTRACTS).count(),
+        "finance_count": ReceiveRequest.objects.filter(status=ReceiveStatus.FINANCE).count(),
+        "receiving_count": ReceiveRequest.objects.filter(status=ReceiveStatus.RECEIVING).count(),
+    }
+    return render(request, "receive_source/receiving_home.html",context )
 
 
 def receive_list(request):
@@ -73,7 +89,7 @@ def receive_list(request):
     if search:
         queryset = queryset.filter(
             Q(facility__name__icontains=search)
-            | Q(inquiry_letter_number__icontains=search)
+            | Q(delivery_letter_number__icontains=search)
             | Q(sources__serial_number__icontains=search)
             | Q(sources__nuclide__name__icontains=search)
         ).distinct()
@@ -100,7 +116,7 @@ def _queue(request, status, page_title):
     search = request.GET.get("search", "")
     if search:
         queryset = queryset.filter(
-            Q(facility__name__icontains=search) | Q(inquiry_letter_number__icontains=search)
+            Q(facility__name__icontains=search) | Q(delivery_letter_number__icontains=search)
         )
 
     paginator = Paginator(queryset, 15)
@@ -474,12 +490,20 @@ STATUS_TO_STEP = {
 # Creator signs -> managers get the docx to fill logistics into BEFORE
 # the Operation Manager's own signature (WAITING_MANAGER_INPUT sits
 # between CREATOR and MANAGER, not before CREATOR like before).
+# Creator signs -> managers get the docx to fill logistics into BEFORE
+# the Operation Manager's own signature (WAITING_MANAGER_INPUT sits
+# between CREATOR and MANAGER, not before CREATOR like before).
+#
+# DEPUTY has no FIXED next status — CEO now comes BEFORE Contracts, not
+# after, so where Deputy routes to depends on receive_request.
+# discount_requested (set by the creator up front, see ReceiveDiscountForm).
+# That branch is handled directly in receive_sign() below, not in this
+# static dict. CEO's next status is CONTRACTS now, not FINANCE.
 NEXT_STATUS = {
     ReceiveApproval.ApprovalStep.CREATOR: ReceiveStatus.WAITING_MANAGER_INPUT,
     ReceiveApproval.ApprovalStep.MANAGER: ReceiveStatus.WAITING_CONTROL,
     ReceiveApproval.ApprovalStep.CONTROL: ReceiveStatus.WAITING_DEPUTY,
-    ReceiveApproval.ApprovalStep.DEPUTY: ReceiveStatus.CONTRACTS,
-    ReceiveApproval.ApprovalStep.CEO: ReceiveStatus.FINANCE,
+    ReceiveApproval.ApprovalStep.CEO: ReceiveStatus.CONTRACTS,
 }
 
 QUEUE_REDIRECT = {
@@ -511,6 +535,8 @@ def receive_sign(request, pk):
     history = ReceiveApproval.objects.filter(receive_request=receive_request).order_by("order")
 
     upload_form = SpecificationUploadForm()
+    discount_editable_steps = (ReceiveApproval.ApprovalStep.CREATOR, ReceiveApproval.ApprovalStep.CEO)
+    discount_form = ReceiveDiscountForm(instance=receive_request) if current_step in discount_editable_steps else None
 
     if request.method == "POST":
 
@@ -530,6 +556,15 @@ def receive_sign(request, pk):
                 )
 
                 messages.success(request, _("Updated specification uploaded."))
+                return redirect("receive_sign", pk=pk)
+
+        elif request.POST.get("action") == "discount":
+
+            discount_form = ReceiveDiscountForm(request.POST, instance=receive_request)
+
+            if discount_form.is_valid():
+                discount_form.save()
+                messages.success(request, _("Discount decision saved."))
                 return redirect("receive_sign", pk=pk)
 
         else:
@@ -557,13 +592,21 @@ def receive_sign(request, pk):
             specification.save()
             os.remove(tmp.name)
 
+            # DEPUTY has no fixed next status — CEO now comes BEFORE
+            # Contracts, routed by discount_requested (set by the
+            # creator up front), not decided later by Contracts.
+            if current_step == ReceiveApproval.ApprovalStep.DEPUTY:
+                next_status = ReceiveStatus.WAITING_CEO if receive_request.discount_requested else ReceiveStatus.CONTRACTS
+            else:
+                next_status = NEXT_STATUS[current_step]
+
             with transaction.atomic():
                 approval.status = ReceiveApproval.ApprovalStatus.APPROVED
                 approval.approver = request.user
                 approval.approved_at = timezone.now()
                 approval.save()
 
-                receive_request.status = NEXT_STATUS[current_step]
+                receive_request.status = next_status
                 receive_request.status_date = timezone.now()
                 receive_request.save(update_fields=["status", "status_date"])
 
@@ -579,6 +622,7 @@ def receive_sign(request, pk):
             "approval": approval,
             "history": history,
             "upload_form": upload_form,
+            "discount_form": discount_form,
             "contract": getattr(receive_request, "contract", None),
         },
     )
@@ -586,6 +630,10 @@ def receive_sign(request, pk):
 
 # =====================================================================
 # STEP 6 — CONTRACT (discount decides whether CEO signs)
+# =====================================================================
+
+# STEP 6 — CONTRACT (cost estimation — discount, if any, was already
+# decided and CEO-approved earlier now, not decided here)
 # =====================================================================
 
 def receive_contract_create(request, pk):
@@ -605,7 +653,11 @@ def receive_contract_create(request, pk):
             contract.receive_request = receive_request
             contract.save()
 
-            maybe_add_ceo_step(receive_request)
+            # CEO (if needed) already signed off BEFORE this stage now —
+            # nothing conditional left to route here, straight to Finance.
+            receive_request.status = ReceiveStatus.FINANCE
+            receive_request.status_date = timezone.now()
+            receive_request.save(update_fields=["status", "status_date"])
 
             messages.success(request, _("Cost declaration saved."))
             return redirect("receive_contracts_queue")
@@ -646,7 +698,9 @@ def receive_contract_update(request, pk):
             contract = form.save()
 
             if receive_request.status == ReceiveStatus.CONTRACTS:
-                maybe_add_ceo_step(receive_request)
+                receive_request.status = ReceiveStatus.FINANCE
+                receive_request.status_date = timezone.now()
+                receive_request.save(update_fields=["status", "status_date"])
 
             messages.success(request, _("Cost declaration updated."))
             return redirect("receive_contracts_queue")
@@ -742,10 +796,44 @@ def receive_characterization(request, pk):
         else:
             rows.append({"source": source, "dsrs": None})
 
+    # صورتجلسه staging — one shared document for the whole batch. Held
+    # here as a plain ReceiveAttachment (not yet a MovementAttachment,
+    # since a DSRS's one-and-only movement doesn't exist until it's
+    # marked stored — see services/workflow.py: mark_source_stored,
+    # which copies these onto each movement automatically as it's created).
+    minutes_attachments = receive_request.attachments.filter(
+        attachment_type=ReceiveAttachmentType.CHARACTERIZATION
+    )
+
+    if request.method == "POST":
+
+        minutes_form = CharacterizationDocForm(request.POST, request.FILES)
+
+        if minutes_form.is_valid():
+
+            for uploaded_file in minutes_form.cleaned_data.get("files", []):
+                ReceiveAttachment.objects.create(
+                    receive_request=receive_request,
+                    attachment_type=ReceiveAttachmentType.CHARACTERIZATION,
+                    file=uploaded_file,
+                    uploaded_by=request.user,
+                )
+
+            messages.success(request, _("صورتجلسه uploaded — will attach automatically as each source is marked stored."))
+            return redirect("receive_characterization", pk=pk)
+
+    else:
+        minutes_form = CharacterizationDocForm()
+
     return render(
         request,
         "receive_source/receive_characterization.html",
-        {"receive_request": receive_request, "rows": rows},
+        {
+            "receive_request": receive_request,
+            "rows": rows,
+            "minutes_form": minutes_form,
+            "minutes_attachments": minutes_attachments,
+        },
     )
 
 
@@ -757,31 +845,21 @@ def dsrs_characterization_update(request, pk, dsrs_pk):
     if request.method == "POST":
 
         form = DSRSCharacterizationForm(request.POST, instance=dsrs)
-        doc_form = CharacterizationDocForm(request.POST, request.FILES)
 
-        if form.is_valid() and doc_form.is_valid():
+        if form.is_valid():
 
             form.save()
-
-            for uploaded_file in doc_form.cleaned_data.get("files", []):
-                ReceiveAttachment.objects.create(
-                    receive_request=receive_request,
-                    attachment_type=ReceiveAttachmentType.CHARACTERIZATION,
-                    file=uploaded_file,
-                    uploaded_by=request.user,
-                )
 
             messages.success(request, _("Characterization saved."))
             return redirect("receive_characterization", pk=pk)
 
     else:
         form = DSRSCharacterizationForm(instance=dsrs)
-        doc_form = CharacterizationDocForm()
 
     return render(
         request,
         "receive_source/dsrs_characterization_form.html",
-        {"receive_request": receive_request, "dsrs": dsrs, "form": form, "doc_form": doc_form},
+        {"receive_request": receive_request, "dsrs": dsrs, "form": form},
     )
 
 
@@ -805,6 +883,77 @@ def dsrs_mark_stored(request, pk, dsrs_pk):
 # =====================================================================
 # DETAIL
 # =====================================================================
+
+def received_sources_list(request):
+    """
+    Read-only overview page: everything about each receive request in
+    one place — contract cost, invoice, payment status/amount, the
+    generated Specification document, صورتجلسه (the shared batch
+    document, staged as a ReceiveAttachment and auto-copied onto each
+    DSRS's single movement as it's marked stored — see
+    services/workflow.py: mark_source_stored), and every source with a
+    link out to its DSRS record. Nothing here is editable.
+    """
+
+    search = request.GET.get("search", "")
+    page_size = request.GET.get("page_size", "10")
+
+    queryset = (
+        ReceiveRequest.objects
+        .select_related("facility", "contract", "payment")
+        .prefetch_related(
+            "sources__nuclide",
+            "sources__result_dsrs",
+            "sources__result_dsrs__movements__attachments",
+            "attachments",
+        )
+        .order_by("-created_at")
+    )
+
+    if search:
+        queryset = queryset.filter(
+            Q(facility__name__icontains=search)
+            | Q(delivery_letter_number__icontains=search)
+        ).distinct()
+
+    paginator = Paginator(queryset, int(page_size))
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    for req in page_obj:
+        # Primary: staged ReceiveAttachment (uploaded on the
+        # characterization list page). Query directly rather than
+        # filtering the prefetch cache in Python, to rule out any cache
+        # staleness as a cause.
+        staged = list(
+            ReceiveAttachment.objects.filter(
+                receive_request=req,
+                attachment_type=ReceiveAttachmentType.CHARACTERIZATION,
+            )
+        )
+
+        if staged:
+            req.minutes_attachments = staged
+        else:
+            # Fallback for requests processed before this staging
+            # mechanism existed: look for a MovementAttachment on any
+            # movement belonging to this request's DSRS records.
+            fallback = []
+            seen_names = set()
+            for source in req.sources.all():
+                for dsrs in source.result_dsrs.all():
+                    for movement in dsrs.movements.all():
+                        for att in movement.attachments.all():
+                            if att.file.name not in seen_names:
+                                fallback.append(att)
+                                seen_names.add(att.file.name)
+            req.minutes_attachments = fallback
+
+    return render(
+        request,
+        "receive_source/received_sources_list.html",
+        {"page_obj": page_obj, "search": search, "page_size": int(page_size)},
+    )
+
 
 def receive_detail(request, pk):
 

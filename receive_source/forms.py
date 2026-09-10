@@ -50,13 +50,13 @@ class ReceiveRequestForm(forms.ModelForm):
     class Meta:
         model = ReceiveRequest
         fields = [
-            "inquiry_letter_number",
-            "inquiry_letter_date",
+            "delivery_letter_number",
+            "delivery_letter_date",
             "distance_to_tehran_km",
             "description",
         ]
         widgets = {
-            "inquiry_letter_date": forms.DateInput(
+            "delivery_letter_date": forms.DateInput(
                 attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}
             ),
             "description": forms.Textarea(attrs={"rows": 3}),
@@ -73,8 +73,8 @@ class ReceiveRequestForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
-                Column(Field("inquiry_letter_number"), css_class="col-md-3"),
-                Column(Field("inquiry_letter_date"), css_class="col-md-3"),
+                Column(Field("delivery_letter_number"), css_class="col-md-3"),
+                Column(Field("delivery_letter_date"), css_class="col-md-3"),
                 Column(Field("distance_to_tehran_km"), css_class="col-md-3"),
                 css_class="g-3",
             ),
@@ -106,7 +106,7 @@ class ReceiveFacilityForm(forms.Form):
 class ReceiveAttachmentForm(forms.Form):
 
     inquiry = MultipleFileField(
-        required=False, label=_("DSRS Inquiry Letter"),
+        required=False, label=_("DSRS Inquiry Form"),
         widget=MultipleFileInput(attrs={"class": "form-control"}),
     )
     letter = MultipleFileField(
@@ -326,6 +326,27 @@ class SpecificationUploadForm(forms.Form):
         self.helper.form_tag = False
 
 
+class ReceiveDiscountForm(forms.ModelForm):
+    """
+    The CREATOR's discount decision — set here (on their sign page), not
+    by Contracts. If checked, the workflow routes through the CEO right
+    after Deputy signs, BEFORE Contracts, instead of after.
+    """
+
+    class Meta:
+        model = ReceiveRequest
+        fields = ["discount_requested", "discount_notes"]
+        widgets = {
+            "discount_notes": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _bootstrap(self.fields)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+
 # =====================================================================
 # STEP 5 — CONTRACT / PAYMENT
 # =====================================================================
@@ -334,9 +355,11 @@ class ReceiveContractForm(forms.ModelForm):
     """
     Per your clarification: we're NOT creating an actual contract at this
     stage — this is just where the Contract Manager declares the waste
-    management cost (and whether a discount applies, which is what
-    routes to CEO), along with the invoice for it. contract_number/date/
-    accountable/amendment_notes still exist on the model for schema
+    management cost, along with the invoice for it. Discount is now
+    decided by the CREATOR (see ReceiveDiscountForm below) and CEO
+    approval happens BEFORE this step, not after — this form only reads
+    that decision (see template), it doesn't set it. contract_number/
+    date/accountable/amendment_notes still exist on the model for schema
     compatibility but are deliberately not exposed here.
     """
 
@@ -345,12 +368,7 @@ class ReceiveContractForm(forms.ModelForm):
         fields = [
             "contract_cost",
             "invoice",
-            "discount_requested",
-            "discount_notes",
         ]
-        widgets = {
-            "discount_notes": forms.Textarea(attrs={"rows": 2}),
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

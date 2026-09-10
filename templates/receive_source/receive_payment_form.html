@@ -19,10 +19,10 @@
                     <div class="alert alert-info">
                         <strong>{% trans "Declared Cost" %}:</strong>
                         {{ contract.contract_cost|default:"-" }}
-                        {% if contract.discount_requested %}
-                            <br><strong>{% trans "Discount Requested" %}:</strong> {% trans "Yes" %}
-                            {% if contract.discount_notes %}
-                                <br><strong>{% trans "Discount Notes" %}:</strong> {{ contract.discount_notes }}
+                        {% if receive_request.discount_requested %}
+                            <br><strong>{% trans "Discount" %}:</strong> {% trans "CEO-approved" %}
+                            {% if receive_request.discount_notes %}
+                                <br><strong>{% trans "Discount Notes" %}:</strong> {{ receive_request.discount_notes }}
                             {% endif %}
                         {% endif %}
                     </div>

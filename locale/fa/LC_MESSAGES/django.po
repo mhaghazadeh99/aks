@@ -1427,70 +1427,35 @@ msgstr "مشخصات فنی با موفقیت امضا شد."
 msgid "Operations Manager"
 msgstr "مدیر عملیات"
 
-#: receive_source/forms.py:92 receive_source/models.py:92
-#: templates/receive_source/receive_create.html:73
-#, fuzzy
-#| msgid "Delete Facility"
 msgid "Delivering Facility"
-msgstr "حذف مرکز"
+msgstr "مرکز تحویل‌دهنده"
 
-#: receive_source/forms.py:158 receive_source/forms.py:220
-#, fuzzy
-#| msgid " Source Inventory"
 msgid "New / Not in Inventory"
-msgstr "موجودی چشمه‌ها"
+msgstr "جدید / در موجودی نیست"
 
-#: receive_source/forms.py:160
-#, fuzzy
-#| msgid "Source Owner"
 msgid "Source Origin"
-msgstr "مالک چشمه"
+msgstr "منشأ چشمه"
 
-#: receive_source/forms.py:167
 msgid "Select from inventory"
 msgstr "انتخاب از موجودی انبار"
 
-#: receive_source/forms.py:168
-#, fuzzy
-#| msgid "Existing DSRS Source"
 msgid "Existing Contracted Source"
-msgstr "چشمه DSRS موجود"
+msgstr "چشمه موجود دارای قرارداد"
 
-#: receive_source/forms.py:174 receive_source/models.py:260
-#: templates/receive_source/receive_contract_form.html:54
-#: templates/receive_source/receive_list.html:133
-#, fuzzy
-#| msgid "Movement Type"
 msgid "Item Type"
-msgstr "نوع جابه‌جایی"
+msgstr "نوع مورد"
 
-#: receive_source/forms.py:187
-msgid ""
-"Optional — not printed on the form, used only to check for an existing "
-"license contract."
-msgstr "اختیاری — در فرم چاپ نمی‌شود، فقط برای بررسی وجود قرارداد مجوز استفاده می‌شود."
-
-#: receive_source/forms.py:191 receive_source/models.py:281
-#, fuzzy
-#| msgid "Activity (mCi)"
 msgid "Average Activity (mCi)"
-msgstr "فعالیت (mCi)"
+msgstr "فعالیت متوسط (mCi)"
 
-#: receive_source/forms.py:219
 msgid "Select From Facility's Contracted Inventory"
 msgstr "انتخاب از موجودی قراردادی مرکز"
 
-#: receive_source/forms.py:249
-#, fuzzy
-#| msgid "Please select a DSRS component."
 msgid "Please select an item from the inventory."
-msgstr "لطفاً یک جزء DSRS انتخاب کنید."
+msgstr "لطفاً یک مورد از موجودی انتخاب کنید."
 
-#: receive_source/forms.py:277
-#, fuzzy
-#| msgid "Please select an existing source."
 msgid "Does this match an existing licensed source?"
-msgstr "لطفاً یک چشمه موجود را انتخاب کنید."
+msgstr "آیا این مورد با یک چشمه دارای مجوز موجود مطابقت دارد؟"
 
 #: receive_source/forms.py:286
 #, python-format
@@ -1515,173 +1480,59 @@ msgstr "نسخه فعلی را از پایین دانلود کنید، آن را
 msgid "Characterization Documents / Photos"
 msgstr "مستندات / تصاویر مشخصه‌یابی"
 
-#: receive_source/models.py:21
-#, fuzzy
-#| msgid "Waiting Creator Signature"
 msgid "Waiting Creator/Coordinator Signature"
-msgstr "در انتظار امضای ایجادکننده"
+msgstr "در انتظار امضای ایجادکننده / هماهنگ‌کننده"
 
-#: receive_source/models.py:23
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Manager Data Entry"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار ورود اطلاعات مدیر"
 
-#: receive_source/models.py:25
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Operation Manager Signature"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار امضای مدیر عملیات"
 
-#: receive_source/models.py:27
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Operation Control Manager Signature"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار امضای مدیر کنترل عملیات"
 
-#: receive_source/models.py:29
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Deputy Manager Signature"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار امضای معاون"
 
-#: receive_source/models.py:33
-msgid "Waiting CEO Signature (Discount Requested)"
-msgstr "در انتظار امضای مدیرعامل (درخواست تخفیف)"
-
-#: receive_source/models.py:37
-#, fuzzy
-#| msgid "Ready To Issue"
 msgid "Ready To Receive"
-msgstr "آماده صدور"
+msgstr "آماده دریافت"
 
-#: receive_source/models.py:39 receive_source/views.py:165
-#: templates/receive_source/receive_characterization.html:5
-#: templates/receive_source/receive_characterization.html:44
-#: templates/receive_source/receiving_home.html:61
 msgid "Receiving / Characterization"
-msgstr "پسمانداری / مشخصه‌یابی"
+msgstr "دریافت / مشخصه‌سنجی"
 
-#: receive_source/models.py:48
-#, fuzzy
-#| msgid "Receive Source"
 msgid "Radioactive Source"
-msgstr "دریافت چشمه"
+msgstr "چشمه پرتوزا"
 
-#: receive_source/models.py:49
-#, fuzzy
-#| msgid "Receive Waste"
 msgid "Radioactive Waste"
-msgstr "دریافت پسماند"
+msgstr "پسماند پرتوزا"
 
-#: receive_source/models.py:59 receive_source/models.py:455
-#, fuzzy
-#| msgid "Payment Done"
 msgid "Payment Receipt"
-msgstr "پرداخت انجام شد"
+msgstr "رسید پرداخت"
 
-#: receive_source/models.py:65
-msgid "Characterization Document (صورتجلسه staging)"
-msgstr "سند مشخصه‌یابی (محل موقت صورتجلسه)"
-
-#: receive_source/models.py:102 templates/receive_source/receive_list.html:69
-#: templates/receive_source/receive_queue.html:39
-#, fuzzy
-#| msgid "Draft Letter Number"
 msgid "Delivery Letter Number"
-msgstr "شماره نامه پیش‌نویس"
+msgstr "شماره نامه تحویل"
 
-#: receive_source/models.py:109 templates/receive_source/receive_detail.html:21
-#: templates/receive_source/receive_list.html:70
-#, fuzzy
-#| msgid "Draft Letter Date"
 msgid "Delivery Letter Date"
-msgstr "تاریخ نامه پیش‌نویس"
+msgstr "تاریخ نامه تحویل"
 
-#: receive_source/models.py:115
-msgid "Estimated Distance to Tehran Office (km)"
-msgstr "برآورد مسافت تا دفتر تهران (کیلومتر)"
-
-#: receive_source/models.py:145 receive_source/models.py:404
-#, fuzzy
-#| msgid "License Request"
 msgid "Discount Requested"
-msgstr "درخواست مجوز"
+msgstr "درخواست تخفیف"
 
-#: receive_source/models.py:149 receive_source/models.py:410
-#: templates/receive_source/receive_payment_form.html:25
-msgid "Discount Notes"
-msgstr "توضیحات تخفیف"
-
-#: receive_source/models.py:181 receive_source/models.py:256
-#: receive_source/models.py:442 receive_source/models.py:502
-#: templates/receive_source/receive_detail.html:4
-#, fuzzy
-#| msgid "License Request"
 msgid "Receive Request"
-msgstr "درخواست مجوز"
+msgstr "درخواست دریافت"
 
-#: receive_source/models.py:182 templates/receive_source/receive_list.html:5
-#, fuzzy
-#| msgid "License Requests"
 msgid "Receive Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "درخواست‌های دریافت"
 
-#: receive_source/models.py:187
-#, fuzzy, python-format
-#| msgid "License Request #%(id)s"
-msgid "Receive Request #%(id)s"
-msgstr "درخواست مجوز شماره %(id)s"
-
-#: receive_source/models.py:232
-#, fuzzy
-#| msgid "Letter Attachments"
 msgid "Receive Attachment"
-msgstr "نامه های پیوست"
+msgstr "پیوست دریافت"
 
-#: receive_source/models.py:233
-#, fuzzy
-#| msgid "Letter Attachments"
 msgid "Receive Attachments"
-msgstr "نامه های پیوست"
+msgstr "پیوست‌های دریافت"
 
-#: receive_source/models.py:277
-msgid ""
-"Not printed on the form — used only to check for an existing license "
-"contract."
-msgstr "در فرم چاپ نمی‌شود — فقط برای بررسی وجود قرارداد مجوز استفاده می‌شود."
-
-#: receive_source/models.py:294
-#, fuzzy
-#| msgid "Half-life (s)"
-msgid "Half-Life"
-msgstr "نیمه‌عمر (ثانیه)"
-
-#: receive_source/models.py:299
-msgid ""
-"Auto-formatted from nuclide.half_life (stored in seconds) at save time — not "
-"user-entered. Kept as a display snapshot since the printed form shows it as "
-"static text."
-msgstr "به‌صورت خودکار از نیمه‌عمر رادیونوکلید (ذخیره‌شده به ثانیه) در زمان ذخیره‌سازی قالب‌بندی می‌شود — توسط کاربر وارد نمی‌شود. به‌عنوان یک عکس لحظه‌ای نمایشی نگهداری می‌شود، زیرا فرم چاپی آن را به‌صورت متن ثابت نشان می‌دهد."
-
-#: receive_source/models.py:318
-msgid ""
-"Auto-annotated with a license-contract match, if any (see below). NOT "
-"printed into the docx's per-source description column — that one is filled "
-"by hand."
-msgstr "در صورت وجود تطابق با قرارداد مجوز، به‌صورت خودکار یادداشت می‌شود (به پایین مراجعه کنید). در ستون توضیحات هر چشمه در فایل docx چاپ نمی‌شود — آن ستون به‌صورت دستی تکمیل می‌شود."
-
-#: receive_source/models.py:336
-#, fuzzy
-#| msgid "Existing DSRS Source"
 msgid "Matched Existing Licensed Source"
-msgstr "چشمه DSRS موجود"
-
-#: receive_source/models.py:337
-msgid ""
-"Set automatically on an exact serial match, or manually confirmed by the "
-"creator on a fuzzy match."
-msgstr "در تطابق دقیق شماره سریال به‌صورت خودکار تنظیم می‌شود، یا در تطابق تقریبی توسط کارشناس هماهنگی تأیید دستی می‌شود."
+msgstr "چشمه موجود دارای مجوز"
 
 #: receive_source/models.py:341
 msgid "Serial Matched Exactly"
@@ -1706,70 +1557,38 @@ msgstr "فاکتور"
 msgid "If checked, the request routes to the CEO for signature before Finance."
 msgstr "در صورت تیک زدن، درخواست پیش از واحد مالی برای امضا به مدیرعامل ارجاع داده می‌شود."
 
-#: receive_source/models.py:431
-#, fuzzy
-#| msgid "Save Contract"
 msgid "Receive Contract"
-msgstr "ذخیره قرارداد"
+msgstr "قرارداد دریافت"
 
-#: receive_source/models.py:432
-#, fuzzy
-#| msgid "Receive Sources"
 msgid "Receive Contracts"
-msgstr "دریافت چشمه‌ها"
+msgstr "قراردادهای دریافت"
 
-#: receive_source/models.py:470
-#, fuzzy
-#| msgid "License Payment"
 msgid "Receive Payment"
-msgstr "پرداخت مجوز"
+msgstr "پرداخت درخواست دریافت"
 
-#: receive_source/models.py:471
-#, fuzzy
-#| msgid "License Payments"
 msgid "Receive Payments"
-msgstr "پرداخت‌های مجوز"
+msgstr "پرداخت‌های درخواست دریافت"
 
-#: receive_source/models.py:487
-#, fuzzy
-#| msgid "Create Contract"
 msgid "Creator / Coordinator"
-msgstr "ایجاد قرارداد"
+msgstr "ایجادکننده / هماهنگ‌کننده"
 
-#: receive_source/models.py:488 receive_source/views.py:141
-#, fuzzy
-#| msgid "Operations Manager"
 msgid "Operation Manager"
 msgstr "مدیر عملیات"
 
-#: receive_source/models.py:489 receive_source/views.py:145
-#, fuzzy
-#| msgid "Operations Control Manager"
 msgid "Operation Control Manager"
 msgstr "مدیر کنترل عملیات"
 
-#: receive_source/models.py:491 receive_source/views.py:153
-#: templates/home.html:149 templates/receive_source/ceo_home.html:6
 msgid "CEO"
 msgstr "مدیرعامل"
 
-#: receive_source/models.py:498
-#, fuzzy
-#| msgid "POST required"
 msgid "Not Required"
-msgstr "درخواست POST الزامی است"
+msgstr "الزامی نیست"
 
-#: receive_source/models.py:534
-#, fuzzy
-#| msgid "License Approval"
 msgid "Receive Approval"
-msgstr "تأیید مجوز"
+msgstr "تأیید دریافت"
 
-#: receive_source/models.py:535
-#, fuzzy
-#| msgid "License Approvals"
 msgid "Receive Approvals"
-msgstr "تأییدهای مجوز"
+msgstr "تأییدهای دریافت"
 
 #: receive_source/services/license_check.py:77
 #, python-format
@@ -1803,74 +1622,35 @@ msgstr "%(v).2f دقیقه"
 msgid "%(v).2f seconds"
 msgstr "%(v).2f ثانیه"
 
-#: receive_source/services/workflow.py:219
-#, fuzzy, python-format
-#| msgid "Receive Sources"
 msgid "Received via %(req)s"
-msgstr "دریافت چشمه‌ها"
+msgstr "دریافت شده از طریق %(req)s"
 
-#: receive_source/views.py:137 templates/operations/manager_home.html:145
-#: templates/receive_source/receive_detail.html:40
-#: templates/receive_source/receive_manager_input.html:5
-#: templates/receive_source/receive_manager_input.html:14
 msgid "Manager Data Entry"
-msgstr "ورود اطلاعات توسط مدیران"
+msgstr "ورود اطلاعات توسط مدیر"
 
-#: receive_source/views.py:178
-#, fuzzy
-#| msgid "This license is no longer a draft and can't be edited here."
 msgid "This request is no longer a draft and can't be edited here."
-msgstr "این مجوز دیگر پیش‌نویس نیست و از اینجا قابل ویرایش نیست."
+msgstr "این درخواست دیگر پیش‌نویس نیست و از اینجا قابل ویرایش نیست."
 
-#: receive_source/views.py:233
-#, fuzzy
-#| msgid "License request saved successfully."
 msgid "Receive request saved successfully."
-msgstr "درخواست مجوز با موفقیت ذخیره شد."
+msgstr "درخواست دریافت با موفقیت ذخیره شد."
 
-#: receive_source/views.py:259
-msgid ""
-"Sources can only be added while the request is in the Specification stage."
-msgstr "چشمه‌ها فقط در مرحله تنظیم مشخصات قابل افزودن هستند."
+msgid "Sources can only be added while the request is in the Specification stage."
+msgstr "چشمه‌ها فقط در مرحله مشخصات فنی قابل افزودن هستند."
 
-#: receive_source/views.py:294 receive_source/views.py:349
-#, fuzzy
-#| msgid "No sources added."
 msgid "Source added."
-msgstr "هیچ چشمه‌ای اضافه نشده است."
+msgstr "چشمه اضافه شد."
 
-#: receive_source/views.py:324
-#, fuzzy
-#| msgid " Source Inventory"
 msgid "Source added from inventory."
-msgstr "موجودی چشمه‌ها"
+msgstr "چشمه از موجودی انبار اضافه شد."
 
-#: receive_source/views.py:399
-#, fuzzy
-#| msgid "Add at least one component first."
 msgid "Add at least one source before continuing."
-msgstr "حداقل یک مولفه افزوده شود."
+msgstr "قبل از ادامه، حداقل یک چشمه اضافه کنید."
 
-#: receive_source/views.py:410
-msgid ""
-"Specification generated — download it, fill in the source details, then sign."
-msgstr "فرم مشخصات تولید شد — آن را دانلود کنید، اطلاعات چشمه‌ها را تکمیل کنید، سپس امضا نمایید."
-
-#: receive_source/views.py:446 receive_source/views.py:558
-#, fuzzy
-#| msgid "Generated Specification"
 msgid "Updated specification uploaded."
-msgstr "مشخصات فنی تولیدشده"
+msgstr "مشخصات فنی به‌روزشده بارگذاری شد."
 
-#: receive_source/views.py:473
-msgid "Data entry complete — ready for the Operation Manager's signature."
-msgstr "ورود اطلاعات کامل شد — آماده امضای مدیر عملیات."
-
-#: receive_source/views.py:525
-#, fuzzy
-#| msgid "This license is not waiting for approval."
 msgid "This request is not waiting for a signature."
-msgstr "این مجوز در انتظار تأیید نیست."
+msgstr "این درخواست در انتظار امضا نیست."
 
 #: receive_source/views.py:567
 msgid "Discount decision saved."
@@ -1885,10 +1665,9 @@ msgid "Declare Waste Management Cost"
 msgstr "اعلام هزینه مدیریت پسماند"
 
 #: receive_source/views.py:705
-#, fuzzy
-#| msgid "Contract updated."
+
 msgid "Cost declaration updated."
-msgstr "قرارداد به‌روزرسانی شد."
+msgstr "اعلام هزینه به‌روزرسانی شد."
 
 #: receive_source/views.py:725
 msgid "Update Waste Management Cost"
@@ -2170,10 +1949,9 @@ msgstr[1] ""
 "چشمه‌های زیر (%(counter)s مورد) برای دریافت قرارداد ثبت خواهند شد:\n"
 
 #: templates/contract/bulk_form.html:41
-#, fuzzy
-#| msgid "Movement Date"
+
 msgid "Movement Details"
-msgstr "تاریخ جابه‌جایی"
+msgstr "جزئیات جابه‌جایی"
 
 #: templates/contract/bulk_form.html:43
 msgid "This will be applied identically to every selected source above."
@@ -2198,8 +1976,7 @@ msgid "Attachments"
 msgstr "پیوست‌ها"
 
 #: templates/contract/bulk_form.html:78
-#, fuzzy
-#| msgid "send to Pars Isotop"
+
 msgid "Send to PI"
 msgstr "ارسال به پارس ایزوتوپ"
 
@@ -2289,10 +2066,9 @@ msgstr "چشمه‌های موجود در شرکت PI برای کنترل کیف
 #: templates/operations/control_home.html:125
 #: templates/operations/deputy_home.html:144
 #: templates/operations/manager_home.html:164
-#, fuzzy
-#| msgid "License Requests"
+
 msgid "Source Delivery Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "درخواست‌های تحویل چشمه"
 
 #: templates/contract/contract_home.html:207
 msgid "Source Delivery requests waiting for Cost declaration"
@@ -3035,14 +2811,6 @@ msgstr "برای ادامه یک گزینه انتخاب کنید."
 msgid "Approve license payments"
 msgstr "تأیید پرداخت‌های مجوز"
 
-#: templates/financial/financial_home.html:130
-#, fuzzy, python-format
-#| msgid ""
-#| "\n"
-#| "%(counter)s license waiting for contract.\n"
-#| msgid_plural ""
-#| "\n"
-#| "%(counter)s licenses waiting for contract.\n"
 msgid ""
 "\n"
 "%(counter)s license waiting for payment.\n"
@@ -3051,26 +2819,20 @@ msgid_plural ""
 "%(counter)s licenses waiting for payment.\n"
 msgstr[0] ""
 "\n"
-"%(counter)s مجوز در انتظار قرارداد است.\n"
+"%(counter)s مجوز در انتظار پرداخت است.\n"
 msgstr[1] ""
 "\n"
-"%(counter)s مجوز در انتظار قرارداد هستند.\n"
+"%(counter)s مجوز در انتظار پرداخت هستند.\n"
 
 #: templates/financial/financial_home.html:143
 msgid "Source Delivery Requests Payment"
 msgstr "پرداخت درخواست‌های پسمانداری"
 
-#: templates/financial/financial_home.html:145
-#, fuzzy
-#| msgid "Approve license payments"
 msgid "Approve Delivery Requests payments"
-msgstr "تأیید پرداخت‌های مجوز"
+msgstr "تأیید پرداخت‌های درخواست‌های تحویل"
 
-#: templates/financial/financial_home.html:149
-#, fuzzy
-#| msgid "license(s) waiting for Signature and approval."
 msgid "Delivery Requests waiting for payment approval"
-msgstr "مجوز در انتظار امضا و تأیید."
+msgstr "درخواست‌های تحویل در انتظار تأیید پرداخت"
 
 #: templates/financial/license_payment_list.html:31
 #: templates/operations/license_queue.html:55
@@ -3130,8 +2892,7 @@ msgid "Operations Control Manager"
 msgstr "مدیر کنترل عملیات"
 
 #: templates/operations/control_home.html:105
-#, fuzzy
-#| msgid "Operations Control Manager"
+
 msgid "Operation Control manager"
 msgstr "مدیر کنترل عملیات"
 
@@ -3160,10 +2921,9 @@ msgid "license(s) waiting for Signature and approval."
 msgstr "مجوز در انتظار امضا و تأیید."
 
 #: templates/operations/deputy_home.html:151
-#, fuzzy
-#| msgid "Waiting Deputy Signature"
+
 msgid "Requests waiting for deputy signature."
-msgstr "در انتظار امضای معاون"
+msgstr "درخواستهای در انتظار امضای معاون"
 
 #: templates/operations/license_create.html:7
 #: templates/operations/license_create.html:26
@@ -3505,32 +3265,22 @@ msgid "Discount-requested requests awaiting CEO"
 msgstr "درخواست‌های دارای تقاضای تخفیف در انتظار مدیرعامل"
 
 #: templates/receive_source/ceo_home.html:166
-#, fuzzy
-#| msgid "Dimensions"
+
 msgid "Decisions"
-msgstr "ابعاد"
+msgstr "تصمیمات"
 
 #: templates/receive_source/ceo_home.html:171
 msgid "CEO decisions and approvals history"
 msgstr "تاریخچه تصمیمات و تأییدیه‌های مدیرعامل"
 
-#: templates/receive_source/ceo_home.html:187
-#, fuzzy
-#| msgid "Reports"
 msgid "CEO Reports"
-msgstr "گزارش‌ها"
+msgstr "گزارش‌های مدیرعامل"
 
-#: templates/receive_source/ceo_home.html:192
 msgid "Review CEO related reports"
 msgstr "بررسی گزارش‌های مرتبط با مدیرعامل"
 
-#: templates/receive_source/dsrs_characterization_form.html:5
-#: templates/receive_source/dsrs_characterization_form.html:14
-#: templates/receive_source/receive_detail.html:56
-#, fuzzy
-#| msgid "Contract Information"
 msgid "Characterization"
-msgstr "اطلاعات قرارداد"
+msgstr "مشخصه‌سنجی چشمه"
 
 #: templates/receive_source/dsrs_characterization_form.html:21
 msgid "Physical Characterization"
@@ -3542,19 +3292,11 @@ msgid ""
 "on the characterization list page, not per source."
 msgstr "صورتجلسه (سند مشترک این دسته) فقط یک‌بار برای کل درخواست در صفحه فهرست مشخصه‌یابی بارگذاری می‌شود، نه برای هر چشمه به‌طور جداگانه."
 
-#: templates/receive_source/receive_add_sources.html:5
-#: templates/receive_source/receive_detail.html:36
-#, fuzzy
-#| msgid "Add Source"
 msgid "Add Sources"
-msgstr "افزودن چشمه"
+msgstr "افزودن چشمه‌ها"
 
-#: templates/receive_source/receive_add_sources.html:14
-#: templates/receive_source/receive_detail.html:63
-#, fuzzy
-#| msgid "Source State"
 msgid "Sources / Waste"
-msgstr "وضعیت چشمه"
+msgstr "چشمه‌ها / پسماند"
 
 #: templates/receive_source/receive_add_sources.html:24
 msgid ""
@@ -3573,10 +3315,9 @@ msgstr "ردیف‌های افزوده‌شده"
 
 #: templates/receive_source/receive_add_sources.html:85
 #: templates/receive_source/receive_contract_form.html:56
-#, fuzzy
-#| msgid "License Payment"
+
 msgid "License Match"
-msgstr "پرداخت مجوز"
+msgstr "تطبیق مجوز"
 
 #: templates/receive_source/receive_add_sources.html:101
 msgid "exact"
@@ -3587,8 +3328,7 @@ msgid "confirmed"
 msgstr "تأییدشده"
 
 #: templates/receive_source/receive_add_sources.html:109
-#, fuzzy
-#| msgid "No sources added."
+
 msgid "No sources added yet."
 msgstr "هیچ چشمه‌ای اضافه نشده است."
 
@@ -3617,83 +3357,35 @@ msgid ""
 "separate, independently-editable DSRS record per unit."
 msgstr "یک ردیف برای هر واحد فیزیکی — چشمه‌ای که با تعداد بیشتر از ۱ افزوده شود، برای هر واحد یک رکورد DSRS جداگانه و قابل‌ویرایش مستقل دریافت می‌کند."
 
-#: templates/receive_source/receive_characterization.html:57
-#: templates/receive_source/received_sources_list.html:135
-#, fuzzy
-#| msgid "Status"
 msgid "DSRS Status"
-msgstr "وضعیت"
+msgstr "وضعیت DSRS"
 
-#: templates/receive_source/receive_characterization.html:70
-#: templates/receive_source/received_sources_list.html:151
-#, fuzzy
-#| msgid "Created At"
 msgid "Not created yet"
-msgstr "تاریخ ایجاد"
+msgstr "هنوز ایجاد نشده است"
 
-#: templates/receive_source/receive_characterization.html:77
-#: templates/receive_source/receive_queue.html:68
-#, fuzzy
-#| msgid "Practice"
 msgid "Characterize"
-msgstr "کاربرد"
+msgstr "مشخصه‌سنجی"
 
-#: templates/receive_source/receive_characterization.html:82
-#, fuzzy
-#| msgid "Stored"
 msgid "Mark Stored"
-msgstr "ذخیره‌شده"
+msgstr "ثبت به‌عنوان ذخیره‌شده"
 
-#: templates/receive_source/receive_characterization.html:88
 msgid "From existing inventory"
 msgstr "از موجودی انبار"
 
-#: templates/receive_source/receive_contract_form.html:19
-msgid ""
-"This is not a legal contract — just where the cost of receiving these items "
-"is declared. Whether each item already has an existing license contract "
-"affects that cost."
-msgstr "این یک قرارداد رسمی نیست — فقط محل اعلام هزینه دریافت این اقلام است. اینکه هر مورد از قبل قرارداد مجوز داشته باشد یا نه، بر این هزینه تأثیر می‌گذارد."
-
-#: templates/receive_source/receive_contract_form.html:25
-#, fuzzy
-#| msgid "Generated Specification"
 msgid "View Filled & Signed Specification"
-msgstr "مشخصات فنی تولیدشده"
+msgstr "مشاهده مشخصات فنی تکمیل و امضاشده"
 
-#: templates/receive_source/receive_contract_form.html:33
-#, fuzzy
-#| msgid "Current File:"
 msgid "View Current Invoice"
-msgstr "فایل فعلی:"
+msgstr "مشاهده فاکتور فعلی"
 
-#: templates/receive_source/receive_contract_form.html:40
-msgid "Discount: CEO-approved"
-msgstr "تخفیف: تأییدشده توسط مدیرعامل"
-
-#: templates/receive_source/receive_contract_form.html:45
-msgid "Factor this discount into the cost you declare below."
-msgstr "این تخفیف را در هزینه‌ای که در پایین اعلام می‌کنید لحاظ کنید."
-
-#: templates/receive_source/receive_contract_form.html:67
-#, fuzzy
-#| msgid "Manage contracts"
 msgid "Existing contract"
-msgstr "مدیریت قراردادها"
+msgstr "قرارداد موجود"
 
-#: templates/receive_source/receive_contract_form.html:69
-#, fuzzy
-#| msgid "Contract"
 msgid "No contract"
-msgstr "قرارداد"
+msgstr "بدون قرارداد"
 
-#: templates/receive_source/receive_create.html:6
-#: templates/receive_source/receive_create.html:21
-#: templates/receive_source/receiving_home.html:68
-#, fuzzy
-#| msgid "New License Request"
 msgid "New Receive Request"
-msgstr "درخواست مجوز جدید"
+msgstr "درخواست دریافت جدید"
 
 #: templates/receive_source/receive_create.html:87
 msgid ""
@@ -3701,41 +3393,23 @@ msgid ""
 "saved — that lets us show only that facility's contracted nuclides, if any."
 msgstr "پس از ذخیره مرکز، ردیف‌های چشمه/پسماند را در صفحه بعد اضافه خواهید کرد — این کار امکان نمایش فقط رادیونوکلیدهای قراردادی آن مرکز (در صورت وجود) را فراهم می‌کند."
 
-#: templates/receive_source/receive_create.html:100
-#, fuzzy
-#| msgid "Save and Continue"
 msgid "Save and Continue to Sources"
-msgstr "ذخیره و ادامه"
+msgstr "ذخیره و ادامه به ثبت منابع"
 
-#: templates/receive_source/receive_detail.html:25
 msgid "Distance to Tehran (km)"
 msgstr "فاصله تا تهران (کیلومتر)"
 
-#: templates/receive_source/receive_detail.html:44
-#: templates/receive_source/receive_queue.html:62
-#, fuzzy
-#| msgid "Sign in"
 msgid "Sign"
-msgstr "ورود"
+msgstr "امضا"
 
-#: templates/receive_source/receive_detail.html:103
-#, fuzzy
-#| msgid "Approval Step"
 msgid "Approvals"
-msgstr "مرحله تأیید"
+msgstr "مراحل تأیید"
 
-#: templates/receive_source/receive_list.html:58
-#, fuzzy
-#| msgid "+ Start New License"
 msgid "+ Start New Receive Request"
-msgstr "+ شروع مجوز جدید"
+msgstr "+ شروع درخواست دریافت جدید"
 
-#: templates/receive_source/receive_list.html:111
-#: templates/receive_source/received_sources_list.html:114
-#, fuzzy
-#| msgid "No license requests found."
 msgid "No receive requests found."
-msgstr "هیچ درخواست مجوزی یافت نشد."
+msgstr "هیچ درخواست دریافتی یافت نشد."
 
 #: templates/receive_source/receive_manager_input.html:19
 msgid ""
@@ -3746,45 +3420,39 @@ msgid ""
 msgstr "بخش لجستیک (بازدید پیش از عملیات، پرسنل، وسیله نقلیه، سختی مسیر، روزهای اسکان/غذا، سایر هزینه‌ها) را مستقیماً در سند زیر تکمیل کنید — هم مدیر عملیات و هم مدیر کنترل عملیات می‌توانند آن را دانلود، تکمیل و مجدداً بارگذاری کنند."
 
 #: templates/receive_source/receive_manager_input.html:25
-#, fuzzy
-#| msgid "Preparing Specification"
+
 msgid "Download Current Specification"
-msgstr "در حال تهیه مشخصات فنی"
+msgstr "دانلود فرم مشخصات فعلی"
 
 #: templates/receive_source/receive_manager_input.html:33
 #: templates/receive_source/receive_sign.html:80
-#, fuzzy
-#| msgid "Uploaded At"
+
 msgid "Upload Filled Document"
-msgstr "تاریخ بارگذاری"
+msgstr " بارگزاری فرم پر شده"
 
 #: templates/receive_source/receive_manager_input.html:43
 msgid "Data Entry Complete — Ready for Operation Manager Signature"
 msgstr "ورود اطلاعات کامل شد — آماده امضای مدیر عملیات"
 
 #: templates/receive_source/receive_payment_form.html:20
-#, fuzzy
-#| msgid "Record Count"
+
 msgid "Declared Cost"
-msgstr "تعداد رکوردها"
+msgstr "هزینه اعلام شده"
 
 #: templates/receive_source/receive_payment_form.html:23
-#, fuzzy
-#| msgid "Count"
+
 msgid "Discount"
-msgstr "تعداد"
+msgstr "تخفیف"
 
 #: templates/receive_source/receive_payment_form.html:23
-#, fuzzy
-#| msgid "Approved"
+
 msgid "CEO-approved"
-msgstr "تأییدشده"
+msgstr " تأییدشده توسط مدیرعامل"
 
 #: templates/receive_source/receive_payment_form.html:34
-#, fuzzy
-#| msgid "Current Facility"
+
 msgid "View Current Receipt"
-msgstr "مرکز فعلی"
+msgstr "مشاهده رسید فعلی"
 
 #: templates/receive_source/receive_payment_form.html:46
 msgid ""
@@ -3802,22 +3470,19 @@ msgstr "در حال حاضر موردی وجود ندارد."
 
 #: templates/receive_source/receive_sign.html:5
 #: templates/receive_source/receive_sign.html:14
-#, fuzzy
-#| msgid "DSRS Specification"
+
 msgid "Sign Specification"
-msgstr "مشخصات فنی DSRS"
+msgstr "امضای فرم مشخصات  "
 
 #: templates/receive_source/receive_sign.html:19
-#, fuzzy
-#| msgid "Current Signature"
+
 msgid "Current Step"
-msgstr "امضای فعلی"
+msgstr "مرحله فعلی"
 
 #: templates/receive_source/receive_sign.html:25
-#, fuzzy
-#| msgid "DSRS Specification Form"
+
 msgid "Download Specification Document"
-msgstr "فرم مشخصات فنی DSRS"
+msgstr "دانلود فرم مشخصات  "
 
 #: templates/receive_source/receive_sign.html:31
 msgid "Contracts and Finance both see whatever you save here."
@@ -3851,17 +3516,15 @@ msgid ""
 msgstr "در صورت تیک زدن، این درخواست بلافاصله پس از امضای معاون، برای تأیید نزد مدیرعامل ارجاع داده می‌شود، پیش از آنکه واحد قراردادها هزینه را برآورد کند."
 
 #: templates/receive_source/receive_sign.html:88
-#, fuzzy
-#| msgid "Save and Continue"
+
 msgid "Sign and Continue"
-msgstr "ذخیره و ادامه"
+msgstr "امضا و ادامه"
 
 #: templates/receive_source/received_sources_list.html:4
 #: templates/receive_source/receiving_home.html:43
-#, fuzzy
-#| msgid "Receive Sources"
+
 msgid "Received Sources"
-msgstr "دریافت چشمه‌ها"
+msgstr " چشمه‌های دریافت شده"
 
 #: templates/receive_source/received_sources_list.html:46
 msgid ""
@@ -3871,50 +3534,43 @@ msgid ""
 msgstr "نمای کلی فقط‌خواندنی — مرکز، هزینه قرارداد، فاکتور، پرداخت، سند مشخصه‌یابی تکمیل/امضاشده (صورتجلسه)، و هر چشمه به همراه پیوند به رکورد DSRS آن."
 
 #: templates/receive_source/received_sources_list.html:54
-#, fuzzy
-#| msgid "License Letter"
+
 msgid "Delivery Letter"
-msgstr "نامه مجوز"
+msgstr "نامه تحویل"
 
 #: templates/receive_source/received_sources_list.html:59
-#, fuzzy
-#| msgid "DSRS Specification"
+
 msgid "Specification"
-msgstr "مشخصات فنی DSRS"
+msgstr "مشخصات  "
 
 #: templates/receive_source/received_sources_list.html:86
-#, fuzzy
-#| msgid "Receive"
+
 msgid "Receipt"
-msgstr "دریافت"
+msgstr "رسید"
 
 #: templates/receive_source/received_sources_list.html:136
 msgid "Link"
 msgstr "پیوند"
 
 #: templates/receive_source/received_sources_list.html:146
-#, fuzzy
-#| msgid "View Name"
+
 msgid "View Data"
-msgstr "نام نما"
+msgstr "مشاهده داده"
 
 #: templates/receive_source/receiving_home.html:31
-#, fuzzy
-#| msgid "Select a service to continue"
+
 msgid "Select a queue to continue"
-msgstr "برای ادامه یک خدمت انتخاب کنید"
+msgstr "برای ادامه، یک صف را انتخاب کنید"
 
 #: templates/receive_source/receiving_home.html:37
-#, fuzzy
-#| msgid "License Requests"
+
 msgid "All Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "همه درخواست‌ها"
 
 #: templates/receive_source/receiving_home.html:38
-#, fuzzy
-#| msgid "View received sources."
+
 msgid "View and start receive requests"
-msgstr "مشاهده چشمه‌های دریافت‌شده."
+msgstr "مشاهده و شروع درخوالست های تحویل چشمه."
 
 #: templates/receive_source/receiving_home.html:44
 msgid "Read-only overview: contract cost, invoice, payment, صورتجلسه, sources"
@@ -3925,10 +3581,9 @@ msgid "Sources awaiting characterization"
 msgstr "چشمه‌های در انتظار مشخصه‌یابی"
 
 #: templates/receive_source/receiving_home.html:63
-#, fuzzy
-#| msgid "License Requests"
+
 msgid "Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "درخواست‌ها"
 
 #: templates/receive_source/receiving_home.html:69
 msgid "Start from a DSRS Delivery letter"

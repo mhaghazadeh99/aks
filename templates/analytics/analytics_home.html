@@ -4,10 +4,11 @@
 
 
 {% block extrastyle %}
+
 <style>
 .chart-toolbar{
     display:flex;
-    align-items:flex-end;
+    align-items:flex-start;
     gap:16px;
     flex-wrap:wrap;
     padding:15px;
@@ -17,34 +18,33 @@
     border-radius:8px;
 }
 
+
 .toolbar-group{
     display:flex;
     flex-direction:column;
-    gap:5px;
+    gap:8px;
+    min-width:170px;
 }
+
 
 .toolbar-group label{
     font-size:13px;
     font-weight:600;
 }
 
+
 .toolbar-group select{
     min-width:170px;
-    height:36px;
+    min-height:40px;
+    height:auto;
+    padding:6px 10px;
+    line-height:1.5;
 }
-
 .generate-btn{
-    height:36px;
-    padding:0 18px;
+    height:40px;
+    padding:6px 18px;
     cursor:pointer;
-}
-
-.chart-container{
-    height:500px;
-    background:#fff;
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:20px;
+    margin-top:25px;
 }
 </style>
 {% endblock %}

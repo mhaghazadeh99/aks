@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load static %}
+
+
+{% block title %}
+{% trans "Sell Request Details" %}
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            {% trans "Sell Request" %} #{{ sell_request.id }}
+        </h2>
+
+        <a href="{% url 'sell_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+            {% trans "Back" %}
+        </a>
+    </div>
+
+
+    <!-- Request Information -->
+    <div class="card mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">
+                {% trans "Request Information" %}
+            </h5>
+        </div>
+
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-4">
+                    <strong>{% trans "Created By" %}</strong>
+                    <br>
+                    {{ sell_request.created_by }}
+                </div>
+
+
+                <div class="col-md-4">
+                    <strong>{% trans "Created At" %}</strong>
+                    <br>
+                    {{ sell_request.created_at|date:"Y-m-d H:i" }}
+                </div>
+
+
+                <div class="col-md-4">
+                    <strong>{% trans "Status" %}</strong>
+                    <br>
+
+                    <span class="badge bg-primary">
+                        {{ sell_request.get_status_display }}
+                    </span>
+
+                </div>
+                
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Original Request File -->
+   <!-- Uploaded Request Form -->
+<div class="card mb-4">
+
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-file-earmark-image"></i>
+            {% trans "Uploaded Request Form" %}
+        </h5>
+    </div>
+
+
+    <div class="card-body">
+
+        {% if sell_request.request_form %}
+
+            <div class="d-flex align-items-center justify-content-between border rounded p-3">
+
+                <div>
+                    <i class="bi bi-image fs-3"></i>
+
+                    <strong class="ms-2">
+                        {% trans "Scanned Request Form" %}
+                    </strong>
+
+                    <br>
+
+                    <small class="text-muted">
+                        {{ sell_request.request_form.name }}
+                    </small>
+                </div>
+
+
+                <div>
+
+                    <a href="{{ sell_request.request_form.url }}"
+                       target="_blank"
+                       class="btn btn-outline-primary">
+
+                        <i class="bi bi-eye"></i>
+                        {% trans "View" %}
+
+                    </a>
+
+
+                    <a href="{{ sell_request.request_form.url }}"
+                       download
+                       class="btn btn-outline-secondary">
+
+                        <i class="bi bi-download"></i>
+                        {% trans "Download" %}
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+        {% else %}
+
+            <p class="text-muted">
+                {% trans "No request form uploaded." %}
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+
+
+
+    <!-- Sources -->
+    <div class="card mb-4">
+
+        <div class="card-header d-flex justify-content-between">
+
+            <span>
+                {% trans "Sources" %}
+            </span>
+
+
+            {% if sell_request.status == "SPECIFICATION" %}
+
+            <a href="{% url 'sell_add_sources' sell_request.pk %}"
+               class="btn btn-sm btn-success">
+
+                <i class="bi bi-plus"></i>
+                {% trans "Add Sources" %}
+
+            </a>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="card-body p-0">
+
+
+            <table class="table table-striped mb-0">
+
+                <thead>
+
+                <tr>
+
+                    <th>
+                        {% trans "Serial Number" %}
+                    </th>
+
+                    <th>
+                        {% trans "Nuclide" %}
+                    </th>
+
+                    <th>
+                        {% trans "Activity" %}
+                    </th>
+
+                    <th>
+                        {% trans "Remarks" %}
+                    </th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                {% for source in sources %}
+
+                <tr>
+
+                    <td>
+                        {{ source.serial_number }}
+                    </td>
+
+
+                    <td>
+                        {{ source.nuclide }}
+                    </td>
+
+
+                    <td>
+                        {{ source.recorded_activity_mci }}
+                        mCi
+                    </td>
+
+
+                    <td>
+                        {{ source.remarks|default:"-" }}
+                    </td>
+
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="4" class="text-center">
+
+                        {% trans "No sources added." %}
+
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- CEO Approval -->
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            {% trans "CEO Approval" %}
+
+        </div>
+
+
+        <div class="card-body">
+
+
+            {% if sell_request.ceo_approved_by %}
+
+                <p>
+                    <strong>
+                    {% trans "Approved By" %}
+                    </strong>
+
+                    {{ sell_request.ceo_approved_by }}
+
+                </p>
+
+
+                <p>
+                    <strong>
+                    {% trans "Approved At" %}
+                    </strong>
+
+                    {{ sell_request.ceo_approved_at }}
+
+                </p>
+
+
+                <span class="badge bg-success">
+
+                    {% trans "Approved" %}
+
+                </span>
+
+
+            {% else %}
+
+
+                <span class="badge bg-warning">
+
+                    {% trans "Waiting for CEO Signature" %}
+
+                </span>
+
+
+            {% endif %}
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- Actions -->
+    <div class="d-flex gap-2 mb-5">
+
+
+        {% if sell_request.status == "WAITING_CEO" %}
+
+            <a href="{% url 'sell_sign' sell_request.pk %}"
+               class="btn btn-primary">
+
+                <i class="bi bi-pen"></i>
+                {% trans "Sign" %}
+
+            </a>
+
+        {% endif %}
+
+
+
+        {% if sell_request.status == "SPECIFICATION" %}
+
+            <a href="{% url 'sell_finish_sources' sell_request.pk %}"
+               class="btn btn-warning">
+
+                {% trans "Send to CEO" %}
+
+            </a>
+
+        {% endif %}
+
+
+
+        {% if already_sent %}
+
+            <span class="badge bg-info p-3">
+
+                {% trans "Already sent to PI" %}
+
+            </span>
+
+        {% endif %}
+
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

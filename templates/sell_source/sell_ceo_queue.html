@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "CEO — Sell Requests" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<h3 class="mb-3">{% trans "Sell Requests Waiting for CEO Signature" %}</h3>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Request" %}</th>
+    <th>{% trans "Created By" %}</th>
+    <th>{% trans "Sources" %}</th>
+    <th>{% trans "Action" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for req in page_obj %}
+<tr>
+    <td>{{ req }}</td>
+    <td>{{ req.created_by }}</td>
+    <td>{{ req.sources.count }}</td>
+    <td><a href="{% url 'sell_sign' req.pk %}" class="btn btn-sm btn-primary">{% trans "Review & Sign" %}</a></td>
+</tr>
+{% empty %}
+<tr><td colspan="4" class="text-center">{% trans "Nothing here right now." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+</div>
+{% endblock %}

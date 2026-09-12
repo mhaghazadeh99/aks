@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Sell Requests" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.pagination{ display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; }
+.pagination a, .pagination span{ padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; }
+.pagination .current{ background:#0d6efd; color:#fff; border-color:#0d6efd; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<div class="table-header">
+    <div class="header-group">
+        <form method="get">
+            <input type="text" name="search" placeholder="{% trans 'Search by serial number...' %}" value="{{ search }}">
+            <button type="submit">🔍</button>
+        </form>
+    </div>
+    <div class="header-group">
+        <a href="{% url 'sell_create' %}" class="btn-blue">{% trans "+ New Sell Request" %}</a>
+    </div>
+</div>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Request" %}</th>
+    <th>{% trans "Created By" %}</th>
+    <th>{% trans "Sources" %}</th>
+    <th>{% trans "Status" %}</th>
+    <th>{% trans "Action" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for req in page_obj %}
+<tr>
+    <td>{{ req }}</td>
+    <td>{{ req.created_by }}</td>
+    <td>{{ req.sources.count }}</td>
+    <td>{{ req.get_status_display }}</td>
+    <td>
+        <a href="{% url 'sell_detail' req.pk %}" class="btn btn-sm btn-outline-primary">{% trans "View" %}</a>
+        {% if req.status == "SPECIFICATION" %}
+        <a href="{% url 'sell_add_sources' req.pk %}" class="btn btn-sm btn-warning">{% trans "Add Sources" %}</a>
+        {% elif req.status == "WAITING_CEO" %}
+        <a href="{% url 'sell_sign' req.pk %}" class="btn btn-sm btn-success">{% trans "Sign" %}</a>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="text-center">{% trans "No sell requests found." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>
+    {% endif %}
+    <span class="current">{{ page_obj.number }}</span>
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>
+    {% endif %}
+</div>
+
+</div>
+{% endblock %}

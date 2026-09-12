@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sell Source" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.home-container{ padding:30px; }
+.home-title{ font-size:28px; font-weight:700; margin-bottom:10px; }
+.home-subtitle{ color:#777; margin-bottom:30px; }
+.home-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:25px; }
+.home-card{
+    background:white; border-radius:16px; padding:25px; text-decoration:none; color:inherit;
+    box-shadow:0 5px 15px rgba(0,0,0,.08); transition:.25s; display:flex; flex-direction:column;
+    justify-content:center; min-height:130px;
+}
+.home-card:hover{ transform:translateY(-5px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
+.home-icon{ font-size:35px; margin-bottom:15px; }
+.home-card h3{ margin:0; font-size:20px; }
+.home-card p{ margin-top:8px; color:#777; }
+.home-count{ margin-top:6px; font-weight:700; color:#0d6efd; font-size:14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="home-container">
+
+    <h1 class="home-title">{% trans "Sell Source" %}</h1>
+    <p class="home-subtitle">{% trans "DSRS sale requests to PI" %}</p>
+
+    <div class="home-grid">
+
+        <a href="{% url 'sell_list' %}" class="home-card">
+            <div class="home-icon">📤</div>
+            <h3>{% trans "All Requests" %}</h3>
+            <p>{% trans "View and start sell requests" %}</p>
+        </a>
+
+        <a href="{% url 'sell_create' %}" class="home-card">
+            <div class="home-icon">➕</div>
+            <h3>{% trans "New Sell Request" %}</h3>
+            <p>{% trans "Upload a scanned DSRS sale request form" %}</p>
+        </a>
+
+        
+
+    </div>
+
+</div>
+{% endblock %}

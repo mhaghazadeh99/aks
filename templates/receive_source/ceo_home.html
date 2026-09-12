@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load receiving_extras %}
-
+{% load sell_tags %}
 {% block title %}
 {% trans "CEO" %}
 {% endblock title %}
@@ -151,11 +151,16 @@
     
 </a>
 
-
+ <a href="{% url 'sell_ceo_queue' %}" class="home-card">
+            <div class="home-icon">☢️</div>
+            <h3>{% trans "DSRS Requests" %}</h3>
+            <p> {% sell_ceo_count %} {% trans "DSRS Requests waiting for CEO signature" %}</p>
+           
+        </a>
 
 <!-- Future CEO functions -->
 
-<a href="#" class="home-card">
+<!-- <a href="#" class="home-card">
 
 <div class="home-icon">
 📄
@@ -193,7 +198,7 @@
 </p>
 
 
-</a>
+</a> -->
 
 
 

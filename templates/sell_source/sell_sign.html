@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign — Sell Request" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h3>{% trans "Review & Sign" %} — {{ sell_request }}</h3>
+                </div>
+                <div class="card-body">
+
+                    <p><strong>{% trans "Scanned Request Form" %}:</strong></p>
+                    <img src="{{ sell_request.request_form.url }}" alt="request form" class="img-fluid border mb-3" style="max-height:500px;">
+
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "نام ماده پرتوزا" %}</th>
+                                <th>{% trans "شماره سریال" %}</th>
+                                <th>{% trans "تاریخ ساخت" %}</th>
+                                <th>{% trans "پرتوزایی ثبت‌شده (mCi)" %}</th>
+                                <th>{% trans "مشخصات فیزیکی" %}</th>
+                                <th>{% trans "ملاحظات" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for source in sell_request.sources.all %}
+                            <tr>
+                                <td>{{ source.nuclide }}</td>
+                                <td>{{ source.serial_number|default:"-" }}</td>
+                                <td>{{ source.manufacture_date|default:"-" }}</td>
+                                <td>{{ source.recorded_activity_mci|default:"-" }}</td>
+                                <td>{{ source.physical_characteristics|default:"-" }}</td>
+                                <td>{{ source.remarks|default:"-" }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">{% trans "Approve and Sign" %}</button>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

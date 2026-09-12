@@ -60,7 +60,7 @@
             <div class="home-icon">📦</div>
             <h3>{% trans "Receiving / Characterization" %}</h3>
             <p>{% trans "Sources awaiting characterization" %}</p>
-            <p class="home-count"># {{ receiving_count }} {% trans "Requests" %}</p>
+            <p class="home-count"> {{ receiving_count }} {% trans "Requests" %}</p>
         </a>
 
         <a href="{% url 'receive_create' %}" class="home-card">

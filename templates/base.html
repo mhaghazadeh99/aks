@@ -59,6 +59,10 @@
    class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
     🏠 {% trans "Home" %}
 </a>
+<a href="{% url 'ceo_home' %}"
+   class="{% if request.resolver_match.url_name == 'ceo_home' %}active{% endif %}">
+    🏛 {% trans "CEO" %}
+</a>
 
 <a href="{% url 'operation_home' %}"
    class="{% if request.resolver_match.url_name == 'operation_home' %}active{% endif %}">

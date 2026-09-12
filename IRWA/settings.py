@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "financial",
     "receive_source",
+    "sell_source",
+    
 
 ]
 

@@ -1162,7 +1162,7 @@ msgstr "درخواست مجوز"
 #: templates/operations/deputy_home.html:124
 #: templates/operations/manager_home.html:125
 msgid "License Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "درخواست‌ مجوز"
 
 #: operations/models.py:145
 #, python-format
@@ -1478,7 +1478,7 @@ msgstr "نسخه فعلی را از پایین دانلود کنید، آن را
 
 #: receive_source/forms.py:459
 msgid "Characterization Documents / Photos"
-msgstr "مستندات / تصاویر مشخصه‌یابی"
+msgstr "مستندات / تصاویر مشخصه‌سازی"
 
 msgid "Waiting Creator/Coordinator Signature"
 msgstr "در انتظار امضای ایجادکننده / هماهنگ‌کننده"
@@ -1499,7 +1499,7 @@ msgid "Ready To Receive"
 msgstr "آماده دریافت"
 
 msgid "Receiving / Characterization"
-msgstr "دریافت / مشخصه‌سنجی"
+msgstr "دریافت / مشخصه‌سازی"
 
 msgid "Radioactive Source"
 msgstr "چشمه پرتوزا"
@@ -1520,16 +1520,16 @@ msgid "Discount Requested"
 msgstr "درخواست تخفیف"
 
 msgid "Receive Request"
-msgstr "درخواست دریافت"
+msgstr "درخواست تحویل"
 
 msgid "Receive Requests"
-msgstr "درخواست‌های دریافت"
+msgstr "درخواست‌ تحویل"
 
 msgid "Receive Attachment"
-msgstr "پیوست دریافت"
+msgstr "پیوست "
 
 msgid "Receive Attachments"
-msgstr "پیوست‌های دریافت"
+msgstr "پیوست‌ها"
 
 msgid "Matched Existing Licensed Source"
 msgstr "چشمه موجود دارای مجوز"
@@ -1564,10 +1564,10 @@ msgid "Receive Contracts"
 msgstr "قراردادهای دریافت"
 
 msgid "Receive Payment"
-msgstr "پرداخت درخواست دریافت"
+msgstr "پرداخت دریافت چشمه"
 
 msgid "Receive Payments"
-msgstr "پرداخت‌های درخواست دریافت"
+msgstr "پرداخت‌های دریافت چشمه"
 
 msgid "Creator / Coordinator"
 msgstr "ایجادکننده / هماهنگ‌کننده"
@@ -1681,7 +1681,7 @@ msgstr "صورتجلسه بارگذاری شد — به‌صورت خودکار 
 
 #: receive_source/views.py:853
 msgid "Characterization saved."
-msgstr "مشخصه‌یابی ذخیره شد."
+msgstr "مشخصه‌سازی ذخیره شد."
 
 #: receive_source/views.py:873
 msgid "Source marked as stored."
@@ -2068,11 +2068,11 @@ msgstr "چشمه‌های موجود در شرکت PI برای کنترل کیف
 #: templates/operations/manager_home.html:164
 
 msgid "Source Delivery Requests"
-msgstr "درخواست‌های تحویل چشمه"
+msgstr "درخواست‌ تحویل چشمه"
 
 #: templates/contract/contract_home.html:207
 msgid "Source Delivery requests waiting for Cost declaration"
-msgstr "درخواست‌های پسمانداری در انتظار اعلام هزینه"
+msgstr "درخواست‌ پسمانداری در انتظار اعلام هزینه"
 
 #: templates/contract/index.html:4
 msgid "Sold DSRS's"
@@ -2826,13 +2826,13 @@ msgstr[1] ""
 
 #: templates/financial/financial_home.html:143
 msgid "Source Delivery Requests Payment"
-msgstr "پرداخت درخواست‌های پسمانداری"
+msgstr "پرداخت درخواست‌ پسمانداری"
 
 msgid "Approve Delivery Requests payments"
-msgstr "تأیید پرداخت‌های درخواست‌های تحویل"
+msgstr "تأیید پرداخت‌های درخواست‌ تحویل"
 
 msgid "Delivery Requests waiting for payment approval"
-msgstr "درخواست‌های تحویل در انتظار تأیید پرداخت"
+msgstr "درخواست‌ تحویل در انتظار تأیید پرداخت"
 
 #: templates/financial/license_payment_list.html:31
 #: templates/operations/license_queue.html:55
@@ -2905,7 +2905,7 @@ msgstr "برای ادامه یک عملیات انتخاب کنید."
 
 #: templates/operations/control_home.html:132
 msgid "Source delivery requests waiting for control manager signature."
-msgstr "درخواست‌های پسمانداری در انتظار امضای مدیر کنترل."
+msgstr "درخواست‌ پسمانداری در انتظار امضای مدیر کنترل."
 
 #: templates/operations/deputy_home.html:5
 msgid "Operations Deputy Manager"
@@ -3198,11 +3198,11 @@ msgstr "مدیر عملیات"
 
 #: templates/operations/manager_home.html:152
 msgid "Source delivery requests waiting for logistics/characterization fields."
-msgstr "درخواست‌های پسمانداری در انتظار تکمیل فیلدهای لجستیک/مشخصه‌یابی."
+msgstr "درخواست‌ پسمانداری در انتظار تکمیل فیلدهای لجستیک/مشخصه‌سازی."
 
 #: templates/operations/manager_home.html:171
 msgid "Source delivery requests waiting for manager signature."
-msgstr "درخواست‌های پسمانداری در انتظار امضای مدیر."
+msgstr "درخواست‌ پسمانداری در انتظار امضای مدیر."
 
 #: templates/operations/operation_home.html:126
 msgid "Review and approve license specifications waiting for deputy approval."
@@ -3214,7 +3214,7 @@ msgstr "بررسی و تأیید مشخصات فنی مجوزهای در انت�
 
 #: templates/operations/operation_home.html:157
 msgid "Monitor license requests and workflow progress."
-msgstr "نظارت بر درخواست‌های مجوز و پیشرفت گردش کار."
+msgstr "نظارت بر درخواست‌ مجوز و پیشرفت گردش کار."
 
 #: templates/operations/operation_home.html:173
 msgid "View and manage customer facilities."
@@ -3258,11 +3258,11 @@ msgstr "مدیریت تأییدیه‌ها و تصمیمات مدیرعامل"
 
 #: templates/receive_source/ceo_home.html:148
 msgid "Source Delivery Discount Requests"
-msgstr "درخواست‌های تخفیف پسمانداری"
+msgstr "درخواست‌ تخفیف پسمانداری"
 
 #: templates/receive_source/ceo_home.html:150
 msgid "Discount-requested requests awaiting CEO"
-msgstr "درخواست‌های دارای تقاضای تخفیف در انتظار مدیرعامل"
+msgstr "درخواست‌ دارای تقاضای تخفیف در انتظار مدیرعامل"
 
 #: templates/receive_source/ceo_home.html:166
 
@@ -3280,17 +3280,17 @@ msgid "Review CEO related reports"
 msgstr "بررسی گزارش‌های مرتبط با مدیرعامل"
 
 msgid "Characterization"
-msgstr "مشخصه‌سنجی چشمه"
+msgstr "مشخصه‌سازی چشمه"
 
 #: templates/receive_source/dsrs_characterization_form.html:21
 msgid "Physical Characterization"
-msgstr "مشخصه‌یابی فیزیکی"
+msgstr "مشخصه‌سازی فیزیکی"
 
 #: templates/receive_source/dsrs_characterization_form.html:28
 msgid ""
 "صورتجلسه (the shared batch document) is uploaded once for the whole request "
 "on the characterization list page, not per source."
-msgstr "صورتجلسه (سند مشترک این دسته) فقط یک‌بار برای کل درخواست در صفحه فهرست مشخصه‌یابی بارگذاری می‌شود، نه برای هر چشمه به‌طور جداگانه."
+msgstr "صورتجلسه (سند مشترک این دسته) فقط یک‌بار برای کل درخواست در صفحه فهرست مشخصه‌سازی بارگذاری می‌شود، نه برای هر چشمه به‌طور جداگانه."
 
 msgid "Add Sources"
 msgstr "افزودن چشمه‌ها"
@@ -3364,7 +3364,7 @@ msgid "Not created yet"
 msgstr "هنوز ایجاد نشده است"
 
 msgid "Characterize"
-msgstr "مشخصه‌سنجی"
+msgstr "مشخصه‌سازی"
 
 msgid "Mark Stored"
 msgstr "ثبت به‌عنوان ذخیره‌شده"
@@ -3507,7 +3507,7 @@ msgid ""
 "Fill in the source/waste characterization columns (shield, burial, storage "
 "duration, sale probability, description) directly in the document above, "
 "upload it below, then sign."
-msgstr "ستون‌های مشخصه‌یابی چشمه/پسماند (شیلد، دفن، مدت نگهداری، احتمال فروش، توضیحات) را مستقیماً در سند بالا تکمیل کنید، آن را در پایین بارگذاری کنید، سپس امضا نمایید."
+msgstr "ستون‌های مشخصه‌سازی چشمه/پسماند (شیلد، دفن، مدت نگهداری، احتمال فروش، توضیحات) را مستقیماً در سند بالا تکمیل کنید، آن را در پایین بارگذاری کنید، سپس امضا نمایید."
 
 #: templates/receive_source/receive_sign.html:63
 msgid ""
@@ -3531,7 +3531,7 @@ msgid ""
 "Read-only overview — facility, contract cost, invoice, payment, the filled/"
 "signed characterization document (صورتجلسه), and every source with a link to "
 "its DSRS record."
-msgstr "نمای کلی فقط‌خواندنی — مرکز، هزینه قرارداد، فاکتور، پرداخت، سند مشخصه‌یابی تکمیل/امضاشده (صورتجلسه)، و هر چشمه به همراه پیوند به رکورد DSRS آن."
+msgstr "نمای کلی فقط‌خواندنی — مرکز، هزینه قرارداد، فاکتور، پرداخت، سند مشخصه‌سازی تکمیل/امضاشده (صورتجلسه)، و هر چشمه به همراه پیوند به رکورد DSRS آن."
 
 #: templates/receive_source/received_sources_list.html:54
 
@@ -3578,7 +3578,7 @@ msgstr "نمای کلی فقط‌خواندنی: هزینه قرارداد، ف�
 
 #: templates/receive_source/receiving_home.html:62
 msgid "Sources awaiting characterization"
-msgstr "چشمه‌های در انتظار مشخصه‌یابی"
+msgstr "چشمه‌های در انتظار مشخصه‌سازی"
 
 #: templates/receive_source/receiving_home.html:63
 
@@ -4761,7 +4761,7 @@ msgid ""
 "If you have configured your browser to disable “Referer” headers, please re-"
 "enable them, at least for this site, or for HTTPS connections, or for “same-"
 "origin” requests."
-msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که هدرهای «Referer» را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت، یا اتصالات HTTPS، یا درخواست‌های «هم‌مبدأ» دوباره فعال کنید."
+msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که هدرهای «Referer» را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت، یا اتصالات HTTPS، یا درخواست‌ «هم‌مبدأ» دوباره فعال کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:45
 msgid ""
@@ -4783,7 +4783,7 @@ msgstr "شما این پیام را می‌بینید زیرا این سایت �
 msgid ""
 "If you have configured your browser to disable cookies, please re-enable "
 "them, at least for this site, or for “same-origin” requests."
-msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که کوکی‌ها را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت یا درخواست‌های «هم‌مبدأ» دوباره فعال کنید."
+msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که کوکی‌ها را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت یا درخواست‌ «هم‌مبدأ» دوباره فعال کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:66
 msgid "More information is available with DEBUG=True."

@@ -45,15 +45,7 @@
                                 <td>
                                     {{ approval.get_step_display }}
                                 </td>
-                                {% if approval.step == "CEO" %}
-                                <div class="alert alert-warning">
-                                    <strong>{% trans "Discount Note" %}</strong>
-                                    <textarea name="discount_notes" class="form-control mt-2" rows="3" form="signForm">{{ license.discount_notes|default:"" }}</textarea>
-                                    <p class="text-muted small mt-2 mb-0">
-                                        {% trans "This note is saved when you click Approve & Sign, and will be visible to Contracts." %}
-                                    </p>
-                                </div>
-                                {% endif %}
+                                
 
                                 <td>
                                     {{ approval.approver|default:"-" }}
@@ -322,67 +314,38 @@
 
                     <form method="post">
 
-                        {% csrf_token %}
+    {% csrf_token %}
 
+    {% if license.discount_requested %}
+    <div class="alert alert-info">
+        <strong>{% trans "Discount Requested" %}</strong>
+        {% if license.discount_notes %}
+            <p class="mb-0 mt-1">{{ license.discount_notes|linebreaksbr }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
 
-                        <div class="mb-3">
+    {% if approval.step == "CEO" %}
+    <div class="mb-3">
+        <label>{% trans "Discount Note" %}</label>
+        <textarea name="discount_notes" class="form-control" rows="3">{{ license.discount_notes|default:"" }}</textarea>
+        <p class="text-muted small mt-1 mb-0">
+            {% trans "Saved when you click Approve & Sign — visible to Contracts afterward." %}
+        </p>
+    </div>
+    {% endif %}
 
-                            <label>
+    <div class="mb-3">
+        <label>{% trans "Comment" %}</label>
+        <textarea name="comment" class="form-control" rows="4"></textarea>
+    </div>
 
-                                {% trans "Comment" %}
+    <div class="d-grid gap-2">
+        <button class="btn btn-success" name="approve">✓ {% trans "Approve & Sign" %}</button>
+        <button class="btn btn-danger" name="reject">✖ {% trans "Reject" %}</button>
+    </div>
 
-                            </label>
-
-
-                            <textarea
-
-                                name="comment"
-
-                                class="form-control"
-
-                                rows="4">
-
-                            </textarea>
-
-
-                        </div>
-
-
-
-                        <div class="d-grid gap-2">
-
-
-                            <button
-
-                                class="btn btn-success"
-
-                                name="approve">
-
-                                ✓
-
-                                {% trans "Approve & Sign" %}
-
-                            </button>
-
-
-
-                            <button
-
-                                class="btn btn-danger"
-
-                                name="reject">
-
-                                ✖
-
-                                {% trans "Reject" %}
-
-                            </button>
-
-
-                        </div>
-
-
-                    </form>
+</form>
 
 
                 </div>

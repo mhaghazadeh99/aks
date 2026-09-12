@@ -1179,6 +1179,23 @@ def license_sign(request, pk):
 
     if request.method == "POST":
 
+        if "reject" in request.POST:
+
+            approval.status = LicenseApproval.ApprovalStatus.REJECTED
+            approval.approver = request.user
+            approval.approved_at = timezone.now()
+            approval.comments = request.POST.get("comment", "")
+            approval.save()
+
+            license_request.status = LicenseStatus.REJECTED
+            license_request.status_date = timezone.now()
+            license_request.save(update_fields=["status", "status_date"])
+
+            messages.warning(request, _("License request rejected."))
+            return redirect("license_list")
+
+        # ---- everything below only runs for "approve" ----
+
         if current_step == LicenseApproval.ApprovalStep.CEO:
             license_request.discount_notes = request.POST.get("discount_notes", license_request.discount_notes)
             license_request.save(update_fields=["discount_notes"])
@@ -1204,6 +1221,7 @@ def license_sign(request, pk):
         approval.status = LicenseApproval.ApprovalStatus.APPROVED
         approval.approver = request.user
         approval.approved_at = timezone.now()
+        approval.comments = request.POST.get("comment", "")
         approval.save()
 
         if current_step == LicenseApproval.ApprovalStep.CREATOR:
@@ -1403,7 +1421,7 @@ def operation_ceo_license_list(request):
 
     paginator = Paginator(queryset, 15)
     page_obj = paginator.get_page(request.GET.get("page"))
-
+    
     return render(
         request,
         "operations/license_queue.html",

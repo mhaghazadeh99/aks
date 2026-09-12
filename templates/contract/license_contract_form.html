@@ -103,10 +103,7 @@
                 <th>{% trans "Description" %}</th>
                 <td>{{ license.description|default:"-" }}</td>
             </tr>
-            <tr></tr>
-            <th>{% trans "Discount" %}</th>
-                    <td>{{ license.discount_notes|default:"No" }}</td>
-</tr>
+            
         </table>
 
     </div>
@@ -230,6 +227,72 @@
 
 </div>
 
+
+<div class="card mb-4">
+
+    <div class="card-header">
+        <h4>{% trans "Discount" %}</h4>
+    </div>
+
+    <div class="card-body">
+
+        <table class="table">
+
+            <thead>
+
+                <tr>
+
+                    <th>{% trans "Discount Note" %}</th>
+                    
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% if license.discount_requested %}
+
+                <tr>
+
+                    <td>{{ license.discount_notes|linebreaksbr }}</td>
+
+                    
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="2">
+
+                        {% trans "No discount note was left by the CEO" %}
+
+                    </td>
+
+                </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- {% if license.discount_requested %}
+<div class="alert alert-warning">
+    <strong>{% trans "Discount Was Requested" %}</strong>
+    {% if license.discount_notes %}
+        <p class="mb-0 mt-1">{{ license.discount_notes|linebreaksbr }}</p>
+    {% else %}
+        <p class="mb-0 mt-1 text-muted">{% trans "No discount note was left by the CEO." %}</p>
+    {% endif %}
+</div>
+{% endif %} -->
 
 <div class="card">
 

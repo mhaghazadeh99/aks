@@ -49,11 +49,18 @@ from .services.license_check import (
     confirm_match,
 )
 
+from operations.models import LicenseRequest, LicenseStatus
 
 def ceo_home(request):    
+    context = {
+
+        "waiting_count": LicenseRequest.objects.filter(
+            status=LicenseStatus.WAITING_CEO
+        ).count(),}
+
     return render(
         request,
-        "receive_source/ceo_home.html",
+        "receive_source/ceo_home.html",context
         
     )
 # =====================================================================

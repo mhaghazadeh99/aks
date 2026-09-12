@@ -51,6 +51,8 @@ class LicenseStatus(models.TextChoices):
         _("Waiting Deputy Signature"),
     )
 
+    WAITING_CEO = "WAITING_CEO", _("Waiting CEO Signature (Discount Requested)")
+    
     CONTRACTS = (
         "CONTRACTS",
         _("Contracts"),
@@ -101,7 +103,18 @@ class LicenseRequest(models.Model):
     )
 
     
+    discount_requested = models.BooleanField(
+        _("Discount Requested"),
+        default=False,
+        help_text=_("If checked, the request routes to the CEO for signature after the Deputy, before Contracts."),
+    )
 
+    discount_notes = models.TextField(
+        _("Discount Notes"),
+        blank=True,
+        null=True,
+        help_text=_("Written by the creator when requesting; the CEO can edit/add to it at sign time."),
+    )
     status = models.CharField( _("Status"),
         max_length=20,
         choices=LicenseStatus.choices,
@@ -368,6 +381,8 @@ class LicenseApproval(models.Model):
         DEPUTY = "DEPUTY", _("Deputy Manager")
 
         CONTRACTS = "CONTRACTS", _("Contracts")
+
+        CEO = "CEO", _("CEO")
 
     class ApprovalStatus(models.TextChoices):
 

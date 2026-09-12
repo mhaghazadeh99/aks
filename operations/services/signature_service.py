@@ -213,6 +213,9 @@ class SpecificationSigner:
         elif step == "DEPUTY":
             # row 2 of the nested approval table = معاون عملیات و بهره‌برداری
             self._sign_approval_row(2, profile)
+        
+        elif step == "CEO":
+            self._sign_approval_row(3, profile)
 
         else:
             raise ValueError("Unknown approval step.")

@@ -27,6 +27,7 @@
                     <th>{% trans "Approver" %}</th>
                     <th>{% trans "Date" %}</th>
                     <th>{% trans "Status" %}</th>
+                    
                 </tr>
 
             </thead>
@@ -41,8 +42,16 @@
                     <td>{{ approval.approver|default:"-" }}</td>
                     <td>{{ approval.approved_at|default:"-" }}</td>
                     <td>{{ approval.get_status_display }}</td>
+                    
 
                 </tr>
+                <!-- {% if approval.step == "CEO" %}
+                    <div class="alert alert-warning">
+                        <strong>{% trans "Discount Note" %}</strong>
+                        <textarea name="discount_notes" class="form-control mt-2" rows="3" form="signForm">{{ license.discount_notes|default:"" }}</textarea>
+                        
+                    </div>
+                    {% endif %} -->
 
                 {% empty %}
 
@@ -94,7 +103,10 @@
                 <th>{% trans "Description" %}</th>
                 <td>{{ license.description|default:"-" }}</td>
             </tr>
-
+            <tr></tr>
+            <th>{% trans "Discount" %}</th>
+                    <td>{{ license.discount_notes|default:"No" }}</td>
+</tr>
         </table>
 
     </div>

@@ -48,6 +48,8 @@ class LicenseRequestForm(forms.ModelForm):
             "letter_number",
             "letter_date",
             "description",
+            "discount_requested",
+            "discount_notes",
         ]
 
         widgets = {
@@ -66,6 +68,7 @@ class LicenseRequestForm(forms.ModelForm):
                     "rows": 3,
                 }
             ),
+            "discount_notes": forms.Textarea(attrs={"rows": 2}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -107,6 +110,19 @@ class LicenseRequestForm(forms.ModelForm):
                 ),
                 css_class="g-3",
             ),
+            Row(
+                Column(
+                    Field("discount_requested"),
+                    
+                ),
+                Column(
+                    Field("discount_notes"),
+                    
+                ),
+                css_class="g-3",
+            ),
+            
+    
         )
 
 

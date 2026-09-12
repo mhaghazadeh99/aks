@@ -7,6 +7,7 @@ from . import views
 
 
 urlpatterns = [
+    path("ceo/licenses/", views.operation_ceo_license_list, name="operation_ceo_license_list"),
 
     path(
         "",

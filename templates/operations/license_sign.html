@@ -45,6 +45,15 @@
                                 <td>
                                     {{ approval.get_step_display }}
                                 </td>
+                                {% if approval.step == "CEO" %}
+                                <div class="alert alert-warning">
+                                    <strong>{% trans "Discount Note" %}</strong>
+                                    <textarea name="discount_notes" class="form-control mt-2" rows="3" form="signForm">{{ license.discount_notes|default:"" }}</textarea>
+                                    <p class="text-muted small mt-2 mb-0">
+                                        {% trans "This note is saved when you click Approve & Sign, and will be visible to Contracts." %}
+                                    </p>
+                                </div>
+                                {% endif %}
 
                                 <td>
                                     {{ approval.approver|default:"-" }}

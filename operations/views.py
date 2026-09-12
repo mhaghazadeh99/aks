@@ -1152,216 +1152,101 @@ def license_export_csv(
 
 
 
-
-
-
-
 def license_sign(request, pk):
 
-    license_request = get_object_or_404(
-        LicenseRequest,
-        pk=pk,
-    )
-
-    # -------------------------------------------------------
-    # Current workflow step
-    # -------------------------------------------------------
+    license_request = get_object_or_404(LicenseRequest, pk=pk)
 
     if license_request.status == LicenseStatus.WAITING_CREATOR:
-
         current_step = LicenseApproval.ApprovalStep.CREATOR
-
     elif license_request.status == LicenseStatus.WAITING_MANAGER:
-
         current_step = LicenseApproval.ApprovalStep.MANAGER
-
     elif license_request.status == LicenseStatus.WAITING_DEPUTY:
-
         current_step = LicenseApproval.ApprovalStep.DEPUTY
-
+    elif license_request.status == LicenseStatus.WAITING_CEO:
+        current_step = LicenseApproval.ApprovalStep.CEO
     else:
-
-        messages.info(
-            request,
-            _("This license is not waiting for approval."),
-        )
-
-        return redirect(
-            "license_detail",
-            pk=pk,
-        )
-
-    # -------------------------------------------------------
-    # Generated specification
-    # -------------------------------------------------------
+        messages.info(request, _("This license is not waiting for approval."))
+        return redirect("license_detail", pk=pk)
 
     specification = get_object_or_404(
-
         LicenseAttachment,
-
         license=license_request,
-
         attachment_type=LicenseAttachmentType.SPECIFICATION,
-
     )
 
-    # -------------------------------------------------------
-    # Approval record
-    # -------------------------------------------------------
-
-    approval = get_object_or_404(
-
-        LicenseApproval,
-
-        license=license_request,
-
-        step=current_step,
-
-    )
-
-    # -------------------------------------------------------
-    # Approval history
-    # -------------------------------------------------------
-
-    history = (
-
-        LicenseApproval.objects
-
-        .filter(
-            license=license_request,
-        )
-
-        .order_by(
-            "step",
-        )
-
-    )
-
-    # -------------------------------------------------------
-    # POST
-    # -------------------------------------------------------
+    approval = get_object_or_404(LicenseApproval, license=license_request, step=current_step)
+    history = LicenseApproval.objects.filter(license=license_request).order_by("step")
 
     if request.method == "POST":
+
+        if current_step == LicenseApproval.ApprovalStep.CEO:
+            license_request.discount_notes = request.POST.get("discount_notes", license_request.discount_notes)
+            license_request.save(update_fields=["discount_notes"])
 
         profile = request.user.profile
 
         if not profile.signature_image:
             messages.error(request, _("Please upload your signature image first."))
-            return redirect(f"{reverse('profile')}?next={request.path}")
+            return redirect("profile")
 
-        # -----------------------------------------------
-        # Sign the specification document
-        # -----------------------------------------------
-        
         tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
-        tmp.close() 
+        tmp.close()
 
-        signer = SpecificationSigner(specification.file.path,)
-
-        signer.sign(profile,current_step.name,)
-
-        signer.save(tmp.name,)
+        signer = SpecificationSigner(specification.file.path)
+        signer.sign(profile, current_step.name)
+        signer.save(tmp.name)
 
         with open(tmp.name, "rb") as f:
-
-            specification.file.save(
-
-                os.path.basename(
-                    specification.file.name,
-                ),
-
-                File(f),
-
-                save=False,
-
-            )
-
+            specification.file.save(os.path.basename(specification.file.name), File(f), save=False)
         specification.save()
+        os.remove(tmp.name)
 
-        os.remove(
-            tmp.name,
-        )
-
-        # -----------------------------------------------
-        # Save approval
-        # -----------------------------------------------
-        with transaction.atomic():
-            approval.status = LicenseApproval.ApprovalStatus.APPROVED
-
-            approval.approver = request.user
-
-            approval.approved_at = timezone.now()
-
-            approval.save()
-
-            # -----------------------------------------------
-            # Next workflow stage
-            # -----------------------------------------------
-
-            if current_step == LicenseApproval.ApprovalStep.CREATOR:
-
-                license_request.status = LicenseStatus.WAITING_MANAGER
-
-            elif current_step == LicenseApproval.ApprovalStep.MANAGER:
-
-                license_request.status = LicenseStatus.WAITING_DEPUTY
-
-            elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
-
-                license_request.status = LicenseStatus.CONTRACTS
-
-            license_request.save()
-
-        messages.success(
-            request,
-            _("Specification signed successfully."),
-        )
-
-        # -----------------------------------------------
-        # Redirect
-        # -----------------------------------------------
+        approval.status = LicenseApproval.ApprovalStatus.APPROVED
+        approval.approver = request.user
+        approval.approved_at = timezone.now()
+        approval.save()
 
         if current_step == LicenseApproval.ApprovalStep.CREATOR:
-
-            return redirect(
-                "license_list",
-            )
+            license_request.status = LicenseStatus.WAITING_MANAGER
 
         elif current_step == LicenseApproval.ApprovalStep.MANAGER:
-
-            return redirect(
-                "operation_manager_license_list",
-            )
+            license_request.status = LicenseStatus.WAITING_DEPUTY
 
         elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
-
-            return redirect(
-                "operation_deputy_license_list",
+            license_request.status = (
+                LicenseStatus.WAITING_CEO if license_request.discount_requested else LicenseStatus.CONTRACTS
             )
 
-    # -------------------------------------------------------
-    # GET
-    # -------------------------------------------------------
+        elif current_step == LicenseApproval.ApprovalStep.CEO:
+            license_request.status = LicenseStatus.CONTRACTS
+
+        license_request.save()
+
+        messages.success(request, _("Specification signed successfully."))
+
+        if current_step == LicenseApproval.ApprovalStep.CREATOR:
+            return redirect("license_list")
+        elif current_step == LicenseApproval.ApprovalStep.MANAGER:
+            return redirect("operation_manager_license_list")
+        elif current_step == LicenseApproval.ApprovalStep.DEPUTY:
+            return redirect("operation_ceo_license_list" if license_request.discount_requested else "contract_home")
+        elif current_step == LicenseApproval.ApprovalStep.CEO:
+            return redirect("contract_home")
 
     return render(
-
         request,
-
         "operations/license_sign.html",
-
         {
-
             "license": license_request,
-
             "specification": specification,
-
             "approval": approval,
-
             "history": history,
-
         },
-
     )
+
+
+
+
 
 def operation_manager_license_list(request):
 
@@ -1496,4 +1381,31 @@ def operation_deputy_license_list(request):
 
         },
 
+    )
+
+
+
+def operation_ceo_license_list(request):
+
+    queryset = (
+        LicenseRequest.objects
+        .select_related("facility", "created_by")
+        .prefetch_related("sources")
+        .filter(status=LicenseStatus.WAITING_CEO)
+        .order_by("-created_at")
+    )
+
+    search = request.GET.get("search", "")
+    if search:
+        queryset = queryset.filter(
+            Q(facility__name__icontains=search) | Q(letter_number__icontains=search)
+        )
+
+    paginator = Paginator(queryset, 15)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(
+        request,
+        "operations/license_queue.html",
+        {"page_title": _("CEO"), "page_obj": page_obj, "search": search},
     )

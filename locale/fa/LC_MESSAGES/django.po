@@ -1427,265 +1427,116 @@ msgstr "مشخصات فنی با موفقیت امضا شد."
 msgid "Operations Manager"
 msgstr "مدیر عملیات"
 
-#: receive_source/forms.py:92 receive_source/models.py:92
-#: templates/receive_source/receive_create.html:73
-#, fuzzy
-#| msgid "Delete Facility"
 msgid "Delivering Facility"
-msgstr "حذف مرکز"
+msgstr "مرکز تحویل‌دهنده"
 
-#: receive_source/forms.py:158 receive_source/forms.py:220
-#, fuzzy
-#| msgid " Source Inventory"
 msgid "New / Not in Inventory"
-msgstr "موجودی چشمه‌ها"
+msgstr "جدید / در موجودی نیست"
 
-#: receive_source/forms.py:160
-#, fuzzy
-#| msgid "Source Owner"
 msgid "Source Origin"
-msgstr "مالک چشمه"
+msgstr "منشأ چشمه"
 
-#: receive_source/forms.py:167
 msgid "Select from inventory"
-msgstr ""
+msgstr "انتخاب از موجودی انبار"
 
-#: receive_source/forms.py:168
-#, fuzzy
-#| msgid "Existing DSRS Source"
 msgid "Existing Contracted Source"
-msgstr "چشمه DSRS موجود"
+msgstr "چشمه موجود دارای قرارداد"
 
-#: receive_source/forms.py:174 receive_source/models.py:260
-#: templates/receive_source/receive_contract_form.html:54
-#: templates/receive_source/receive_list.html:133
-#, fuzzy
-#| msgid "Movement Type"
 msgid "Item Type"
-msgstr "نوع جابه‌جایی"
+msgstr "نوع مورد"
 
-#: receive_source/forms.py:187
-msgid ""
-"Optional — not printed on the form, used only to check for an existing "
-"license contract."
-msgstr ""
-
-#: receive_source/forms.py:191 receive_source/models.py:281
-#, fuzzy
-#| msgid "Activity (mCi)"
 msgid "Average Activity (mCi)"
-msgstr "فعالیت (mCi)"
+msgstr "فعالیت متوسط (mCi)"
 
-#: receive_source/forms.py:219
 msgid "Select From Facility's Contracted Inventory"
-msgstr ""
+msgstr "انتخاب از موجودی قراردادی مرکز"
 
-#: receive_source/forms.py:249
-#, fuzzy
-#| msgid "Please select a DSRS component."
 msgid "Please select an item from the inventory."
-msgstr "لطفاً یک جزء DSRS انتخاب کنید."
+msgstr "لطفاً یک مورد از موجودی انتخاب کنید."
 
-#: receive_source/forms.py:277
-#, fuzzy
-#| msgid "Please select an existing source."
 msgid "Does this match an existing licensed source?"
-msgstr "لطفاً یک چشمه موجود را انتخاب کنید."
+msgstr "آیا این مورد با یک چشمه دارای مجوز موجود مطابقت دارد؟"
 
 #: receive_source/forms.py:286
 #, python-format
 msgid "%(serial)s — contract %(num)s"
-msgstr ""
+msgstr "%(serial)s — قرارداد %(num)s"
 
 #: receive_source/forms.py:292
 msgid "None of these"
-msgstr ""
+msgstr "هیچ‌کدام"
 
 #: receive_source/forms.py:318
 msgid "Upload Filled Specification (.docx)"
-msgstr ""
+msgstr "بارگذاری فرم مشخصات تکمیل‌شده (.docx)"
 
 #: receive_source/forms.py:319
 msgid ""
 "Download the current version below, fill it in Word, then upload it here to "
 "replace it."
-msgstr ""
+msgstr "نسخه فعلی را از پایین دانلود کنید، آن را در Word تکمیل کنید، سپس اینجا بارگذاری کنید تا جایگزین شود."
 
 #: receive_source/forms.py:459
 msgid "Characterization Documents / Photos"
-msgstr ""
+msgstr "مستندات / تصاویر مشخصه‌یابی"
 
-#: receive_source/models.py:21
-#, fuzzy
-#| msgid "Waiting Creator Signature"
 msgid "Waiting Creator/Coordinator Signature"
-msgstr "در انتظار امضای ایجادکننده"
+msgstr "در انتظار امضای ایجادکننده / هماهنگ‌کننده"
 
-#: receive_source/models.py:23
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Manager Data Entry"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار ورود اطلاعات مدیر"
 
-#: receive_source/models.py:25
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Operation Manager Signature"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار امضای مدیر عملیات"
 
-#: receive_source/models.py:27
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Operation Control Manager Signature"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار امضای مدیر کنترل عملیات"
 
-#: receive_source/models.py:29
-#, fuzzy
-#| msgid "Waiting Manager Signature"
 msgid "Waiting Deputy Manager Signature"
-msgstr "در انتظار امضای مدیر"
+msgstr "در انتظار امضای معاون"
 
-#: receive_source/models.py:33
-msgid "Waiting CEO Signature (Discount Requested)"
-msgstr ""
-
-#: receive_source/models.py:37
-#, fuzzy
-#| msgid "Ready To Issue"
 msgid "Ready To Receive"
-msgstr "آماده صدور"
+msgstr "آماده دریافت"
 
-#: receive_source/models.py:39 receive_source/views.py:165
-#: templates/receive_source/receive_characterization.html:5
-#: templates/receive_source/receive_characterization.html:44
-#: templates/receive_source/receiving_home.html:61
 msgid "Receiving / Characterization"
-msgstr ""
+msgstr "دریافت / مشخصه‌سنجی"
 
-#: receive_source/models.py:48
-#, fuzzy
-#| msgid "Receive Source"
 msgid "Radioactive Source"
-msgstr "دریافت چشمه"
+msgstr "چشمه پرتوزا"
 
-#: receive_source/models.py:49
-#, fuzzy
-#| msgid "Receive Waste"
 msgid "Radioactive Waste"
-msgstr "دریافت پسماند"
+msgstr "پسماند پرتوزا"
 
-#: receive_source/models.py:59 receive_source/models.py:455
-#, fuzzy
-#| msgid "Payment Done"
 msgid "Payment Receipt"
-msgstr "پرداخت انجام شد"
+msgstr "رسید پرداخت"
 
-#: receive_source/models.py:65
-msgid "Characterization Document (صورتجلسه staging)"
-msgstr ""
-
-#: receive_source/models.py:102 templates/receive_source/receive_list.html:69
-#: templates/receive_source/receive_queue.html:39
-#, fuzzy
-#| msgid "Draft Letter Number"
 msgid "Delivery Letter Number"
-msgstr "شماره نامه پیش‌نویس"
+msgstr "شماره نامه تحویل"
 
-#: receive_source/models.py:109 templates/receive_source/receive_detail.html:21
-#: templates/receive_source/receive_list.html:70
-#, fuzzy
-#| msgid "Draft Letter Date"
 msgid "Delivery Letter Date"
-msgstr "تاریخ نامه پیش‌نویس"
+msgstr "تاریخ نامه تحویل"
 
-#: receive_source/models.py:115
-msgid "Estimated Distance to Tehran Office (km)"
-msgstr ""
-
-#: receive_source/models.py:145 receive_source/models.py:404
-#, fuzzy
-#| msgid "License Request"
 msgid "Discount Requested"
-msgstr "درخواست مجوز"
+msgstr "درخواست تخفیف"
 
-#: receive_source/models.py:149 receive_source/models.py:410
-#: templates/receive_source/receive_payment_form.html:25
-msgid "Discount Notes"
-msgstr ""
-
-#: receive_source/models.py:181 receive_source/models.py:256
-#: receive_source/models.py:442 receive_source/models.py:502
-#: templates/receive_source/receive_detail.html:4
-#, fuzzy
-#| msgid "License Request"
 msgid "Receive Request"
-msgstr "درخواست مجوز"
+msgstr "درخواست دریافت"
 
-#: receive_source/models.py:182 templates/receive_source/receive_list.html:5
-#, fuzzy
-#| msgid "License Requests"
 msgid "Receive Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "درخواست‌های دریافت"
 
-#: receive_source/models.py:187
-#, fuzzy, python-format
-#| msgid "License Request #%(id)s"
-msgid "Receive Request #%(id)s"
-msgstr "درخواست مجوز شماره %(id)s"
-
-#: receive_source/models.py:232
-#, fuzzy
-#| msgid "Letter Attachments"
 msgid "Receive Attachment"
-msgstr "نامه های پیوست"
+msgstr "پیوست دریافت"
 
-#: receive_source/models.py:233
-#, fuzzy
-#| msgid "Letter Attachments"
 msgid "Receive Attachments"
-msgstr "نامه های پیوست"
+msgstr "پیوست‌های دریافت"
 
-#: receive_source/models.py:277
-msgid ""
-"Not printed on the form — used only to check for an existing license "
-"contract."
-msgstr ""
-
-#: receive_source/models.py:294
-#, fuzzy
-#| msgid "Half-life (s)"
-msgid "Half-Life"
-msgstr "نیمه‌عمر (ثانیه)"
-
-#: receive_source/models.py:299
-msgid ""
-"Auto-formatted from nuclide.half_life (stored in seconds) at save time — not "
-"user-entered. Kept as a display snapshot since the printed form shows it as "
-"static text."
-msgstr ""
-
-#: receive_source/models.py:318
-msgid ""
-"Auto-annotated with a license-contract match, if any (see below). NOT "
-"printed into the docx's per-source description column — that one is filled "
-"by hand."
-msgstr ""
-
-#: receive_source/models.py:336
-#, fuzzy
-#| msgid "Existing DSRS Source"
 msgid "Matched Existing Licensed Source"
-msgstr "چشمه DSRS موجود"
-
-#: receive_source/models.py:337
-msgid ""
-"Set automatically on an exact serial match, or manually confirmed by the "
-"creator on a fuzzy match."
-msgstr ""
+msgstr "چشمه موجود دارای مجوز"
 
 #: receive_source/models.py:341
 msgid "Serial Matched Exactly"
-msgstr ""
+msgstr "تطابق دقیق شماره سریال"
 
 #: receive_source/models.py:365 templates/operations/operation_home.html:207
 #: templates/receive_source/receiving_home.html:5
@@ -1700,217 +1551,145 @@ msgstr "دریافت چشمه‌ها"
 #: receive_source/models.py:397
 #: templates/receive_source/received_sources_list.html:57
 msgid "Invoice"
-msgstr ""
+msgstr "فاکتور"
 
 #: receive_source/models.py:406
 msgid "If checked, the request routes to the CEO for signature before Finance."
-msgstr ""
+msgstr "در صورت تیک زدن، درخواست پیش از واحد مالی برای امضا به مدیرعامل ارجاع داده می‌شود."
 
-#: receive_source/models.py:431
-#, fuzzy
-#| msgid "Save Contract"
 msgid "Receive Contract"
-msgstr "ذخیره قرارداد"
+msgstr "قرارداد دریافت"
 
-#: receive_source/models.py:432
-#, fuzzy
-#| msgid "Receive Sources"
 msgid "Receive Contracts"
-msgstr "دریافت چشمه‌ها"
+msgstr "قراردادهای دریافت"
 
-#: receive_source/models.py:470
-#, fuzzy
-#| msgid "License Payment"
 msgid "Receive Payment"
-msgstr "پرداخت مجوز"
+msgstr "پرداخت درخواست دریافت"
 
-#: receive_source/models.py:471
-#, fuzzy
-#| msgid "License Payments"
 msgid "Receive Payments"
-msgstr "پرداخت‌های مجوز"
+msgstr "پرداخت‌های درخواست دریافت"
 
-#: receive_source/models.py:487
-#, fuzzy
-#| msgid "Create Contract"
 msgid "Creator / Coordinator"
-msgstr "ایجاد قرارداد"
+msgstr "ایجادکننده / هماهنگ‌کننده"
 
-#: receive_source/models.py:488 receive_source/views.py:141
-#, fuzzy
-#| msgid "Operations Manager"
 msgid "Operation Manager"
 msgstr "مدیر عملیات"
 
-#: receive_source/models.py:489 receive_source/views.py:145
-#, fuzzy
-#| msgid "Operations Control Manager"
 msgid "Operation Control Manager"
 msgstr "مدیر کنترل عملیات"
 
-#: receive_source/models.py:491 receive_source/views.py:153
-#: templates/home.html:149 templates/receive_source/ceo_home.html:6
 msgid "CEO"
-msgstr ""
+msgstr "مدیرعامل"
 
-#: receive_source/models.py:498
-#, fuzzy
-#| msgid "POST required"
 msgid "Not Required"
-msgstr "درخواست POST الزامی است"
+msgstr "الزامی نیست"
 
-#: receive_source/models.py:534
-#, fuzzy
-#| msgid "License Approval"
 msgid "Receive Approval"
-msgstr "تأیید مجوز"
+msgstr "تأیید دریافت"
 
-#: receive_source/models.py:535
-#, fuzzy
-#| msgid "License Approvals"
 msgid "Receive Approvals"
-msgstr "تأییدهای مجوز"
+msgstr "تأییدهای دریافت"
 
 #: receive_source/services/license_check.py:77
 #, python-format
 msgid ""
 "Existing license contract found: %(num)s (facility & nuclide match, serial: "
 "%(serial)s)"
-msgstr ""
+msgstr "قرارداد مجوز موجود یافت شد: %(num)s (تطابق مرکز و رادیونوکلید، شماره سریال: %(serial)s)"
 
 #: receive_source/services/workflow.py:90
 #, python-format
 msgid "%(v).2f years"
-msgstr ""
+msgstr "%(v).2f سال"
 
 #: receive_source/services/workflow.py:92
 #, python-format
 msgid "%(v).2f days"
-msgstr ""
+msgstr "%(v).2f روز"
 
 #: receive_source/services/workflow.py:94
 #, python-format
 msgid "%(v).2f hours"
-msgstr ""
+msgstr "%(v).2f ساعت"
 
 #: receive_source/services/workflow.py:96
 #, python-format
 msgid "%(v).2f minutes"
-msgstr ""
+msgstr "%(v).2f دقیقه"
 
 #: receive_source/services/workflow.py:97
 #, python-format
 msgid "%(v).2f seconds"
-msgstr ""
+msgstr "%(v).2f ثانیه"
 
-#: receive_source/services/workflow.py:219
-#, fuzzy, python-format
-#| msgid "Receive Sources"
 msgid "Received via %(req)s"
-msgstr "دریافت چشمه‌ها"
+msgstr "دریافت شده از طریق %(req)s"
 
-#: receive_source/views.py:137 templates/operations/manager_home.html:145
-#: templates/receive_source/receive_detail.html:40
-#: templates/receive_source/receive_manager_input.html:5
-#: templates/receive_source/receive_manager_input.html:14
 msgid "Manager Data Entry"
-msgstr ""
+msgstr "ورود اطلاعات توسط مدیر"
 
-#: receive_source/views.py:178
-#, fuzzy
-#| msgid "This license is no longer a draft and can't be edited here."
 msgid "This request is no longer a draft and can't be edited here."
-msgstr "این مجوز دیگر پیش‌نویس نیست و از اینجا قابل ویرایش نیست."
+msgstr "این درخواست دیگر پیش‌نویس نیست و از اینجا قابل ویرایش نیست."
 
-#: receive_source/views.py:233
-#, fuzzy
-#| msgid "License request saved successfully."
 msgid "Receive request saved successfully."
-msgstr "درخواست مجوز با موفقیت ذخیره شد."
+msgstr "درخواست دریافت با موفقیت ذخیره شد."
 
-#: receive_source/views.py:259
-msgid ""
-"Sources can only be added while the request is in the Specification stage."
-msgstr ""
+msgid "Sources can only be added while the request is in the Specification stage."
+msgstr "چشمه‌ها فقط در مرحله مشخصات فنی قابل افزودن هستند."
 
-#: receive_source/views.py:294 receive_source/views.py:349
-#, fuzzy
-#| msgid "No sources added."
 msgid "Source added."
-msgstr "هیچ چشمه‌ای اضافه نشده است."
+msgstr "چشمه اضافه شد."
 
-#: receive_source/views.py:324
-#, fuzzy
-#| msgid " Source Inventory"
 msgid "Source added from inventory."
-msgstr "موجودی چشمه‌ها"
+msgstr "چشمه از موجودی انبار اضافه شد."
 
-#: receive_source/views.py:399
-#, fuzzy
-#| msgid "Add at least one component first."
 msgid "Add at least one source before continuing."
-msgstr "حداقل یک مولفه افزوده شود."
+msgstr "قبل از ادامه، حداقل یک چشمه اضافه کنید."
 
-#: receive_source/views.py:410
-msgid ""
-"Specification generated — download it, fill in the source details, then sign."
-msgstr ""
-
-#: receive_source/views.py:446 receive_source/views.py:558
-#, fuzzy
-#| msgid "Generated Specification"
 msgid "Updated specification uploaded."
-msgstr "مشخصات فنی تولیدشده"
+msgstr "مشخصات فنی به‌روزشده بارگذاری شد."
 
-#: receive_source/views.py:473
-msgid "Data entry complete — ready for the Operation Manager's signature."
-msgstr ""
-
-#: receive_source/views.py:525
-#, fuzzy
-#| msgid "This license is not waiting for approval."
 msgid "This request is not waiting for a signature."
-msgstr "این مجوز در انتظار تأیید نیست."
+msgstr "این درخواست در انتظار امضا نیست."
 
 #: receive_source/views.py:567
 msgid "Discount decision saved."
-msgstr ""
+msgstr "تصمیم تخفیف ذخیره شد."
 
 #: receive_source/views.py:662
 msgid "Cost declaration saved."
-msgstr ""
+msgstr "اعلام هزینه ذخیره شد."
 
 #: receive_source/views.py:681
 msgid "Declare Waste Management Cost"
-msgstr ""
+msgstr "اعلام هزینه مدیریت پسماند"
 
 #: receive_source/views.py:705
-#, fuzzy
-#| msgid "Contract updated."
+
 msgid "Cost declaration updated."
-msgstr "قرارداد به‌روزرسانی شد."
+msgstr "اعلام هزینه به‌روزرسانی شد."
 
 #: receive_source/views.py:725
 msgid "Update Waste Management Cost"
-msgstr ""
+msgstr "ویرایش هزینه مدیریت پسماند"
 
 #: receive_source/views.py:822
 msgid ""
 "صورتجلسه uploaded — will attach automatically as each source is marked "
 "stored."
-msgstr ""
+msgstr "صورتجلسه بارگذاری شد — به‌صورت خودکار هنگام ذخیره‌سازی هر چشمه پیوست می‌شود."
 
 #: receive_source/views.py:853
 msgid "Characterization saved."
-msgstr ""
+msgstr "مشخصه‌یابی ذخیره شد."
 
 #: receive_source/views.py:873
 msgid "Source marked as stored."
-msgstr ""
+msgstr "چشمه به‌عنوان ذخیره‌شده علامت‌گذاری شد."
 
 #: receive_source/views.py:877
 msgid "All sources stored — this request is now complete."
-msgstr ""
+msgstr "همه چشمه‌ها ذخیره شدند — این درخواست اکنون تکمیل شده است."
 
 #: reference/forms.py:24
 msgid "CSV file"
@@ -2170,18 +1949,17 @@ msgstr[1] ""
 "چشمه‌های زیر (%(counter)s مورد) برای دریافت قرارداد ثبت خواهند شد:\n"
 
 #: templates/contract/bulk_form.html:41
-#, fuzzy
-#| msgid "Movement Date"
+
 msgid "Movement Details"
-msgstr "تاریخ جابه‌جایی"
+msgstr "جزئیات جابه‌جایی"
 
 #: templates/contract/bulk_form.html:43
 msgid "This will be applied identically to every selected source above."
-msgstr ""
+msgstr "این مورد به‌صورت یکسان برای تمام چشمه‌های انتخاب‌شده بالا اعمال خواهد شد."
 
 #: templates/contract/bulk_form.html:54
 msgid "Leave blank to use each source's current facility."
-msgstr ""
+msgstr "برای استفاده از مرکز فعلی هر چشمه، خالی بگذارید."
 
 #: templates/contract/bulk_form.html:73
 #: templates/contract/license_contract_form.html:161
@@ -2198,8 +1976,7 @@ msgid "Attachments"
 msgstr "پیوست‌ها"
 
 #: templates/contract/bulk_form.html:78
-#, fuzzy
-#| msgid "send to Pars Isotop"
+
 msgid "Send to PI"
 msgstr "ارسال به پارس ایزوتوپ"
 
@@ -2289,14 +2066,13 @@ msgstr "چشمه‌های موجود در شرکت PI برای کنترل کیف
 #: templates/operations/control_home.html:125
 #: templates/operations/deputy_home.html:144
 #: templates/operations/manager_home.html:164
-#, fuzzy
-#| msgid "License Requests"
+
 msgid "Source Delivery Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "درخواست‌های تحویل چشمه"
 
 #: templates/contract/contract_home.html:207
 msgid "Source Delivery requests waiting for Cost declaration"
-msgstr ""
+msgstr "درخواست‌های پسمانداری در انتظار اعلام هزینه"
 
 #: templates/contract/index.html:4
 msgid "Sold DSRS's"
@@ -3035,14 +2811,6 @@ msgstr "برای ادامه یک گزینه انتخاب کنید."
 msgid "Approve license payments"
 msgstr "تأیید پرداخت‌های مجوز"
 
-#: templates/financial/financial_home.html:130
-#, fuzzy, python-format
-#| msgid ""
-#| "\n"
-#| "%(counter)s license waiting for contract.\n"
-#| msgid_plural ""
-#| "\n"
-#| "%(counter)s licenses waiting for contract.\n"
 msgid ""
 "\n"
 "%(counter)s license waiting for payment.\n"
@@ -3051,26 +2819,20 @@ msgid_plural ""
 "%(counter)s licenses waiting for payment.\n"
 msgstr[0] ""
 "\n"
-"%(counter)s مجوز در انتظار قرارداد است.\n"
+"%(counter)s مجوز در انتظار پرداخت است.\n"
 msgstr[1] ""
 "\n"
-"%(counter)s مجوز در انتظار قرارداد هستند.\n"
+"%(counter)s مجوز در انتظار پرداخت هستند.\n"
 
 #: templates/financial/financial_home.html:143
 msgid "Source Delivery Requests Payment"
-msgstr ""
+msgstr "پرداخت درخواست‌های پسمانداری"
 
-#: templates/financial/financial_home.html:145
-#, fuzzy
-#| msgid "Approve license payments"
 msgid "Approve Delivery Requests payments"
-msgstr "تأیید پرداخت‌های مجوز"
+msgstr "تأیید پرداخت‌های درخواست‌های تحویل"
 
-#: templates/financial/financial_home.html:149
-#, fuzzy
-#| msgid "license(s) waiting for Signature and approval."
 msgid "Delivery Requests waiting for payment approval"
-msgstr "مجوز در انتظار امضا و تأیید."
+msgstr "درخواست‌های تحویل در انتظار تأیید پرداخت"
 
 #: templates/financial/license_payment_list.html:31
 #: templates/operations/license_queue.html:55
@@ -3101,7 +2863,7 @@ msgstr "برای ادامه یک خدمت انتخاب کنید"
 
 #: templates/home.html:150
 msgid "CEO dashboard and approvals"
-msgstr ""
+msgstr "داشبورد مدیرعامل و تأییدیه‌ها"
 
 #: templates/home.html:160 templates/operations/operation_home.html:5
 #: templates/operations/operation_home.html:104
@@ -3130,8 +2892,7 @@ msgid "Operations Control Manager"
 msgstr "مدیر کنترل عملیات"
 
 #: templates/operations/control_home.html:105
-#, fuzzy
-#| msgid "Operations Control Manager"
+
 msgid "Operation Control manager"
 msgstr "مدیر کنترل عملیات"
 
@@ -3144,7 +2905,7 @@ msgstr "برای ادامه یک عملیات انتخاب کنید."
 
 #: templates/operations/control_home.html:132
 msgid "Source delivery requests waiting for control manager signature."
-msgstr ""
+msgstr "درخواست‌های پسمانداری در انتظار امضای مدیر کنترل."
 
 #: templates/operations/deputy_home.html:5
 msgid "Operations Deputy Manager"
@@ -3160,10 +2921,9 @@ msgid "license(s) waiting for Signature and approval."
 msgstr "مجوز در انتظار امضا و تأیید."
 
 #: templates/operations/deputy_home.html:151
-#, fuzzy
-#| msgid "Waiting Deputy Signature"
+
 msgid "Requests waiting for deputy signature."
-msgstr "در انتظار امضای معاون"
+msgstr "درخواستهای در انتظار امضای معاون"
 
 #: templates/operations/license_create.html:7
 #: templates/operations/license_create.html:26
@@ -3351,7 +3111,7 @@ msgstr "هیچ درخواست مجوزی یافت نشد."
 #: templates/receive_source/receive_list.html:153
 #: templates/receive_source/received_sources_list.html:161
 msgid "Close"
-msgstr ""
+msgstr "بستن"
 
 #: templates/operations/license_list.html:681
 msgid "Letter Attachments"
@@ -3438,11 +3198,11 @@ msgstr "مدیر عملیات"
 
 #: templates/operations/manager_home.html:152
 msgid "Source delivery requests waiting for logistics/characterization fields."
-msgstr ""
+msgstr "درخواست‌های پسمانداری در انتظار تکمیل فیلدهای لجستیک/مشخصه‌یابی."
 
 #: templates/operations/manager_home.html:171
 msgid "Source delivery requests waiting for manager signature."
-msgstr ""
+msgstr "درخواست‌های پسمانداری در انتظار امضای مدیر."
 
 #: templates/operations/operation_home.html:126
 msgid "Review and approve license specifications waiting for deputy approval."
@@ -3490,252 +3250,166 @@ msgstr "مشاهده مجوزهای صادرشده برای چشمه‌های پ
 
 #: templates/receive_source/ceo_home.html:129
 msgid "CEO Dashboard"
-msgstr ""
+msgstr "داشبورد مدیرعامل"
 
 #: templates/receive_source/ceo_home.html:136
 msgid "Manage CEO approvals and decisions"
-msgstr ""
+msgstr "مدیریت تأییدیه‌ها و تصمیمات مدیرعامل"
 
 #: templates/receive_source/ceo_home.html:148
 msgid "Source Delivery Discount Requests"
-msgstr ""
+msgstr "درخواست‌های تخفیف پسمانداری"
 
 #: templates/receive_source/ceo_home.html:150
 msgid "Discount-requested requests awaiting CEO"
-msgstr ""
+msgstr "درخواست‌های دارای تقاضای تخفیف در انتظار مدیرعامل"
 
 #: templates/receive_source/ceo_home.html:166
-#, fuzzy
-#| msgid "Dimensions"
+
 msgid "Decisions"
-msgstr "ابعاد"
+msgstr "تصمیمات"
 
 #: templates/receive_source/ceo_home.html:171
 msgid "CEO decisions and approvals history"
-msgstr ""
+msgstr "تاریخچه تصمیمات و تأییدیه‌های مدیرعامل"
 
-#: templates/receive_source/ceo_home.html:187
-#, fuzzy
-#| msgid "Reports"
 msgid "CEO Reports"
-msgstr "گزارش‌ها"
+msgstr "گزارش‌های مدیرعامل"
 
-#: templates/receive_source/ceo_home.html:192
 msgid "Review CEO related reports"
-msgstr ""
+msgstr "بررسی گزارش‌های مرتبط با مدیرعامل"
 
-#: templates/receive_source/dsrs_characterization_form.html:5
-#: templates/receive_source/dsrs_characterization_form.html:14
-#: templates/receive_source/receive_detail.html:56
-#, fuzzy
-#| msgid "Contract Information"
 msgid "Characterization"
-msgstr "اطلاعات قرارداد"
+msgstr "مشخصه‌سنجی چشمه"
 
 #: templates/receive_source/dsrs_characterization_form.html:21
 msgid "Physical Characterization"
-msgstr ""
+msgstr "مشخصه‌یابی فیزیکی"
 
 #: templates/receive_source/dsrs_characterization_form.html:28
 msgid ""
 "صورتجلسه (the shared batch document) is uploaded once for the whole request "
 "on the characterization list page, not per source."
-msgstr ""
+msgstr "صورتجلسه (سند مشترک این دسته) فقط یک‌بار برای کل درخواست در صفحه فهرست مشخصه‌یابی بارگذاری می‌شود، نه برای هر چشمه به‌طور جداگانه."
 
-#: templates/receive_source/receive_add_sources.html:5
-#: templates/receive_source/receive_detail.html:36
-#, fuzzy
-#| msgid "Add Source"
 msgid "Add Sources"
-msgstr "افزودن چشمه"
+msgstr "افزودن چشمه‌ها"
 
-#: templates/receive_source/receive_add_sources.html:14
-#: templates/receive_source/receive_detail.html:63
-#, fuzzy
-#| msgid "Source State"
 msgid "Sources / Waste"
-msgstr "وضعیت چشمه"
+msgstr "چشمه‌ها / پسماند"
 
 #: templates/receive_source/receive_add_sources.html:24
 msgid ""
 "This facility has an existing license contract for this nuclide, but the "
 "serial number you typed didn't match exactly. Does this item match one of "
 "these?"
-msgstr ""
+msgstr "این مرکز دارای قرارداد مجوز برای این رادیونوکلید است، اما شماره سریالی که وارد کردید دقیقاً مطابقت نداشت. آیا این مورد با یکی از موارد زیر مطابقت دارد؟"
 
 #: templates/receive_source/receive_add_sources.html:30
 msgid "Confirm"
-msgstr ""
+msgstr "تأیید"
 
 #: templates/receive_source/receive_add_sources.html:73
 msgid "Added Rows"
-msgstr ""
+msgstr "ردیف‌های افزوده‌شده"
 
 #: templates/receive_source/receive_add_sources.html:85
 #: templates/receive_source/receive_contract_form.html:56
-#, fuzzy
-#| msgid "License Payment"
+
 msgid "License Match"
-msgstr "پرداخت مجوز"
+msgstr "تطبیق مجوز"
 
 #: templates/receive_source/receive_add_sources.html:101
 msgid "exact"
-msgstr ""
+msgstr "دقیق"
 
 #: templates/receive_source/receive_add_sources.html:101
 msgid "confirmed"
-msgstr ""
+msgstr "تأییدشده"
 
 #: templates/receive_source/receive_add_sources.html:109
-#, fuzzy
-#| msgid "No sources added."
+
 msgid "No sources added yet."
 msgstr "هیچ چشمه‌ای اضافه نشده است."
 
 #: templates/receive_source/receive_add_sources.html:123
 msgid "Finish Adding Sources — Send to Managers"
-msgstr ""
+msgstr "پایان افزودن چشمه‌ها — ارسال به مدیران"
 
 #: templates/receive_source/receive_characterization.html:14
 #: templates/receive_source/received_sources_list.html:60
 msgid "صورتجلسه"
-msgstr ""
+msgstr "صورتجلسه"
 
 #: templates/receive_source/receive_characterization.html:19
 msgid ""
 "One shared document for the whole batch — uploading here attaches it to "
 "every source in this request, not just one."
-msgstr ""
+msgstr "یک سند مشترک برای کل این دسته — بارگذاری در اینجا آن را به تمام چشمه‌های این درخواست پیوست می‌کند، نه فقط یکی."
 
 #: templates/receive_source/receive_characterization.html:36
 msgid "Upload صورتجلسه"
-msgstr ""
+msgstr "بارگذاری صورتجلسه"
 
 #: templates/receive_source/receive_characterization.html:49
 msgid ""
 "One row per physical unit — a source added with quantity > 1 gets a "
 "separate, independently-editable DSRS record per unit."
-msgstr ""
+msgstr "یک ردیف برای هر واحد فیزیکی — چشمه‌ای که با تعداد بیشتر از ۱ افزوده شود، برای هر واحد یک رکورد DSRS جداگانه و قابل‌ویرایش مستقل دریافت می‌کند."
 
-#: templates/receive_source/receive_characterization.html:57
-#: templates/receive_source/received_sources_list.html:135
-#, fuzzy
-#| msgid "Status"
 msgid "DSRS Status"
-msgstr "وضعیت"
+msgstr "وضعیت DSRS"
 
-#: templates/receive_source/receive_characterization.html:70
-#: templates/receive_source/received_sources_list.html:151
-#, fuzzy
-#| msgid "Created At"
 msgid "Not created yet"
-msgstr "تاریخ ایجاد"
+msgstr "هنوز ایجاد نشده است"
 
-#: templates/receive_source/receive_characterization.html:77
-#: templates/receive_source/receive_queue.html:68
-#, fuzzy
-#| msgid "Practice"
 msgid "Characterize"
-msgstr "کاربرد"
+msgstr "مشخصه‌سنجی"
 
-#: templates/receive_source/receive_characterization.html:82
-#, fuzzy
-#| msgid "Stored"
 msgid "Mark Stored"
-msgstr "ذخیره‌شده"
+msgstr "ثبت به‌عنوان ذخیره‌شده"
 
-#: templates/receive_source/receive_characterization.html:88
 msgid "From existing inventory"
-msgstr ""
+msgstr "از موجودی انبار"
 
-#: templates/receive_source/receive_contract_form.html:19
-msgid ""
-"This is not a legal contract — just where the cost of receiving these items "
-"is declared. Whether each item already has an existing license contract "
-"affects that cost."
-msgstr ""
-
-#: templates/receive_source/receive_contract_form.html:25
-#, fuzzy
-#| msgid "Generated Specification"
 msgid "View Filled & Signed Specification"
-msgstr "مشخصات فنی تولیدشده"
+msgstr "مشاهده مشخصات فنی تکمیل و امضاشده"
 
-#: templates/receive_source/receive_contract_form.html:33
-#, fuzzy
-#| msgid "Current File:"
 msgid "View Current Invoice"
-msgstr "فایل فعلی:"
+msgstr "مشاهده فاکتور فعلی"
 
-#: templates/receive_source/receive_contract_form.html:40
-msgid "Discount: CEO-approved"
-msgstr ""
-
-#: templates/receive_source/receive_contract_form.html:45
-msgid "Factor this discount into the cost you declare below."
-msgstr ""
-
-#: templates/receive_source/receive_contract_form.html:67
-#, fuzzy
-#| msgid "Manage contracts"
 msgid "Existing contract"
-msgstr "مدیریت قراردادها"
+msgstr "قرارداد موجود"
 
-#: templates/receive_source/receive_contract_form.html:69
-#, fuzzy
-#| msgid "Contract"
 msgid "No contract"
-msgstr "قرارداد"
+msgstr "بدون قرارداد"
 
-#: templates/receive_source/receive_create.html:6
-#: templates/receive_source/receive_create.html:21
-#: templates/receive_source/receiving_home.html:68
-#, fuzzy
-#| msgid "New License Request"
 msgid "New Receive Request"
-msgstr "درخواست مجوز جدید"
+msgstr "درخواست دریافت جدید"
 
 #: templates/receive_source/receive_create.html:87
 msgid ""
 "You'll add the source/waste rows on the next page, once the facility is "
 "saved — that lets us show only that facility's contracted nuclides, if any."
-msgstr ""
+msgstr "پس از ذخیره مرکز، ردیف‌های چشمه/پسماند را در صفحه بعد اضافه خواهید کرد — این کار امکان نمایش فقط رادیونوکلیدهای قراردادی آن مرکز (در صورت وجود) را فراهم می‌کند."
 
-#: templates/receive_source/receive_create.html:100
-#, fuzzy
-#| msgid "Save and Continue"
 msgid "Save and Continue to Sources"
-msgstr "ذخیره و ادامه"
+msgstr "ذخیره و ادامه به ثبت منابع"
 
-#: templates/receive_source/receive_detail.html:25
 msgid "Distance to Tehran (km)"
-msgstr ""
+msgstr "فاصله تا تهران (کیلومتر)"
 
-#: templates/receive_source/receive_detail.html:44
-#: templates/receive_source/receive_queue.html:62
-#, fuzzy
-#| msgid "Sign in"
 msgid "Sign"
-msgstr "ورود"
+msgstr "امضا"
 
-#: templates/receive_source/receive_detail.html:103
-#, fuzzy
-#| msgid "Approval Step"
 msgid "Approvals"
-msgstr "مرحله تأیید"
+msgstr "مراحل تأیید"
 
-#: templates/receive_source/receive_list.html:58
-#, fuzzy
-#| msgid "+ Start New License"
 msgid "+ Start New Receive Request"
-msgstr "+ شروع مجوز جدید"
+msgstr "+ شروع درخواست دریافت جدید"
 
-#: templates/receive_source/receive_list.html:111
-#: templates/receive_source/received_sources_list.html:114
-#, fuzzy
-#| msgid "No license requests found."
 msgid "No receive requests found."
-msgstr "هیچ درخواست مجوزی یافت نشد."
+msgstr "هیچ درخواست دریافتی یافت نشد."
 
 #: templates/receive_source/receive_manager_input.html:19
 msgid ""
@@ -3743,196 +3417,177 @@ msgid ""
 "difficulty, accommodation/food days, other costs) directly in the document "
 "below — both the Operation Manager and the Operation Control Manager can "
 "download, fill in, and re-upload it."
-msgstr ""
+msgstr "بخش لجستیک (بازدید پیش از عملیات، پرسنل، وسیله نقلیه، سختی مسیر، روزهای اسکان/غذا، سایر هزینه‌ها) را مستقیماً در سند زیر تکمیل کنید — هم مدیر عملیات و هم مدیر کنترل عملیات می‌توانند آن را دانلود، تکمیل و مجدداً بارگذاری کنند."
 
 #: templates/receive_source/receive_manager_input.html:25
-#, fuzzy
-#| msgid "Preparing Specification"
+
 msgid "Download Current Specification"
-msgstr "در حال تهیه مشخصات فنی"
+msgstr "دانلود فرم مشخصات فعلی"
 
 #: templates/receive_source/receive_manager_input.html:33
 #: templates/receive_source/receive_sign.html:80
-#, fuzzy
-#| msgid "Uploaded At"
+
 msgid "Upload Filled Document"
-msgstr "تاریخ بارگذاری"
+msgstr " بارگزاری فرم پر شده"
 
 #: templates/receive_source/receive_manager_input.html:43
 msgid "Data Entry Complete — Ready for Operation Manager Signature"
-msgstr ""
+msgstr "ورود اطلاعات کامل شد — آماده امضای مدیر عملیات"
 
 #: templates/receive_source/receive_payment_form.html:20
-#, fuzzy
-#| msgid "Record Count"
+
 msgid "Declared Cost"
-msgstr "تعداد رکوردها"
+msgstr "هزینه اعلام شده"
 
 #: templates/receive_source/receive_payment_form.html:23
-#, fuzzy
-#| msgid "Count"
+
 msgid "Discount"
-msgstr "تعداد"
+msgstr "تخفیف"
 
 #: templates/receive_source/receive_payment_form.html:23
-#, fuzzy
-#| msgid "Approved"
+
 msgid "CEO-approved"
-msgstr "تأییدشده"
+msgstr " تأییدشده توسط مدیرعامل"
 
 #: templates/receive_source/receive_payment_form.html:34
-#, fuzzy
-#| msgid "Current Facility"
+
 msgid "View Current Receipt"
-msgstr "مرکز فعلی"
+msgstr "مشاهده رسید فعلی"
 
 #: templates/receive_source/receive_payment_form.html:46
 msgid ""
 "Marking payment done here creates the physical DSRS records (status: In Use) "
 "for every source in this request."
-msgstr ""
+msgstr "علامت‌گذاری پرداخت در اینجا باعث ایجاد رکوردهای فیزیکی DSRS (با وضعیت: در حال استفاده) برای تمام چشمه‌های این درخواست می‌شود."
 
 #: templates/receive_source/receive_queue.html:60
 msgid "Fill In Data"
-msgstr ""
+msgstr "تکمیل اطلاعات"
 
 #: templates/receive_source/receive_queue.html:74
 msgid "Nothing here right now."
-msgstr ""
+msgstr "در حال حاضر موردی وجود ندارد."
 
 #: templates/receive_source/receive_sign.html:5
 #: templates/receive_source/receive_sign.html:14
-#, fuzzy
-#| msgid "DSRS Specification"
+
 msgid "Sign Specification"
-msgstr "مشخصات فنی DSRS"
+msgstr "امضای فرم مشخصات  "
 
 #: templates/receive_source/receive_sign.html:19
-#, fuzzy
-#| msgid "Current Signature"
+
 msgid "Current Step"
-msgstr "امضای فعلی"
+msgstr "مرحله فعلی"
 
 #: templates/receive_source/receive_sign.html:25
-#, fuzzy
-#| msgid "DSRS Specification Form"
+
 msgid "Download Specification Document"
-msgstr "فرم مشخصات فنی DSRS"
+msgstr "دانلود فرم مشخصات  "
 
 #: templates/receive_source/receive_sign.html:31
 msgid "Contracts and Finance both see whatever you save here."
-msgstr ""
+msgstr "هرچه در اینجا ذخیره کنید، هم واحد قراردادها و هم واحد مالی آن را می‌بینند."
 
 #: templates/receive_source/receive_sign.html:33
 msgid "Contracts hasn't estimated a cost yet — that happens after you sign."
-msgstr ""
+msgstr "واحد قراردادها هنوز هزینه‌ای برآورد نکرده است — این کار پس از امضای شما انجام می‌شود."
 
 #: templates/receive_source/receive_sign.html:39
 #: templates/receive_source/receive_sign.html:59
 msgid "Discount Decision"
-msgstr ""
+msgstr "تصمیم تخفیف"
 
 #: templates/receive_source/receive_sign.html:46
 #: templates/receive_source/receive_sign.html:69
 msgid "Save Discount Decision"
-msgstr ""
+msgstr "ذخیره تصمیم تخفیف"
 
 #: templates/receive_source/receive_sign.html:54
 msgid ""
 "Fill in the source/waste characterization columns (shield, burial, storage "
 "duration, sale probability, description) directly in the document above, "
 "upload it below, then sign."
-msgstr ""
+msgstr "ستون‌های مشخصه‌یابی چشمه/پسماند (شیلد، دفن، مدت نگهداری، احتمال فروش، توضیحات) را مستقیماً در سند بالا تکمیل کنید، آن را در پایین بارگذاری کنید، سپس امضا نمایید."
 
 #: templates/receive_source/receive_sign.html:63
 msgid ""
 "If checked, this request routes through the CEO for approval right after "
 "Deputy signs, before Contracts estimates the cost."
-msgstr ""
+msgstr "در صورت تیک زدن، این درخواست بلافاصله پس از امضای معاون، برای تأیید نزد مدیرعامل ارجاع داده می‌شود، پیش از آنکه واحد قراردادها هزینه را برآورد کند."
 
 #: templates/receive_source/receive_sign.html:88
-#, fuzzy
-#| msgid "Save and Continue"
+
 msgid "Sign and Continue"
-msgstr "ذخیره و ادامه"
+msgstr "امضا و ادامه"
 
 #: templates/receive_source/received_sources_list.html:4
 #: templates/receive_source/receiving_home.html:43
-#, fuzzy
-#| msgid "Receive Sources"
+
 msgid "Received Sources"
-msgstr "دریافت چشمه‌ها"
+msgstr " چشمه‌های دریافت شده"
 
 #: templates/receive_source/received_sources_list.html:46
 msgid ""
 "Read-only overview — facility, contract cost, invoice, payment, the filled/"
 "signed characterization document (صورتجلسه), and every source with a link to "
 "its DSRS record."
-msgstr ""
+msgstr "نمای کلی فقط‌خواندنی — مرکز، هزینه قرارداد، فاکتور، پرداخت، سند مشخصه‌یابی تکمیل/امضاشده (صورتجلسه)، و هر چشمه به همراه پیوند به رکورد DSRS آن."
 
 #: templates/receive_source/received_sources_list.html:54
-#, fuzzy
-#| msgid "License Letter"
+
 msgid "Delivery Letter"
-msgstr "نامه مجوز"
+msgstr "نامه تحویل"
 
 #: templates/receive_source/received_sources_list.html:59
-#, fuzzy
-#| msgid "DSRS Specification"
+
 msgid "Specification"
-msgstr "مشخصات فنی DSRS"
+msgstr "مشخصات  "
 
 #: templates/receive_source/received_sources_list.html:86
-#, fuzzy
-#| msgid "Receive"
+
 msgid "Receipt"
-msgstr "دریافت"
+msgstr "رسید"
 
 #: templates/receive_source/received_sources_list.html:136
 msgid "Link"
-msgstr ""
+msgstr "پیوند"
 
 #: templates/receive_source/received_sources_list.html:146
-#, fuzzy
-#| msgid "View Name"
+
 msgid "View Data"
-msgstr "نام نما"
+msgstr "مشاهده داده"
 
 #: templates/receive_source/receiving_home.html:31
-#, fuzzy
-#| msgid "Select a service to continue"
+
 msgid "Select a queue to continue"
-msgstr "برای ادامه یک خدمت انتخاب کنید"
+msgstr "برای ادامه، یک صف را انتخاب کنید"
 
 #: templates/receive_source/receiving_home.html:37
-#, fuzzy
-#| msgid "License Requests"
+
 msgid "All Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "همه درخواست‌ها"
 
 #: templates/receive_source/receiving_home.html:38
-#, fuzzy
-#| msgid "View received sources."
+
 msgid "View and start receive requests"
-msgstr "مشاهده چشمه‌های دریافت‌شده."
+msgstr "مشاهده و شروع درخوالست های تحویل چشمه."
 
 #: templates/receive_source/receiving_home.html:44
 msgid "Read-only overview: contract cost, invoice, payment, صورتجلسه, sources"
-msgstr ""
+msgstr "نمای کلی فقط‌خواندنی: هزینه قرارداد، فاکتور، پرداخت، صورتجلسه، چشمه‌ها"
 
 #: templates/receive_source/receiving_home.html:62
 msgid "Sources awaiting characterization"
-msgstr ""
+msgstr "چشمه‌های در انتظار مشخصه‌یابی"
 
 #: templates/receive_source/receiving_home.html:63
-#, fuzzy
-#| msgid "License Requests"
+
 msgid "Requests"
-msgstr "درخواست‌های مجوز"
+msgstr "درخواست‌ها"
 
 #: templates/receive_source/receiving_home.html:69
 msgid "Start from a DSRS Delivery letter"
-msgstr ""
+msgstr "شروع از نامه تحویل DSRS"
 
 #: templates/reference/radionuclide_form.html:7
 msgid "Nuclide Form"
@@ -4111,42 +3766,42 @@ msgstr "IPv4"
 #: venv/lib/python3.12/site-packages/django/core/validators.py:320
 #: venv/lib/python3.12/site-packages/django/utils/ipv6.py:43
 msgid "IPv6"
-msgstr ""
+msgstr "IPv6"
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:334
 msgid "IPv4 or IPv6"
-msgstr ""
+msgstr "IPv4 یا IPv6"
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:375
 msgid "Enter only digits separated by commas."
-msgstr ""
+msgstr "فقط ارقام جدا شده با ویرگول وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:381
 #, python-format
 msgid "Ensure this value is %(limit_value)s (it is %(show_value)s)."
-msgstr ""
+msgstr "اطمینان حاصل کنید که این مقدار %(limit_value)s باشد (اکنون %(show_value)s است)."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:416
 #, python-format
 msgid "Ensure this value is less than or equal to %(limit_value)s."
-msgstr ""
+msgstr "اطمینان حاصل کنید که این مقدار کوچک‌تر یا مساوی %(limit_value)s باشد."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:425
 #, python-format
 msgid "Ensure this value is greater than or equal to %(limit_value)s."
-msgstr ""
+msgstr "اطمینان حاصل کنید که این مقدار بزرگ‌تر یا مساوی %(limit_value)s باشد."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:434
 #, python-format
 msgid "Ensure this value is a multiple of step size %(limit_value)s."
-msgstr ""
+msgstr "اطمینان حاصل کنید که این مقدار مضربی از گام %(limit_value)s باشد."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:441
 #, python-format
 msgid ""
 "Ensure this value is a multiple of step size %(limit_value)s, starting from "
 "%(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and so on."
-msgstr ""
+msgstr "اطمینان حاصل کنید که این مقدار مضربی از گام %(limit_value)s، با شروع از %(offset)s باشد، برای مثال %(offset)s، %(valid_value1)s، %(valid_value2)s و به همین ترتیب."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:473
 #, python-format
@@ -4204,44 +3859,44 @@ msgstr[1] ""
 msgid ""
 "File extension “%(extension)s” is not allowed. Allowed extensions are: "
 "%(allowed_extensions)s."
-msgstr ""
+msgstr "پسوند فایل «%(extension)s» مجاز نیست. پسوندهای مجاز عبارت‌اند از: %(allowed_extensions)s."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:659
 msgid "Null characters are not allowed."
-msgstr ""
+msgstr "کاراکترهای Null مجاز نیستند."
 
 #: venv/lib/python3.12/site-packages/django/db/models/base.py:1633
 #: venv/lib/python3.12/site-packages/django/forms/models.py:932
 msgid "and"
-msgstr ""
+msgstr "و"
 
 #: venv/lib/python3.12/site-packages/django/db/models/base.py:1635
 #, python-format
 msgid "%(model_name)s with this %(field_labels)s already exists."
-msgstr ""
+msgstr "%(model_name)s با این %(field_labels)s از قبل وجود دارد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/constraints.py:20
 #, python-format
 msgid "Constraint “%(name)s” is violated."
-msgstr ""
+msgstr "محدودیت «%(name)s» نقض شده است."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:134
 #, python-format
 msgid "Value %(value)r is not a valid choice."
-msgstr ""
+msgstr "مقدار %(value)r یک گزینه معتبر نیست."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:135
 msgid "This field cannot be null."
-msgstr ""
+msgstr "این فیلد نمی‌تواند Null باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:136
 msgid "This field cannot be blank."
-msgstr ""
+msgstr "این فیلد نمی‌تواند خالی باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:137
 #, python-format
 msgid "%(model_name)s with this %(field_label)s already exists."
-msgstr ""
+msgstr "%(model_name)s با این %(field_label)s از قبل وجود دارد."
 
 #. Translators: The 'lookup_type' is one of 'date', 'year' or
 #. 'month'. Eg: "Title must be unique for pub_date year"
@@ -4249,46 +3904,46 @@ msgstr ""
 #, python-format
 msgid ""
 "%(field_label)s must be unique for %(date_field_label)s %(lookup_type)s."
-msgstr ""
+msgstr "%(field_label)s باید برای %(date_field_label)s %(lookup_type)s یکتا باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:180
 #, python-format
 msgid "Field of type: %(field_type)s"
-msgstr ""
+msgstr "فیلدی از نوع: %(field_type)s"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1161
 #, python-format
 msgid "“%(value)s” value must be either True or False."
-msgstr ""
+msgstr "مقدار «%(value)s» باید True یا False باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1162
 #, python-format
 msgid "“%(value)s” value must be either True, False, or None."
-msgstr ""
+msgstr "مقدار «%(value)s» باید True، False یا None باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1164
 msgid "Boolean (Either True or False)"
-msgstr ""
+msgstr "بولی (True یا False)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1214
 #, python-format
 msgid "String (up to %(max_length)s)"
-msgstr ""
+msgstr "رشته (حداکثر %(max_length)s کاراکتر)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1216
 msgid "String (unlimited)"
-msgstr ""
+msgstr "رشته (بدون محدودیت طول)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1325
 msgid "Comma-separated integers"
-msgstr ""
+msgstr "اعداد صحیح جدا شده با ویرگول"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1426
 #, python-format
 msgid ""
 "“%(value)s” value has an invalid date format. It must be in YYYY-MM-DD "
 "format."
-msgstr ""
+msgstr "مقدار «%(value)s» قالب تاریخ نامعتبری دارد. باید به‌صورت YYYY-MM-DD باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1430
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1565
@@ -4296,45 +3951,45 @@ msgstr ""
 msgid ""
 "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid "
 "date."
-msgstr ""
+msgstr "مقدار «%(value)s» قالب صحیح (YYYY-MM-DD) دارد اما تاریخ نامعتبری است."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1434
 msgid "Date (without time)"
-msgstr ""
+msgstr "تاریخ (بدون زمان)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1561
 #, python-format
 msgid ""
 "“%(value)s” value has an invalid format. It must be in YYYY-MM-DD HH:MM[:ss[."
 "uuuuuu]][TZ] format."
-msgstr ""
+msgstr "مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت YYYY-MM-DD HH:MM[:ss[.uuuuuu]][TZ] باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1569
 #, python-format
 msgid ""
 "“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
 "[TZ]) but it is an invalid date/time."
-msgstr ""
+msgstr "مقدار «%(value)s» قالب صحیح (YYYY-MM-DD HH:MM[:ss[.uuuuuu]][TZ]) دارد اما تاریخ/زمان نامعتبری است."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1574
 msgid "Date (with time)"
-msgstr ""
+msgstr "تاریخ (با زمان)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1701
 #, python-format
 msgid "“%(value)s” value must be a decimal number."
-msgstr ""
+msgstr "مقدار «%(value)s» باید یک عدد اعشاری باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1703
 msgid "Decimal number"
-msgstr ""
+msgstr "عدد اعشاری"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1864
 #, python-format
 msgid ""
 "“%(value)s” value has an invalid format. It must be in [DD] [[HH:]MM:]ss[."
 "uuuuuu] format."
-msgstr ""
+msgstr "مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت [DD] [[HH:]MM:]ss[.uuuuuu] باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1868
 msgid "Duration"
@@ -4351,28 +4006,28 @@ msgstr "فایل"
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2023
 #, python-format
 msgid "“%(value)s” value must be a float."
-msgstr ""
+msgstr "مقدار «%(value)s» باید یک عدد اعشاری (float) باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2025
 msgid "Floating point number"
-msgstr ""
+msgstr "عدد اعشاری (float)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2065
 #, python-format
 msgid "“%(value)s” value must be an integer."
-msgstr ""
+msgstr "مقدار «%(value)s» باید یک عدد صحیح باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2067
 msgid "Integer"
-msgstr ""
+msgstr "عدد صحیح"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2163
 msgid "Big (8 byte) integer"
-msgstr ""
+msgstr "عدد صحیح بزرگ (۸ بایتی)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2180
 msgid "Small integer"
-msgstr ""
+msgstr "عدد صحیح کوچک"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2188
 msgid "IPv4 address"
@@ -4386,152 +4041,152 @@ msgstr "آدرس"
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2311
 #, python-format
 msgid "“%(value)s” value must be either None, True or False."
-msgstr ""
+msgstr "مقدار «%(value)s» باید None، True یا False باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2313
 msgid "Boolean (Either True, False or None)"
-msgstr ""
+msgstr "بولی (True، False یا None)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2364
 msgid "Positive big integer"
-msgstr ""
+msgstr "عدد صحیح مثبت بزرگ"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2379
 msgid "Positive integer"
-msgstr ""
+msgstr "عدد صحیح مثبت"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2394
 msgid "Positive small integer"
-msgstr ""
+msgstr "عدد صحیح مثبت کوچک"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2410
 #, python-format
 msgid "Slug (up to %(max_length)s)"
-msgstr ""
+msgstr "اسلاگ (حداکثر %(max_length)s کاراکتر)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2446
 msgid "Text"
-msgstr ""
+msgstr "متن"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2526
 #, python-format
 msgid ""
 "“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
 "format."
-msgstr ""
+msgstr "مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت HH:MM[:ss[.uuuuuu]] باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2530
 #, python-format
 msgid ""
 "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
 "invalid time."
-msgstr ""
+msgstr "مقدار «%(value)s» قالب صحیح (HH:MM[:ss[.uuuuuu]]) دارد اما زمان نامعتبری است."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2534
 msgid "Time"
-msgstr ""
+msgstr "زمان"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2642
 msgid "URL"
-msgstr ""
+msgstr "نشانی اینترنتی"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2666
 msgid "Raw binary data"
-msgstr ""
+msgstr "داده خام دودویی"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2731
 #, python-format
 msgid "“%(value)s” is not a valid UUID."
-msgstr ""
+msgstr "«%(value)s» یک UUID معتبر نیست."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2733
 msgid "Universally unique identifier"
-msgstr ""
+msgstr "شناسه یکتای سراسری (UUID)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/json.py:24
 msgid "A JSON object"
-msgstr ""
+msgstr "یک شیء JSON"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/json.py:26
 msgid "Value must be valid JSON."
-msgstr ""
+msgstr "مقدار باید JSON معتبری باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:974
 #, python-format
 msgid "%(model)s instance with %(field)s %(value)r is not a valid choice."
-msgstr ""
+msgstr "نمونه %(model)s با %(field)s %(value)r گزینه معتبری نیست."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:977
 msgid "Foreign Key (type determined by related field)"
-msgstr ""
+msgstr "کلید خارجی (نوع بر اساس فیلد مرتبط تعیین می‌شود)"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1271
 msgid "One-to-one relationship"
-msgstr ""
+msgstr "رابطه یک‌به‌یک"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1328
 #, python-format
 msgid "%(from)s-%(to)s relationship"
-msgstr ""
+msgstr "رابطه %(from)s-%(to)s"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1330
 #, python-format
 msgid "%(from)s-%(to)s relationships"
-msgstr ""
+msgstr "روابط %(from)s-%(to)s"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/related.py:1378
 msgid "Many-to-many relationship"
-msgstr ""
+msgstr "رابطه چندبه‌چند"
 
 #. Translators: If found as last label character, these punctuation
 #. characters will prevent the default label_suffix to be appended to
 #. the label
 #: venv/lib/python3.12/site-packages/django/forms/boundfield.py:188
 msgid ":?.!"
-msgstr ""
+msgstr "؟.!:"
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:91
 msgid "This field is required."
-msgstr ""
+msgstr "این فیلد الزامی است."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:313
 msgid "Enter a whole number."
-msgstr ""
+msgstr "یک عدد صحیح وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:484
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:1241
 msgid "Enter a valid date."
-msgstr ""
+msgstr "یک تاریخ معتبر وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:507
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:1242
 msgid "Enter a valid time."
-msgstr ""
+msgstr "یک زمان معتبر وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:534
 msgid "Enter a valid date/time."
-msgstr ""
+msgstr "یک تاریخ/زمان معتبر وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:568
 msgid "Enter a valid duration."
-msgstr ""
+msgstr "یک بازه زمانی معتبر وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:569
 #, python-brace-format
 msgid "The number of days must be between {min_days} and {max_days}."
-msgstr ""
+msgstr "تعداد روزها باید بین {min_days} و {max_days} باشد."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:638
 msgid "No file was submitted. Check the encoding type on the form."
-msgstr ""
+msgstr "هیچ فایلی ارسال نشد. نوع رمزگذاری فرم را بررسی کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:639
 msgid "No file was submitted."
-msgstr ""
+msgstr "هیچ فایلی ارسال نشد."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:640
 msgid "The submitted file is empty."
-msgstr ""
+msgstr "فایل ارسال‌شده خالی است."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:642
 #, python-format
@@ -4543,55 +4198,55 @@ msgstr[1] ""
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:647
 msgid "Please either submit a file or check the clear checkbox, not both."
-msgstr ""
+msgstr "لطفاً یا یک فایل ارسال کنید یا گزینه پاک‌کردن را تیک بزنید، نه هر دو."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:715
 msgid ""
 "Upload a valid image. The file you uploaded was either not an image or a "
 "corrupted image."
-msgstr ""
+msgstr "یک تصویر معتبر بارگذاری کنید. فایلی که بارگذاری کردید یا تصویر نبود یا تصویر خراب بود."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:862
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:949
 #: venv/lib/python3.12/site-packages/django/forms/models.py:1621
 #, python-format
 msgid "Select a valid choice. %(value)s is not one of the available choices."
-msgstr ""
+msgstr "یک گزینه معتبر انتخاب کنید. %(value)s یکی از گزینه‌های موجود نیست."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:951
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:1070
 #: venv/lib/python3.12/site-packages/django/forms/models.py:1619
 msgid "Enter a list of values."
-msgstr ""
+msgstr "یک فهرست از مقادیر وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:1071
 msgid "Enter a complete value."
-msgstr ""
+msgstr "یک مقدار کامل وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:1313
 msgid "Enter a valid UUID."
-msgstr ""
+msgstr "یک UUID معتبر وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:1343
 msgid "Enter a valid JSON."
-msgstr ""
+msgstr "یک JSON معتبر وارد کنید."
 
 #. Translators: This is the default suffix added to form field labels
 #: venv/lib/python3.12/site-packages/django/forms/forms.py:97
 msgid ":"
-msgstr ""
+msgstr "؛"
 
 #: venv/lib/python3.12/site-packages/django/forms/forms.py:239
 #, python-format
 msgid "(Hidden field %(name)s) %(error)s"
-msgstr ""
+msgstr "(فیلد پنهان %(name)s) %(error)s"
 
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:61
 #, python-format
 msgid ""
 "ManagementForm data is missing or has been tampered with. Missing fields: "
 "%(field_names)s. You may need to file a bug report if the issue persists."
-msgstr ""
+msgstr "داده ManagementForm گم شده یا دستکاری شده است. فیلدهای مفقود: %(field_names)s. در صورت تکرار مشکل، ممکن است لازم باشد گزارش خطا ثبت کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:65
 #, python-format
@@ -4610,89 +4265,89 @@ msgstr[1] ""
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:484
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:491
 msgid "Order"
-msgstr ""
+msgstr "ترتیب"
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:925
 #, python-format
 msgid "Please correct the duplicate data for %(field)s."
-msgstr ""
+msgstr "لطفاً داده تکراری مربوط به %(field)s را اصلاح کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:930
 #, python-format
 msgid "Please correct the duplicate data for %(field)s, which must be unique."
-msgstr ""
+msgstr "لطفاً داده تکراری مربوط به %(field)s را که باید یکتا باشد اصلاح کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:937
 #, python-format
 msgid ""
 "Please correct the duplicate data for %(field_name)s which must be unique "
 "for the %(lookup)s in %(date_field)s."
-msgstr ""
+msgstr "لطفاً داده تکراری مربوط به %(field_name)s را که باید برای %(lookup)s در %(date_field)s یکتا باشد اصلاح کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:946
 msgid "Please correct the duplicate values below."
-msgstr ""
+msgstr "لطفاً مقادیر تکراری زیر را اصلاح کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:1383
 msgid "The inline value did not match the parent instance."
-msgstr ""
+msgstr "مقدار درون‌خطی با نمونه والد مطابقت نداشت."
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:1474
 msgid "Select a valid choice. That choice is not one of the available choices."
-msgstr ""
+msgstr "یک گزینه معتبر انتخاب کنید. آن گزینه یکی از گزینه‌های موجود نیست."
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:1623
 #, python-format
 msgid "“%(pk)s” is not a valid value."
-msgstr ""
+msgstr "«%(pk)s» مقدار معتبری نیست."
 
 #: venv/lib/python3.12/site-packages/django/forms/utils.py:229
 #, python-format
 msgid ""
 "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it "
 "may be ambiguous or it may not exist."
-msgstr ""
+msgstr "%(datetime)s را نمی‌توان در منطقه زمانی %(current_timezone)s تفسیر کرد؛ ممکن است مبهم باشد یا وجود نداشته باشد."
 
 #: venv/lib/python3.12/site-packages/django/forms/widgets.py:528
 msgid "Clear"
-msgstr ""
+msgstr "پاک کردن"
 
 #: venv/lib/python3.12/site-packages/django/forms/widgets.py:529
 msgid "Currently"
-msgstr ""
+msgstr "در حال حاضر"
 
 #: venv/lib/python3.12/site-packages/django/forms/widgets.py:530
 msgid "Change"
-msgstr ""
+msgstr "تغییر"
 
 #: venv/lib/python3.12/site-packages/django/forms/widgets.py:869
 msgid "Unknown"
-msgstr ""
+msgstr "نامشخص"
 
 #: venv/lib/python3.12/site-packages/django/tasks/base.py:34
 msgctxt "Task"
 msgid "Ready"
-msgstr ""
+msgstr "آماده"
 
 #: venv/lib/python3.12/site-packages/django/tasks/base.py:36
 msgctxt "Task"
 msgid "Running"
-msgstr ""
+msgstr "در حال اجرا"
 
 #: venv/lib/python3.12/site-packages/django/tasks/base.py:38
 msgctxt "Task"
 msgid "Failed"
-msgstr ""
+msgstr "ناموفق"
 
 #: venv/lib/python3.12/site-packages/django/tasks/base.py:40
 msgctxt "Task"
 msgid "Successful"
-msgstr ""
+msgstr "موفق"
 
 #. Translators: Please do not add spaces around commas.
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:878
 msgid "yes,no,maybe"
-msgstr ""
+msgstr "بله,خیر,شاید"
 
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:908
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:925
@@ -4705,99 +4360,99 @@ msgstr[1] ""
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:927
 #, python-format
 msgid "%s KB"
-msgstr ""
+msgstr "%s کیلوبایت"
 
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:929
 #, python-format
 msgid "%s MB"
-msgstr ""
+msgstr "%s مگابایت"
 
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:931
 #, python-format
 msgid "%s GB"
-msgstr ""
+msgstr "%s گیگابایت"
 
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:933
 #, python-format
 msgid "%s TB"
-msgstr ""
+msgstr "%s ترابایت"
 
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:935
 #, python-format
 msgid "%s PB"
-msgstr ""
+msgstr "%s پتابایت"
 
 #: venv/lib/python3.12/site-packages/django/utils/dateformat.py:74
 msgid "p.m."
-msgstr ""
+msgstr "ب.ظ."
 
 #: venv/lib/python3.12/site-packages/django/utils/dateformat.py:75
 msgid "a.m."
-msgstr ""
+msgstr "ق.ظ."
 
 #: venv/lib/python3.12/site-packages/django/utils/dateformat.py:80
 msgid "PM"
-msgstr ""
+msgstr "بعدازظهر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dateformat.py:81
 msgid "AM"
-msgstr ""
+msgstr "قبل‌ازظهر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dateformat.py:153
 msgid "midnight"
-msgstr ""
+msgstr "نیمه‌شب"
 
 #: venv/lib/python3.12/site-packages/django/utils/dateformat.py:155
 msgid "noon"
-msgstr ""
+msgstr "ظهر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:7
 msgid "Monday"
-msgstr ""
+msgstr "دوشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:8
 msgid "Tuesday"
-msgstr ""
+msgstr "سه‌شنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:9
 msgid "Wednesday"
-msgstr ""
+msgstr "چهارشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:10
 msgid "Thursday"
-msgstr ""
+msgstr "پنجشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:11
 msgid "Friday"
-msgstr ""
+msgstr "جمعه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:12
 msgid "Saturday"
-msgstr ""
+msgstr "شنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:13
 msgid "Sunday"
-msgstr ""
+msgstr "یکشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:16
 msgid "Mon"
-msgstr ""
+msgstr "دوشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:17
 msgid "Tue"
-msgstr ""
+msgstr "سه‌شنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:18
 msgid "Wed"
-msgstr ""
+msgstr "چهارشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:19
 msgid "Thu"
-msgstr ""
+msgstr "پنجشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:20
 msgid "Fri"
-msgstr ""
+msgstr "جمعه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:21
 msgid "Sat"
@@ -4805,15 +4460,15 @@ msgstr "وضعیت"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:22
 msgid "Sun"
-msgstr ""
+msgstr "یکشنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:25
 msgid "January"
-msgstr ""
+msgstr "ژانویه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:26
 msgid "February"
-msgstr ""
+msgstr "فوریه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:27
 msgid "March"
@@ -4821,23 +4476,23 @@ msgstr "جستجو..."
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:28
 msgid "April"
-msgstr ""
+msgstr "آوریل"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:29
 msgid "May"
-msgstr ""
+msgstr "مه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:30
 msgid "June"
-msgstr ""
+msgstr "ژوئن"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:31
 msgid "July"
-msgstr ""
+msgstr "ژوئیه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:32
 msgid "August"
-msgstr ""
+msgstr "اوت"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:33
 msgid "September"
@@ -4845,73 +4500,73 @@ msgstr " شماره نامه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:34
 msgid "October"
-msgstr ""
+msgstr "اکتبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:35
 msgid "November"
-msgstr ""
+msgstr "نوامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:36
 msgid "December"
-msgstr ""
+msgstr "دسامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:39
 msgid "jan"
-msgstr ""
+msgstr "ژانویه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:40
 msgid "feb"
-msgstr ""
+msgstr "فوریه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:41
 msgid "mar"
-msgstr ""
+msgstr "مارس"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:42
 msgid "apr"
-msgstr ""
+msgstr "آوریل"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:43
 msgid "may"
-msgstr ""
+msgstr "مه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:44
 msgid "jun"
-msgstr ""
+msgstr "ژوئن"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:45
 msgid "jul"
-msgstr ""
+msgstr "ژوئیه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:46
 msgid "aug"
-msgstr ""
+msgstr "اوت"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:47
 msgid "sep"
-msgstr ""
+msgstr "سپتامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:48
 msgid "oct"
-msgstr ""
+msgstr "اکتبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:49
 msgid "nov"
-msgstr ""
+msgstr "نوامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:50
 msgid "dec"
-msgstr ""
+msgstr "دسامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:53
 msgctxt "abbrev. month"
 msgid "Jan."
-msgstr ""
+msgstr "ژانویه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:54
 msgctxt "abbrev. month"
 msgid "Feb."
-msgstr ""
+msgstr "فوریه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:55
 msgctxt "abbrev. month"
@@ -4921,57 +4576,57 @@ msgstr "جستجو..."
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:56
 msgctxt "abbrev. month"
 msgid "April"
-msgstr ""
+msgstr "آوریل"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:57
 msgctxt "abbrev. month"
 msgid "May"
-msgstr ""
+msgstr "مه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:58
 msgctxt "abbrev. month"
 msgid "June"
-msgstr ""
+msgstr "ژوئن"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:59
 msgctxt "abbrev. month"
 msgid "July"
-msgstr ""
+msgstr "ژوئیه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:60
 msgctxt "abbrev. month"
 msgid "Aug."
-msgstr ""
+msgstr "اوت"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:61
 msgctxt "abbrev. month"
 msgid "Sept."
-msgstr ""
+msgstr "سپتامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:62
 msgctxt "abbrev. month"
 msgid "Oct."
-msgstr ""
+msgstr "اکتبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:63
 msgctxt "abbrev. month"
 msgid "Nov."
-msgstr ""
+msgstr "نوامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:64
 msgctxt "abbrev. month"
 msgid "Dec."
-msgstr ""
+msgstr "دسامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:67
 msgctxt "alt. month"
 msgid "January"
-msgstr ""
+msgstr "ژانویه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:68
 msgctxt "alt. month"
 msgid "February"
-msgstr ""
+msgstr "فوریه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:69
 msgctxt "alt. month"
@@ -4981,27 +4636,27 @@ msgstr "جستجو..."
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:70
 msgctxt "alt. month"
 msgid "April"
-msgstr ""
+msgstr "آوریل"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:71
 msgctxt "alt. month"
 msgid "May"
-msgstr ""
+msgstr "مه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:72
 msgctxt "alt. month"
 msgid "June"
-msgstr ""
+msgstr "ژوئن"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:73
 msgctxt "alt. month"
 msgid "July"
-msgstr ""
+msgstr "ژوئیه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:74
 msgctxt "alt. month"
 msgid "August"
-msgstr ""
+msgstr "اوت"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:75
 msgctxt "alt. month"
@@ -5011,37 +4666,37 @@ msgstr " شماره نامه"
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:76
 msgctxt "alt. month"
 msgid "October"
-msgstr ""
+msgstr "اکتبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:77
 msgctxt "alt. month"
 msgid "November"
-msgstr ""
+msgstr "نوامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:78
 msgctxt "alt. month"
 msgid "December"
-msgstr ""
+msgstr "دسامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/ipv6.py:20
 msgid "This is not a valid IPv6 address."
-msgstr ""
+msgstr "این یک نشانی IPv6 معتبر نیست."
 
 #: venv/lib/python3.12/site-packages/django/utils/text.py:76
 #, python-format
 msgctxt "String to return when truncating text"
 msgid "%(truncated_text)s…"
-msgstr ""
+msgstr "%(truncated_text)s…"
 
 #: venv/lib/python3.12/site-packages/django/utils/text.py:282
 msgid "or"
-msgstr ""
+msgstr "یا"
 
 #. Translators: This string is used as a separator between list elements
 #: venv/lib/python3.12/site-packages/django/utils/text.py:301
 #: venv/lib/python3.12/site-packages/django/utils/timesince.py:135
 msgid ", "
-msgstr ""
+msgstr "، "
 
 #: venv/lib/python3.12/site-packages/django/utils/timesince.py:8
 #, python-format
@@ -5087,11 +4742,11 @@ msgstr[1] ""
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:29
 msgid "Forbidden"
-msgstr ""
+msgstr "دسترسی ممنوع"
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:30
 msgid "CSRF verification failed. Request aborted."
-msgstr ""
+msgstr "تأیید CSRF ناموفق بود. درخواست لغو شد."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:34
 msgid ""
@@ -5099,14 +4754,14 @@ msgid ""
 "header” to be sent by your web browser, but none was sent. This header is "
 "required for security reasons, to ensure that your browser is not being "
 "hijacked by third parties."
-msgstr ""
+msgstr "شما این پیام را می‌بینید زیرا این سایت HTTPS نیاز دارد که مرورگر شما یک «هدر Referer» ارسال کند، اما هیچ هدری ارسال نشد. این هدر به دلایل امنیتی لازم است تا اطمینان حاصل شود مرورگر شما توسط اشخاص ثالث ربوده نشده است."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:40
 msgid ""
 "If you have configured your browser to disable “Referer” headers, please re-"
 "enable them, at least for this site, or for HTTPS connections, or for “same-"
 "origin” requests."
-msgstr ""
+msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که هدرهای «Referer» را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت، یا اتصالات HTTPS، یا درخواست‌های «هم‌مبدأ» دوباره فعال کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:45
 msgid ""
@@ -5115,111 +4770,111 @@ msgid ""
 "CSRF protection requires the “Referer” header to do strict referer checking. "
 "If you’re concerned about privacy, use alternatives like <a "
 "rel=\"noreferrer\" …> for links to third-party sites."
-msgstr ""
+msgstr "اگر از تگ <meta name=\"referrer\" content=\"no-referrer\"> استفاده می‌کنید یا هدر «Referrer-Policy: no-referrer» را ارسال می‌کنید، لطفاً آن‌ها را حذف کنید. محافظت CSRF برای بررسی دقیق referer به هدر «Referer» نیاز دارد. اگر نگران حریم خصوصی هستید، از جایگزین‌هایی مانند <a rel=\"noreferrer\" …> برای پیوند به سایت‌های شخص ثالث استفاده کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:54
 msgid ""
 "You are seeing this message because this site requires a CSRF cookie when "
 "submitting forms. This cookie is required for security reasons, to ensure "
 "that your browser is not being hijacked by third parties."
-msgstr ""
+msgstr "شما این پیام را می‌بینید زیرا این سایت هنگام ارسال فرم‌ها به کوکی CSRF نیاز دارد. این کوکی به دلایل امنیتی لازم است تا اطمینان حاصل شود مرورگر شما توسط اشخاص ثالث ربوده نشده است."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:60
 msgid ""
 "If you have configured your browser to disable cookies, please re-enable "
 "them, at least for this site, or for “same-origin” requests."
-msgstr ""
+msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که کوکی‌ها را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت یا درخواست‌های «هم‌مبدأ» دوباره فعال کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:66
 msgid "More information is available with DEBUG=True."
-msgstr ""
+msgstr "با تنظیم DEBUG=True اطلاعات بیشتری در دسترس است."
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:44
 msgid "No year specified"
-msgstr ""
+msgstr "سالی مشخص نشده است"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:64
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:115
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:214
 msgid "Date out of range"
-msgstr ""
+msgstr "تاریخ خارج از محدوده است"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:94
 msgid "No month specified"
-msgstr ""
+msgstr "ماهی مشخص نشده است"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:147
 msgid "No day specified"
-msgstr ""
+msgstr "روزی مشخص نشده است"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:194
 msgid "No week specified"
-msgstr ""
+msgstr "هفته‌ای مشخص نشده است"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:353
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:384
 #, python-format
 msgid "No %(verbose_name_plural)s available"
-msgstr ""
+msgstr "هیچ %(verbose_name_plural)s در دسترس نیست"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:680
 #, python-format
 msgid ""
 "Future %(verbose_name_plural)s not available because %(class_name)s."
 "allow_future is False."
-msgstr ""
+msgstr "%(verbose_name_plural)s آینده در دسترس نیست زیرا %(class_name)s.allow_future برابر با False است."
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:720
 #, python-format
 msgid "Invalid date string “%(datestr)s” given format “%(format)s”"
-msgstr ""
+msgstr "رشته تاریخ نامعتبر «%(datestr)s» با قالب «%(format)s»"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/detail.py:56
 #, python-format
 msgid "No %(verbose_name)s found matching the query"
-msgstr ""
+msgstr "هیچ %(verbose_name)s مطابق با این پرس‌وجو یافت نشد"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/list.py:70
 msgid "Page is not “last”, nor can it be converted to an int."
-msgstr ""
+msgstr "صفحه «last» نیست و نمی‌توان آن را به عدد صحیح تبدیل کرد."
 
 #: venv/lib/python3.12/site-packages/django/views/generic/list.py:77
 #, python-format
 msgid "Invalid page (%(page_number)s): %(message)s"
-msgstr ""
+msgstr "صفحه نامعتبر (%(page_number)s): %(message)s"
 
 #: venv/lib/python3.12/site-packages/django/views/generic/list.py:173
 #, python-format
 msgid "Empty list and “%(class_name)s.allow_empty” is False."
-msgstr ""
+msgstr "فهرست خالی است و «%(class_name)s.allow_empty» برابر با False است."
 
 #: venv/lib/python3.12/site-packages/django/views/static.py:49
 msgid "Directory indexes are not allowed here."
-msgstr ""
+msgstr "نمایش فهرست پوشه در اینجا مجاز نیست."
 
 #: venv/lib/python3.12/site-packages/django/views/static.py:51
 #, python-format
 msgid "“%(path)s” does not exist"
-msgstr ""
+msgstr "«%(path)s» وجود ندارد"
 
 #: venv/lib/python3.12/site-packages/django/views/static.py:68
 #: venv/lib/python3.12/site-packages/django/views/templates/directory_index.html:8
 #: venv/lib/python3.12/site-packages/django/views/templates/directory_index.html:11
 #, python-format
 msgid "Index of %(directory)s"
-msgstr ""
+msgstr "فهرست %(directory)s"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:7
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:204
 msgid "The install worked successfully! Congratulations!"
-msgstr ""
+msgstr "نصب با موفقیت انجام شد! تبریک می‌گوییم!"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:206
 #, python-format
 msgid ""
 "View <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
 "target=\"_blank\" rel=\"noopener\">release notes</a> for Django %(version)s"
-msgstr ""
+msgstr "مشاهده <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" target=\"_blank\" rel=\"noopener\">یادداشت‌های انتشار</a> برای جنگو %(version)s"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:208
 #, python-format
@@ -5228,31 +4883,31 @@ msgid ""
 "%(version)s/ref/settings/#debug\" target=\"_blank\" "
 "rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
 "configured any URLs."
-msgstr ""
+msgstr "شما این صفحه را می‌بینید زیرا <a href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" target=\"_blank\" rel=\"noopener\">DEBUG=True</a> در فایل تنظیمات شما فعال است و هیچ URL‌ای پیکربندی نکرده‌اید."
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:217
 msgid "Django Documentation"
-msgstr ""
+msgstr "مستندات جنگو"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:218
 msgid "Topics, references, &amp; how-to’s"
-msgstr ""
+msgstr "موضوعات، مراجع و راهنماها"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:226
 msgid "Tutorial: A Polling App"
-msgstr ""
+msgstr "آموزش: یک اپلیکیشن نظرسنجی"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:227
 msgid "Get started with Django"
-msgstr ""
+msgstr "شروع کار با جنگو"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:235
 msgid "Django Community"
-msgstr ""
+msgstr "انجمن جنگو"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:236
 msgid "Connect, get help, or contribute"
-msgstr ""
+msgstr "ارتباط برقرار کنید، کمک بگیرید یا مشارکت کنید"
 
 #~ msgid "Create Contracts"
 #~ msgstr "ایجاد قراردادها"

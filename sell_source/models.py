@@ -106,15 +106,15 @@ class SellRequestSource(models.Model):
     nuclide = models.ForeignKey(
         "reference.Nuclides",
         on_delete=models.PROTECT,
-        verbose_name=_("نام ماده پرتوزا / Nuclide"),
+        verbose_name=_("Nuclide"),
     )
-    serial_number = models.CharField(_("شماره سریال / Serial Number"), max_length=25, blank=True, null=True)
-    manufacture_date = models.DateField(_("تاریخ ساخت / Manufacture Date"), null=True, blank=True)
-    recorded_activity_mci = models.FloatField(_("پرتوزایی ثبت‌شده / Recorded Activity (mCi)"), null=True, blank=True)
+    serial_number = models.CharField(_("  Serial Number"), max_length=25, blank=True, null=True)
+    manufacture_date = models.DateField(_("Manufacture Date"), null=True, blank=True)
+    recorded_activity_mci = models.FloatField(_("Recorded Activity (mCi)"), null=True, blank=True)
 
     # ---- Filled by the user ----
-    physical_characteristics = models.TextField(_("مشخصات فیزیکی / Physical Characteristics"), blank=True)
-    remarks = models.TextField(_("ملاحظات / Remarks"), blank=True)
+    physical_characteristics = models.TextField(_("Physical Characteristics"), blank=True)
+    remarks = models.TextField(_("Remarks"), blank=True)
 
     added_at = models.DateTimeField(_("Added At"), auto_now_add=True)
 

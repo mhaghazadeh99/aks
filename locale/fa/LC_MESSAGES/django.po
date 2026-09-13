@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-10 09:04+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2026-09-13 09:33+0000\n"
+"PO-Revision-Date: 2026-09-13 12:45+0330\n"
+"Last-Translator: Mohammad\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fa\n"
 "MIME-Version: 1.0\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: IRWA/settings.py:182
+#: IRWA/settings.py:184
 msgid "فارسی"
 msgstr "فارسی"
 
-#: IRWA/settings.py:184
+#: IRWA/settings.py:186
 msgid "English"
 msgstr "انگلیسی"
 
@@ -83,7 +83,7 @@ msgstr "مجوز دسترسی به نما حذف شد."
 msgid "Profile updated successfully."
 msgstr "پروفایل با موفقیت به‌روزرسانی شد."
 
-#: contract/forms.py:13 templates/contract/license_contract_form.html:325
+#: contract/forms.py:13 templates/contract/license_contract_form.html:400
 msgid "Contract Document"
 msgstr "سند قرارداد"
 
@@ -97,7 +97,7 @@ msgstr "نامه مجوز"
 
 #: contract/forms.py:147 contract/models.py:149 contract/views.py:590
 msgid "Payment Done"
-msgstr "پرداخت انجام شد"
+msgstr "پرداخت انجام شده است."
 
 #: contract/forms.py:148 contract/models.py:154 contract/views.py:591
 #: financial/models.py:23 receive_source/models.py:448
@@ -115,7 +115,7 @@ msgstr "تاریخ پرداخت"
 #: templates/financial/license_payment_list.html:39
 #: templates/operations/license_detail.html:51
 #: templates/operations/license_list.html:335
-#: templates/receive_source/receive_list.html:71
+#: templates/receive_source/receive_list.html:72
 msgid "Contract Number"
 msgstr "شماره قرارداد"
 
@@ -127,7 +127,7 @@ msgstr "تاریخ قرارداد"
 
 #: contract/models.py:33 receive_source/models.py:393
 #: templates/financial/license_payment_list.html:43
-#: templates/receive_source/received_sources_list.html:56
+#: templates/receive_source/received_sources_list.html:57
 msgid "Contract Cost"
 msgstr "هزینه قرارداد"
 
@@ -177,17 +177,17 @@ msgstr "مسئول قرارداد"
 
 #: contract/models.py:114 contract/models.py:160 contract/views.py:592
 #: dashboard/models.py:437 facilities/models.py:61 financial/models.py:43
-#: operations/models.py:128 receive_source/models.py:174
+#: operations/models.py:141 receive_source/models.py:174
 #: receive_source/models.py:425 receive_source/models.py:463
-#: templates/dsrs/source_list.html:132
+#: sell_source/models.py:57 templates/dsrs/source_list.html:132
 #: templates/operations/license_list.html:931
 msgid "Created At"
 msgstr "تاریخ ایجاد"
 
 #: contract/models.py:119 facilities/models.py:66 financial/models.py:48
-#: operations/models.py:132 operations/models.py:346
+#: operations/models.py:145 operations/models.py:359
 #: receive_source/models.py:175 receive_source/models.py:426
-#: receive_source/models.py:464
+#: receive_source/models.py:464 sell_source/models.py:58
 msgid "Updated At"
 msgstr "تاریخ به‌روزرسانی"
 
@@ -216,7 +216,7 @@ msgstr "قرارداد به‌روزرسانی شد."
 msgid "Update License Contract"
 msgstr "به‌روزرسانی قرارداد مجوز"
 
-#: contract/views.py:390 receive_source/views.py:726
+#: contract/views.py:390 receive_source/views.py:733
 #: templates/operations/license_update.html:410
 msgid "Save Changes"
 msgstr "ذخیره تغییرات"
@@ -247,31 +247,32 @@ msgstr "شما به این صفحه دسترسی ندارید."
 msgid "ID"
 msgstr "شناسه"
 
-#: contract/views.py:582 operations/models.py:240 receive_source/forms.py:186
+#: contract/views.py:582 operations/models.py:253 receive_source/forms.py:186
 #: receive_source/models.py:273 templates/contract/bulk_form.html:18
 #: templates/contract/contract_edit.html:35 templates/contract/index.html:198
 #: templates/contract/index.html:344
-#: templates/contract/license_contract_form.html:122
+#: templates/contract/license_contract_form.html:131
 #: templates/dashboard/tables.html:213 templates/dashboard/tables.html:620
 #: templates/operations/license_detail.html:87
 #: templates/operations/license_list.html:597
 #: templates/operations/license_list.html:913
-#: templates/operations/license_sign.html:155
+#: templates/operations/license_sign.html:156
 #: templates/operations/license_specification.html:117
 #: templates/operations/license_update.html:285
 #: templates/receive_source/receive_add_sources.html:82
 #: templates/receive_source/receive_characterization.html:56
-#: templates/receive_source/receive_detail.html:70
-#: templates/receive_source/received_sources_list.html:134
+#: templates/receive_source/receive_detail.html:71
+#: templates/receive_source/received_sources_list.html:154
 msgid "Serial Number"
 msgstr "شماره سریال"
 
-#: contract/views.py:583 dashboard/models.py:119 operations/forms.py:288
-#: operations/models.py:236 receive_source/forms.py:181
-#: receive_source/models.py:268 templates/contract/bulk_form.html:19
+#: contract/views.py:583 dashboard/models.py:119 operations/forms.py:304
+#: operations/models.py:249 receive_source/forms.py:181
+#: receive_source/models.py:268 sell_source/models.py:109
+#: templates/contract/bulk_form.html:19
 #: templates/contract/contract_edit.html:40 templates/contract/index.html:199
 #: templates/contract/index.html:345
-#: templates/contract/license_contract_form.html:121
+#: templates/contract/license_contract_form.html:130
 #: templates/contract/license_issue.html:74 templates/dashboard/tables.html:615
 #: templates/dsrs/source_list.html:116
 #: templates/operations/license_create.html:174
@@ -279,20 +280,20 @@ msgstr "شماره سریال"
 #: templates/operations/license_detail.html:83
 #: templates/operations/license_list.html:596
 #: templates/operations/license_list.html:907
-#: templates/operations/license_sign.html:151
+#: templates/operations/license_sign.html:152
 #: templates/operations/license_specification.html:116
 #: templates/operations/license_update.html:289
 #: templates/receive_source/receive_add_sources.html:81
 #: templates/receive_source/receive_characterization.html:55
-#: templates/receive_source/receive_contract_form.html:53
-#: templates/receive_source/receive_detail.html:69
-#: templates/receive_source/receive_list.html:132
-#: templates/receive_source/received_sources_list.html:133
+#: templates/receive_source/receive_contract_form.html:54
+#: templates/receive_source/receive_detail.html:70
+#: templates/receive_source/receive_list.html:133
+#: templates/receive_source/received_sources_list.html:153
 #: templates/reference/radionuclide_list.html:25
 msgid "Nuclide"
 msgstr "رادیونوکلید"
 
-#: contract/views.py:584 dashboard/models.py:90 operations/forms.py:281
+#: contract/views.py:584 dashboard/models.py:90 operations/forms.py:297
 #: templates/contract/index.html:200 templates/contract/index.html:343
 #: templates/dashboard/tables.html:218 templates/dashboard/tables.html:601
 #: templates/dsrs/source_list.html:80
@@ -301,12 +302,12 @@ msgstr "رادیونوکلید"
 msgid "Source Type"
 msgstr "نوع چشمه"
 
-#: contract/views.py:585 facilities/models.py:72 operations/forms.py:118
+#: contract/views.py:585 facilities/models.py:72 operations/forms.py:134
 #: templates/contract/bulk_form.html:20
 #: templates/contract/contract_edit.html:45 templates/contract/index.html:201
 #: templates/contract/index.html:346
 #: templates/contract/issued_license_list.html:19
-#: templates/contract/license_contract_form.html:79
+#: templates/contract/license_contract_form.html:88
 #: templates/contract/license_contract_home.html:17
 #: templates/contract/ready_to_issue_list.html:38
 #: templates/dashboard/tables.html:607 templates/dsrs/source_list.html:88
@@ -317,18 +318,19 @@ msgstr "نوع چشمه"
 #: templates/operations/license_list.html:325
 #: templates/operations/license_list.html:896
 #: templates/operations/license_queue.html:53
-#: templates/operations/license_sign.html:100
+#: templates/operations/license_sign.html:101
 #: templates/operations/license_specification.html:56
 #: templates/operations/license_update.html:77
-#: templates/receive_source/receive_list.html:68
-#: templates/receive_source/receive_queue.html:38
-#: templates/receive_source/received_sources_list.html:53
+#: templates/receive_source/receive_list.html:69
+#: templates/receive_source/receive_queue.html:39
+#: templates/receive_source/received_sources_list.html:54
 msgid "Facility"
 msgstr "مرکز"
 
-#: contract/views.py:586 operations/models.py:105 operations/models.py:413
+#: contract/views.py:586 operations/models.py:118 operations/models.py:428
 #: receive_source/models.py:123 receive_source/models.py:522
-#: templates/contract/index.html:202 templates/contract/index.html:347
+#: sell_source/models.py:44 templates/contract/index.html:202
+#: templates/contract/index.html:347
 #: templates/contract/issued_license_list.html:21
 #: templates/contract/license_contract_form.html:29
 #: templates/dashboard/tables.html:259 templates/dashboard/tables.html:612
@@ -338,33 +340,35 @@ msgstr "مرکز"
 #: templates/operations/license_list.html:904
 #: templates/operations/license_queue.html:63
 #: templates/operations/license_sign.html:35
-#: templates/receive_source/receive_contract_form.html:95
-#: templates/receive_source/receive_detail.html:109
-#: templates/receive_source/receive_list.html:74
-#: templates/receive_source/receive_queue.html:42
-#: templates/receive_source/receive_sign.html:104
-#: templates/receive_source/received_sources_list.html:55
+#: templates/receive_source/receive_contract_form.html:96
+#: templates/receive_source/receive_detail.html:110
+#: templates/receive_source/receive_list.html:75
+#: templates/receive_source/receive_queue.html:43
+#: templates/receive_source/receive_sign.html:105
+#: templates/receive_source/received_sources_list.html:56
+#: templates/sell_source/sell_list.html:36
 msgid "Status"
 msgstr "وضعیت"
 
-#: contract/views.py:587 dashboard/models.py:115 operations/models.py:110
-#: receive_source/models.py:130 templates/contract/index.html:348
-#: templates/dashboard/tables.html:263 templates/dashboard/tables.html:613
+#: contract/views.py:587 dashboard/models.py:115 operations/models.py:123
+#: receive_source/models.py:130 sell_source/models.py:49
+#: templates/contract/index.html:348 templates/dashboard/tables.html:263
+#: templates/dashboard/tables.html:613
 #: templates/operations/license_list.html:905
 msgid "Status Date"
 msgstr "تاریخ وضعیت"
 
-#: dashboard/forms.py:32 operations/models.py:246
-#: templates/contract/license_contract_form.html:123
+#: dashboard/forms.py:32 operations/models.py:259
+#: templates/contract/license_contract_form.html:132
 #: templates/dsrs/source_list.html:120
 #: templates/operations/license_detail.html:91
 #: templates/operations/license_list.html:598
 #: templates/operations/license_list.html:910
-#: templates/operations/license_sign.html:159
+#: templates/operations/license_sign.html:160
 #: templates/operations/license_specification.html:118
 #: templates/operations/license_update.html:293
 msgid "Activity"
-msgstr "فعالیت"
+msgstr "پرتوزایی"
 
 #: dashboard/forms.py:33 templates/dashboard/tables.html:294
 msgid "Surface Dose Rate (µSv/h)"
@@ -393,15 +397,15 @@ msgstr "قابل تفکیک"
 
 #: dashboard/forms.py:126
 msgid "Activity must be positive."
-msgstr "فعالیت باید مثبت باشد."
+msgstr "پرتوزایی باید مثبت باشد."
 
 #: dashboard/forms.py:132
 msgid "Nuclide is required when activity is entered."
-msgstr "در صورت وارد کردن فعالیت، رادیونوکلید الزامی است."
+msgstr "در صورت وارد کردن پرتوزایی، رادیونوکلید الزامی است."
 
 #: dashboard/forms.py:171 dashboard/models.py:389
 msgid "Movement Type"
-msgstr "نوع جابه‌جایی"
+msgstr "نوع انتقال"
 
 #: dashboard/forms.py:172 dashboard/models.py:396
 msgid "From Facility"
@@ -413,20 +417,20 @@ msgstr "به مرکز"
 
 #: dashboard/forms.py:174 dashboard/models.py:418
 msgid "Movement Date"
-msgstr "تاریخ جابه‌جایی"
+msgstr "تاریخ انتقال"
 
-#: dashboard/forms.py:175 operations/forms.py:299 receive_source/forms.py:195
+#: dashboard/forms.py:175 operations/forms.py:315 receive_source/forms.py:195
 #: receive_source/models.py:289 templates/dsrs/edit_source.html:39
 #: templates/operations/license_create.html:188
 #: templates/operations/license_create.html:539
 #: templates/receive_source/receive_add_sources.html:84
-#: templates/receive_source/receive_contract_form.html:55
-#: templates/receive_source/receive_detail.html:72
-#: templates/receive_source/receive_list.html:135
+#: templates/receive_source/receive_contract_form.html:56
+#: templates/receive_source/receive_detail.html:73
+#: templates/receive_source/receive_list.html:136
 msgid "Quantity"
 msgstr "تعداد"
 
-#: dashboard/forms.py:176 dashboard/models.py:442
+#: dashboard/forms.py:176 dashboard/models.py:442 sell_source/models.py:117
 #: templates/dashboard/tables.html:358 templates/dsrs/edit_source.html:41
 msgid "Remarks"
 msgstr "توضیحات"
@@ -500,11 +504,11 @@ msgstr "در حال استفاده"
 #: dashboard/models.py:39
 #: templates/receive_source/receive_characterization.html:86
 msgid "Stored"
-msgstr "ذخیره‌شده"
+msgstr "نگهداری‌شده"
 
 #: dashboard/models.py:40
 msgid "Reused"
-msgstr "استفاده مجدد شده"
+msgstr "استفاده مجددشده"
 
 #: dashboard/models.py:41
 msgid "Recycled"
@@ -512,7 +516,7 @@ msgstr "بازیافت‌شده"
 
 #: dashboard/models.py:42
 msgid "Disposed"
-msgstr "امحاشده"
+msgstr "دفع/امحاشده"
 
 #: dashboard/models.py:43
 msgid "Loaned"
@@ -539,11 +543,11 @@ msgid "NEW"
 msgstr "جدید"
 
 #: dashboard/models.py:64 templates/operations/license_create.html:218
-#: templates/receive_source/receive_detail.html:73
+#: templates/receive_source/receive_detail.html:74
 msgid "DSRS"
-msgstr "چشمه پرتوزای محصورشده"
+msgstr " چشمه پرتوزای محصور مصرف شده (DSRS)"
 
-#: dashboard/models.py:71 operations/forms.py:295
+#: dashboard/models.py:71 operations/forms.py:311
 msgid "DSRS Source"
 msgstr "چشمه DSRS"
 
@@ -598,15 +602,15 @@ msgstr "شخص مسئول"
 
 #: dashboard/models.py:120
 msgid "activityinput"
-msgstr "ورودی فعالیت"
+msgstr "مقدار پرتوزایی"
 
 #: dashboard/models.py:121
 msgid "activity unit"
-msgstr "واحد فعالیت"
+msgstr "واحد پرتوزایی"
 
 #: dashboard/models.py:131
 msgid "Activity reference date"
-msgstr "تاریخ مرجع فعالیت"
+msgstr "تاریخ مرجع پرتوزایی"
 
 #: dashboard/models.py:133
 msgid "serial number"
@@ -614,7 +618,7 @@ msgstr "شماره سریال"
 
 #: dashboard/models.py:135
 msgid "Dose rate on surface uSv"
-msgstr "نرخ دز در سطح (uSv)"
+msgstr "نرخ دز سطحی (uSv)"
 
 #: dashboard/models.py:136
 msgid "Dose rate at 1 m distance uSv"
@@ -683,23 +687,23 @@ msgstr "ابعاد"
 
 #: dashboard/models.py:158 templates/dashboard/tables.html:636
 #: templates/operations/license_list.html:929
-#: templates/operations/license_sign.html:323
+#: templates/operations/license_sign.html:339
 msgid "Comment"
 msgstr "توضیحات"
 
 #: dashboard/models.py:383 templates/operations/license_create.html:242
 #: templates/operations/license_list.html:404
-#: templates/receive_source/receive_list.html:96
-#: templates/receive_source/received_sources_list.html:109
+#: templates/receive_source/receive_list.html:97
+#: templates/receive_source/received_sources_list.html:99
 msgid "Source"
 msgstr "چشمه"
 
-#: dashboard/models.py:423 operations/models.py:156 receive_source/models.py:58
+#: dashboard/models.py:423 operations/models.py:169 receive_source/models.py:58
 #: templates/dashboard/tables.html:603
 #: templates/operations/license_list.html:341
 #: templates/operations/license_update.html:104
-#: templates/receive_source/receive_detail.html:48
-#: templates/receive_source/receive_queue.html:64
+#: templates/receive_source/receive_detail.html:49
+#: templates/receive_source/receive_queue.html:65
 msgid "Contract"
 msgstr "قرارداد"
 
@@ -709,15 +713,15 @@ msgstr "انجام‌شده توسط"
 
 #: dashboard/models.py:448
 msgid "Source Movement"
-msgstr "جابه‌جایی چشمه"
+msgstr "انتقال چشمه"
 
 #: dashboard/models.py:449
 msgid "Source Movements"
-msgstr "جابه‌جایی‌های چشمه"
+msgstr "انتقال‌های چشمه"
 
 #: dashboard/models.py:468
 msgid "Movement"
-msgstr "جابه‌جایی"
+msgstr "انتقال"
 
 #: dashboard/models.py:474
 msgid "Attachment File"
@@ -729,11 +733,11 @@ msgstr "تاریخ بارگذاری"
 
 #: dashboard/models.py:485
 msgid "Movement Attachment"
-msgstr "پیوست جابه‌جایی"
+msgstr "پیوست انتقال"
 
 #: dashboard/models.py:486
 msgid "Movement Attachments"
-msgstr "پیوست‌های جابه‌جایی"
+msgstr "پیوست‌های انتقال"
 
 #: dashboard/models.py:492 dashboard/models.py:514
 msgid "Parent"
@@ -782,7 +786,7 @@ msgstr "دسترسی به سوابق SRS ندارید"
 
 #: dashboard/views.py:249
 msgid "Movement recorded successfully."
-msgstr "جابه‌جایی با موفقیت ثبت شد."
+msgstr "انتقال با موفقیت ثبت شد."
 
 #: dashboard/views.py:273
 msgid "Source updated successfully."
@@ -794,7 +798,7 @@ msgstr "اطلاعات رادیونوکلید موجود نیست"
 
 #: dashboard/views.py:470
 msgid "No current activity available"
-msgstr "فعالیت فعلی موجود نیست"
+msgstr "پرتوزایی فعلی موجود نیست"
 
 #: dashboard/views.py:512
 msgid "Model updated successfully"
@@ -842,7 +846,7 @@ msgstr "قرارداد «%(number)s» یافت نشد"
 msgid "Cancel"
 msgstr "لغو"
 
-#: facilities/forms.py:141 receive_source/views.py:682
+#: facilities/forms.py:141 receive_source/views.py:689
 #: templates/accounts/profile.html:34 templates/contract/contract_edit.html:99
 #: templates/dsrs/add_source.html:164
 #: templates/financial/license_payment_form.html:80
@@ -899,7 +903,7 @@ msgid "Economic Code"
 msgstr "کد اقتصادی"
 
 #: facilities/models.py:73 templates/facilities/facility_list.html:7
-#: templates/operations/operation_home.html:169
+#: templates/operations/operation_home.html:170
 msgid "Facilities"
 msgstr "مراکز"
 
@@ -950,7 +954,7 @@ msgstr "مبلغ پرداخت‌شده را وارد کنید"
 msgid "Additional notes"
 msgstr "یادداشت‌های اضافی"
 
-#: financial/models.py:12 operations/models.py:218 operations/models.py:383
+#: financial/models.py:12 operations/models.py:231 operations/models.py:398
 msgid "License"
 msgstr "مجوز"
 
@@ -983,7 +987,7 @@ msgstr "پرداخت‌های مجوز"
 msgid "Payment %(id)s"
 msgstr "پرداخت %(id)s"
 
-#: financial/views.py:104 receive_source/views.py:757
+#: financial/views.py:104 receive_source/views.py:764
 msgid "Payment information saved successfully."
 msgstr "اطلاعات پرداخت با موفقیت ذخیره شد."
 
@@ -991,74 +995,75 @@ msgstr "اطلاعات پرداخت با موفقیت ذخیره شد."
 msgid "Please correct the errors below."
 msgstr "لطفاً خطاهای زیر را اصلاح کنید."
 
-#: operations/forms.py:59
+#: operations/forms.py:61
 msgid "Select letter date"
 msgstr "تاریخ نامه را انتخاب کنید"
 
-#: operations/forms.py:119 receive_source/forms.py:93
+
+#: operations/forms.py:135 receive_source/forms.py:93
 msgid "Select Facility"
 msgstr "مرکز را انتخاب کنید"
 
-#: operations/forms.py:148 operations/models.py:152 receive_source/forms.py:113
+#: operations/forms.py:164 operations/models.py:165 receive_source/forms.py:113
 #: receive_source/models.py:55 templates/operations/license_list.html:339
 msgid "Letter"
 msgstr "نامه"
 
-#: operations/forms.py:158 operations/models.py:153
+#: operations/forms.py:174 operations/models.py:166
 msgid "Commitment"
 msgstr "تعهدنامه"
 
-#: operations/forms.py:168 operations/models.py:154
+#: operations/forms.py:184 operations/models.py:167
 msgid "Permit"
 msgstr "پروانه"
 
-#: operations/forms.py:178 receive_source/forms.py:109
+#: operations/forms.py:194 receive_source/forms.py:109
 #: receive_source/models.py:54
 msgid "DSRS Inquiry Form"
 msgstr "فرم استعلام DSRS"
 
-#: operations/forms.py:188 operations/models.py:160 receive_source/forms.py:117
+#: operations/forms.py:204 operations/models.py:173 receive_source/forms.py:117
 #: receive_source/models.py:66
 msgid "Other"
 msgstr "سایر"
 
-#: operations/forms.py:287 receive_source/forms.py:180
+#: operations/forms.py:303 receive_source/forms.py:180
 msgid "Select Nuclide"
 msgstr "رادیونوکلید را انتخاب کنید"
 
-#: operations/forms.py:294
+#: operations/forms.py:310
 msgid "Select DSRS"
 msgstr "DSRS را انتخاب کنید"
 
-#: operations/forms.py:347 receive_source/forms.py:262
+#: operations/forms.py:363 receive_source/forms.py:262
 msgid "Please select a nuclide."
 msgstr "لطفاً یک رادیونوکلید انتخاب کنید."
 
-#: operations/forms.py:350 operations/forms.py:374
+#: operations/forms.py:366 operations/forms.py:390
 msgid "Please enter a quantity."
 msgstr "لطفاً تعداد را وارد کنید."
 
-#: operations/forms.py:358
+#: operations/forms.py:374
 msgid "Please select an existing DSRS."
 msgstr "لطفاً یک DSRS موجود را انتخاب کنید."
 
-#: operations/forms.py:362
+#: operations/forms.py:378
 msgid "Only single-count DSRS sources can be reused."
 msgstr "فقط چشمه‌های DSRS با تعداد یک قابل استفاده مجدد هستند."
 
-#: operations/forms.py:371
+#: operations/forms.py:387
 msgid "Please select a DSRS component."
 msgstr "لطفاً یک جزء DSRS انتخاب کنید."
 
-#: operations/forms.py:378
+#: operations/forms.py:394
 msgid "Quantity exceeds this DSRS's available count."
 msgstr "تعداد واردشده از تعداد موجود این DSRS بیشتر است."
 
-#: operations/forms.py:414
+#: operations/forms.py:430
 msgid "Select activity date"
-msgstr "تاریخ فعالیت را انتخاب کنید"
+msgstr "تاریخ پرتوزایی را انتخاب کنید"
 
-#: operations/forms.py:483
+#: operations/forms.py:499
 msgid "Please select an existing source."
 msgstr "لطفاً یک چشمه موجود را انتخاب کنید."
 
@@ -1082,246 +1087,290 @@ msgstr "در انتظار امضای مدیر"
 msgid "Waiting Deputy Signature"
 msgstr "در انتظار امضای معاون"
 
-#: operations/models.py:56 operations/models.py:370 receive_source/models.py:31
-#: receive_source/views.py:157 templates/base.html:70 templates/home.html:178
+#: operations/models.py:54 receive_source/models.py:33
+msgid "Waiting CEO Signature (Discount Requested)"
+msgstr "در انتظار امضای مدیرعامل (درخواست تخفیف)"
+
+#: operations/models.py:58 operations/models.py:383 receive_source/models.py:31
+#: receive_source/views.py:164 templates/base.html:74 templates/home.html:178
 msgid "Contracts"
 msgstr "قراردادها"
 
-#: operations/models.py:61 receive_source/models.py:35
-#: receive_source/views.py:161
+#: operations/models.py:63 receive_source/models.py:35
+#: receive_source/views.py:168
 msgid "Finance"
 msgstr "امور مالی"
 
-#: operations/models.py:66 templates/contract/contract_home.html:146
+#: operations/models.py:68 templates/contract/contract_home.html:146
 #: templates/contract/ready_to_issue_list.html:5
 msgid "Ready To Issue"
 msgstr "آماده صدور"
 
-#: operations/models.py:71
+#: operations/models.py:73
 msgid "Issued"
 msgstr "صادرشده"
 
-#: operations/models.py:76 receive_source/models.py:41
+#: operations/models.py:78 receive_source/models.py:41
 msgid "Completed"
 msgstr "تکمیل‌شده"
 
-#: operations/models.py:81 operations/models.py:378 receive_source/models.py:43
+#: operations/models.py:83 operations/models.py:393 receive_source/models.py:43
 #: receive_source/models.py:497
 msgid "Rejected"
 msgstr "ردشده"
 
-#: operations/models.py:92 templates/contract/issued_license_list.html:20
-#: templates/contract/license_contract_form.html:84
+#: operations/models.py:94 templates/contract/issued_license_list.html:20
+#: templates/contract/license_contract_form.html:93
 #: templates/contract/license_contract_home.html:21
 #: templates/contract/ready_to_issue_list.html:34
 #: templates/financial/license_payment_form.html:32
 #: templates/operations/license_detail.html:40
 #: templates/operations/license_list.html:327
-#: templates/operations/license_sign.html:105
+#: templates/operations/license_sign.html:106
 #: templates/operations/license_specification.html:32
 msgid "Letter Number"
 msgstr "شماره نامه"
 
-#: operations/models.py:98 templates/contract/license_contract_form.html:89
+#: operations/models.py:100 templates/contract/license_contract_form.html:98
 #: templates/operations/license_list.html:329
 #: templates/operations/license_queue.html:57
-#: templates/operations/license_sign.html:110
+#: templates/operations/license_sign.html:111
 #: templates/operations/license_specification.html:42
 msgid "Letter Date"
 msgstr "تاریخ نامه"
 
-#: operations/models.py:114 receive_source/models.py:136
+#: operations/models.py:107 receive_source/models.py:145
+#: receive_source/models.py:404 templates/operations/license_sign.html:321
+msgid "Discount Requested"
+msgstr "درخواست تخفیف"
+
+#: operations/models.py:109
+msgid ""
+"If checked, the request routes to the CEO for signature after the Deputy, "
+"before Contracts."
+msgstr ""
+"در صورت تیک زدن، درخواست پس از معاون و پیش از واحد قراردادها برای امضا به "
+"مدیرعامل ارجاع داده می‌شود."
+
+#: operations/models.py:113 receive_source/models.py:149
+#: receive_source/models.py:410
+#: templates/receive_source/receive_payment_form.html:25
+msgid "Discount Notes"
+msgstr "یادداشت‌های تخفیف"
+
+#: operations/models.py:116
+msgid ""
+"Written by the creator when requesting; the CEO can edit/add to it at sign "
+"time."
+msgstr ""
+"توسط ایجادکننده هنگام ثبت درخواست نوشته می‌شود؛ مدیرعامل می‌تواند در زمان "
+"امضا آن را ویرایش یا تکمیل کند."
+
+#: operations/models.py:127 receive_source/models.py:136
 msgid "Specification Completed"
 msgstr "مشخصات فنی تکمیل شد"
 
-#: operations/models.py:119 operations/models.py:267
+#: operations/models.py:132 operations/models.py:280
 #: receive_source/models.py:163 receive_source/models.py:316
-#: templates/contract/license_contract_form.html:94
-#: templates/operations/license_sign.html:115
+#: templates/contract/license_contract_form.html:103
+#: templates/operations/license_sign.html:116
 #: templates/operations/license_specification.html:121
 #: templates/operations/license_update.html:305
-#: templates/receive_source/receive_detail.html:74
+#: templates/receive_source/receive_detail.html:75
 msgid "Description"
 msgstr "توضیحات"
 
-#: operations/models.py:124 receive_source/models.py:169
-#: templates/dashboard/tables.html:362 templates/dsrs/source_list.html:128
+#: operations/models.py:137 receive_source/models.py:169
+#: sell_source/models.py:53 templates/dashboard/tables.html:362
+#: templates/dsrs/source_list.html:128
 #: templates/operations/license_detail.html:62
 #: templates/operations/license_list.html:930
 #: templates/operations/license_queue.html:61
-#: templates/receive_source/receive_detail.html:29
-#: templates/receive_source/receive_queue.html:41
+#: templates/receive_source/receive_detail.html:30
+#: templates/receive_source/receive_queue.html:42
+#: templates/sell_source/sell_ceo_queue.html:16
+#: templates/sell_source/sell_list.html:34
 msgid "Created By"
 msgstr "ایجادشده توسط"
 
-#: operations/models.py:139
+#: operations/models.py:152
 msgid "License Request"
 msgstr "درخواست مجوز"
 
-#: operations/models.py:140 templates/contract/contract_home.html:126
+#: operations/models.py:153 templates/contract/contract_home.html:126
 #: templates/operations/deputy_home.html:124
 #: templates/operations/manager_home.html:125
 msgid "License Requests"
 msgstr "درخواست‌ مجوز"
 
-#: operations/models.py:145
+#: operations/models.py:158
 #, python-format
 msgid "License Request #%(id)s"
 msgstr "درخواست مجوز شماره %(id)s"
 
-#: operations/models.py:155
+#: operations/models.py:168
 msgid "DSRS Inquiry"
 msgstr "استعلام DSRS"
 
-#: operations/models.py:157 receive_source/models.py:56
+#: operations/models.py:170 receive_source/models.py:56
 msgid "Generated Specification"
 msgstr "مشخصات فنی تولیدشده"
 
-#: operations/models.py:158 receive_source/models.py:57
+#: operations/models.py:171 receive_source/models.py:57
 msgid "Specification Appendix"
 msgstr "پیوست مشخصات فنی"
 
-#: operations/models.py:159
+#: operations/models.py:172
 msgid "Issued License letter"
 msgstr "نامه مجوز صادرشده"
 
-#: operations/models.py:173 receive_source/models.py:213
+#: operations/models.py:186 receive_source/models.py:213
 msgid "Attachment Type"
 msgstr "نوع پیوست"
 
-#: operations/models.py:179 receive_source/models.py:219
-#: templates/contract/license_contract_form.html:173
+#: operations/models.py:192 receive_source/models.py:219
+#: templates/contract/license_contract_form.html:182
 #: templates/dsrs/edit_source.html:57
 #: templates/operations/license_detail.html:145
-#: templates/operations/license_sign.html:236
+#: templates/operations/license_sign.html:237
 #: templates/operations/license_update.html:178
 #: venv/lib/python3.12/site-packages/django/db/models/fields/files.py:244
 msgid "File"
 msgstr "فایل"
 
-#: operations/models.py:204
+#: operations/models.py:217
 msgid "New Source"
 msgstr "چشمه جدید"
 
-#: operations/models.py:206
+#: operations/models.py:219
 msgid "Reused Source"
 msgstr "چشمه استفاده‌شده مجدد"
 
-#: operations/models.py:208
+#: operations/models.py:221
 msgid "Recycled Source"
 msgstr "چشمه بازیافت‌شده"
 
-#: operations/models.py:254 templates/dashboard/tables.html:277
+#: operations/models.py:267 templates/dashboard/tables.html:277
 #: templates/operations/license_list.html:909
 msgid "Activity Unit"
-msgstr "واحد فعالیت"
+msgstr "واحد پرتوزایی"
 
-#: operations/models.py:261 templates/operations/license_update.html:301
+#: operations/models.py:274 templates/operations/license_update.html:301
 msgid "Activity Date"
-msgstr "تاریخ فعالیت"
+msgstr "تاریخ پرتوزایی"
 
-#: operations/models.py:266 receive_source/models.py:346
+#: operations/models.py:279 receive_source/models.py:346
 msgid "Specification Order"
 msgstr "ترتیب مشخصات فنی"
 
-#: operations/models.py:285
+#: operations/models.py:298
 msgid "Requested Source"
 msgstr "چشمه درخواستی"
 
-#: operations/models.py:287 templates/contract/license_issue.html:63
+#: operations/models.py:300 templates/contract/license_issue.html:63
 #: templates/operations/license_create.html:157
 msgid "Requested Sources"
 msgstr "چشمه‌های درخواستی"
 
-#: operations/models.py:292 receive_source/models.py:369
+#: operations/models.py:305 receive_source/models.py:369
 #, python-format
 msgid "Source #%(id)s"
 msgstr "چشمه شماره %(id)s"
 
-#: operations/models.py:316 templates/operations/license_create.html:219
+#: operations/models.py:329 templates/operations/license_create.html:219
 #: templates/operations/license_create.html:569
 msgid "Quantity Used"
 msgstr "مقدار مصرف‌شده"
 
-#: operations/models.py:320
+#: operations/models.py:333
 msgid "Source Component"
 msgstr "جزء چشمه"
 
-#: operations/models.py:321
+#: operations/models.py:334
 msgid "Source Components"
 msgstr "اجزای چشمه"
 
-#: operations/models.py:330 templates/dashboard/tables.html:637
+#: operations/models.py:343 templates/dashboard/tables.html:637
 msgid "User"
 msgstr "کاربر"
 
-#: operations/models.py:335 templates/accounts/profile.html:20
+#: operations/models.py:348 templates/accounts/profile.html:20
 msgid "Signature"
 msgstr "امضا"
 
-#: operations/models.py:340
+#: operations/models.py:353
 msgid "Title"
 msgstr "عنوان"
 
-#: operations/models.py:351
+#: operations/models.py:364
 msgid "User Signature"
 msgstr "امضای کاربر"
 
-#: operations/models.py:352
+#: operations/models.py:365
 msgid "User Signatures"
 msgstr "امضاهای کاربران"
 
-#: operations/models.py:364
+#: operations/models.py:377
 msgid "Creator"
 msgstr "ایجادکننده"
 
-#: operations/models.py:366
+#: operations/models.py:379
 msgid "Manager"
 msgstr "مدیر"
 
-#: operations/models.py:368 operations/views.py:1491
-#: receive_source/models.py:490 receive_source/views.py:149
+#: operations/models.py:381 operations/views.py:1394
+#: receive_source/models.py:490 receive_source/views.py:156
 #: templates/operations/operation_home.html:122
 msgid "Deputy Manager"
 msgstr "معاون"
 
-#: operations/models.py:374 receive_source/models.py:495
-#: templates/receive_source/receive_list.html:90
-#: templates/receive_source/received_sources_list.html:89
+#: operations/models.py:385 operations/views.py:1428
+#: receive_source/models.py:491 receive_source/views.py:160
+#: templates/base.html:64 templates/home.html:149
+#: templates/receive_source/ceo_home.html:7
+#: templates/sell_source/sell_home.html:47
+msgid "CEO"
+msgstr "مدیرعامل"
+
+#: operations/models.py:389 receive_source/models.py:495
+#: templates/receive_source/receive_list.html:91
+#: templates/receive_source/received_sources_list.html:91
 msgid "Pending"
 msgstr "در انتظار"
 
-#: operations/models.py:376 receive_source/models.py:496
+#: operations/models.py:391 receive_source/models.py:496
+#: sell_source/models.py:11
 msgid "Approved"
 msgstr "تأییدشده"
 
-#: operations/models.py:391 receive_source/models.py:508
+#: operations/models.py:406 receive_source/models.py:508
 msgid "Approval Step"
 msgstr "مرحله تأیید"
 
-#: operations/models.py:404 receive_source/models.py:515
+#: operations/models.py:419 receive_source/models.py:515
 #: templates/contract/license_contract_form.html:27
 #: templates/operations/license_sign.html:33
-#: templates/receive_source/receive_contract_form.html:96
-#: templates/receive_source/receive_detail.html:110
-#: templates/receive_source/receive_sign.html:105
+#: templates/receive_source/receive_contract_form.html:97
+#: templates/receive_source/receive_detail.html:111
+#: templates/receive_source/receive_sign.html:106
 msgid "Approver"
 msgstr "تأییدکننده"
 
-#: operations/models.py:423 receive_source/models.py:527
+#: operations/models.py:438 receive_source/models.py:527
+#: sell_source/models.py:70
 msgid "Approved At"
 msgstr "زمان تأیید"
 
-#: operations/models.py:431 receive_source/models.py:528
-#: templates/receive_source/receive_sign.html:107
+#: operations/models.py:446 receive_source/models.py:528
+#: templates/receive_source/receive_sign.html:108
 msgid "Comments"
 msgstr "نظرات"
 
-#: operations/models.py:440 templates/operations/license_sign.html:5
+#: operations/models.py:455 templates/operations/license_sign.html:5
 msgid "License Approval"
 msgstr "تأیید مجوز"
 
-#: operations/models.py:441
+#: operations/models.py:456
 msgid "License Approvals"
 msgstr "تأییدهای مجوز"
 
@@ -1410,50 +1459,75 @@ msgstr "%(count)s مجوز با موفقیت وارد شد."
 msgid "Export CSV"
 msgstr "خروجی CSV"
 
-#: operations/views.py:1186
+#: operations/views.py:1168
 msgid "This license is not waiting for approval."
 msgstr "این مجوز در انتظار تأیید نیست."
 
-#: operations/views.py:1249 receive_source/views.py:575
+#: operations/views.py:1194
+msgid "License request rejected."
+msgstr "درخواست مجوز رد شد."
+
+#: operations/views.py:1206 receive_source/views.py:582
 msgid "Please upload your signature image first."
 msgstr "لطفاً ابتدا تصویر امضای خود را بارگذاری کنید."
 
-#: operations/views.py:1317 receive_source/views.py:613
+#: operations/views.py:1243 receive_source/views.py:620
 msgid "Specification signed successfully."
 msgstr "مشخصات فنی با موفقیت امضا شد."
 
-#: operations/views.py:1423 templates/operations/manager_home.html:6
-#: templates/operations/operation_home.html:138
+#: operations/views.py:1326 templates/operations/manager_home.html:6
+#: templates/operations/operation_home.html:139
 msgid "Operations Manager"
 msgstr "مدیر عملیات"
 
+#: receive_source/forms.py:92 receive_source/models.py:92
+#: templates/receive_source/receive_create.html:73
 msgid "Delivering Facility"
 msgstr "مرکز تحویل‌دهنده"
 
+#: receive_source/forms.py:158 receive_source/forms.py:220
 msgid "New / Not in Inventory"
 msgstr "جدید / در موجودی نیست"
 
+#: receive_source/forms.py:160
 msgid "Source Origin"
 msgstr "منشأ چشمه"
 
+#: receive_source/forms.py:167
 msgid "Select from inventory"
 msgstr "انتخاب از موجودی انبار"
 
+#: receive_source/forms.py:168
 msgid "Existing Contracted Source"
 msgstr "چشمه موجود دارای قرارداد"
 
+#: receive_source/forms.py:174 receive_source/models.py:260
+#: templates/receive_source/receive_contract_form.html:55
+#: templates/receive_source/receive_list.html:134
 msgid "Item Type"
 msgstr "نوع مورد"
 
-msgid "Average Activity (mCi)"
-msgstr "فعالیت متوسط (mCi)"
+#: receive_source/forms.py:187
+msgid ""
+"Optional — not printed on the form, used only to check for an existing "
+"license contract."
+msgstr ""
+"اختیاری — روی فرم چاپ نمی‌شود و فقط برای بررسی وجود قرارداد مجوز موجود "
+"استفاده می‌شود."
 
+#: receive_source/forms.py:191 receive_source/models.py:281
+msgid "Average Activity (mCi)"
+msgstr "پرتوزایی متوسط (mCi)"
+
+#: receive_source/forms.py:219
 msgid "Select From Facility's Contracted Inventory"
 msgstr "انتخاب از موجودی قراردادی مرکز"
 
+#: receive_source/forms.py:249
 msgid "Please select an item from the inventory."
 msgstr "لطفاً یک مورد از موجودی انتخاب کنید."
 
+#: receive_source/forms.py:277
 msgid "Does this match an existing licensed source?"
 msgstr "آیا این مورد با یک چشمه دارای مجوز موجود مطابقت دارد؟"
 
@@ -1474,71 +1548,146 @@ msgstr "بارگذاری فرم مشخصات تکمیل‌شده (.docx)"
 msgid ""
 "Download the current version below, fill it in Word, then upload it here to "
 "replace it."
-msgstr "نسخه فعلی را از پایین دانلود کنید، آن را در Word تکمیل کنید، سپس اینجا بارگذاری کنید تا جایگزین شود."
+msgstr ""
+"نسخه فعلی را از پایین دانلود کنید، آن را در Word تکمیل کنید، سپس اینجا "
+"بارگذاری کنید تا جایگزین شود."
 
 #: receive_source/forms.py:459
 msgid "Characterization Documents / Photos"
 msgstr "مستندات / تصاویر مشخصه‌سازی"
 
+#: receive_source/models.py:21
 msgid "Waiting Creator/Coordinator Signature"
 msgstr "در انتظار امضای ایجادکننده / هماهنگ‌کننده"
 
+#: receive_source/models.py:23
 msgid "Waiting Manager Data Entry"
 msgstr "در انتظار ورود اطلاعات مدیر"
 
+#: receive_source/models.py:25
 msgid "Waiting Operation Manager Signature"
 msgstr "در انتظار امضای مدیر عملیات"
 
+#: receive_source/models.py:27
 msgid "Waiting Operation Control Manager Signature"
 msgstr "در انتظار امضای مدیر کنترل عملیات"
 
+#: receive_source/models.py:29
 msgid "Waiting Deputy Manager Signature"
 msgstr "در انتظار امضای معاون"
 
+#: receive_source/models.py:37
 msgid "Ready To Receive"
 msgstr "آماده دریافت"
 
+#: receive_source/models.py:39 receive_source/views.py:172
+#: templates/receive_source/receive_characterization.html:5
+#: templates/receive_source/receive_characterization.html:44
+#: templates/receive_source/receiving_home.html:61
 msgid "Receiving / Characterization"
 msgstr "دریافت / مشخصه‌سازی"
 
+#: receive_source/models.py:48
 msgid "Radioactive Source"
 msgstr "چشمه پرتوزا"
 
+#: receive_source/models.py:49
 msgid "Radioactive Waste"
 msgstr "پسماند پرتوزا"
 
+#: receive_source/models.py:59 receive_source/models.py:455
 msgid "Payment Receipt"
 msgstr "رسید پرداخت"
 
+#: receive_source/models.py:65
+msgid "Characterization Document (صورتجلسه staging)"
+msgstr "سند مشخصه‌سازی (صورتجلسه موقت)"
+
+#: receive_source/models.py:102 templates/receive_source/receive_list.html:70
+#: templates/receive_source/receive_queue.html:40
 msgid "Delivery Letter Number"
 msgstr "شماره نامه تحویل"
 
+#: receive_source/models.py:109 templates/receive_source/receive_detail.html:22
+#: templates/receive_source/receive_list.html:71
 msgid "Delivery Letter Date"
 msgstr "تاریخ نامه تحویل"
 
-msgid "Discount Requested"
-msgstr "درخواست تخفیف"
+#: receive_source/models.py:115
+msgid "Estimated Distance to Tehran Office (km)"
+msgstr "فاصله تخمینی تا دفتر تهران (کیلومتر)"
 
+#: receive_source/models.py:181 receive_source/models.py:256
+#: receive_source/models.py:442 receive_source/models.py:502
+#: templates/receive_source/receive_detail.html:5
 msgid "Receive Request"
 msgstr "درخواست تحویل"
 
+#: receive_source/models.py:182 templates/receive_source/receive_list.html:6
 msgid "Receive Requests"
 msgstr "درخواست‌ تحویل"
 
-msgid "Receive Attachment"
-msgstr "پیوست "
+#: receive_source/models.py:187
+#, python-format
+msgid "Receive Request #%(id)s"
+msgstr "درخواست تحویل شماره %(id)s"
 
+#: receive_source/models.py:232
+msgid "Receive Attachment"
+msgstr "پیوست"
+
+#: receive_source/models.py:233
 msgid "Receive Attachments"
 msgstr "پیوست‌ها"
 
+#: receive_source/models.py:277
+msgid ""
+"Not printed on the form — used only to check for an existing license "
+"contract."
+msgstr ""
+"روی فرم چاپ نمی‌شود — فقط برای بررسی وجود قرارداد مجوز موجود استفاده می‌شود."
+
+#: receive_source/models.py:294
+msgid "Half-Life"
+msgstr "نیمه‌عمر"
+
+#: receive_source/models.py:299
+msgid ""
+"Auto-formatted from nuclide.half_life (stored in seconds) at save time — not "
+"user-entered. Kept as a display snapshot since the printed form shows it as "
+"static text."
+msgstr ""
+"به‌صورت خودکار از nuclide.half_life (که به ثانیه ذخیره می‌شود) در زمان "
+"ذخیره‌سازی قالب‌بندی می‌شود — توسط کاربر وارد نمی‌شود. به‌عنوان یک مقدار ثابت "
+"نگهداری می‌شود، زیرا در فرم چاپی به‌صورت متن ثابت نمایش داده می‌شود."
+
+#: receive_source/models.py:318
+msgid ""
+"Auto-annotated with a license-contract match, if any (see below). NOT "
+"printed into the docx's per-source description column — that one is filled "
+"by hand."
+msgstr ""
+"در صورت وجود تطابق با یک قرارداد مجوز، به‌صورت خودکار حاشیه‌نویسی می‌شود (به "
+"زیر مراجعه کنید). این مقدار در ستون توضیحات هر چشمه در فایل docx چاپ "
+"نمی‌شود — آن ستون به‌صورت دستی تکمیل می‌شود."
+
+#: receive_source/models.py:336
 msgid "Matched Existing Licensed Source"
 msgstr "چشمه موجود دارای مجوز"
+
+#: receive_source/models.py:337
+msgid ""
+"Set automatically on an exact serial match, or manually confirmed by the "
+"creator on a fuzzy match."
+msgstr ""
+"در صورت تطابق دقیق شماره سریال به‌صورت خودکار تنظیم می‌شود، یا در صورت تطابق "
+"تقریبی توسط ایجادکننده به‌صورت دستی تأیید می‌شود."
 
 #: receive_source/models.py:341
 msgid "Serial Matched Exactly"
 msgstr "تطابق دقیق شماره سریال"
 
-#: receive_source/models.py:365 templates/operations/operation_home.html:207
+#: receive_source/models.py:365 templates/operations/operation_home.html:208
 #: templates/receive_source/receiving_home.html:5
 #: templates/receive_source/receiving_home.html:30
 msgid "Receive Source"
@@ -1549,44 +1698,53 @@ msgid "Receive Sources"
 msgstr "دریافت چشمه‌ها"
 
 #: receive_source/models.py:397
-#: templates/receive_source/received_sources_list.html:57
+#: templates/receive_source/received_sources_list.html:58
 msgid "Invoice"
 msgstr "فاکتور"
 
 #: receive_source/models.py:406
 msgid "If checked, the request routes to the CEO for signature before Finance."
-msgstr "در صورت تیک زدن، درخواست پیش از واحد مالی برای امضا به مدیرعامل ارجاع داده می‌شود."
+msgstr ""
+"در صورت تیک زدن، درخواست پیش از واحد مالی برای امضا به مدیرعامل ارجاع داده "
+"می‌شود."
 
+#: receive_source/models.py:431
 msgid "Receive Contract"
 msgstr "قرارداد دریافت"
 
+#: receive_source/models.py:432
 msgid "Receive Contracts"
 msgstr "قراردادهای دریافت"
 
+#: receive_source/models.py:470
 msgid "Receive Payment"
 msgstr "پرداخت دریافت چشمه"
 
+#: receive_source/models.py:471
 msgid "Receive Payments"
 msgstr "پرداخت‌های دریافت چشمه"
 
+#: receive_source/models.py:487
 msgid "Creator / Coordinator"
 msgstr "ایجادکننده / هماهنگ‌کننده"
 
+#: receive_source/models.py:488 receive_source/views.py:148
 msgid "Operation Manager"
 msgstr "مدیر عملیات"
 
+#: receive_source/models.py:489 receive_source/views.py:152
 msgid "Operation Control Manager"
 msgstr "مدیر کنترل عملیات"
 
-msgid "CEO"
-msgstr "مدیرعامل"
-
+#: receive_source/models.py:498
 msgid "Not Required"
 msgstr "الزامی نیست"
 
+#: receive_source/models.py:534
 msgid "Receive Approval"
 msgstr "تأیید دریافت"
 
+#: receive_source/models.py:535
 msgid "Receive Approvals"
 msgstr "تأییدهای دریافت"
 
@@ -1595,7 +1753,9 @@ msgstr "تأییدهای دریافت"
 msgid ""
 "Existing license contract found: %(num)s (facility & nuclide match, serial: "
 "%(serial)s)"
-msgstr "قرارداد مجوز موجود یافت شد: %(num)s (تطابق مرکز و رادیونوکلید، شماره سریال: %(serial)s)"
+msgstr ""
+"قرارداد مجوز موجود یافت شد: %(num)s (تطابق مرکز و رادیونوکلید، شماره سریال: "
+"%(serial)s)"
 
 #: receive_source/services/workflow.py:90
 #, python-format
@@ -1622,72 +1782,99 @@ msgstr "%(v).2f دقیقه"
 msgid "%(v).2f seconds"
 msgstr "%(v).2f ثانیه"
 
+#: receive_source/services/workflow.py:219
+#, python-format
 msgid "Received via %(req)s"
 msgstr "دریافت شده از طریق %(req)s"
 
+#: receive_source/views.py:144 templates/operations/manager_home.html:145
+#: templates/receive_source/receive_detail.html:41
+#: templates/receive_source/receive_manager_input.html:6
+#: templates/receive_source/receive_manager_input.html:15
 msgid "Manager Data Entry"
 msgstr "ورود اطلاعات توسط مدیر"
 
+#: receive_source/views.py:185
 msgid "This request is no longer a draft and can't be edited here."
 msgstr "این درخواست دیگر پیش‌نویس نیست و از اینجا قابل ویرایش نیست."
 
+#: receive_source/views.py:240
 msgid "Receive request saved successfully."
 msgstr "درخواست دریافت با موفقیت ذخیره شد."
 
-msgid "Sources can only be added while the request is in the Specification stage."
+#: receive_source/views.py:266
+msgid ""
+"Sources can only be added while the request is in the Specification stage."
 msgstr "چشمه‌ها فقط در مرحله مشخصات فنی قابل افزودن هستند."
 
+#: receive_source/views.py:301 receive_source/views.py:356
+#: sell_source/views.py:126
 msgid "Source added."
 msgstr "چشمه اضافه شد."
 
+#: receive_source/views.py:331
 msgid "Source added from inventory."
 msgstr "چشمه از موجودی انبار اضافه شد."
 
+#: receive_source/views.py:406 sell_source/views.py:156
 msgid "Add at least one source before continuing."
 msgstr "قبل از ادامه، حداقل یک چشمه اضافه کنید."
 
+#: receive_source/views.py:417
+msgid ""
+"Specification generated — download it, fill in the source details, then sign."
+msgstr ""
+"مشخصات فنی تولید شد — آن را دانلود کنید، جزئیات چشمه را تکمیل کنید، سپس امضا "
+"کنید."
+
+#: receive_source/views.py:453 receive_source/views.py:565
 msgid "Updated specification uploaded."
 msgstr "مشخصات فنی به‌روزشده بارگذاری شد."
 
+#: receive_source/views.py:480
+msgid "Data entry complete — ready for the Operation Manager's signature."
+msgstr "ورود اطلاعات کامل شد — آماده امضای مدیر عملیات."
+
+#: receive_source/views.py:532
 msgid "This request is not waiting for a signature."
 msgstr "این درخواست در انتظار امضا نیست."
 
-#: receive_source/views.py:567
+#: receive_source/views.py:574
 msgid "Discount decision saved."
 msgstr "تصمیم تخفیف ذخیره شد."
 
-#: receive_source/views.py:662
+#: receive_source/views.py:669
 msgid "Cost declaration saved."
 msgstr "اعلام هزینه ذخیره شد."
 
-#: receive_source/views.py:681
+#: receive_source/views.py:688
 msgid "Declare Waste Management Cost"
 msgstr "اعلام هزینه مدیریت پسماند"
 
-#: receive_source/views.py:705
-
+#: receive_source/views.py:712
 msgid "Cost declaration updated."
 msgstr "اعلام هزینه به‌روزرسانی شد."
 
-#: receive_source/views.py:725
+#: receive_source/views.py:732
 msgid "Update Waste Management Cost"
 msgstr "ویرایش هزینه مدیریت پسماند"
 
-#: receive_source/views.py:822
+#: receive_source/views.py:829
 msgid ""
 "صورتجلسه uploaded — will attach automatically as each source is marked "
 "stored."
-msgstr "صورتجلسه بارگذاری شد — به‌صورت خودکار هنگام ذخیره‌سازی هر چشمه پیوست می‌شود."
+msgstr ""
+"صورتجلسه بارگذاری شد — به‌صورت خودکار هنگام ذخیره‌سازی هر چشمه پیوست می‌شود."
 
-#: receive_source/views.py:853
+#: receive_source/views.py:860
 msgid "Characterization saved."
 msgstr "مشخصه‌سازی ذخیره شد."
 
-#: receive_source/views.py:873
+#: receive_source/views.py:880
 msgid "Source marked as stored."
-msgstr "چشمه به‌عنوان ذخیره‌شده علامت‌گذاری شد."
+msgstr "چشمه به‌عنوان نگهداری‌شده علامت‌گذاری شد."
 
-#: receive_source/views.py:877
+#: receive_source/views.py:884
 msgid "All sources stored — this request is now complete."
 msgstr "همه چشمه‌ها ذخیره شدند — این درخواست اکنون تکمیل شده است."
 
@@ -1709,8 +1896,117 @@ msgstr "ردیف %(row)s: مقدار اعشاری برای %(field)s نامعت�
 msgid "Row %(row)s: Invalid integer for %(field)s"
 msgstr "ردیف %(row)s: مقدار صحیح برای %(field)s نامعتبر است"
 
+#: sell_source/forms.py:43
+msgid "Select a source from inventory"
+msgstr "چشمه‌ای را از موجودی انبار انتخاب کنید"
+
+#: sell_source/forms.py:44
+msgid "Source (from inventory)"
+msgstr "چشمه (از موجودی انبار)"
+
+#: sell_source/forms.py:50
+msgid "مشخصات فیزیکی / Physical Characteristics"
+msgstr "مشخصات فیزیکی"
+
+#: sell_source/forms.py:56
+msgid "ملاحظات / Remarks"
+msgstr "ملاحظات"
+
+#: sell_source/models.py:8
+msgid "Draft — Request Form Uploaded"
+msgstr "پیش‌نویس — فرم درخواست بارگذاری شد"
+
+#: sell_source/models.py:9
+msgid "Adding Sources"
+msgstr "افزودن چشمه‌ها"
+
+#: sell_source/models.py:10
+msgid "Waiting CEO Signature"
+msgstr "در انتظار امضای مدیرعامل"
+
+#: sell_source/models.py:26
+msgid "DSRS Sale Request Form (scanned)"
+msgstr "فرم درخواست فروش DSRS (اسکن‌شده)"
+
+#: sell_source/models.py:28
+msgid "Scanned copy of the signed paper request, JPEG."
+msgstr "نسخه اسکن‌شده درخواست کاغذی امضاشده، JPEG."
+
+#: sell_source/models.py:37
+msgid "Filled Form"
+msgstr "فرم تکمیل‌شده"
+
+#: sell_source/models.py:64
+msgid "Approved By (CEO)"
+msgstr "تأییدشده توسط (مدیرعامل)"
+
+#: sell_source/models.py:74
+msgid "Sell Source Request"
+msgstr "درخواست فروش چشمه"
+
+#: sell_source/models.py:75
+msgid "Sell Source Requests"
+msgstr "درخواست‌های فروش چشمه"
+
+#: sell_source/models.py:78
+#, python-format
+msgid "Sell Request #%(id)s"
+msgstr "درخواست فروش شماره %(id)s"
+
+#: sell_source/models.py:95 templates/sell_source/sell_detail.html:4
+msgid "Sell Request"
+msgstr "درخواست فروش"
+
+#: sell_source/models.py:102
+msgid "Source (DSRS)"
+msgstr "چشمه (DSRS)"
+
+#: sell_source/models.py:111
+msgid "  Serial Number"
+msgstr "شماره سریال"
+
+#: sell_source/models.py:112
+msgid "Manufacture Date"
+msgstr "تاریخ ساخت"
+
+#: sell_source/models.py:113
+msgid "Recorded Activity (mCi)"
+msgstr "پرتوزایی ثبت‌شده (mCi)"
+
+#: sell_source/models.py:116
+msgid "Physical Characteristics"
+msgstr "مشخصات فیزیکی"
+
+#: sell_source/models.py:119
+msgid "Added At"
+msgstr "زمان افزودن"
+
+#: sell_source/models.py:123
+msgid "Sell Request Source"
+msgstr "چشمه درخواست فروش"
+
+#: sell_source/models.py:124
+msgid "Sell Request Sources"
+msgstr "چشمه‌های درخواست فروش"
+
+#: sell_source/views.py:86
+msgid "Request form uploaded — now add the sources."
+msgstr "فرم درخواست بارگذاری شد — اکنون چشمه‌ها را اضافه کنید."
+
+#: sell_source/views.py:146
+msgid "Source removed."
+msgstr "چشمه حذف شد."
+
+#: sell_source/views.py:163
+msgid "Sent to the CEO for signature."
+msgstr "برای امضا به مدیرعامل ارسال شد."
+
+#: sell_source/views.py:187
+msgid "Approved and signed."
+msgstr "تأیید و امضا شد."
+
 #: templates/accounts/profile.html:6 templates/accounts/profile.html:13
-#: templates/base.html:109
+#: templates/base.html:113
 msgid "My Profile"
 msgstr "پروفایل من"
 
@@ -1758,8 +2054,10 @@ msgstr "گروه‌ها"
 #: templates/operations/license_list.html:345
 #: templates/operations/license_queue.html:65
 #: templates/receive_source/receive_characterization.html:58
-#: templates/receive_source/receive_list.html:75
-#: templates/receive_source/receive_queue.html:43
+#: templates/receive_source/receive_list.html:76
+#: templates/receive_source/receive_queue.html:44
+#: templates/sell_source/sell_ceo_queue.html:18
+#: templates/sell_source/sell_list.html:37
 msgid "Action"
 msgstr "عملیات"
 
@@ -1887,48 +2185,48 @@ msgstr "سری زمانی"
 msgid "Home"
 msgstr "خانه"
 
-#: templates/base.html:65
+#: templates/base.html:69
 msgid "operation"
 msgstr "عملیات"
 
-#: templates/base.html:75 templates/home.html:194
+#: templates/base.html:79 templates/home.html:194
 msgid "Financial"
 msgstr "امور مالی"
 
-#: templates/base.html:78
+#: templates/base.html:82
 msgid "Laboratory"
 msgstr "آزمایشگاه"
 
-#: templates/base.html:83 templates/home.html:210
+#: templates/base.html:87 templates/home.html:210
 msgid "Reports"
 msgstr "گزارش‌ها"
 
-#: templates/base.html:87
+#: templates/base.html:91
 msgid " Source Inventory"
 msgstr "موجودی چشمه‌ها"
 
-#: templates/base.html:92
+#: templates/base.html:96
 msgid "Waste"
 msgstr "پسماند"
 
-#: templates/base.html:98
+#: templates/base.html:102
 msgid "Reference Data"
 msgstr "داده‌های مرجع"
 
-#: templates/base.html:103
+#: templates/base.html:107
 msgid "Access Control"
 msgstr "کنترل دسترسی"
 
-#: templates/base.html:117 templates/registration/password_change_form.html:18
+#: templates/base.html:121 templates/registration/password_change_form.html:18
 #: templates/registration/password_change_form.html:93
 msgid "Change Password"
 msgstr "تغییر رمز عبور"
 
-#: templates/base.html:124
+#: templates/base.html:128
 msgid "Logout"
 msgstr "خروج"
 
-#: templates/base.html:132 templates/registration/login.html:119
+#: templates/base.html:136 templates/registration/login.html:119
 #: templates/registration/login.html:163
 msgid "Login"
 msgstr "ورود"
@@ -1949,9 +2247,8 @@ msgstr[1] ""
 "چشمه‌های زیر (%(counter)s مورد) برای دریافت قرارداد ثبت خواهند شد:\n"
 
 #: templates/contract/bulk_form.html:41
-
 msgid "Movement Details"
-msgstr "جزئیات جابه‌جایی"
+msgstr "جزئیات انتقال"
 
 #: templates/contract/bulk_form.html:43
 msgid "This will be applied identically to every selected source above."
@@ -1962,21 +2259,24 @@ msgid "Leave blank to use each source's current facility."
 msgstr "برای استفاده از مرکز فعلی هر چشمه، خالی بگذارید."
 
 #: templates/contract/bulk_form.html:73
-#: templates/contract/license_contract_form.html:161
+#: templates/contract/license_contract_form.html:170
 #: templates/dashboard/tables.html:354 templates/dsrs/add_source.html:151
 #: templates/dsrs/edit_source.html:42 templates/dsrs/edit_source.html:89
 #: templates/operations/license_create.html:76
 #: templates/operations/license_detail.html:133
 #: templates/operations/license_list.html:928
-#: templates/operations/license_sign.html:216
+#: templates/operations/license_sign.html:217
 #: templates/operations/license_update.html:162
 #: templates/receive_source/receive_create.html:48
-#: templates/receive_source/receive_detail.html:129
+#: templates/receive_source/receive_detail.html:130
+#: templates/receive_source/received_sources_list.html:63
+#: templates/receive_source/received_sources_list.html:120
 msgid "Attachments"
 msgstr "پیوست‌ها"
 
 #: templates/contract/bulk_form.html:78
-
+#: templates/sell_source/sell_detail.html:80
+#: templates/sell_source/sell_detail.html:86
 msgid "Send to PI"
 msgstr "ارسال به پارس ایزوتوپ"
 
@@ -2052,7 +2352,7 @@ msgstr[0] ""
 "%(counter)s مجوز صادر شده است.\n"
 msgstr[1] ""
 "\n"
-"%(counter)s مجوز صادر شده است.\n"
+"%(counter)s مجوز صادر شده‌اند.\n"
 
 #: templates/contract/contract_home.html:186
 msgid "Sources to sell"
@@ -2066,7 +2366,6 @@ msgstr "چشمه‌های موجود در شرکت PI برای کنترل کیف
 #: templates/operations/control_home.html:125
 #: templates/operations/deputy_home.html:144
 #: templates/operations/manager_home.html:164
-
 msgid "Source Delivery Requests"
 msgstr "درخواست‌ تحویل چشمه"
 
@@ -2082,9 +2381,9 @@ msgstr "DSRSهای فروخته‌شده"
 #: templates/facilities/facility_list.html:114
 #: templates/operations/license_list.html:203
 #: templates/operations/license_queue.html:31
-#: templates/receive_source/receive_list.html:39
-#: templates/receive_source/receive_queue.html:26
-#: templates/receive_source/received_sources_list.html:28
+#: templates/receive_source/receive_list.html:40
+#: templates/receive_source/receive_queue.html:27
+#: templates/receive_source/received_sources_list.html:29
 msgid "Search..."
 msgstr "جستجو..."
 
@@ -2114,12 +2413,12 @@ msgstr "شناسه رکورد"
 
 #: templates/contract/index.html:205 templates/contract/index.html:350
 #: templates/operations/license_update.html:133
-#: templates/receive_source/receive_detail.html:52
-#: templates/receive_source/receive_list.html:72
+#: templates/receive_source/receive_detail.html:53
+#: templates/receive_source/receive_list.html:73
 #: templates/receive_source/receive_payment_form.html:5
 #: templates/receive_source/receive_payment_form.html:14
-#: templates/receive_source/receive_queue.html:66
-#: templates/receive_source/received_sources_list.html:58
+#: templates/receive_source/receive_queue.html:67
+#: templates/receive_source/received_sources_list.html:59
 msgid "Payment"
 msgstr "پرداخت"
 
@@ -2168,20 +2467,19 @@ msgstr[0] ""
 msgstr[1] ""
 "\n"
 "    صفحه %(page)s از %(total)s (%(counter)s رکورد)\n"
-"    صفحه %(page)s از %(total)s (%(count)s رکورد)\n"
-"    "
 
 #: templates/contract/issued_license_list.html:46
 #: templates/operations/license_list.html:479
 #: templates/operations/license_list.html:716
 #: templates/operations/license_list.html:804
+#: templates/receive_source/_attachments_list.html:9
 #: templates/receive_source/receive_characterization.html:27
-#: templates/receive_source/receive_detail.html:136
-#: templates/receive_source/receive_list.html:102
-#: templates/receive_source/receive_queue.html:57
-#: templates/receive_source/received_sources_list.html:77
-#: templates/receive_source/received_sources_list.html:94
-#: templates/receive_source/received_sources_list.html:101
+#: templates/receive_source/receive_detail.html:137
+#: templates/receive_source/receive_list.html:103
+#: templates/receive_source/receive_queue.html:58
+#: templates/receive_source/received_sources_list.html:79
+#: templates/receive_source/received_sources_list.html:128
+#: templates/sell_source/sell_list.html:48
 msgid "View"
 msgstr "مشاهده"
 
@@ -2191,113 +2489,141 @@ msgstr "هیچ مجوز صادرشده‌ای یافت نشد."
 
 #: templates/contract/license_contract_form.html:16
 #: templates/operations/license_sign.html:23
-#: templates/receive_source/receive_contract_form.html:88
-#: templates/receive_source/receive_sign.html:97
+#: templates/receive_source/receive_contract_form.html:89
+#: templates/receive_source/receive_sign.html:98
 msgid "Approval History"
 msgstr "تاریخچه تأیید"
 
 #: templates/contract/license_contract_form.html:26
 #: templates/operations/license_sign.html:32
-#: templates/receive_source/receive_contract_form.html:94
-#: templates/receive_source/receive_detail.html:108
-#: templates/receive_source/receive_sign.html:103
+#: templates/receive_source/receive_contract_form.html:95
+#: templates/receive_source/receive_detail.html:109
+#: templates/receive_source/receive_sign.html:104
 msgid "Step"
 msgstr "مرحله"
 
 #: templates/contract/license_contract_form.html:28
 #: templates/dsrs/edit_source.html:35 templates/operations/license_sign.html:34
-#: templates/receive_source/receive_contract_form.html:97
-#: templates/receive_source/receive_detail.html:111
-#: templates/receive_source/receive_sign.html:106
+#: templates/receive_source/receive_contract_form.html:98
+#: templates/receive_source/receive_detail.html:112
+#: templates/receive_source/receive_sign.html:107
 msgid "Date"
 msgstr "تاریخ"
 
-#: templates/contract/license_contract_form.html:52
-#: templates/operations/license_sign.html:67
+#: templates/contract/license_contract_form.html:50
+#: templates/contract/license_contract_form.html:245
+#: templates/operations/license_sign.html:330
+msgid "Discount Note"
+msgstr "یادداشت تخفیف"
+
+#: templates/contract/license_contract_form.html:61
+#: templates/operations/license_sign.html:68
 msgid "No approvals."
 msgstr "هیچ تأییدی ثبت نشده است."
 
-#: templates/contract/license_contract_form.html:71
-#: templates/operations/license_sign.html:89
+#: templates/contract/license_contract_form.html:80
+#: templates/operations/license_sign.html:90
 #: templates/operations/license_update.html:40
 msgid "License Information"
 msgstr "اطلاعات مجوز"
 
-#: templates/contract/license_contract_form.html:108
+#: templates/contract/license_contract_form.html:117
 #: templates/operations/license_detail.html:75
 #: templates/operations/license_list.html:406
 #: templates/operations/license_list.html:576
 #: templates/operations/license_queue.html:59
-#: templates/operations/license_sign.html:133
+#: templates/operations/license_sign.html:134
 #: templates/operations/license_update.html:260
-#: templates/receive_source/receive_list.html:73
-#: templates/receive_source/receive_list.html:96
-#: templates/receive_source/receive_list.html:125
-#: templates/receive_source/receive_queue.html:40
-#: templates/receive_source/received_sources_list.html:61
-#: templates/receive_source/received_sources_list.html:109
-#: templates/receive_source/received_sources_list.html:126
+#: templates/receive_source/receive_list.html:74
+#: templates/receive_source/receive_list.html:97
+#: templates/receive_source/receive_list.html:126
+#: templates/receive_source/receive_queue.html:41
+#: templates/receive_source/received_sources_list.html:62
+#: templates/receive_source/received_sources_list.html:99
+#: templates/receive_source/received_sources_list.html:146
+#: templates/sell_source/sell_ceo_queue.html:17
+#: templates/sell_source/sell_detail.html:34
+#: templates/sell_source/sell_list.html:35
 msgid "Sources"
 msgstr "چشمه‌ها"
 
-#: templates/contract/license_contract_form.html:149
-#: templates/operations/license_sign.html:197
+#: templates/contract/license_contract_form.html:158
+#: templates/operations/license_sign.html:198
+#: templates/sell_source/sell_detail.html:58
 msgid "No sources."
 msgstr "هیچ چشمه‌ای وجود ندارد."
 
-#: templates/contract/license_contract_form.html:172
+#: templates/contract/license_contract_form.html:181
 #: templates/contract/license_issue.html:73 templates/dsrs/edit_source.html:36
 #: templates/operations/license_create.html:241
 #: templates/operations/license_detail.html:143
-#: templates/operations/license_sign.html:232
+#: templates/operations/license_sign.html:233
 #: templates/operations/license_specification.html:115
 #: templates/operations/license_update.html:177
 #: templates/operations/license_update.html:277
 #: templates/receive_source/receive_add_sources.html:80
-#: templates/receive_source/receive_detail.html:68
+#: templates/receive_source/receive_detail.html:69
 msgid "Type"
 msgstr "نوع"
 
-#: templates/contract/license_contract_form.html:191
+#: templates/contract/license_contract_form.html:200
 #: templates/operations/license_detail.html:167
 #: templates/operations/license_queue.html:119
-#: templates/operations/license_sign.html:263
+#: templates/operations/license_sign.html:264
 msgid "Open"
 msgstr "باز کردن"
 
-#: templates/contract/license_contract_form.html:205
+#: templates/contract/license_contract_form.html:214
 #: templates/operations/license_detail.html:181
-#: templates/operations/license_sign.html:278
+#: templates/operations/license_sign.html:279
 #: templates/operations/license_update.html:229
-#: templates/receive_source/receive_detail.html:140
+#: templates/receive_source/receive_detail.html:141
+#: templates/receive_source/received_sources_list.html:131
 msgid "No attachments."
 msgstr "هیچ پیوستی وجود ندارد."
 
-#: templates/contract/license_contract_form.html:225
+#: templates/contract/license_contract_form.html:234
+#: templates/receive_source/receive_payment_form.html:23
+msgid "Discount"
+msgstr "تخفیف"
+
+#: templates/contract/license_contract_form.html:270
+msgid "No discount note was left by the CEO"
+msgstr "مدیرعامل یادداشتی برای تخفیف ثبت نکرده است"
+
+#: templates/contract/license_contract_form.html:288
+msgid "Discount Was Requested"
+msgstr "تخفیف درخواست شده است"
+
+#: templates/contract/license_contract_form.html:292
+msgid "No discount note was left by the CEO."
+msgstr "مدیرعامل یادداشتی برای تخفیف ثبت نکرده است."
+
+#: templates/contract/license_contract_form.html:300
 msgid "License Contract"
 msgstr "قرارداد مجوز"
 
-#: templates/contract/license_contract_form.html:235
+#: templates/contract/license_contract_form.html:310
 msgid "Draft Information"
 msgstr "اطلاعات پیش‌نویس"
 
-#: templates/contract/license_contract_form.html:261
+#: templates/contract/license_contract_form.html:336
 msgid "Contract Information"
 msgstr "اطلاعات قرارداد"
 
-#: templates/contract/license_contract_form.html:287
+#: templates/contract/license_contract_form.html:362
 msgid "Notification Letter"
 msgstr "نامه اطلاع‌رسانی"
 
-#: templates/contract/license_contract_form.html:305
+#: templates/contract/license_contract_form.html:380
 msgid "Administrative Information"
 msgstr "اطلاعات اداری"
 
-#: templates/contract/license_contract_form.html:336
+#: templates/contract/license_contract_form.html:411
 msgid "Current File:"
 msgstr "فایل فعلی:"
 
-#: templates/contract/license_contract_form.html:373
+#: templates/contract/license_contract_form.html:448
 msgid "Save Contract"
 msgstr "ذخیره قرارداد"
 
@@ -2336,9 +2662,9 @@ msgstr "سریال"
 #: templates/contract/license_issue.html:105
 #: templates/operations/license_list.html:629
 #: templates/receive_source/receive_characterization.html:95
-#: templates/receive_source/receive_detail.html:95
-#: templates/receive_source/receive_list.html:147
-#: templates/receive_source/received_sources_list.html:155
+#: templates/receive_source/receive_detail.html:96
+#: templates/receive_source/receive_list.html:148
+#: templates/receive_source/received_sources_list.html:175
 msgid "No sources found."
 msgstr "هیچ چشمه‌ای یافت نشد."
 
@@ -2430,11 +2756,11 @@ msgstr "محل نگهداری"
 
 #: templates/dashboard/tables.html:273
 msgid "Entered Activity"
-msgstr "فعالیت واردشده"
+msgstr "پرتوزایی واردشده"
 
 #: templates/dashboard/tables.html:281
 msgid "Current Activity"
-msgstr "فعالیت فعلی"
+msgstr "پرتوزایی فعلی"
 
 #: templates/dashboard/tables.html:285 templates/dsrs/source_list.html:124
 #: templates/operations/license_list.html:911
@@ -2444,7 +2770,7 @@ msgstr "دسته‌بندی"
 #: templates/dashboard/tables.html:289
 #: templates/operations/license_list.html:912
 msgid "Activity Reference Date"
-msgstr "تاریخ مرجع فعالیت"
+msgstr "تاریخ مرجع پرتوزایی"
 
 #: templates/dashboard/tables.html:298
 msgid "Dose Rate @ 1m (µSv/h)"
@@ -2486,7 +2812,7 @@ msgstr "عکس"
 
 #: templates/dashboard/tables.html:439
 msgid "Movement File"
-msgstr "فایل جابه‌جایی"
+msgstr "فایل انتقال"
 
 #: templates/dashboard/tables.html:459
 msgid "History"
@@ -2494,24 +2820,26 @@ msgstr "تاریخچه"
 
 #: templates/dashboard/tables.html:478
 #: templates/operations/license_list.html:843
-#: templates/receive_source/receive_list.html:162
-#: templates/receive_source/receive_queue.html:83
-#: templates/receive_source/received_sources_list.html:170
+#: templates/receive_source/receive_list.html:163
+#: templates/receive_source/receive_queue.html:84
+#: templates/receive_source/received_sources_list.html:190
+#: templates/sell_source/sell_list.html:65
 msgid "Previous"
 msgstr "قبلی"
 
 #: templates/dashboard/tables.html:516
 #: templates/operations/license_list.html:881
-#: templates/receive_source/receive_list.html:174
-#: templates/receive_source/receive_queue.html:87
-#: templates/receive_source/received_sources_list.html:182
+#: templates/receive_source/receive_list.html:175
+#: templates/receive_source/receive_queue.html:88
+#: templates/receive_source/received_sources_list.html:202
+#: templates/sell_source/sell_list.html:69
 msgid "Next"
 msgstr "بعدی"
 
 #: templates/dashboard/tables.html:523
 #: templates/operations/license_list.html:888
-#: templates/receive_source/receive_list.html:179
-#: templates/receive_source/received_sources_list.html:187
+#: templates/receive_source/receive_list.html:180
+#: templates/receive_source/received_sources_list.html:207
 msgid "of"
 msgstr "از"
 
@@ -2584,6 +2912,7 @@ msgid "Contamination"
 msgstr "آلودگی"
 
 #: templates/dashboard/tables.html:626
+#: templates/sell_source/sell_detail.html:18
 msgid "Form"
 msgstr "فرم"
 
@@ -2611,7 +2940,7 @@ msgstr "بارگذاری تصاویر DSRS"
 
 #: templates/dsrs/add_source.html:143
 msgid "Initial Movement"
-msgstr "جابه‌جایی اولیه"
+msgstr "انتقال اولیه"
 
 #: templates/dsrs/add_source.html:221
 msgid "Errors:"
@@ -2643,10 +2972,10 @@ msgstr "به‌روزرسانی"
 
 #: templates/dsrs/decay_chart.html:54 templates/dsrs/decay_chart.html:82
 #: templates/receive_source/receive_add_sources.html:83
-#: templates/receive_source/receive_detail.html:71
-#: templates/receive_source/receive_list.html:134
+#: templates/receive_source/receive_detail.html:72
+#: templates/receive_source/receive_list.html:135
 msgid "Activity (mCi)"
-msgstr "فعالیت (mCi)"
+msgstr "پرتوزایی (mCi)"
 
 #: templates/dsrs/decay_chart.html:68
 msgid "Radioactive Decay Over Time (Years)"
@@ -2662,7 +2991,7 @@ msgstr "ویرایش چشمه"
 
 #: templates/dsrs/edit_source.html:28
 msgid "Movement History"
-msgstr "تاریخچه جابه‌جایی"
+msgstr "تاریخچه انتقال"
 
 #: templates/dsrs/edit_source.html:37
 msgid "From"
@@ -2674,11 +3003,11 @@ msgstr "به"
 
 #: templates/dsrs/edit_source.html:65
 msgid "No movements recorded yet."
-msgstr "هنوز هیچ جابه‌جایی ثبت نشده است."
+msgstr "هنوز هیچ انتقال ثبت نشده است."
 
 #: templates/dsrs/edit_source.html:79
 msgid "Record New Movement"
-msgstr "ثبت جابه‌جایی جدید"
+msgstr "ثبت انتقال جدید"
 
 #: templates/dsrs/edit_source.html:82
 msgid "Linked Contract"
@@ -2686,7 +3015,7 @@ msgstr "قرارداد مرتبط"
 
 #: templates/dsrs/edit_source.html:99
 msgid "Record Movement"
-msgstr "ثبت جابه‌جایی"
+msgstr "ثبت انتقال"
 
 #: templates/dsrs/edit_source.html:121
 msgid "Existing Images"
@@ -2771,8 +3100,8 @@ msgstr "جستجو"
 
 #: templates/facilities/facility_list.html:154
 #: templates/operations/license_list.html:229
-#: templates/receive_source/receive_list.html:47
-#: templates/receive_source/received_sources_list.html:35
+#: templates/receive_source/receive_list.html:48
+#: templates/receive_source/received_sources_list.html:36
 msgid "Items"
 msgstr "موارد"
 
@@ -2811,6 +3140,8 @@ msgstr "برای ادامه یک گزینه انتخاب کنید."
 msgid "Approve license payments"
 msgstr "تأیید پرداخت‌های مجوز"
 
+#: templates/financial/financial_home.html:130
+#, python-format
 msgid ""
 "\n"
 "%(counter)s license waiting for payment.\n"
@@ -2828,9 +3159,11 @@ msgstr[1] ""
 msgid "Source Delivery Requests Payment"
 msgstr "پرداخت درخواست‌ پسمانداری"
 
+#: templates/financial/financial_home.html:145
 msgid "Approve Delivery Requests payments"
 msgstr "تأیید پرداخت‌های درخواست‌ تحویل"
 
+#: templates/financial/financial_home.html:149
 msgid "Delivery Requests waiting for payment approval"
 msgstr "درخواست‌ تحویل در انتظار تأیید پرداخت"
 
@@ -2840,8 +3173,8 @@ msgid "Letter No."
 msgstr "شماره نامه"
 
 #: templates/financial/license_payment_list.html:47
-#: templates/receive_source/receive_list.html:88
-#: templates/receive_source/received_sources_list.html:84
+#: templates/receive_source/receive_list.html:89
+#: templates/receive_source/received_sources_list.html:86
 msgid "Paid"
 msgstr "پرداخت‌شده"
 
@@ -2887,12 +3220,11 @@ msgid "Reports and analytics"
 msgstr "گزارش‌ها و تحلیل‌ها"
 
 #: templates/operations/control_home.html:6
-#: templates/operations/operation_home.html:153
+#: templates/operations/operation_home.html:154
 msgid "Operations Control Manager"
 msgstr "مدیر کنترل عملیات"
 
 #: templates/operations/control_home.html:105
-
 msgid "Operation Control manager"
 msgstr "مدیر کنترل عملیات"
 
@@ -2921,9 +3253,8 @@ msgid "license(s) waiting for Signature and approval."
 msgstr "مجوز در انتظار امضا و تأیید."
 
 #: templates/operations/deputy_home.html:151
-
 msgid "Requests waiting for deputy signature."
-msgstr "درخواستهای در انتظار امضای معاون"
+msgstr "درخواست‌های در انتظار امضای معاون."
 
 #: templates/operations/license_create.html:7
 #: templates/operations/license_create.html:26
@@ -2932,7 +3263,7 @@ msgstr "درخواست مجوز جدید"
 
 #: templates/operations/license_create.html:24
 #: templates/receive_source/receive_create.html:19
-#: templates/receive_source/receive_list.html:104
+#: templates/receive_source/receive_list.html:105
 msgid "Continue Draft"
 msgstr "ادامه پیش‌نویس"
 
@@ -2966,6 +3297,7 @@ msgstr "چشمه DSRS موجود"
 
 #: templates/operations/license_create.html:195
 #: templates/receive_source/receive_add_sources.html:41
+#: templates/sell_source/sell_add_sources.html:25
 msgid "Add"
 msgstr "افزودن"
 
@@ -2986,6 +3318,7 @@ msgid "Finalize Recycled Source"
 msgstr "نهایی‌سازی چشمه بازیافت‌شده"
 
 #: templates/operations/license_create.html:244
+#: templates/sell_source/sell_add_sources.html:44
 msgid "Remove"
 msgstr "حذف"
 
@@ -3004,7 +3337,7 @@ msgstr "حداقل یک مولفه افزوده شود."
 
 #: templates/operations/license_create.html:301
 msgid "Select the final nuclide for this recycled source."
-msgstr "ردیف %(row)d: برای چشمه بازیافت‌شده، رادیونوکلید نهایی الزامی است."
+msgstr "لطفاً رادیونوکلید نهایی این چشمه بازیافت‌شده را انتخاب کنید."
 
 #: templates/operations/license_create.html:302
 msgid "Quantity exceeds this DSRS's available count"
@@ -3016,7 +3349,7 @@ msgstr "بازیافت‌شده از"
 
 #: templates/operations/license_create.html:304
 msgid "component"
-msgstr "اجزا"
+msgstr "جزء"
 
 #: templates/operations/license_create.html:305
 msgid "components"
@@ -3108,22 +3441,22 @@ msgstr "هیچ درخواست مجوزی یافت نشد."
 #: templates/operations/license_list.html:738
 #: templates/operations/license_list.html:776
 #: templates/operations/license_list.html:826
-#: templates/receive_source/receive_list.html:153
-#: templates/receive_source/received_sources_list.html:161
+#: templates/receive_source/receive_list.html:154
+#: templates/receive_source/received_sources_list.html:181
 msgid "Close"
 msgstr "بستن"
 
 #: templates/operations/license_list.html:681
 msgid "Letter Attachments"
-msgstr "نامه های پیوست"
+msgstr "پیوست‌های نامه"
 
 #: templates/operations/license_list.html:769
 msgid "Contract Attachments"
-msgstr "سند قرارداد"
+msgstr "پیوست‌های قرارداد"
 
 #: templates/operations/license_list.html:889
-#: templates/receive_source/receive_list.html:180
-#: templates/receive_source/received_sources_list.html:188
+#: templates/receive_source/receive_list.html:181
+#: templates/receive_source/received_sources_list.html:208
 msgid "records"
 msgstr "رکورد"
 
@@ -3141,7 +3474,7 @@ msgstr "شماره"
 
 #: templates/operations/license_list.html:908
 msgid "Input Activity"
-msgstr "فعالیت ورودی"
+msgstr "پرتوزایی ورودی"
 
 #: templates/operations/license_list.html:914
 msgid "Surface Dose Rate"
@@ -3163,11 +3496,15 @@ msgstr "لطفاً حداقل یک رکورد DSRS انتخاب کنید."
 msgid "No licenses found."
 msgstr "هیچ مجوزی یافت نشد."
 
-#: templates/operations/license_sign.html:354
+#: templates/operations/license_sign.html:333
+msgid "Saved when you click Approve & Sign — visible to Contracts afterward."
+msgstr "با کلیک روی «تأیید و امضا» ذخیره می‌شود — پس از آن برای واحد قراردادها قابل مشاهده است."
+
+#: templates/operations/license_sign.html:344
 msgid "Approve & Sign"
 msgstr "تأیید و امضا"
 
-#: templates/operations/license_sign.html:368
+#: templates/operations/license_sign.html:345
 msgid "Reject"
 msgstr "رد"
 
@@ -3208,77 +3545,107 @@ msgstr "درخواست‌ پسمانداری در انتظار امضای مدی
 msgid "Review and approve license specifications waiting for deputy approval."
 msgstr "بررسی و تأیید مشخصات فنی مجوزهای در انتظار تأیید معاون."
 
-#: templates/operations/operation_home.html:142
+#: templates/operations/operation_home.html:143
 msgid "Review and approve license specifications waiting for manager approval."
 msgstr "بررسی و تأیید مشخصات فنی مجوزهای در انتظار تأیید مدیر."
 
-#: templates/operations/operation_home.html:157
+#: templates/operations/operation_home.html:158
 msgid "Monitor license requests and workflow progress."
 msgstr "نظارت بر درخواست‌ مجوز و پیشرفت گردش کار."
 
-#: templates/operations/operation_home.html:173
+#: templates/operations/operation_home.html:174
 msgid "View and manage customer facilities."
 msgstr "مشاهده و مدیریت مراکز مشتریان."
 
-#: templates/operations/operation_home.html:189
+#: templates/operations/operation_home.html:190
 msgid "Receive Waste"
 msgstr "دریافت پسماند"
 
-#: templates/operations/operation_home.html:193
+#: templates/operations/operation_home.html:194
 msgid "View received Waste."
 msgstr "مشاهده پسماندهای دریافت‌شده."
 
-#: templates/operations/operation_home.html:211
+#: templates/operations/operation_home.html:212
 msgid "View received sources."
 msgstr "مشاهده چشمه‌های دریافت‌شده."
 
-#: templates/operations/operation_home.html:225
+#: templates/operations/operation_home.html:226
+#: templates/sell_source/sell_home.html:4
+#: templates/sell_source/sell_home.html:28
 msgid "Sell Source"
 msgstr "فروش چشمه"
 
-#: templates/operations/operation_home.html:229
+#: templates/operations/operation_home.html:230
 msgid "View sold sources."
 msgstr "مشاهده چشمه‌های فروخته‌شده."
 
-#: templates/operations/operation_home.html:242
+#: templates/operations/operation_home.html:243
 msgid "Issue Source License"
 msgstr "صدور مجوز چشمه پرتوزا"
 
-#: templates/operations/operation_home.html:246
+#: templates/operations/operation_home.html:247
 msgid "View issued license for radioactive sources and add new ones."
 msgstr "مشاهده مجوزهای صادرشده برای چشمه‌های پرتوزا و افزودن چشمه‌های جدید."
 
-#: templates/receive_source/ceo_home.html:129
+#: templates/receive_source/_attachments_list.html:3
+msgid "Attachments So Far"
+msgstr "پیوست‌های ثبت‌شده تاکنون"
+
+#: templates/receive_source/_attachments_list.html:12
+msgid "No attachments yet."
+msgstr "هنوز هیچ پیوستی وجود ندارد."
+
+#: templates/receive_source/ceo_home.html:130
 msgid "CEO Dashboard"
 msgstr "داشبورد مدیرعامل"
 
-#: templates/receive_source/ceo_home.html:136
+#: templates/receive_source/ceo_home.html:137
 msgid "Manage CEO approvals and decisions"
 msgstr "مدیریت تأییدیه‌ها و تصمیمات مدیرعامل"
 
-#: templates/receive_source/ceo_home.html:148
+#: templates/receive_source/ceo_home.html:149
 msgid "Source Delivery Discount Requests"
 msgstr "درخواست‌ تخفیف پسمانداری"
 
-#: templates/receive_source/ceo_home.html:150
+#: templates/receive_source/ceo_home.html:151
 msgid "Discount-requested requests awaiting CEO"
 msgstr "درخواست‌ دارای تقاضای تخفیف در انتظار مدیرعامل"
 
-#: templates/receive_source/ceo_home.html:166
+#: templates/receive_source/ceo_home.html:157
+msgid "DSRS Requests"
+msgstr "درخواست‌های DSRS"
 
+#: templates/receive_source/ceo_home.html:158
+msgid "DSRS Requests waiting for CEO signature"
+msgstr "درخواست‌های DSRS در انتظار امضای مدیرعامل"
+
+#: templates/receive_source/ceo_home.html:164
+msgid "License Contract Discount Requests"
+msgstr "درخواست‌های تخفیف قرارداد مجوز"
+
+#: templates/receive_source/ceo_home.html:166
+msgid "Discount-requested requests for license Contract awaiting CEO"
+msgstr "درخواست‌های قرارداد مجوز دارای تقاضای تخفیف در انتظار مدیرعامل"
+
+#: templates/receive_source/ceo_home.html:180
 msgid "Decisions"
 msgstr "تصمیمات"
 
-#: templates/receive_source/ceo_home.html:171
+#: templates/receive_source/ceo_home.html:185
 msgid "CEO decisions and approvals history"
 msgstr "تاریخچه تصمیمات و تأییدیه‌های مدیرعامل"
 
+#: templates/receive_source/ceo_home.html:201
 msgid "CEO Reports"
 msgstr "گزارش‌های مدیرعامل"
 
+#: templates/receive_source/ceo_home.html:206
 msgid "Review CEO related reports"
 msgstr "بررسی گزارش‌های مرتبط با مدیرعامل"
 
+#: templates/receive_source/dsrs_characterization_form.html:5
+#: templates/receive_source/dsrs_characterization_form.html:14
+#: templates/receive_source/receive_detail.html:57
 msgid "Characterization"
 msgstr "مشخصه‌سازی چشمه"
 
@@ -3290,11 +3657,20 @@ msgstr "مشخصه‌سازی فیزیکی"
 msgid ""
 "صورتجلسه (the shared batch document) is uploaded once for the whole request "
 "on the characterization list page, not per source."
-msgstr "صورتجلسه (سند مشترک این دسته) فقط یک‌بار برای کل درخواست در صفحه فهرست مشخصه‌سازی بارگذاری می‌شود، نه برای هر چشمه به‌طور جداگانه."
+msgstr ""
+"صورتجلسه (سند مشترک این دسته) فقط یک‌بار برای کل درخواست در صفحه فهرست "
+"مشخصه‌سازی بارگذاری می‌شود، نه برای هر چشمه به‌طور جداگانه."
 
+#: templates/receive_source/receive_add_sources.html:5
+#: templates/receive_source/receive_detail.html:37
+#: templates/sell_source/sell_add_sources.html:5
+#: templates/sell_source/sell_detail.html:25
+#: templates/sell_source/sell_list.html:50
 msgid "Add Sources"
 msgstr "افزودن چشمه‌ها"
 
+#: templates/receive_source/receive_add_sources.html:14
+#: templates/receive_source/receive_detail.html:64
 msgid "Sources / Waste"
 msgstr "چشمه‌ها / پسماند"
 
@@ -3303,7 +3679,9 @@ msgid ""
 "This facility has an existing license contract for this nuclide, but the "
 "serial number you typed didn't match exactly. Does this item match one of "
 "these?"
-msgstr "این مرکز دارای قرارداد مجوز برای این رادیونوکلید است، اما شماره سریالی که وارد کردید دقیقاً مطابقت نداشت. آیا این مورد با یکی از موارد زیر مطابقت دارد؟"
+msgstr ""
+"این مرکز دارای قرارداد مجوز برای این رادیونوکلید است، اما شماره سریالی که "
+"وارد کردید دقیقاً مطابقت نداشت. آیا این مورد با یکی از موارد زیر مطابقت دارد؟"
 
 #: templates/receive_source/receive_add_sources.html:30
 msgid "Confirm"
@@ -3314,8 +3692,7 @@ msgid "Added Rows"
 msgstr "ردیف‌های افزوده‌شده"
 
 #: templates/receive_source/receive_add_sources.html:85
-#: templates/receive_source/receive_contract_form.html:56
-
+#: templates/receive_source/receive_contract_form.html:57
 msgid "License Match"
 msgstr "تطبیق مجوز"
 
@@ -3328,7 +3705,7 @@ msgid "confirmed"
 msgstr "تأییدشده"
 
 #: templates/receive_source/receive_add_sources.html:109
-
+#: templates/sell_source/sell_add_sources.html:64
 msgid "No sources added yet."
 msgstr "هیچ چشمه‌ای اضافه نشده است."
 
@@ -3337,7 +3714,6 @@ msgid "Finish Adding Sources — Send to Managers"
 msgstr "پایان افزودن چشمه‌ها — ارسال به مدیران"
 
 #: templates/receive_source/receive_characterization.html:14
-#: templates/receive_source/received_sources_list.html:60
 msgid "صورتجلسه"
 msgstr "صورتجلسه"
 
@@ -3345,7 +3721,9 @@ msgstr "صورتجلسه"
 msgid ""
 "One shared document for the whole batch — uploading here attaches it to "
 "every source in this request, not just one."
-msgstr "یک سند مشترک برای کل این دسته — بارگذاری در اینجا آن را به تمام چشمه‌های این درخواست پیوست می‌کند، نه فقط یکی."
+msgstr ""
+"یک سند مشترک برای کل این دسته — بارگذاری در اینجا آن را به تمام چشمه‌های این "
+"درخواست پیوست می‌کند، نه فقط یکی."
 
 #: templates/receive_source/receive_characterization.html:36
 msgid "Upload صورتجلسه"
@@ -3355,35 +3733,70 @@ msgstr "بارگذاری صورتجلسه"
 msgid ""
 "One row per physical unit — a source added with quantity > 1 gets a "
 "separate, independently-editable DSRS record per unit."
-msgstr "یک ردیف برای هر واحد فیزیکی — چشمه‌ای که با تعداد بیشتر از ۱ افزوده شود، برای هر واحد یک رکورد DSRS جداگانه و قابل‌ویرایش مستقل دریافت می‌کند."
+msgstr ""
+"یک ردیف برای هر واحد فیزیکی — چشمه‌ای که با تعداد بیشتر از ۱ افزوده شود، برای "
+"هر واحد یک رکورد DSRS جداگانه و قابل‌ویرایش مستقل دریافت می‌کند."
 
+#: templates/receive_source/receive_characterization.html:57
+#: templates/receive_source/received_sources_list.html:155
 msgid "DSRS Status"
 msgstr "وضعیت DSRS"
 
+#: templates/receive_source/receive_characterization.html:70
+#: templates/receive_source/received_sources_list.html:171
 msgid "Not created yet"
 msgstr "هنوز ایجاد نشده است"
 
+#: templates/receive_source/receive_characterization.html:77
+#: templates/receive_source/receive_queue.html:69
 msgid "Characterize"
 msgstr "مشخصه‌سازی"
 
+#: templates/receive_source/receive_characterization.html:82
 msgid "Mark Stored"
-msgstr "ثبت به‌عنوان ذخیره‌شده"
+msgstr "ثبت به‌عنوان نگهداری‌شده"
 
+#: templates/receive_source/receive_characterization.html:88
 msgid "From existing inventory"
 msgstr "از موجودی انبار"
 
+#: templates/receive_source/receive_contract_form.html:20
+msgid ""
+"This is not a legal contract — just where the cost of receiving these items "
+"is declared. Whether each item already has an existing license contract "
+"affects that cost."
+msgstr ""
+"این یک قرارداد قانونی نیست — فقط محلی برای اعلام هزینه دریافت این اقلام "
+"است. اینکه هر مورد قبلاً قرارداد مجوز داشته باشد یا نه، بر این هزینه تأثیر "
+"می‌گذارد."
+
+#: templates/receive_source/receive_contract_form.html:26
 msgid "View Filled & Signed Specification"
 msgstr "مشاهده مشخصات فنی تکمیل و امضاشده"
 
+#: templates/receive_source/receive_contract_form.html:34
 msgid "View Current Invoice"
 msgstr "مشاهده فاکتور فعلی"
 
+#: templates/receive_source/receive_contract_form.html:41
+msgid "Discount: CEO-approved"
+msgstr "تخفیف: تأییدشده توسط مدیرعامل"
+
+#: templates/receive_source/receive_contract_form.html:46
+msgid "Factor this discount into the cost you declare below."
+msgstr "این تخفیف را در هزینه‌ای که در زیر اعلام می‌کنید لحاظ کنید."
+
+#: templates/receive_source/receive_contract_form.html:68
 msgid "Existing contract"
 msgstr "قرارداد موجود"
 
+#: templates/receive_source/receive_contract_form.html:70
 msgid "No contract"
 msgstr "بدون قرارداد"
 
+#: templates/receive_source/receive_create.html:6
+#: templates/receive_source/receive_create.html:21
+#: templates/receive_source/receiving_home.html:68
 msgid "New Receive Request"
 msgstr "درخواست دریافت جدید"
 
@@ -3391,66 +3804,71 @@ msgstr "درخواست دریافت جدید"
 msgid ""
 "You'll add the source/waste rows on the next page, once the facility is "
 "saved — that lets us show only that facility's contracted nuclides, if any."
-msgstr "پس از ذخیره مرکز، ردیف‌های چشمه/پسماند را در صفحه بعد اضافه خواهید کرد — این کار امکان نمایش فقط رادیونوکلیدهای قراردادی آن مرکز (در صورت وجود) را فراهم می‌کند."
+msgstr ""
+"پس از ذخیره مرکز، ردیف‌های چشمه/پسماند را در صفحه بعد اضافه خواهید کرد — این "
+"کار امکان نمایش فقط رادیونوکلیدهای قراردادی آن مرکز (در صورت وجود) را فراهم "
+"می‌کند."
 
+#: templates/receive_source/receive_create.html:100
 msgid "Save and Continue to Sources"
 msgstr "ذخیره و ادامه به ثبت منابع"
 
+#: templates/receive_source/receive_detail.html:26
 msgid "Distance to Tehran (km)"
 msgstr "فاصله تا تهران (کیلومتر)"
 
+#: templates/receive_source/receive_detail.html:45
+#: templates/receive_source/receive_queue.html:63
+#: templates/sell_source/sell_list.html:52
 msgid "Sign"
 msgstr "امضا"
 
+#: templates/receive_source/receive_detail.html:104
 msgid "Approvals"
 msgstr "مراحل تأیید"
 
+#: templates/receive_source/receive_list.html:59
 msgid "+ Start New Receive Request"
 msgstr "+ شروع درخواست دریافت جدید"
 
+#: templates/receive_source/receive_list.html:112
+#: templates/receive_source/received_sources_list.html:110
 msgid "No receive requests found."
 msgstr "هیچ درخواست دریافتی یافت نشد."
 
-#: templates/receive_source/receive_manager_input.html:19
+#: templates/receive_source/receive_manager_input.html:20
 msgid ""
 "Fill in the logistics section (pre-op visit, personnel, vehicle, route "
 "difficulty, accommodation/food days, other costs) directly in the document "
 "below — both the Operation Manager and the Operation Control Manager can "
 "download, fill in, and re-upload it."
-msgstr "بخش لجستیک (بازدید پیش از عملیات، پرسنل، وسیله نقلیه، سختی مسیر، روزهای اسکان/غذا، سایر هزینه‌ها) را مستقیماً در سند زیر تکمیل کنید — هم مدیر عملیات و هم مدیر کنترل عملیات می‌توانند آن را دانلود، تکمیل و مجدداً بارگذاری کنند."
+msgstr ""
+"بخش لجستیک (بازدید پیش از عملیات، پرسنل، وسیله نقلیه، سختی مسیر، روزهای "
+"اسکان/غذا، سایر هزینه‌ها) را مستقیماً در سند زیر تکمیل کنید — هم مدیر عملیات و "
+"هم مدیر کنترل عملیات می‌توانند آن را دانلود، تکمیل و مجدداً بارگذاری کنند."
 
-#: templates/receive_source/receive_manager_input.html:25
-
+#: templates/receive_source/receive_manager_input.html:26
 msgid "Download Current Specification"
 msgstr "دانلود فرم مشخصات فعلی"
 
-#: templates/receive_source/receive_manager_input.html:33
-#: templates/receive_source/receive_sign.html:80
-
+#: templates/receive_source/receive_manager_input.html:34
+#: templates/receive_source/receive_sign.html:81
 msgid "Upload Filled Document"
-msgstr " بارگزاری فرم پر شده"
+msgstr "بارگذاری فرم تکمیل‌شده"
 
-#: templates/receive_source/receive_manager_input.html:43
+#: templates/receive_source/receive_manager_input.html:44
 msgid "Data Entry Complete — Ready for Operation Manager Signature"
 msgstr "ورود اطلاعات کامل شد — آماده امضای مدیر عملیات"
 
 #: templates/receive_source/receive_payment_form.html:20
-
 msgid "Declared Cost"
 msgstr "هزینه اعلام شده"
 
 #: templates/receive_source/receive_payment_form.html:23
-
-msgid "Discount"
-msgstr "تخفیف"
-
-#: templates/receive_source/receive_payment_form.html:23
-
 msgid "CEO-approved"
-msgstr " تأییدشده توسط مدیرعامل"
+msgstr "تأییدشده توسط مدیرعامل"
 
 #: templates/receive_source/receive_payment_form.html:34
-
 msgid "View Current Receipt"
 msgstr "مشاهده رسید فعلی"
 
@@ -3458,119 +3876,117 @@ msgstr "مشاهده رسید فعلی"
 msgid ""
 "Marking payment done here creates the physical DSRS records (status: In Use) "
 "for every source in this request."
-msgstr "علامت‌گذاری پرداخت در اینجا باعث ایجاد رکوردهای فیزیکی DSRS (با وضعیت: در حال استفاده) برای تمام چشمه‌های این درخواست می‌شود."
+msgstr ""
+"علامت‌گذاری پرداخت در اینجا باعث ایجاد رکوردهای فیزیکی DSRS (با وضعیت: در حال "
+"استفاده) برای تمام چشمه‌های این درخواست می‌شود."
 
-#: templates/receive_source/receive_queue.html:60
+#: templates/receive_source/receive_queue.html:61
 msgid "Fill In Data"
 msgstr "تکمیل اطلاعات"
 
-#: templates/receive_source/receive_queue.html:74
+#: templates/receive_source/receive_queue.html:75
+#: templates/sell_source/sell_ceo_queue.html:30
 msgid "Nothing here right now."
 msgstr "در حال حاضر موردی وجود ندارد."
 
-#: templates/receive_source/receive_sign.html:5
-#: templates/receive_source/receive_sign.html:14
-
+#: templates/receive_source/receive_sign.html:6
+#: templates/receive_source/receive_sign.html:15
 msgid "Sign Specification"
-msgstr "امضای فرم مشخصات  "
+msgstr "امضای فرم مشخصات"
 
-#: templates/receive_source/receive_sign.html:19
-
+#: templates/receive_source/receive_sign.html:20
 msgid "Current Step"
 msgstr "مرحله فعلی"
 
-#: templates/receive_source/receive_sign.html:25
-
+#: templates/receive_source/receive_sign.html:26
 msgid "Download Specification Document"
-msgstr "دانلود فرم مشخصات  "
+msgstr "دانلود فرم مشخصات"
 
-#: templates/receive_source/receive_sign.html:31
+#: templates/receive_source/receive_sign.html:32
 msgid "Contracts and Finance both see whatever you save here."
-msgstr "هرچه در اینجا ذخیره کنید، هم واحد قراردادها و هم واحد مالی آن را می‌بینند."
+msgstr ""
+"هرچه در اینجا ذخیره کنید، هم واحد قراردادها و هم واحد مالی آن را می‌بینند."
 
-#: templates/receive_source/receive_sign.html:33
+#: templates/receive_source/receive_sign.html:34
 msgid "Contracts hasn't estimated a cost yet — that happens after you sign."
-msgstr "واحد قراردادها هنوز هزینه‌ای برآورد نکرده است — این کار پس از امضای شما انجام می‌شود."
+msgstr ""
+"واحد قراردادها هنوز هزینه‌ای برآورد نکرده است — این کار پس از امضای شما انجام "
+"می‌شود."
 
-#: templates/receive_source/receive_sign.html:39
-#: templates/receive_source/receive_sign.html:59
+#: templates/receive_source/receive_sign.html:40
+#: templates/receive_source/receive_sign.html:60
 msgid "Discount Decision"
 msgstr "تصمیم تخفیف"
 
-#: templates/receive_source/receive_sign.html:46
-#: templates/receive_source/receive_sign.html:69
+#: templates/receive_source/receive_sign.html:47
+#: templates/receive_source/receive_sign.html:70
 msgid "Save Discount Decision"
 msgstr "ذخیره تصمیم تخفیف"
 
-#: templates/receive_source/receive_sign.html:54
+#: templates/receive_source/receive_sign.html:55
 msgid ""
 "Fill in the source/waste characterization columns (shield, burial, storage "
 "duration, sale probability, description) directly in the document above, "
 "upload it below, then sign."
-msgstr "ستون‌های مشخصه‌سازی چشمه/پسماند (شیلد، دفن، مدت نگهداری، احتمال فروش، توضیحات) را مستقیماً در سند بالا تکمیل کنید، آن را در پایین بارگذاری کنید، سپس امضا نمایید."
+msgstr ""
+"ستون‌های مشخصه‌سازی چشمه/پسماند (شیلد، دفن، مدت نگهداری، احتمال فروش، توضیحات) "
+"را مستقیماً در سند بالا تکمیل کنید، آن را در پایین بارگذاری کنید، سپس امضا "
+"نمایید."
 
-#: templates/receive_source/receive_sign.html:63
+#: templates/receive_source/receive_sign.html:64
 msgid ""
 "If checked, this request routes through the CEO for approval right after "
 "Deputy signs, before Contracts estimates the cost."
-msgstr "در صورت تیک زدن، این درخواست بلافاصله پس از امضای معاون، برای تأیید نزد مدیرعامل ارجاع داده می‌شود، پیش از آنکه واحد قراردادها هزینه را برآورد کند."
+msgstr ""
+"در صورت تیک زدن، این درخواست بلافاصله پس از امضای معاون، برای تأیید نزد "
+"مدیرعامل ارجاع داده می‌شود، پیش از آنکه واحد قراردادها هزینه را برآورد کند."
 
-#: templates/receive_source/receive_sign.html:88
-
+#: templates/receive_source/receive_sign.html:89
 msgid "Sign and Continue"
 msgstr "امضا و ادامه"
 
-#: templates/receive_source/received_sources_list.html:4
+#: templates/receive_source/received_sources_list.html:5
 #: templates/receive_source/receiving_home.html:43
-
 msgid "Received Sources"
-msgstr " چشمه‌های دریافت شده"
+msgstr "چشمه‌های دریافت‌شده"
 
-#: templates/receive_source/received_sources_list.html:46
+#: templates/receive_source/received_sources_list.html:47
 msgid ""
 "Read-only overview — facility, contract cost, invoice, payment, the filled/"
 "signed characterization document (صورتجلسه), and every source with a link to "
 "its DSRS record."
-msgstr "نمای کلی فقط‌خواندنی — مرکز، هزینه قرارداد، فاکتور، پرداخت، سند مشخصه‌سازی تکمیل/امضاشده (صورتجلسه)، و هر چشمه به همراه پیوند به رکورد DSRS آن."
+msgstr ""
+"نمای کلی فقط‌خواندنی — مرکز، هزینه قرارداد، فاکتور، پرداخت، سند مشخصه‌سازی "
+"تکمیل/امضاشده (صورتجلسه)، و هر چشمه به همراه پیوند به رکورد DSRS آن."
 
-#: templates/receive_source/received_sources_list.html:54
-
+#: templates/receive_source/received_sources_list.html:55
 msgid "Delivery Letter"
 msgstr "نامه تحویل"
 
-#: templates/receive_source/received_sources_list.html:59
-
-msgid "Specification"
-msgstr "مشخصات  "
-
-#: templates/receive_source/received_sources_list.html:86
-
+#: templates/receive_source/received_sources_list.html:88
 msgid "Receipt"
 msgstr "رسید"
 
-#: templates/receive_source/received_sources_list.html:136
+#: templates/receive_source/received_sources_list.html:156
 msgid "Link"
 msgstr "پیوند"
 
-#: templates/receive_source/received_sources_list.html:146
-
+#: templates/receive_source/received_sources_list.html:166
 msgid "View Data"
 msgstr "مشاهده داده"
 
 #: templates/receive_source/receiving_home.html:31
-
 msgid "Select a queue to continue"
 msgstr "برای ادامه، یک صف را انتخاب کنید"
 
 #: templates/receive_source/receiving_home.html:37
-
+#: templates/sell_source/sell_home.html:35
 msgid "All Requests"
 msgstr "همه درخواست‌ها"
 
 #: templates/receive_source/receiving_home.html:38
-
 msgid "View and start receive requests"
-msgstr "مشاهده و شروع درخوالست های تحویل چشمه."
+msgstr "مشاهده و شروع درخواست‌های تحویل چشمه."
 
 #: templates/receive_source/receiving_home.html:44
 msgid "Read-only overview: contract cost, invoice, payment, صورتجلسه, sources"
@@ -3581,7 +3997,7 @@ msgid "Sources awaiting characterization"
 msgstr "چشمه‌های در انتظار مشخصه‌سازی"
 
 #: templates/receive_source/receiving_home.html:63
-
+#: templates/sell_source/sell_home.html:49
 msgid "Requests"
 msgstr "درخواست‌ها"
 
@@ -3592,6 +4008,8 @@ msgstr "شروع از نامه تحویل DSRS"
 #: templates/reference/radionuclide_form.html:7
 msgid "Nuclide Form"
 msgstr "فرم رادیونوکلید"
+
+
 
 #: templates/reference/radionuclide_import.html:10
 msgid "Import Radionuclides"
@@ -3662,7 +4080,7 @@ msgstr "ایجاد حساب کاربری"
 
 #: templates/registration/auth_signup.html:171
 msgid "Already have an account?"
-msgstr "قبلاً حساب کاربری دارید؟"
+msgstr "حساب کاربری دارید؟"
 
 #: templates/registration/auth_signup.html:173
 msgid "Sign in"
@@ -3683,6 +4101,156 @@ msgstr "رمز عبور شما با موفقیت تغییر کرد."
 #: templates/registration/password_change_done.html:27
 msgid "Back to Home Page"
 msgstr "بازگشت به صفحه اصلی"
+
+#: templates/sell_source/sell_add_sources.html:14
+msgid "Add Sources From Inventory"
+msgstr "افزودن چشمه از موجودی انبار"
+
+#: templates/sell_source/sell_add_sources.html:18
+msgid "Live Preview"
+msgstr "پیش‌نمایش زنده"
+
+#: templates/sell_source/sell_add_sources.html:32
+msgid "Added Sources"
+msgstr "چشمه‌های افزوده‌شده"
+
+#: templates/sell_source/sell_add_sources.html:38
+#: templates/sell_source/sell_detail.html:39
+#: templates/sell_source/sell_sign.html:24
+msgid "نام ماده پرتوزا"
+msgstr "نام ماده پرتوزا"
+
+#: templates/sell_source/sell_add_sources.html:39
+#: templates/sell_source/sell_detail.html:40
+#: templates/sell_source/sell_sign.html:25
+msgid "شماره سریال"
+msgstr "شماره سریال"
+
+#: templates/sell_source/sell_add_sources.html:40
+#: templates/sell_source/sell_detail.html:41
+#: templates/sell_source/sell_sign.html:26
+msgid "تاریخ ساخت"
+msgstr "تاریخ ساخت"
+
+#: templates/sell_source/sell_add_sources.html:41
+#: templates/sell_source/sell_detail.html:42
+#: templates/sell_source/sell_sign.html:27
+msgid "پرتوزایی ثبت‌شده (mCi)"
+msgstr "پرتوزایی ثبت‌شده (mCi)"
+
+#: templates/sell_source/sell_add_sources.html:42
+#: templates/sell_source/sell_detail.html:43
+#: templates/sell_source/sell_sign.html:28
+msgid "مشخصات فیزیکی"
+msgstr "مشخصات فیزیکی"
+
+#: templates/sell_source/sell_add_sources.html:43
+#: templates/sell_source/sell_detail.html:44
+#: templates/sell_source/sell_sign.html:29
+msgid "ملاحظات"
+msgstr "ملاحظات"
+
+#: templates/sell_source/sell_add_sources.html:75
+msgid "Finish — Send to CEO for Signature"
+msgstr "پایان — ارسال برای امضای مدیرعامل"
+
+#: templates/sell_source/sell_ceo_queue.html:4
+msgid "CEO — Sell Requests"
+msgstr "مدیرعامل — درخواست‌های فروش"
+
+#: templates/sell_source/sell_ceo_queue.html:9
+msgid "Sell Requests Waiting for CEO Signature"
+msgstr "درخواست‌های فروش در انتظار امضای مدیرعامل"
+
+#: templates/sell_source/sell_ceo_queue.html:15
+#: templates/sell_source/sell_list.html:33
+msgid "Request"
+msgstr "درخواست"
+
+#: templates/sell_source/sell_ceo_queue.html:27
+#: templates/sell_source/sell_detail.html:27
+#: templates/sell_source/sell_sign.html:13
+msgid "Review & Sign"
+msgstr "بررسی و امضا"
+
+#: templates/sell_source/sell_create.html:5
+#: templates/sell_source/sell_create.html:14
+#: templates/sell_source/sell_home.html:41
+msgid "New Sell Request"
+msgstr "درخواست فروش جدید"
+
+#: templates/sell_source/sell_create.html:19
+msgid ""
+"Upload the scanned DSRS sale request form (jpeg). You'll add the sources "
+"from inventory on the next page."
+msgstr ""
+"فرم اسکن‌شده درخواست فروش DSRS (jpeg) را بارگذاری کنید. چشمه‌ها را از موجودی "
+"انبار در صفحه بعد اضافه خواهید کرد."
+
+#: templates/sell_source/sell_create.html:25
+msgid "Upload and Continue"
+msgstr "بارگذاری و ادامه"
+
+#: templates/sell_source/sell_detail.html:67
+msgid "Signed By"
+msgstr "امضاشده توسط"
+
+#: templates/sell_source/sell_detail.html:72
+msgid ""
+"The signature and date above are also drawn directly onto the form image."
+msgstr "امضا و تاریخ بالا مستقیماً روی تصویر فرم نیز رسم می‌شوند."
+
+#: templates/sell_source/sell_detail.html:83
+msgid "Already sent to PI"
+msgstr "قبلاً به پارس ایزوتوپ ارسال شده است"
+
+#: templates/sell_source/sell_detail.html:130
+msgid "Request failed:"
+msgstr "درخواست ناموفق بود:"
+
+#: templates/sell_source/sell_home.html:29
+msgid "DSRS sale requests to PI"
+msgstr "درخواست‌های فروش DSRS به پارس ایزوتوپ"
+
+#: templates/sell_source/sell_home.html:36
+msgid "View and start sell requests"
+msgstr "مشاهده و شروع درخواست‌های فروش."
+
+#: templates/sell_source/sell_home.html:42
+msgid "Upload a scanned DSRS sale request form"
+msgstr "بارگذاری فرم اسکن‌شده درخواست فروش DSRS"
+
+#: templates/sell_source/sell_home.html:48
+msgid "Requests waiting for CEO signature"
+msgstr "درخواست‌ها در انتظار امضای مدیرعامل."
+
+#: templates/sell_source/sell_list.html:4
+msgid "Sell Requests"
+msgstr "درخواست‌های فروش"
+
+#: templates/sell_source/sell_list.html:20
+msgid "Search by serial number..."
+msgstr "جستجو بر اساس شماره سریال..."
+
+#: templates/sell_source/sell_list.html:25
+msgid "+ New Sell Request"
+msgstr "+ درخواست فروش جدید"
+
+#: templates/sell_source/sell_list.html:57
+msgid "No sell requests found."
+msgstr "هیچ درخواست فروشی یافت نشد."
+
+#: templates/sell_source/sell_sign.html:4
+msgid "Sign — Sell Request"
+msgstr "امضا — درخواست فروش"
+
+#: templates/sell_source/sell_sign.html:17
+msgid "Scanned Request Form"
+msgstr "فرم اسکن‌شده درخواست"
+
+#: templates/sell_source/sell_sign.html:48
+msgid "Approve and Sign"
+msgstr "تأیید و امضا"
 
 #: venv/lib/python3.12/site-packages/django/contrib/messages/apps.py:16
 msgid "Messages"
@@ -3779,7 +4347,9 @@ msgstr "فقط ارقام جدا شده با ویرگول وارد کنید."
 #: venv/lib/python3.12/site-packages/django/core/validators.py:381
 #, python-format
 msgid "Ensure this value is %(limit_value)s (it is %(show_value)s)."
-msgstr "اطمینان حاصل کنید که این مقدار %(limit_value)s باشد (اکنون %(show_value)s است)."
+msgstr ""
+"اطمینان حاصل کنید که این مقدار %(limit_value)s باشد (اکنون %(show_value)s "
+"است)."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:416
 #, python-format
@@ -3801,7 +4371,10 @@ msgstr "اطمینان حاصل کنید که این مقدار مضربی از 
 msgid ""
 "Ensure this value is a multiple of step size %(limit_value)s, starting from "
 "%(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and so on."
-msgstr "اطمینان حاصل کنید که این مقدار مضربی از گام %(limit_value)s، با شروع از %(offset)s باشد، برای مثال %(offset)s، %(valid_value1)s، %(valid_value2)s و به همین ترتیب."
+msgstr ""
+"اطمینان حاصل کنید که این مقدار مضربی از گام %(limit_value)s، با شروع از "
+"%(offset)s باشد، برای مثال %(offset)s، %(valid_value1)s، %(valid_value2)s و "
+"به همین ترتیب."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:473
 #, python-format
@@ -3812,7 +4385,11 @@ msgid_plural ""
 "Ensure this value has at least %(limit_value)d characters (it has "
 "%(show_value)d)."
 msgstr[0] ""
+"اطمینان حاصل کنید که این مقدار حداقل %(limit_value)d نویسه داشته باشد "
+"(اکنون %(show_value)d نویسه دارد)."
 msgstr[1] ""
+"اطمینان حاصل کنید که این مقدار حداقل %(limit_value)d نویسه داشته باشد "
+"(اکنون %(show_value)d نویسه دارد)."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:491
 #, python-format
@@ -3823,27 +4400,31 @@ msgid_plural ""
 "Ensure this value has at most %(limit_value)d characters (it has "
 "%(show_value)d)."
 msgstr[0] ""
+"اطمینان حاصل کنید که این مقدار حداکثر %(limit_value)d نویسه داشته باشد "
+"(اکنون %(show_value)d نویسه دارد)."
 msgstr[1] ""
+"اطمینان حاصل کنید که این مقدار حداکثر %(limit_value)d نویسه داشته باشد "
+"(اکنون %(show_value)d نویسه دارد)."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:514
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:364
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:403
 msgid "Enter a number."
-msgstr "شاره وارد کنید"
+msgstr "یک عدد وارد کنید."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:516
 #, python-format
 msgid "Ensure that there are no more than %(max)s digit in total."
 msgid_plural "Ensure that there are no more than %(max)s digits in total."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "اطمینان حاصل کنید که مجموعاً بیش از %(max)s رقم وجود نداشته باشد."
+msgstr[1] "اطمینان حاصل کنید که مجموعاً بیش از %(max)s رقم وجود نداشته باشد."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:521
 #, python-format
 msgid "Ensure that there are no more than %(max)s decimal place."
 msgid_plural "Ensure that there are no more than %(max)s decimal places."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "اطمینان حاصل کنید که بیش از %(max)s رقم اعشار وجود نداشته باشد."
+msgstr[1] "اطمینان حاصل کنید که بیش از %(max)s رقم اعشار وجود نداشته باشد."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:526
 #, python-format
@@ -3852,14 +4433,18 @@ msgid ""
 msgid_plural ""
 "Ensure that there are no more than %(max)s digits before the decimal point."
 msgstr[0] ""
+"اطمینان حاصل کنید که بیش از %(max)s رقم پیش از ممیز اعشار وجود نداشته باشد."
 msgstr[1] ""
+"اطمینان حاصل کنید که بیش از %(max)s رقم پیش از ممیز اعشار وجود نداشته باشد."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:597
 #, python-format
 msgid ""
 "File extension “%(extension)s” is not allowed. Allowed extensions are: "
 "%(allowed_extensions)s."
-msgstr "پسوند فایل «%(extension)s» مجاز نیست. پسوندهای مجاز عبارت‌اند از: %(allowed_extensions)s."
+msgstr ""
+"پسوند فایل «%(extension)s» مجاز نیست. پسوندهای مجاز عبارت‌اند از: "
+"%(allowed_extensions)s."
 
 #: venv/lib/python3.12/site-packages/django/core/validators.py:659
 msgid "Null characters are not allowed."
@@ -3904,7 +4489,8 @@ msgstr "%(model_name)s با این %(field_label)s از قبل وجود دارد
 #, python-format
 msgid ""
 "%(field_label)s must be unique for %(date_field_label)s %(lookup_type)s."
-msgstr "%(field_label)s باید برای %(date_field_label)s %(lookup_type)s یکتا باشد."
+msgstr ""
+"%(field_label)s باید برای %(date_field_label)s %(lookup_type)s یکتا باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:180
 #, python-format
@@ -3943,7 +4529,8 @@ msgstr "اعداد صحیح جدا شده با ویرگول"
 msgid ""
 "“%(value)s” value has an invalid date format. It must be in YYYY-MM-DD "
 "format."
-msgstr "مقدار «%(value)s» قالب تاریخ نامعتبری دارد. باید به‌صورت YYYY-MM-DD باشد."
+msgstr ""
+"مقدار «%(value)s» قالب تاریخ نامعتبری دارد. باید به‌صورت YYYY-MM-DD باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1430
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1565
@@ -3962,14 +4549,18 @@ msgstr "تاریخ (بدون زمان)"
 msgid ""
 "“%(value)s” value has an invalid format. It must be in YYYY-MM-DD HH:MM[:ss[."
 "uuuuuu]][TZ] format."
-msgstr "مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت YYYY-MM-DD HH:MM[:ss[.uuuuuu]][TZ] باشد."
+msgstr ""
+"مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت YYYY-MM-DD HH:MM[:ss[."
+"uuuuuu]][TZ] باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1569
 #, python-format
 msgid ""
 "“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
 "[TZ]) but it is an invalid date/time."
-msgstr "مقدار «%(value)s» قالب صحیح (YYYY-MM-DD HH:MM[:ss[.uuuuuu]][TZ]) دارد اما تاریخ/زمان نامعتبری است."
+msgstr ""
+"مقدار «%(value)s» قالب صحیح (YYYY-MM-DD HH:MM[:ss[.uuuuuu]][TZ]) دارد اما "
+"تاریخ/زمان نامعتبری است."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1574
 msgid "Date (with time)"
@@ -3989,19 +4580,21 @@ msgstr "عدد اعشاری"
 msgid ""
 "“%(value)s” value has an invalid format. It must be in [DD] [[HH:]MM:]ss[."
 "uuuuuu] format."
-msgstr "مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت [DD] [[HH:]MM:]ss[.uuuuuu] باشد."
+msgstr ""
+"مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت [DD] [[HH:]MM:]ss[.uuuuuu] "
+"باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1868
 msgid "Duration"
-msgstr "عملیات"
+msgstr "بازه زمانی"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1920
 msgid "Email address"
-msgstr "آدرس"
+msgstr "آدرس ایمیل"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1945
 msgid "File path"
-msgstr "فایل"
+msgstr "مسیر فایل"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2023
 #, python-format
@@ -4031,11 +4624,11 @@ msgstr "عدد صحیح کوچک"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2188
 msgid "IPv4 address"
-msgstr "آدرس"
+msgstr "آدرس IPv4"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2219
 msgid "IP address"
-msgstr "آدرس"
+msgstr "آدرس IP"
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2310
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2311
@@ -4073,14 +4666,16 @@ msgstr "متن"
 msgid ""
 "“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
 "format."
-msgstr "مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت HH:MM[:ss[.uuuuuu]] باشد."
+msgstr ""
+"مقدار «%(value)s» قالب نامعتبری دارد. باید به‌صورت HH:MM[:ss[.uuuuuu]] باشد."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2530
 #, python-format
 msgid ""
 "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
 "invalid time."
-msgstr "مقدار «%(value)s» قالب صحیح (HH:MM[:ss[.uuuuuu]]) دارد اما زمان نامعتبری است."
+msgstr ""
+"مقدار «%(value)s» قالب صحیح (HH:MM[:ss[.uuuuuu]]) دارد اما زمان نامعتبری است."
 
 #: venv/lib/python3.12/site-packages/django/db/models/fields/__init__.py:2534
 msgid "Time"
@@ -4194,7 +4789,11 @@ msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
 msgid_plural ""
 "Ensure this filename has at most %(max)d characters (it has %(length)d)."
 msgstr[0] ""
+"اطمینان حاصل کنید که نام این فایل حداکثر %(max)d نویسه داشته باشد (اکنون "
+"%(length)d نویسه دارد)."
 msgstr[1] ""
+"اطمینان حاصل کنید که نام این فایل حداکثر %(max)d نویسه داشته باشد (اکنون "
+"%(length)d نویسه دارد)."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:647
 msgid "Please either submit a file or check the clear checkbox, not both."
@@ -4204,7 +4803,9 @@ msgstr "لطفاً یا یک فایل ارسال کنید یا گزینه پاک
 msgid ""
 "Upload a valid image. The file you uploaded was either not an image or a "
 "corrupted image."
-msgstr "یک تصویر معتبر بارگذاری کنید. فایلی که بارگذاری کردید یا تصویر نبود یا تصویر خراب بود."
+msgstr ""
+"یک تصویر معتبر بارگذاری کنید. فایلی که بارگذاری کردید یا تصویر نبود یا تصویر "
+"خراب بود."
 
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:862
 #: venv/lib/python3.12/site-packages/django/forms/fields.py:949
@@ -4234,7 +4835,7 @@ msgstr "یک JSON معتبر وارد کنید."
 #. Translators: This is the default suffix added to form field labels
 #: venv/lib/python3.12/site-packages/django/forms/forms.py:97
 msgid ":"
-msgstr "؛"
+msgstr ":"
 
 #: venv/lib/python3.12/site-packages/django/forms/forms.py:239
 #, python-format
@@ -4246,21 +4847,23 @@ msgstr "(فیلد پنهان %(name)s) %(error)s"
 msgid ""
 "ManagementForm data is missing or has been tampered with. Missing fields: "
 "%(field_names)s. You may need to file a bug report if the issue persists."
-msgstr "داده ManagementForm گم شده یا دستکاری شده است. فیلدهای مفقود: %(field_names)s. در صورت تکرار مشکل، ممکن است لازم باشد گزارش خطا ثبت کنید."
+msgstr ""
+"داده ManagementForm گم شده یا دستکاری شده است. فیلدهای مفقود: "
+"%(field_names)s. در صورت تکرار مشکل، ممکن است لازم باشد گزارش خطا ثبت کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:65
 #, python-format
 msgid "Please submit at most %(num)d form."
 msgid_plural "Please submit at most %(num)d forms."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "لطفاً حداکثر %(num)d فرم ارسال کنید."
+msgstr[1] "لطفاً حداکثر %(num)d فرم ارسال کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:70
 #, python-format
 msgid "Please submit at least %(num)d form."
 msgid_plural "Please submit at least %(num)d forms."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "لطفاً حداقل %(num)d فرم ارسال کنید."
+msgstr[1] "لطفاً حداقل %(num)d فرم ارسال کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:484
 #: venv/lib/python3.12/site-packages/django/forms/formsets.py:491
@@ -4282,7 +4885,9 @@ msgstr "لطفاً داده تکراری مربوط به %(field)s را که ب�
 msgid ""
 "Please correct the duplicate data for %(field_name)s which must be unique "
 "for the %(lookup)s in %(date_field)s."
-msgstr "لطفاً داده تکراری مربوط به %(field_name)s را که باید برای %(lookup)s در %(date_field)s یکتا باشد اصلاح کنید."
+msgstr ""
+"لطفاً داده تکراری مربوط به %(field_name)s را که باید برای %(lookup)s در "
+"%(date_field)s یکتا باشد اصلاح کنید."
 
 #: venv/lib/python3.12/site-packages/django/forms/models.py:946
 msgid "Please correct the duplicate values below."
@@ -4306,7 +4911,9 @@ msgstr "«%(pk)s» مقدار معتبری نیست."
 msgid ""
 "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it "
 "may be ambiguous or it may not exist."
-msgstr "%(datetime)s را نمی‌توان در منطقه زمانی %(current_timezone)s تفسیر کرد؛ ممکن است مبهم باشد یا وجود نداشته باشد."
+msgstr ""
+"%(datetime)s را نمی‌توان در منطقه زمانی %(current_timezone)s تفسیر کرد؛ ممکن "
+"است مبهم باشد یا وجود نداشته باشد."
 
 #: venv/lib/python3.12/site-packages/django/forms/widgets.py:528
 msgid "Clear"
@@ -4354,8 +4961,8 @@ msgstr "بله,خیر,شاید"
 #, python-format
 msgid "%(size)d byte"
 msgid_plural "%(size)d bytes"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(size)d بایت"
+msgstr[1] "%(size)d بایت"
 
 #: venv/lib/python3.12/site-packages/django/template/defaultfilters.py:927
 #, python-format
@@ -4456,7 +5063,7 @@ msgstr "جمعه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:21
 msgid "Sat"
-msgstr "وضعیت"
+msgstr "شنبه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:22
 msgid "Sun"
@@ -4472,7 +5079,7 @@ msgstr "فوریه"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:27
 msgid "March"
-msgstr "جستجو..."
+msgstr "مارس"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:28
 msgid "April"
@@ -4571,7 +5178,7 @@ msgstr "فوریه"
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:55
 msgctxt "abbrev. month"
 msgid "March"
-msgstr "جستجو..."
+msgstr "مارس"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:56
 msgctxt "abbrev. month"
@@ -4631,7 +5238,7 @@ msgstr "فوریه"
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:69
 msgctxt "alt. month"
 msgid "March"
-msgstr "جستجو..."
+msgstr "مارس"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:70
 msgctxt "alt. month"
@@ -4661,7 +5268,7 @@ msgstr "اوت"
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:75
 msgctxt "alt. month"
 msgid "September"
-msgstr " شماره نامه"
+msgstr "سپتامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:76
 msgctxt "alt. month"
@@ -4702,43 +5309,43 @@ msgstr "، "
 #, python-format
 msgid "%(num)d year"
 msgid_plural "%(num)d years"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d سال"
+msgstr[1] "%(num)d سال"
 
 #: venv/lib/python3.12/site-packages/django/utils/timesince.py:9
 #, python-format
 msgid "%(num)d month"
 msgid_plural "%(num)d months"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d ماه"
+msgstr[1] "%(num)d ماه"
 
 #: venv/lib/python3.12/site-packages/django/utils/timesince.py:10
 #, python-format
 msgid "%(num)d week"
 msgid_plural "%(num)d weeks"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d هفته"
+msgstr[1] "%(num)d هفته"
 
 #: venv/lib/python3.12/site-packages/django/utils/timesince.py:11
 #, python-format
 msgid "%(num)d day"
 msgid_plural "%(num)d days"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d روز"
+msgstr[1] "%(num)d روز"
 
 #: venv/lib/python3.12/site-packages/django/utils/timesince.py:12
 #, python-format
 msgid "%(num)d hour"
 msgid_plural "%(num)d hours"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d ساعت"
+msgstr[1] "%(num)d ساعت"
 
 #: venv/lib/python3.12/site-packages/django/utils/timesince.py:13
 #, python-format
 msgid "%(num)d minute"
 msgid_plural "%(num)d minutes"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(num)d دقیقه"
+msgstr[1] "%(num)d دقیقه"
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:29
 msgid "Forbidden"
@@ -4754,14 +5361,20 @@ msgid ""
 "header” to be sent by your web browser, but none was sent. This header is "
 "required for security reasons, to ensure that your browser is not being "
 "hijacked by third parties."
-msgstr "شما این پیام را می‌بینید زیرا این سایت HTTPS نیاز دارد که مرورگر شما یک «هدر Referer» ارسال کند، اما هیچ هدری ارسال نشد. این هدر به دلایل امنیتی لازم است تا اطمینان حاصل شود مرورگر شما توسط اشخاص ثالث ربوده نشده است."
+msgstr ""
+"شما این پیام را می‌بینید زیرا این سایت HTTPS نیاز دارد که مرورگر شما یک «هدر "
+"Referer» ارسال کند، اما هیچ هدری ارسال نشد. این هدر به دلایل امنیتی لازم است "
+"تا اطمینان حاصل شود مرورگر شما توسط اشخاص ثالث ربوده نشده است."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:40
 msgid ""
 "If you have configured your browser to disable “Referer” headers, please re-"
 "enable them, at least for this site, or for HTTPS connections, or for “same-"
 "origin” requests."
-msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که هدرهای «Referer» را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت، یا اتصالات HTTPS، یا درخواست‌ «هم‌مبدأ» دوباره فعال کنید."
+msgstr ""
+"اگر مرورگر خود را طوری تنظیم کرده‌اید که هدرهای «Referer» را غیرفعال کند، "
+"لطفاً آن‌ها را حداقل برای این سایت، یا اتصالات HTTPS، یا درخواست‌ «هم‌مبدأ» "
+"دوباره فعال کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:45
 msgid ""
@@ -4770,20 +5383,30 @@ msgid ""
 "CSRF protection requires the “Referer” header to do strict referer checking. "
 "If you’re concerned about privacy, use alternatives like <a "
 "rel=\"noreferrer\" …> for links to third-party sites."
-msgstr "اگر از تگ <meta name=\"referrer\" content=\"no-referrer\"> استفاده می‌کنید یا هدر «Referrer-Policy: no-referrer» را ارسال می‌کنید، لطفاً آن‌ها را حذف کنید. محافظت CSRF برای بررسی دقیق referer به هدر «Referer» نیاز دارد. اگر نگران حریم خصوصی هستید، از جایگزین‌هایی مانند <a rel=\"noreferrer\" …> برای پیوند به سایت‌های شخص ثالث استفاده کنید."
+msgstr ""
+"اگر از تگ <meta name=\"referrer\" content=\"no-referrer\"> استفاده می‌کنید یا "
+"هدر «Referrer-Policy: no-referrer» را ارسال می‌کنید، لطفاً آن‌ها را حذف کنید. "
+"محافظت CSRF برای بررسی دقیق referer به هدر «Referer» نیاز دارد. اگر نگران "
+"حریم خصوصی هستید، از جایگزین‌هایی مانند <a rel=\"noreferrer\" …> برای پیوند "
+"به سایت‌های شخص ثالث استفاده کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:54
 msgid ""
 "You are seeing this message because this site requires a CSRF cookie when "
 "submitting forms. This cookie is required for security reasons, to ensure "
 "that your browser is not being hijacked by third parties."
-msgstr "شما این پیام را می‌بینید زیرا این سایت هنگام ارسال فرم‌ها به کوکی CSRF نیاز دارد. این کوکی به دلایل امنیتی لازم است تا اطمینان حاصل شود مرورگر شما توسط اشخاص ثالث ربوده نشده است."
+msgstr ""
+"شما این پیام را می‌بینید زیرا این سایت هنگام ارسال فرم‌ها به کوکی CSRF نیاز "
+"دارد. این کوکی به دلایل امنیتی لازم است تا اطمینان حاصل شود مرورگر شما توسط "
+"اشخاص ثالث ربوده نشده است."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:60
 msgid ""
 "If you have configured your browser to disable cookies, please re-enable "
 "them, at least for this site, or for “same-origin” requests."
-msgstr "اگر مرورگر خود را طوری تنظیم کرده‌اید که کوکی‌ها را غیرفعال کند، لطفاً آن‌ها را حداقل برای این سایت یا درخواست‌ «هم‌مبدأ» دوباره فعال کنید."
+msgstr ""
+"اگر مرورگر خود را طوری تنظیم کرده‌اید که کوکی‌ها را غیرفعال کند، لطفاً آن‌ها را "
+"حداقل برای این سایت یا درخواست‌ «هم‌مبدأ» دوباره فعال کنید."
 
 #: venv/lib/python3.12/site-packages/django/views/csrf.py:66
 msgid "More information is available with DEBUG=True."
@@ -4822,7 +5445,9 @@ msgstr "هیچ %(verbose_name_plural)s در دسترس نیست"
 msgid ""
 "Future %(verbose_name_plural)s not available because %(class_name)s."
 "allow_future is False."
-msgstr "%(verbose_name_plural)s آینده در دسترس نیست زیرا %(class_name)s.allow_future برابر با False است."
+msgstr ""
+"%(verbose_name_plural)s آینده در دسترس نیست زیرا %(class_name)s.allow_future "
+"برابر با False است."
 
 #: venv/lib/python3.12/site-packages/django/views/generic/dates.py:720
 #, python-format
@@ -4874,7 +5499,10 @@ msgstr "نصب با موفقیت انجام شد! تبریک می‌گوییم!"
 msgid ""
 "View <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
 "target=\"_blank\" rel=\"noopener\">release notes</a> for Django %(version)s"
-msgstr "مشاهده <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" target=\"_blank\" rel=\"noopener\">یادداشت‌های انتشار</a> برای جنگو %(version)s"
+msgstr ""
+"مشاهده <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
+"target=\"_blank\" rel=\"noopener\">یادداشت‌های انتشار</a> برای جنگو "
+"%(version)s"
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:208
 #, python-format
@@ -4883,7 +5511,11 @@ msgid ""
 "%(version)s/ref/settings/#debug\" target=\"_blank\" "
 "rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
 "configured any URLs."
-msgstr "شما این صفحه را می‌بینید زیرا <a href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" target=\"_blank\" rel=\"noopener\">DEBUG=True</a> در فایل تنظیمات شما فعال است و هیچ URL‌ای پیکربندی نکرده‌اید."
+msgstr ""
+"شما این صفحه را می‌بینید زیرا <a href=\"https://docs.djangoproject.com/en/"
+"%(version)s/ref/settings/#debug\" target=\"_blank\" "
+"rel=\"noopener\">DEBUG=True</a> در فایل تنظیمات شما فعال است و هیچ URL‌ای "
+"پیکربندی نکرده‌اید."
 
 #: venv/lib/python3.12/site-packages/django/views/templates/default_urlconf.html:217
 msgid "Django Documentation"
@@ -4909,8 +5541,11 @@ msgstr "انجمن جنگو"
 msgid "Connect, get help, or contribute"
 msgstr "ارتباط برقرار کنید، کمک بگیرید یا مشارکت کنید"
 
+#~ msgid "Specification"
+#~ msgstr "مشخصات  "
+
 #~ msgid "Create Contracts"
-#~ msgstr "ایجاد قراردادها"
+#~ msgstr "ایجاد قرارداد"
 
 #~ msgid "Take Photo"
 #~ msgstr "گرفتن عکس"
@@ -4934,7 +5569,7 @@ msgstr "ارتباط برقرار کنید، کمک بگیرید یا مشارک
 #~ msgstr "+ دریافت چشمه"
 
 #~ msgid "Last Movement"
-#~ msgstr "آخرین جابه‌جایی"
+#~ msgstr "آخرین انتقال"
 
 #~ msgid "No received sources found."
 #~ msgstr "هیچ چشمه دریافت‌شده‌ای یافت نشد."

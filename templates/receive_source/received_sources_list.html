@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% include "receive_source/_attachments_list.html" %}
 
 {% block title %}{% trans "Received Sources" %}{% endblock %}
 
@@ -56,9 +57,10 @@
     <th>{% trans "Contract Cost" %}</th>
     <th>{% trans "Invoice" %}</th>
     <th>{% trans "Payment" %}</th>
-    <th>{% trans "Specification" %}</th>
-    <th>{% trans "صورتجلسه" %}</th>
+    
+    
     <th>{% trans "Sources" %}</th>
+    <th>{% trans "Attachments" %}</th>
 </tr>
 </thead>
 <tbody>
@@ -89,26 +91,20 @@
             <span class="text-muted">{% trans "Pending" %}</span>
         {% endif %}
     </td>
-    <td>
-        {% if req.specification_attachment %}
-            <a href="{{ req.specification_attachment.file.url }}" target="_blank">📄 {% trans "View" %}</a>
-        {% else %}
-            <span class="text-muted">-</span>
-        {% endif %}
-    </td>
-    <td>
-        {% for att in req.minutes_attachments %}
-            <a href="{{ att.file.url }}" target="_blank">📎 {% trans "View" %}</a><br>
-        {% empty %}
-            <span class="text-muted">-</span>
-        {% endfor %}
-    </td>
+   
+   
     <td>
         <button type="button" class="summary-badge sources" data-bs-toggle="modal" data-bs-target="#sourcesModal{{ req.pk }}">
             📦 {{ req.sources.count }}
             {% if req.sources.count == 1 %}{% trans "Source" %}{% else %}{% trans "Sources" %}{% endif %}
         </button>
     </td>
+    <td>
+    <button type="button" class="summary-badge sources" data-bs-toggle="modal" data-bs-target="#attachModal{{ req.pk }}">
+        📎 {{ req.attachments.count }}
+    </button>
+</td>
+    
 </tr>
 {% empty %}
 <tr><td colspan="8" class="text-center">{% trans "No receive requests found." %}</td></tr>
@@ -116,6 +112,30 @@
 
 </tbody>
 </table>
+{% for req in page_obj %}
+<div class="modal fade" id="attachModal{{ req.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📎 {% trans "Attachments" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-group">
+                {% for att in req.attachments.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ att.get_attachment_type_display }}
+                        <a href="{{ att.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">{% trans "View" %}</a>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-center text-muted">{% trans "No attachments." %}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 </div>
 
 {% for req in page_obj %}

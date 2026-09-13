@@ -139,7 +139,9 @@ MAX_TABLE_ROWS = len(ROWS)
 
 # CEO stamp/signature box and its adjacent "تاریخ:" fill-in spot.
 SIGNATURE_BOX = (0.0537, 0.5975, 0.2600, 0.6620)
-SIGNATURE_DATE_BOX = (0.3200, 0.6650, 0.4500, 0.6900)
+SIGNATURE_DATE_BOX = (0.0920, 0.6650, 0.2220, 0.6900)
+# SIGNATURE_DATE_BOX = (0.1200, 0.6650, 0.2500, 0.6900)
+# SIGNATURE_DATE_BOX = (0.3200, 0.6650, 0.4500, 0.6900)
 
 TEXT_COLOR = (20, 20, 130)
 DEFAULT_FONT_SIZE =12
@@ -234,7 +236,7 @@ def regenerate_filled_form(sell_request):
         _draw_in_box(
             draw, size, SIGNATURE_DATE_BOX,
             _format_jalali_date(sell_request.ceo_approved_at),
-            font_size=20,
+            font_size=14,
             shape=False,  # digits only (Persian-digit string), no RTL reshaping needed
         )
 

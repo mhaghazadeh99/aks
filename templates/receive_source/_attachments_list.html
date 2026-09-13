@@ -1,0 +1,16 @@
+{% load i18n %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header"><h5 class="mb-0">{% trans "Attachments So Far" %}</h5></div>
+    <div class="card-body">
+        <ul class="list-group">
+        {% for att in receive_request.attachments.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ att.get_attachment_type_display }}
+                <a href="{{ att.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">{% trans "View" %}</a>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-center text-muted">{% trans "No attachments yet." %}</li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>

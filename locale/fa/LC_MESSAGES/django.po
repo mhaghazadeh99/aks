@@ -4496,7 +4496,7 @@ msgstr "اوت"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:33
 msgid "September"
-msgstr " شماره نامه"
+msgstr "سپتامبر"
 
 #: venv/lib/python3.12/site-packages/django/utils/dates.py:34
 msgid "October"

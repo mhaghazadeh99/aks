@@ -28,6 +28,18 @@ class SellRequest(models.Model):
         help_text=_("Scanned copy of the signed paper request, JPEG."),
     )
 
+    # The pristine upload above is never modified — this is a fresh
+    # render of it (from services/form_filler.py) with the middle
+    # table's rows and, once approved, the CEO's signature/date drawn
+    # on. Regenerated from scratch every time sources change or the
+    # CEO signs, rather than drawn on top of a previous version.
+    filled_form = models.ImageField(
+        _("Filled Form"),
+        upload_to="sell_source/filled_forms/",
+        blank=True,
+        null=True,
+    )
+
     status = models.CharField(
         _("Status"),
         max_length=20,

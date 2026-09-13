@@ -42,7 +42,12 @@
             <p>{% trans "Upload a scanned DSRS sale request form" %}</p>
         </a>
 
-        
+        <a href="{% url 'sell_ceo_queue' %}" class="home-card">
+            <div class="home-icon">🏛</div>
+            <h3>{% trans "CEO" %}</h3>
+            <p>{% trans "Requests waiting for CEO signature" %}</p>
+            <p class="home-count"># {{ ceo_count }} {% trans "Requests" %}</p>
+        </a>
 
     </div>
 

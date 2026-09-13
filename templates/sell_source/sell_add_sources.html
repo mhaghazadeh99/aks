@@ -14,6 +14,11 @@
                     <h3>{% trans "Add Sources From Inventory" %}</h3>
                 </div>
                 <div class="card-body">
+
+                    <p><strong>{% trans "Live Preview" %}:</strong></p>
+                    <img src="{% if sell_request.filled_form %}{{ sell_request.filled_form.url }}{% else %}{{ sell_request.request_form.url }}{% endif %}"
+                         alt="request form preview" class="img-fluid border mb-3" style="max-height:500px;">
+
                     <form method="post">
                         {% csrf_token %}
                         {% crispy source_form %}

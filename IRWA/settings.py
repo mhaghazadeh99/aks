@@ -216,3 +216,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 #     'dsrs'  : "dashboard.models.DSRS",
 #     'contract':"contract.models.Contract",
 # }
+
+
+SELL_SOURCE_PERSIAN_FONT_PATH = os.path.join(
+    BASE_DIR,
+    "sell_source",
+    "fonts",
+    "vazirmatn",
+    "Vazirmatn-Regular.ttf"
+)

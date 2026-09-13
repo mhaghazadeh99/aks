@@ -1,5 +1,3 @@
-
-# Create your views here.
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,6 +8,7 @@ from dashboard.models import DSRS
 
 from .forms import SellRequestForm, SellSourceForm
 from .models import SellRequest, SellRequestSource, SellRequestStatus
+from .services.form_filler import regenerate_filled_form
 
 
 # =====================================================================
@@ -122,6 +121,8 @@ def sell_add_sources(request, pk):
                 remarks=source_form.cleaned_data.get("remarks", ""),
             )
 
+            regenerate_filled_form(sell_request)
+
             messages.success(request, _("Source added."))
             return redirect("sell_add_sources", pk=pk)
 
@@ -141,6 +142,7 @@ def sell_remove_source(request, pk, source_pk):
 
     if request.method == "POST":
         get_object_or_404(SellRequestSource, pk=source_pk, sell_request=sell_request).delete()
+        regenerate_filled_form(sell_request)
         messages.success(request, _("Source removed."))
 
     return redirect("sell_add_sources", pk=pk)
@@ -179,6 +181,8 @@ def sell_sign(request, pk):
         sell_request.status = SellRequestStatus.APPROVED
         sell_request.status_date = timezone.now()
         sell_request.save(update_fields=["ceo_approved_by", "ceo_approved_at", "status", "status_date"])
+
+        regenerate_filled_form(sell_request)
 
         messages.success(request, _("Approved and signed."))
         return redirect("sell_detail", pk=pk)

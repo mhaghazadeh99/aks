@@ -15,7 +15,8 @@
                 <div class="card-body">
 
                     <p><strong>{% trans "Scanned Request Form" %}:</strong></p>
-                    <img src="{{ sell_request.request_form.url }}" alt="request form" class="img-fluid border mb-3" style="max-height:500px;">
+                    <img src="{% if sell_request.filled_form %}{{ sell_request.filled_form.url }}{% else %}{{ sell_request.request_form.url }}{% endif %}"
+                         alt="request form" class="img-fluid border mb-3" style="max-height:500px;">
 
                     <table class="table table-bordered">
                         <thead class="table-light">

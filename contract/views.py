@@ -511,11 +511,10 @@ def create_contract_bulk(request):
 
 def contract_edit(request, pk):
 
-    if not request.user.groups.filter(name="Contracts Users").exists():
-        return HttpResponseForbidden(_("You dont have access to this page."))
+    
 
     contract = get_object_or_404(Contract, pk=pk)
-
+    
     if request.method == "POST":
 
         form = ContractForm(request.POST, instance=contract)
@@ -526,14 +525,15 @@ def contract_edit(request, pk):
 
     else:
         form = ContractForm(instance=contract)
-
+    sources = contract.dsrs.all()
     return render(
         request,
         "contract/contract_edit.html",
         {
             "form": form,
             "contract": contract,
-            "source": contract.dsrs.all(),   # singular now, not a queryset
+            "sources": sources,
+            "main_source": sources.first(),  
         }
     )
     

@@ -56,9 +56,9 @@
 <tr>
     <th>{% trans "Source Type" %}</th>
     <td data-col="source_type">
-    {% with s=c.dsrs.first %}
-        {{ s.get_Source_Type_display }}
-    {% endwith %}
+    
+        {{ main_source.get_Source_Type_display }}
+    
 </td>
 </tr>
 
@@ -66,9 +66,9 @@
 <tr>
     <th>{% trans "Status" %}</th>
     <td data-col="status">
-    {% with s=c.dsrs.first %}
-        {{ s.get_Status_display }}
-    {% endwith %}
+    
+        {{ main_source.get_Status_display }}
+   
 </td>
 </tr>
 
@@ -76,9 +76,9 @@
 <tr>
     <th>{% trans "Facility" %}</th>
     <td data-col="facility">
-    {% with s=c.dsrs.first %}
-        {{ s.Facility }}
-    {% endwith %}
+    
+        {{ main_source.Facility }}
+  
 </td>
 </tr>
 

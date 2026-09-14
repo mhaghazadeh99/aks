@@ -33,9 +33,13 @@ than crashing, but it will NOT look right until those are installed.
 import os
 from io import BytesIO
 
+import cv2
+import numpy as np
 from django.conf import settings
 from django.core.files.base import ContentFile
 from PIL import Image, ImageDraw, ImageFont
+
+from .table_locator import locate_table
 
 try:
     import arabic_reshaper
@@ -115,36 +119,26 @@ def _shape(text):
 
 
 # =====================================================================
-# CALIBRATION — fractions of (width, height), measured against the
-# reference scan. See module docstring.
+# The middle table's rows/columns are now located DYNAMICALLY per
+# upload (see table_locator.py) instead of fixed fractions — this is
+# what actually solves the "coordinates drift" problem. The CEO stamp
+# box is not a ruled table cell, so it's not amenable to the same line-
+# detection approach; it stays fraction-based below.
 # =====================================================================
 
-COLUMNS = {
-    "remarks": (0.0542, 0.2887),    # ملاحظات
-    "serial": (0.2892, 0.3411),     # شماره سریال چشمه
-    "activity": (0.3416, 0.5160),   # پرتوزایی ثبت شده (mCi)
-    "mfg_date": (0.5164, 0.5993),   # تاریخ ساخت
-    "physical": (0.5998, 0.7373),   # مشخصات فیزیکی
-    "nuclide": (0.7373, 0.8452),    # نام ماده پرتوزا
-}
+MAX_TABLE_ROWS = 5
 
-ROWS = [
-    (0.4871, 0.5080),
-    (0.5080, 0.5250),
-    (0.5250, 0.5420),
-    (0.5420, 0.5590),
-    (0.5590, 0.5760),
-]
-MAX_TABLE_ROWS = len(ROWS)
-
-# CEO stamp/signature box and its adjacent "تاریخ:" fill-in spot.
+# CEO stamp/signature box and its adjacent "تاریخ:" fill-in spot —
+# fraction-based, calibrated from the reference scan. If this drifts on
+# real submissions, it'll need re-measuring the same way the table
+# calibration originally was (this one genuinely can't be auto-detected
+# the way ruled table lines can, since it's just blank paper).
 SIGNATURE_BOX = (0.0537, 0.5975, 0.2600, 0.6620)
-SIGNATURE_DATE_BOX = (0.0920, 0.6650, 0.2220, 0.6900)
-# SIGNATURE_DATE_BOX = (0.1200, 0.6650, 0.2500, 0.6900)
-# SIGNATURE_DATE_BOX = (0.3200, 0.6650, 0.4500, 0.6900)
+SIGNATURE_DATE_BOX = (0.3200, 0.6650, 0.4500, 0.6900)
 
 TEXT_COLOR = (20, 20, 130)
-DEFAULT_FONT_SIZE =12
+DEFAULT_FONT_SIZE = 26
+
 
 def _font(size):
     font_path = getattr(settings, "SELL_SOURCE_PERSIAN_FONT_PATH", None)
@@ -156,16 +150,12 @@ def _font(size):
     return ImageFont.load_default()
 
 
-def _draw_in_box(draw, image_size, box_fractions, text, font_size=DEFAULT_FONT_SIZE, shape=True):
-    """box_fractions = (x0, y0, x1, y1) as fractions of image size.
-    Centers `text` within that box."""
+def _draw_in_box_px(draw, box_px, text, font_size=DEFAULT_FONT_SIZE, shape=True):
+    """box_px = (x0, y0, x1, y1) in absolute pixels. Centers `text` within it."""
     if not text:
         return
 
-    W, H = image_size
-    x0f, y0f, x1f, y1f = box_fractions
-    x0, y0, x1, y1 = x0f * W, y0f * H, x1f * W, y1f * H
-
+    x0, y0, x1, y1 = box_px
     rendered = _shape(text) if shape else str(text)
     font = _font(font_size)
 
@@ -178,10 +168,12 @@ def _draw_in_box(draw, image_size, box_fractions, text, font_size=DEFAULT_FONT_S
     draw.text((cx, cy), rendered, font=font, fill=TEXT_COLOR)
 
 
-def _draw_cell(draw, image_size, col_key, row_bounds, text, font_size=DEFAULT_FONT_SIZE):
-    x0f, x1f = COLUMNS[col_key]
-    y0f, y1f = row_bounds
-    _draw_in_box(draw, image_size, (x0f, y0f, x1f, y1f), text, font_size=font_size)
+def _draw_in_box_frac(draw, image_size, box_fractions, text, font_size=DEFAULT_FONT_SIZE, shape=True):
+    """box_fractions = (x0, y0, x1, y1) as fractions of image size — used
+    only for the CEO stamp box, which isn't dynamically located."""
+    W, H = image_size
+    x0f, y0f, x1f, y1f = box_fractions
+    _draw_in_box_px(draw, (x0f * W, y0f * H, x1f * W, y1f * H), text, font_size=font_size, shape=shape)
 
 
 def regenerate_filled_form(sell_request):
@@ -196,7 +188,14 @@ def regenerate_filled_form(sell_request):
     if not sell_request.request_form:
         return None
 
-    image = Image.open(sell_request.request_form.path).convert("RGB")
+    image_path = sell_request.request_form.path
+
+    # Dynamic grid detection needs OpenCV's BGR array; PIL handles the
+    # actual drawing since it already has our font/RTL-shaping pipeline.
+    cv_image = cv2.imread(image_path)
+    table = locate_table(cv_image) if cv_image is not None else None
+
+    image = Image.open(image_path).convert("RGB")
     draw = ImageDraw.Draw(image)
     size = image.size
 
@@ -204,17 +203,35 @@ def regenerate_filled_form(sell_request):
         sell_request.sources.select_related("nuclide").order_by("id")[:MAX_TABLE_ROWS]
     )
 
-    for i, source in enumerate(sources):
-        row_bounds = ROWS[i]
-        _draw_cell(draw, size, "nuclide", row_bounds, str(source.nuclide) if source.nuclide else "")
-        _draw_cell(draw, size, "physical", row_bounds, source.physical_characteristics)
-        _draw_cell(draw, size, "mfg_date", row_bounds, _to_persian_digits(source.manufacture_date) if source.manufacture_date else "")
-        _draw_cell(
-            draw, size, "activity", row_bounds,
-            _to_persian_digits(f"{source.recorded_activity_mci:.2f}") if source.recorded_activity_mci is not None else "",
-        )
-        _draw_cell(draw, size, "serial", row_bounds, source.serial_number)
-        _draw_cell(draw, size, "remarks", row_bounds, source.remarks)
+    if table is not None:
+        if table["used_fallback"]:
+            # Detection didn't find a confident match on this particular
+            # scan — worth knowing about rather than silently mis-placing
+            # text, since the fallback fractions may not fit this image.
+            import logging
+            logging.getLogger(__name__).warning(
+                "sell_source.form_filler: dynamic table detection fell back "
+                "to fixed fractions for SellRequest #%s (request_form=%s) — "
+                "verify the result looks right.",
+                sell_request.pk, image_path,
+            )
+
+        for i, source in enumerate(sources):
+            row_px = table["rows"][i]
+
+            def cell_box(col_key):
+                x0, x1 = table["columns"][col_key]
+                return (x0, row_px[0], x1, row_px[1])
+
+            _draw_in_box_px(draw, cell_box("nuclide"), str(source.nuclide) if source.nuclide else "")
+            _draw_in_box_px(draw, cell_box("physical"), source.physical_characteristics)
+            _draw_in_box_px(draw, cell_box("mfg_date"), _to_persian_digits(source.manufacture_date) if source.manufacture_date else "")
+            _draw_in_box_px(
+                draw, cell_box("activity"),
+                _to_persian_digits(f"{source.recorded_activity_mci:.2f}") if source.recorded_activity_mci is not None else "",
+            )
+            _draw_in_box_px(draw, cell_box("serial"), source.serial_number)
+            _draw_in_box_px(draw, cell_box("remarks"), source.remarks)
 
     if sell_request.ceo_approved_by_id:
 
@@ -233,10 +250,10 @@ def regenerate_filled_form(sell_request):
             paste_y = int(y0f * H + (box_h - sig.height) / 2)
             image.paste(sig, (paste_x, paste_y), sig)
 
-        _draw_in_box(
+        _draw_in_box_frac(
             draw, size, SIGNATURE_DATE_BOX,
             _format_jalali_date(sell_request.ceo_approved_at),
-            font_size=14,
+            font_size=22,
             shape=False,  # digits only (Persian-digit string), no RTL reshaping needed
         )
 

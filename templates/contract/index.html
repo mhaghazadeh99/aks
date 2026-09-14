@@ -225,18 +225,22 @@
 </td>
 
     <td data-col="source_type">
-    {% for s in c.dsrs.all %}
-        {{ s.get_Source_Type_display }}{% if not forloop.last %}, {% endif %}
-    {% endfor %}
+    {% with s=c.dsrs.first %}
+        {{ s.get_Source_Type_display }}
+    {% endwith %}
 </td>
     
-    <td data-col="facility">{{ c.facility }}</td>
+   <td data-col="facility">
+    {% with s=c.dsrs.first %}
+        {{ s.Facility }}
+    {% endwith %}
+</td>
     
     
     <td data-col="status">
-    {% for s in c.dsrs.all %}
-        {{ s.get_Status_display }}{% if not forloop.last %}, {% endif %}
-    {% endfor %}
+    {% with s=c.dsrs.first %}
+        {{ s.get_Status_display }}
+    {% endwith %}
 </td>
     <td data-col="contract_number">{{ c.contract_number|default:"—" }}</td>
     <td data-col="contract_date">{{ c.contract_date|default:"—" }}</td>

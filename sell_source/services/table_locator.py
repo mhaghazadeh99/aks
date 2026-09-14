@@ -111,18 +111,47 @@ def _detect_vertical_lines(bw, x0, x1, y0, y1, kernel_height_frac=0.25, strength
     return [x + x0 for x in _cluster_positions(idx)]
 
 
-def _find_table_row_band(horizontal_lines, tolerance=0.35):
+def _row_darkness(bw, x0, x1, y0, y1):
+    """Mean fraction of dark pixels in a band — used to tell a
+    text-dense header row apart from a lightly-filled data row."""
+    band = bw[y0:y1, x0:x1]
+    if band.size == 0:
+        return 0.0
+    return float((band > 0).mean())
+
+
+def _shift_and_extrapolate(window):
+    """
+    Drops one extra line from the front (per observed real-world
+    behavior: the line immediately after the header still lands on
+    label text, so the true header/row1 boundary is one line further
+    than assumed) and extrapolates a 5th row at the end using the
+    average row height, so we still return 5 usable rows.
+    """
+    avg_gap = (window[6] - window[2]) / 4
+    extra = int(window[6] + avg_gap)
+    return [window[2], window[3], window[4], window[5], window[6], extra]
+
+
+def _find_table_row_band(horizontal_lines, bw=None, table_x_range=None, tolerance=0.35):
     """
     Among all detected horizontal lines, find 7 consecutive ones matching
     this table's shape: one tall gap (header) then 5 roughly-equal gaps
-    (data rows). Returns (header_bottom_and_row_boundaries) — a list of
-    6 y-values bounding the 5 data rows — or None if no match found.
+    (data rows). Returns 6 y-values bounding the 5 data rows, or None.
+
+    If `bw` (the binarized image) and `table_x_range` are given, also
+    requires the header candidate to be noticeably more text-dense than
+    the rows after it — a wrapped multi-word Persian header across 6
+    columns is far denser than a data row (which starts near-blank).
+    Without this check, a false "tall gap" elsewhere (e.g. the header
+    border missing from the detected line set, causing the window to
+    shift by one row) can get accepted, which fills data starting in the
+    label row instead of the first real row.
     """
     lines = sorted(horizontal_lines)
     n = len(lines)
 
-    best = None
-    best_score = None
+    candidates = []
 
     for start in range(n - 6):
         window = lines[start:start + 7]
@@ -133,20 +162,36 @@ def _find_table_row_band(horizontal_lines, tolerance=0.35):
 
         if avg_row <= 0:
             continue
-        # header should be noticeably taller than a data row (wrapped text)
         if header_gap < avg_row * 1.3:
             continue
-        # the 5 row gaps should be roughly equal
         deviation = max(abs(g - avg_row) / avg_row for g in row_gaps)
         if deviation > tolerance:
             continue
 
-        score = deviation  # lower is better
-        if best_score is None or score < best_score:
-            best_score = score
-            best = window[1:]  # the 6 boundaries around the 5 data rows
+        candidates.append((deviation, window))
 
-    return best
+    candidates.sort(key=lambda c: c[0])
+
+    if bw is None or table_x_range is None:
+        return _shift_and_extrapolate(candidates[0][1]) if candidates else None
+
+    x0, x1 = table_x_range
+    for deviation, window in candidates:
+        header_density = _row_darkness(bw, x0, x1, window[0], window[1])
+        row_densities = [
+            _row_darkness(bw, x0, x1, window[i], window[i + 1])
+            for i in range(1, 6)
+        ]
+        avg_row_density = np.mean(row_densities) if row_densities else 0
+        # Header (wrapped, multi-word, 6 columns of Persian text) should
+        # be substantially denser than an average data row.
+        if header_density > avg_row_density * 1.8 and header_density > 0.03:
+            return _shift_and_extrapolate(window)
+
+    # No candidate passed the density check — fall back to the
+    # best-fitting shape match rather than giving up entirely, but this
+    # case is exactly the one worth logging/flagging upstream.
+    return _shift_and_extrapolate(candidates[0][1]) if candidates else None
 
 
 def locate_table(image_bgr):
@@ -167,7 +212,10 @@ def locate_table(image_bgr):
     search_y0, search_y1 = int(0.30 * H), int(0.75 * H)
 
     h_lines = _detect_horizontal_lines(bw, search_y0, search_y1)
-    row_band = _find_table_row_band(h_lines) if len(h_lines) >= 7 else None
+    row_band = (
+        _find_table_row_band(h_lines, bw=bw, table_x_range=(0, W))
+        if len(h_lines) >= 7 else None
+    )
 
     if row_band is None:
         # Fallback to fixed fractions.

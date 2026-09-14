@@ -31,32 +31,74 @@
 
         <table class="table table-bordered mb-0">
 
-            <tr>
-                <th>{% trans "Serial Number" %}</th>
-                <td>{{ source.serial_number }}</td>
-            </tr>
+<tr>
+     <th>{% trans "Serial Number" %}</th>
+    <td>
+        {% for s in sources %}
+            {{ s.serial_number }}
+            {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </td>
+</tr>
 
-            <tr>
-                <th>{% trans "Nuclide" %}</th>
-                <td>{{ source.Nuclide }}</td>
-            </tr>
 
-            <tr>
-                <th>{% trans "Facility" %}</th>
-                <td>{{ source.Facility }}</td>
-            </tr>
+<tr>
+    <th>{% trans "Nuclide" %}</th>
+    <td>
+        {% for s in sources %}
+            {{ s.Nuclide }}
+            {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </td>
+</tr>
 
-            <tr>
-                <th>{% trans "Contract Number" %}</th>
-                <td>{{ contract.contract_number|default:"—" }}</td>
-            </tr>
 
-            <tr>
-                <th>{% trans "Contract Date" %}</th>
-                <td>{{ contract.contract_date|default:"—" }}</td>
-            </tr>
+<tr>
+    <th>{% trans "Source Type" %}</th>
+    <td data-col="source_type">
+    {% with s=c.dsrs.first %}
+        {{ s.get_Source_Type_display }}
+    {% endwith %}
+</td>
+</tr>
 
-        </table>
+
+<tr>
+    <th>{% trans "Status" %}</th>
+    <td data-col="status">
+    {% with s=c.dsrs.first %}
+        {{ s.get_Status_display }}
+    {% endwith %}
+</td>
+</tr>
+
+
+<tr>
+    <th>{% trans "Facility" %}</th>
+    <td data-col="facility">
+    {% with s=c.dsrs.first %}
+        {{ s.Facility }}
+    {% endwith %}
+</td>
+</tr>
+
+
+<tr>
+    <th>{% trans "Contract Number" %}</th>
+    <td>
+        {{ contract.contract_number|default:"—" }}
+    </td>
+</tr>
+
+
+<tr>
+    <th>{% trans "Contract Date" %}</th>
+    <td>
+        {{ contract.contract_date|default:"—" }}
+    </td>
+</tr>
+
+</table>
 
     </div>
 
@@ -108,4 +150,4 @@
 </div>
 
 {% endblock %}
-```
+

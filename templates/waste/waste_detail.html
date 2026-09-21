@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Waste Batch" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">{{ batch.waste_id }}</h3>
+                    <span class="badge bg-primary">{{ batch.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3"><strong>{% trans "Type" %}:</strong> {{ batch.get_waste_type_display }}</div>
+                        <div class="col-md-3"><strong>{% trans "Class" %}:</strong> {{ batch.get_waste_class_display|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "State" %}:</strong> {{ batch.get_waste_state_display }}</div>
+                        <div class="col-md-3"><strong>{% trans "Facility" %}:</strong> {{ batch.facility }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-3"><strong>{% trans "Mass (kg)" %}:</strong> {{ batch.mass_kg|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "Volume (m³)" %}:</strong> {{ batch.volume_m3|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "Location" %}:</strong> {{ batch.location|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "Received" %}:</strong> {{ batch.date_received|default:"-" }}</div>
+                    </div>
+
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="{% url 'waste_edit' batch.pk %}" class="btn btn-warning">{% trans "Edit" %}</a>
+                        <a href="{% url 'waste_split' batch.pk %}" class="btn btn-outline-primary">{% trans "Split" %}</a>
+                        <a href="{% url 'waste_condition' batch.pk %}" class="btn btn-outline-primary">{% trans "Condition" %}</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Radiological — from Latest Analysis" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if analysis %}
+                        <p class="text-muted small">
+                            {% trans "Analysis date" %}: {{ analysis.analysis_date }} —
+                            {% trans "Sample" %}: {{ analysis.sample.sample_id }}
+                            {% if not analysis.approved %}
+                                <span class="badge bg-warning">{% trans "Not yet approved" %}</span>
+                            {% endif %}
+                        </p>
+                        <div class="row mb-3">
+                            <div class="col-md-3"><strong>{% trans "Total Alpha (Bq)" %}:</strong> {{ analysis.total_alpha|default:"-" }}</div>
+                            <div class="col-md-3"><strong>{% trans "Total Beta (Bq)" %}:</strong> {{ analysis.total_beta|default:"-" }}</div>
+                            <div class="col-md-3"><strong>{% trans "Current Gamma (Bq)" %}:</strong> {{ batch.current_gamma_bq_value|default:"-" }}</div>
+                            <div class="col-md-3"><strong>{% trans "Current Total (Bq)" %}:</strong> {{ batch.current_total_activity_bq_value|default:"-" }}</div>
+                        </div>
+
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Radionuclide" %}</th>
+                                    <th>{% trans "Radiation Type" %}</th>
+                                    <th>{% trans "Measured Activity (Bq)" %}</th>
+                                    <th>{% trans "Current Activity (Bq)" %}</th>
+                                    <th>{% trans "Uncertainty" %}</th>
+                                    <th>{% trans "MDA" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for na in nuclide_activities %}
+                                <tr>
+                                    <td>{{ na.radionuclide }}</td>
+                                    <td>{{ na.get_radiation_type_display }}</td>
+                                    <td>{{ na.activity_bq }}</td>
+                                    <td>{{ na.current_activity_bq|floatformat:3 }}</td>
+                                    <td>{{ na.uncertainty_bq|default:"-" }}</td>
+                                    <td>{{ na.mda_bq|default:"-" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="6" class="text-center">{% trans "No per-nuclide results recorded." %}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-muted">
+                            {% trans "No analysis yet — take a sample and send it to the lab." %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><h5 class="mb-0">{% trans "Samples" %}</h5></div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Sample ID" %}</th>
+                                <th>{% trans "Stage" %}</th>
+                                <th>{% trans "Sampling Date" %}</th>
+                                <th>{% trans "Status" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for s in samples %}
+                            <tr>
+                                <td>{{ s.sample_id }}</td>
+                                <td>{{ s.get_sample_stage_display }}</td>
+                                <td>{{ s.sampling_date }}</td>
+                                <td>{{ s.get_status_display }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center">{% trans "No samples yet." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if parent_links or child_links %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><h5 class="mb-0">{% trans "Lineage" %}</h5></div>
+                <div class="card-body">
+                    {% if parent_links %}
+                    <h6>{% trans "Created from" %}</h6>
+                    <ul>
+                    {% for link in parent_links %}
+                        <li>
+                            {{ link.get_operation_display }} —
+                            <a href="{% url 'waste_detail' link.parent.pk %}">{{ link.parent.waste_id }}</a>
+                            ({{ link.mass_kg|default:"-" }} kg / {{ link.volume_m3|default:"-" }} m³)
+                        </li>
+                    {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    {% if child_links %}
+                    <h6>{% trans "Became" %}</h6>
+                    <ul>
+                    {% for link in child_links %}
+                        <li>
+                            {{ link.get_operation_display }} →
+                            <a href="{% url 'waste_detail' link.child.pk %}">{{ link.child.waste_id }}</a>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">{% trans "Movements" %}</h5></div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "From" %}</th>
+                                <th>{% trans "To" %}</th>
+                                <th>{% trans "Remarks" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for m in movements %}
+                            <tr>
+                                <td>{{ m.movement_date }}</td>
+                                <td>{{ m.get_movement_type_display }}</td>
+                                <td>{{ m.from_facility|default:"-" }}</td>
+                                <td>{{ m.to_facility|default:"-" }}</td>
+                                <td>{{ m.remarks|default:"-" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="text-center">{% trans "No movements." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

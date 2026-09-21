@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Laboratory" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.home-container{ padding:30px; }
+.home-title{ font-size:28px; font-weight:700; margin-bottom:10px; }
+.home-subtitle{ color:#777; margin-bottom:30px; }
+.home-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:25px; }
+.home-card{
+    background:white; border-radius:16px; padding:25px; text-decoration:none; color:inherit;
+    box-shadow:0 5px 15px rgba(0,0,0,.08); transition:.25s; display:flex; flex-direction:column;
+    justify-content:center; min-height:130px;
+}
+.home-card:hover{ transform:translateY(-5px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
+.home-icon{ font-size:35px; margin-bottom:15px; }
+.home-card h3{ margin:0; font-size:20px; }
+.home-card p{ margin-top:8px; color:#777; }
+.home-count{ margin-top:6px; font-weight:700; color:#0d6efd; font-size:14px; }
+.home-count.urgent{ color:#dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    <h1 class="home-title">{% trans "Laboratory" %}</h1>
+    <p class="home-subtitle">{% trans "Samples and analyses" %}</p>
+
+    <div class="home-grid">
+
+        <a href="{% url 'sample_list' %}" class="home-card">
+            <div class="home-icon">🧪</div>
+            <h3>{% trans "All Samples" %}</h3>
+            <p>{% trans "Browse every sample" %}</p>
+        </a>
+
+        <a href="{% url 'sample_create' %}" class="home-card">
+            <div class="home-icon">➕</div>
+            <h3>{% trans "New Sample" %}</h3>
+            <p>{% trans "With or without a waste batch" %}</p>
+        </a>
+
+        <a href="{% url 'sample_list' %}?status=COLLECTED" class="home-card">
+            <div class="home-icon">📥</div>
+            <h3>{% trans "Collected" %}</h3>
+            <p>{% trans "Taken, not yet sent to the lab" %}</p>
+            <p class="home-count"># {{ collected_count }} {% trans "Samples" %}</p>
+        </a>
+
+        <a href="{% url 'sample_list' %}?status=SENT_TO_LAB" class="home-card">
+            <div class="home-icon">🚚</div>
+            <h3>{% trans "Sent To Lab" %}</h3>
+            <p>{% trans "In transit — awaiting lab receipt" %}</p>
+            <p class="home-count"># {{ sent_count }} {% trans "Samples" %}</p>
+        </a>
+
+        <a href="{% url 'sample_list' %}?status=RECEIVED_BY_LAB" class="home-card">
+            <div class="home-icon">📦</div>
+            <h3>{% trans "Received By Lab" %}</h3>
+            <p>{% trans "Ready to start analysis" %}</p>
+            <p class="home-count"># {{ received_count }} {% trans "Samples" %}</p>
+        </a>
+
+        <a href="{% url 'sample_list' %}?status=IN_ANALYSIS" class="home-card">
+            <div class="home-icon">🔬</div>
+            <h3>{% trans "In Analysis" %}</h3>
+            <p>{% trans "Being counted" %}</p>
+            <p class="home-count"># {{ in_analysis_count }} {% trans "Samples" %}</p>
+        </a>
+
+        <a href="{% url 'analysis_review_queue' %}" class="home-card">
+            <div class="home-icon">✅</div>
+            <h3>{% trans "Pending Review" %}</h3>
+            <p>{% trans "Analyses awaiting approval" %}</p>
+            <p class="home-count"># {{ pending_review_count }} {% trans "Analyses" %}</p>
+        </a>
+
+        <a href="{% url 'sample_list' %}" class="home-card">
+            <div class="home-icon">⚠</div>
+            <h3>{% trans "Urgent" %}</h3>
+            <p>{% trans "Open urgent samples" %}</p>
+            <p class="home-count urgent"># {{ urgent_count }} {% trans "Samples" %}</p>
+        </a>
+
+    </div>
+</div>
+{% endblock %}

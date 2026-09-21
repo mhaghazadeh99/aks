@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Analyses Pending Review" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<h3 class="mb-3">{% trans "Analyses Pending Review" %}</h3>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Sample" %}</th>
+    <th>{% trans "Waste Batch" %}</th>
+    <th>{% trans "Analysis Date" %}</th>
+    <th>{% trans "Total Alpha" %}</th>
+    <th>{% trans "Total Beta" %}</th>
+    <th>{% trans "Analyst" %}</th>
+    <th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for a in page_obj %}
+<tr>
+    <td>{{ a.sample.sample_id }}</td>
+    <td>
+        {% if a.sample.batch %}
+            <a href="{% url 'waste_detail' a.sample.batch.pk %}">{{ a.sample.batch.waste_id }}</a>
+        {% else %}
+            <span class="text-muted">{% trans "Standalone" %}</span>
+        {% endif %}
+    </td>
+    <td>{{ a.analysis_date }}</td>
+    <td>{{ a.total_alpha|default:"-" }}</td>
+    <td>{{ a.total_beta|default:"-" }}</td>
+    <td>{{ a.analyst|default:"-" }}</td>
+    <td>
+        <a href="{% url 'sample_detail' a.sample.pk %}" class="btn btn-sm btn-outline-primary">{% trans "Review" %}</a>
+        <form method="post" action="{% url 'analysis_approve' a.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-success">{% trans "Approve" %}</button>
+        </form>
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="7" class="text-center">{% trans "Nothing pending review." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+</div>
+{% endblock %}

@@ -1,19 +1,31 @@
 from django.contrib import admin
-from .models import *
-# Register your models here.
 
-admin.site.register(WasteBatch)
-admin.site.register(LiquidWasteDetails)
-admin.site.register(WasteConditioning)
-admin.site.register(BatchActivitySnapshot)
+from .models import WasteBatch, WasteMovement, WasteMovementAttachment, WasteBatchLineage
 
-# operation
-# admin.site.register(Operation)
-# admin.site.register(OperationInput)
-# admin.site.register(OperationOutput)
-# admin.site.register(MergeOperation)
-# admin.site.register(SplitOperation)
-# admin.site.register(TreatmentOperation)
-# admin.site.register(ReleaseOperation)
-# admin.site.register(SolidificationOperation)
-# admin.site.register(SolidifiedPackage)
+
+class WasteMovementInline(admin.TabularInline):
+    model = WasteMovement
+    extra = 0
+
+
+@admin.register(WasteBatch)
+class WasteBatchAdmin(admin.ModelAdmin):
+    list_display = ("waste_id", "waste_type", "waste_state", "waste_class", "facility", "status", "created_at")
+    list_filter = ("waste_type", "waste_state", "waste_class", "status", "facility")
+    search_fields = ("waste_id", "material", "location")
+    inlines = [WasteMovementInline]
+
+
+@admin.register(WasteMovement)
+class WasteMovementAdmin(admin.ModelAdmin):
+    list_display = ("batch", "movement_type", "from_facility", "to_facility", "movement_date")
+    list_filter = ("movement_type",)
+
+
+@admin.register(WasteBatchLineage)
+class WasteBatchLineageAdmin(admin.ModelAdmin):
+    list_display = ("operation", "parent", "child", "performed_by", "performed_at")
+    list_filter = ("operation",)
+
+
+admin.site.register(WasteMovementAttachment)

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Sample" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        {{ sample.sample_id }}
+                        {% if sample.urgent %}<span class="badge bg-danger">{% trans "Urgent" %}</span>{% endif %}
+                    </h3>
+                    <span class="badge bg-primary">{{ sample.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>{% trans "Source" %}:</strong>
+                            {% if sample.batch %}
+                                <a href="{% url 'waste_detail' sample.batch.pk %}">{{ sample.batch.waste_id }}</a>
+                            {% else %}
+                                {% trans "Standalone" %} — {{ sample.description|default:"-" }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4"><strong>{% trans "Stage" %}:</strong> {{ sample.get_sample_stage_display }}</div>
+                        <div class="col-md-4"><strong>{% trans "Sampling Date" %}:</strong> {{ sample.sampling_date }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-4"><strong>{% trans "Mass (kg)" %}:</strong> {{ sample.sample_mass_kg|default:"-" }}</div>
+                        <div class="col-md-4"><strong>{% trans "Volume (L)" %}:</strong> {{ sample.sample_volume_l|default:"-" }}</div>
+                        <div class="col-md-4"><strong>{% trans "Barcode" %}:</strong> {{ sample.sample_code_barcode|default:"-" }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-4"><strong>{% trans "Collected By" %}:</strong> {{ sample.collected_by|default:"-" }}</div>
+                        <div class="col-md-4"><strong>{% trans "Sent To Lab" %}:</strong> {{ sample.sent_to_lab_date|default:"-" }}</div>
+                        <div class="col-md-4"><strong>{% trans "Lab Received" %}:</strong> {{ sample.lab_received_date|default:"-" }}</div>
+                    </div>
+                    {% if sample.remarks %}
+                    <p class="mt-2"><strong>{% trans "Remarks" %}:</strong> {{ sample.remarks }}</p>
+                    {% endif %}
+                    {% if sample.lab_comments %}
+                    <p class="mt-2"><strong>{% trans "Lab Comments" %}:</strong> {{ sample.lab_comments }}</p>
+                    {% endif %}
+
+                    <hr>
+
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'sample_edit' sample.pk %}" class="btn btn-warning">{% trans "Edit" %}</a>
+
+                        {% if sample.status == "COLLECTED" %}
+                        <form method="post" action="{% url 'sample_send_to_lab' sample.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">{% trans "Send to Lab" %}</button>
+                        </form>
+                        {% endif %}
+
+                        {% if sample.status == "RECEIVED_BY_LAB" or sample.status == "IN_ANALYSIS" %}
+                        <a href="{% url 'analysis_edit' sample.pk %}" class="btn btn-success">
+                            {% if analysis %}{% trans "Edit Analysis" %}{% else %}{% trans "Enter Analysis" %}{% endif %}
+                        </a>
+                        {% endif %}
+
+                        {% if sample.status == "RECEIVED_BY_LAB" %}
+                        <form method="post" action="{% url 'sample_start_analysis' sample.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-primary">{% trans "Start Analysis" %}</button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    {% if sample.status == "SENT_TO_LAB" %}
+                    <hr>
+                    <h6>{% trans "Lab Receipt" %}</h6>
+                    <form method="post" action="{% url 'sample_lab_receive' sample.pk %}">
+                        {% csrf_token %}
+                        {% crispy receive_form %}
+                        <button type="submit" class="btn btn-primary mt-2">{% trans "Mark as Received" %}</button>
+                    </form>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            {% if analysis %}
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Analysis" %}</h5>
+                    {% if analysis.approved %}
+                        <span class="badge bg-success">{% trans "Approved" %}</span>
+                    {% else %}
+                        <span class="badge bg-warning">{% trans "Pending review" %}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>{% trans "Analysis Date" %}:</strong> {{ analysis.analysis_date }}</div>
+                        <div class="col-md-3"><strong>{% trans "Total Alpha (Bq)" %}:</strong> {{ analysis.total_alpha|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "Total Beta (Bq)" %}:</strong> {{ analysis.total_beta|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "Analyst" %}:</strong> {{ analysis.analyst|default:"-" }}</div>
+                    </div>
+
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Radionuclide" %}</th>
+                                <th>{% trans "Radiation Type" %}</th>
+                                <th>{% trans "Activity (Bq)" %}</th>
+                                <th>{% trans "Uncertainty" %}</th>
+                                <th>{% trans "MDA" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for na in nuclide_activities %}
+                            <tr>
+                                <td>{{ na.radionuclide }}</td>
+                                <td>{{ na.get_radiation_type_display }}</td>
+                                <td>{{ na.activity_bq }}</td>
+                                <td>{{ na.uncertainty_bq|default:"-" }}</td>
+                                <td>{{ na.mda_bq|default:"-" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="text-center">{% trans "No per-nuclide rows." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% if analysis.analysis_notes %}
+                    <p><strong>{% trans "Notes" %}:</strong> {{ analysis.analysis_notes }}</p>
+                    {% endif %}
+
+                    {% if not analysis.approved %}
+                    <form method="post" action="{% url 'analysis_approve' analysis.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">{% trans "Approve Analysis" %}</button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted small">
+                        {% trans "Reviewed by" %} {{ analysis.reviewed_by }} — {{ analysis.review_date }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

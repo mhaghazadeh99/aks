@@ -78,7 +78,9 @@
    class="{% if request.resolver_match.url_name == 'financial_home' %}active{% endif %}">
     💳 {% trans "Financial" %}
 </a>
-<a href="#">
+
+<a href="{% url 'lab_home' %}"
+class="{% if request.resolver_match.url_name == 'lab_home' %}active{% endif %}">
     🧪 {% trans "Laboratory" %}
 </a>
 
@@ -91,8 +93,8 @@
     📦 {% trans " Source Inventory" %}
 </a>
 
-<a href="{% url 'waste_list' %}"
-   class="{% if request.resolver_match.url_name == 'waste_list' %}active{% endif %}">
+<a href="{% url 'waste_home' %}"
+   class="{% if request.resolver_match.url_name == 'waste_home' %}active{% endif %}">
     ♻ {% trans "Waste" %}
 </a>
 

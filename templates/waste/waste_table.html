@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Waste Inventory" %}{% endblock %}
+
+{% block content %}
+{% block extrastyle %}
+<style>
+.action-icons { display: flex; gap: 8px; align-items: center; }
+.icon-btn {
+    display: inline-flex; justify-content: center; align-items: center;
+    width: 34px; height: 34px; border-radius: 8px;
+    text-decoration: none; font-size: 16px;
+    background: #f5f6f8; color: #444;
+    transition: all 0.2s ease; border: 1px solid transparent;
+}
+.icon-btn:hover { transform: translateY(-2px); background: #fff; border-color: #ddd; box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+.icon-btn.edit:hover { color: #d39e00; }
+.icon-btn.history:hover { color: #6c757d; }
+.pagination { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; }
+.pagination a, .pagination span { padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; }
+.pagination .current { background:#0d6efd; color:#fff; border-color:#0d6efd; }
+.page-info { text-align:center; margin-top:10px; color:#666; }
+.col-toggle {
+    width:16px !important; height:16px !important;
+    min-width:16px !important; min-height:16px !important;
+    flex:0 0 auto !important; opacity:1 !important;
+    display:inline-block !important; appearance:auto !important;
+    -webkit-appearance:checkbox !important;
+}
+.column-panel label { display:flex; align-items:center; justify-content:flex-start; gap:8px; white-space:nowrap; }
+.column-panel { display:flex; flex-direction:column; }
+.hidden { display:none !important; }
+#filterContainer { display:flex; flex-direction:row; flex-wrap:wrap; gap:10px; align-items:center; }
+#filterContainer > * { display:inline-flex; align-items:center; }
+.badge-liquid { background:#e7f1ff; color:#0d6efd; padding:3px 8px; border-radius:12px; font-size:12px; }
+.badge-solid  { background:#f3f0ff; color:#6f42c1; padding:3px 8px; border-radius:12px; font-size:12px; }
+</style>
+{% endblock extrastyle %}
+
+<div class="content">
+
+<!-- ================= HEADER TOOLBAR ================= -->
+<div class="table-header">
+
+  <div class="header-group">
+    <input type="text" id="searchInput" placeholder="{% trans 'Search...' %}">
+    <button id="searchBtn">🔍</button>
+  </div>
+
+  <div class="column-bar">
+    <button class="btn-gray" onclick="toggleColumnPanel()">☰ {% trans "Show/Hide Columns" %}</button>
+    <div id="columnPanel" class="column-panel hidden"></div>
+  </div>
+
+  <form method="get">
+  <div class="header-group">
+    <label for="pageSize">{% trans "Items:" %}</label>
+    <select id="pageSize" name="size" onchange="this.form.submit()">
+        <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
+        <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
+        <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
+        <option value="all" {% if page_size == "all" %}selected{% endif %}>{% trans "All" %}</option>
+    </select>
+  </div>
+  </form>
+
+  <div class="header-group">
+    <button class="btn-green" onclick="exportCSV()">{% trans "Export CSV" %}</button>
+    <button class="btn-blue" id="newMovementBtn">{% trans "New Movement" %}</button>
+    <button class="btn-blue" id="mergeBtn">{% trans "Merge" %}</button>
+    <button class="btn-blue" id="sendToAnalysisBtn">{% trans "Send to Analysis" %}</button>
+    <a href="{% url 'waste_create' %}" class="btn-blue">+ {% trans "Add Waste" %}</a>
+  </div>
+
+</div>
+
+<!-- ================= FILTER BAR ================= -->
+<div class="filter-bar">
+  <div id="filterContainer"></div>
+  <button id="addFilter" class="btn-blue">{% trans "Add Filter" %}</button>
+  <button id="applyFilters" class="btn-info">{% trans "Apply" %}</button>
+  <label style="margin-inline-start:12px;">
+    <input type="checkbox" id="showConsumed" {% if show_consumed %}checked{% endif %}>
+    {% trans "Show merged/split/conditioned batches" %}
+  </label>
+</div>
+
+<!-- ================= TABLE ================= -->
+<div class="table-scroll">
+<table id="mainTable">
+<thead>
+<tr>
+<th>{% trans "Select" %}</th>
+<th data-col="waste_id">{% trans "Waste ID" %}</th>
+<th data-col="waste_type">{% trans "Waste Type" %}</th>
+<th data-col="waste_class">{% trans "Waste Class" %}</th>
+<th data-col="waste_state">{% trans "State" %}</th>
+<th data-col="facility">{% trans "Current Facility" %}</th>
+<th data-col="origin_facility">{% trans "Origin Facility" %}</th>
+<th data-col="origin_of_waste">{% trans "Origin of Waste" %}</th>
+<th data-col="date_received">{% trans "Date Received" %}</th>
+<th data-col="material">{% trans "Material" %}</th>
+<th data-col="waste_arising_from">{% trans "Arising From" %}</th>
+<th data-col="container_type">{% trans "Container Type" %}</th>
+<th data-col="mass_kg">{% trans "Mass (kg)" %}</th>
+<th data-col="volume_m3">{% trans "Volume (m³)" %}</th>
+<th data-col="nuclides">{% trans "Nuclides" %}</th>
+<th data-col="total_alpha">{% trans "Total Alpha (Bq)" %}</th>
+<th data-col="total_beta">{% trans "Total Beta (Bq)" %}</th>
+<th data-col="current_gamma">{% trans "Current Gamma (Bq)" %}</th>
+<th data-col="current_total">{% trans "Current Total Activity (Bq)" %}</th>
+<th data-col="dose_rate_surface_uSv">{% trans "Surface Dose (µSv/h)" %}</th>
+<th data-col="dose_rate_1m_uSv">{% trans "Dose @1m (µSv/h)" %}</th>
+<th data-col="dose_rate_date">{% trans "Dose Date" %}</th>
+<th data-col="alpha_contamination">{% trans "Alpha Contamination" %}</th>
+<th data-col="beta_gamma_contamination">{% trans "Beta/Gamma Contamination" %}</th>
+<th data-col="ph">{% trans "pH" %}</th>
+<th data-col="density">{% trans "Density" %}</th>
+<th data-col="total_solids">{% trans "Total Solids" %}</th>
+<th data-col="suspended_solids">{% trans "Suspended Solids" %}</th>
+<th data-col="soluble_solids">{% trans "Soluble Solids" %}</th>
+<th data-col="possible_pretreatment">{% trans "Possible Pre-Treatment" %}</th>
+<th data-col="possible_treatment">{% trans "Possible Treatment" %}</th>
+<th data-col="pretreatment">{% trans "Pre-Treatment" %}</th>
+<th data-col="treatment">{% trans "Treatment" %}</th>
+<th data-col="package_type">{% trans "Package Type" %}</th>
+<th data-col="waste_matrix">{% trans "Waste Matrix" %}</th>
+<th data-col="waste_to_matrix_ratio">{% trans "Waste/Matrix Ratio" %}</th>
+<th data-col="waste_mass_kg">{% trans "Waste Mass (kg)" %}</th>
+<th data-col="package_mass_kg">{% trans "Package Mass (kg)" %}</th>
+<th data-col="package_volume_m3">{% trans "Package Volume (m³)" %}</th>
+<th data-col="location">{% trans "Storage Location" %}</th>
+<th data-col="status">{% trans "Status" %}</th>
+<th data-col="status_date">{% trans "Status Date" %}</th>
+<th data-col="samples">{% trans "Samples" %}</th>
+<th data-col="attachment">{% trans "Attachments" %}</th>
+<th data-col="created_by">{% trans "Created By" %}</th>
+<th data-col="created_at">{% trans "Created Date" %}</th>
+<th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+
+<tbody id="tableBody">
+{% for b in batches %}
+<tr>
+<td><input type="checkbox" class="batch-checkbox" value="{{ b.id }}"></td>
+<td data-col="waste_id">{{ b.waste_id }}</td>
+<td data-col="waste_type">
+    {% if b.waste_type == "LIQUID" %}
+        <span class="badge-liquid">{{ b.get_waste_type_display }}</span>
+    {% else %}
+        <span class="badge-solid">{{ b.get_waste_type_display }}</span>
+    {% endif %}
+</td>
+<td data-col="waste_class">{{ b.get_waste_class_display|default:"-" }}</td>
+<td data-col="waste_state">{{ b.get_waste_state_display }}</td>
+<td data-col="facility">{{ b.facility }}</td>
+<td data-col="origin_facility">{{ b.origin_facility|default:"-" }}</td>
+<td data-col="origin_of_waste">{{ b.get_origin_of_waste_display }}</td>
+<td data-col="date_received">{{ b.date_received|default:"-" }}</td>
+<td data-col="material">{{ b.material|default:"-" }}</td>
+<td data-col="waste_arising_from">{{ b.waste_arising_from|default:"-" }}</td>
+<td data-col="container_type">{{ b.container_type|default:"-" }}</td>
+<td data-col="mass_kg">{{ b.mass_kg|default:"-" }}</td>
+<td data-col="volume_m3">{{ b.volume_m3|default:"-" }}</td>
+<td data-col="nuclides">{{ b.nuclide_summary|default:"-" }}</td>
+<td data-col="total_alpha">{{ b.total_alpha_bq|default:"-" }}</td>
+<td data-col="total_beta">{{ b.total_beta_bq|default:"-" }}</td>
+<td data-col="current_gamma">{{ b.current_gamma_bq_value|default:"-" }}</td>
+<td data-col="current_total">{{ b.current_total_activity_bq_value|default:"-" }}</td>
+<td data-col="dose_rate_surface_uSv">{{ b.dose_rate_surface_uSv|default:"-" }}</td>
+<td data-col="dose_rate_1m_uSv">{{ b.dose_rate_1m_uSv|default:"-" }}</td>
+<td data-col="dose_rate_date">{{ b.dose_rate_date|default:"-" }}</td>
+<td data-col="alpha_contamination">{{ b.alpha_contamination_bq_cm2|default:"-" }}</td>
+<td data-col="beta_gamma_contamination">{{ b.beta_gamma_contamination_bq_cm2|default:"-" }}</td>
+<td data-col="ph">{{ b.ph|default:"-" }}</td>
+<td data-col="density">{{ b.density|default:"-" }}</td>
+<td data-col="total_solids">{{ b.total_solids|default:"-" }}</td>
+<td data-col="suspended_solids">{{ b.suspended_solids|default:"-" }}</td>
+<td data-col="soluble_solids">{{ b.soluble_solids|default:"-" }}</td>
+<td data-col="possible_pretreatment">{{ b.get_possible_pretreatment_display|default:"-" }}</td>
+<td data-col="possible_treatment">{{ b.get_possible_treatment_display|default:"-" }}</td>
+<td data-col="pretreatment">{{ b.get_pretreatment_display|default:"-" }}</td>
+<td data-col="treatment">{{ b.get_treatment_display|default:"-" }}</td>
+<td data-col="package_type">{{ b.package_type|default:"-" }}</td>
+<td data-col="waste_matrix">{{ b.waste_matrix|default:"-" }}</td>
+<td data-col="waste_to_matrix_ratio">{{ b.waste_to_matrix_ratio|default:"-" }}</td>
+<td data-col="waste_mass_kg">{{ b.waste_mass_kg|default:"-" }}</td>
+<td data-col="package_mass_kg">{{ b.package_mass_kg|default:"-" }}</td>
+<td data-col="package_volume_m3">{{ b.package_volume_m3|default:"-" }}</td>
+<td data-col="location">{{ b.location|default:"-" }}</td>
+<td data-col="status">{{ b.get_status_display }}</td>
+<td data-col="status_date">{{ b.status_date|default:"-" }}</td>
+<td data-col="samples">{{ b.samples.count }}</td>
+<td data-col="attachment">
+    {% if b.attachment %}<a href="{{ b.attachment.url }}" target="_blank">{% trans "File" %}</a>{% else %}-{% endif %}
+    {% with last_movement=b.movements.last %}
+        {% for att in last_movement.attachments.all %}
+            <a href="{{ att.file.url }}" target="_blank">{% trans "Movement File" %} {{ forloop.counter }}</a><br>
+        {% endfor %}
+    {% endwith %}
+</td>
+<td data-col="created_by">{{ b.created_by|default:"-" }}</td>
+<td data-col="created_at">{{ b.created_at }}</td>
+
+<td class="action-icons">
+  <a href="{% url 'waste_detail' b.id %}" class="icon-btn" title="{% trans 'View' %}">👁</a>
+  <a href="{% url 'waste_edit' b.id %}" class="icon-btn edit" title="{% trans 'Edit' %}">✏️</a>
+  <a href="{% url 'waste_split' b.id %}" class="icon-btn" title="{% trans 'Split' %}">✂️</a>
+  <a href="{% url 'waste_condition' b.id %}" class="icon-btn" title="{% trans 'Condition' %}">🧱</a>
+</td>
+</tr>
+{% empty %}
+<tr><td colspan="47" class="text-center">{% trans "No waste batches found." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">{% trans "Previous" %}</a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">{{ num }}</a>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">{% trans "Next" %}</a>
+    {% endif %}
+</div>
+
+<div class="page-info">
+    {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+    ({{ page_obj.paginator.count }} {% trans "records" %})
+</div>
+
+<!-- Hidden POST form reused by the bulk action buttons -->
+<form id="bulkForm" method="post" style="display:none;">
+    {% csrf_token %}
+    <div id="bulkIds"></div>
+</form>
+
+<script>
+function currentParams() { return new URLSearchParams(window.location.search); }
+
+function runSearch() {
+    const p = currentParams();
+    const term = document.getElementById("searchInput").value.trim();
+    if (term) { p.set("search", term); } else { p.delete("search"); }
+    p.delete("page");
+    window.location.search = p.toString();
+}
+
+document.getElementById("searchInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); runSearch(); }
+});
+document.getElementById("searchBtn").addEventListener("click", function (e) {
+    e.preventDefault(); runSearch();
+});
+document.addEventListener("DOMContentLoaded", function () {
+    const existing = currentParams().get("search");
+    if (existing) { document.getElementById("searchInput").value = existing; }
+});
+
+document.getElementById("showConsumed").addEventListener("change", function () {
+    const p = currentParams();
+    if (this.checked) { p.set("show_consumed", "1"); } else { p.delete("show_consumed"); }
+    p.delete("page");
+    window.location.search = p.toString();
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) { cookieValue = decodeURIComponent(c.split('=')[1]); }
+    });
+    return cookieValue;
+}
+
+window.exportCSV = function () {
+    window.location.href = "{% url 'waste_export_csv' %}" + window.location.search;
+};
+
+// ---- FILTERS ----
+document.getElementById("addFilter").onclick = function () {
+    let row = document.createElement("div");
+    row.className = "d-flex mb-2";
+    row.innerHTML = `
+       <select class="form-control mr-2 key">
+        <option value="waste_id">{% trans "Waste ID" %}</option>
+        <option value="waste_type">{% trans "Waste Type" %}</option>
+        <option value="waste_class">{% trans "Waste Class" %}</option>
+        <option value="waste_state">{% trans "State" %}</option>
+        <option value="facility">{% trans "Facility" %}</option>
+        <option value="origin_facility">{% trans "Origin Facility" %}</option>
+        <option value="origin_of_waste">{% trans "Origin of Waste" %}</option>
+        <option value="date_received">{% trans "Date Received" %}</option>
+        <option value="material">{% trans "Material" %}</option>
+        <option value="waste_arising_from">{% trans "Arising From" %}</option>
+        <option value="container_type">{% trans "Container Type" %}</option>
+        <option value="package_type">{% trans "Package Type" %}</option>
+        <option value="waste_matrix">{% trans "Waste Matrix" %}</option>
+        <option value="mass_kg">{% trans "Mass" %}</option>
+        <option value="volume_m3">{% trans "Volume" %}</option>
+        <option value="location">{% trans "Location" %}</option>
+        <option value="status">{% trans "Status" %}</option>
+        <option value="status_date">{% trans "Status Date" %}</option>
+        <option value="pretreatment">{% trans "Pre-Treatment" %}</option>
+        <option value="treatment">{% trans "Treatment" %}</option>
+        <option value="possible_pretreatment">{% trans "Possible Pre-Treatment" %}</option>
+        <option value="possible_treatment">{% trans "Possible Treatment" %}</option>
+        <option value="source_nuclide">{% trans "Nuclide" %}</option>
+        <option value="created_by">{% trans "Created By" %}</option>
+        <option value="created_at">{% trans "Created" %}</option>
+       </select>
+        <input class="form-control mr-2 value" placeholder="{% trans 'Value' %}">
+        <button class="btn btn-danger">X</button>
+    `;
+    row.querySelector("button").onclick = () => row.remove();
+    document.getElementById("filterContainer").appendChild(row);
+};
+
+document.getElementById("applyFilters").onclick = function () {
+    let k = document.querySelectorAll(".key");
+    let v = document.querySelectorAll(".value");
+    let p = new URLSearchParams();
+    k.forEach((x, i) => {
+        if (v[i].value) { p.append("key", x.value); p.append("value", v[i].value); }
+    });
+    window.location.href = "?" + p.toString();
+};
+
+// ---- COLUMN SHOW/HIDE ----
+const panel = document.getElementById("columnPanel");
+document.querySelectorAll("#mainTable thead th[data-col]").forEach(th => {
+    const col = th.dataset.col;
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="checkbox" class="col-toggle" data-col="${col}" checked> ${th.innerText}`;
+    panel.appendChild(label);
+});
+
+fetch("{% url 'waste_get_column' %}")
+.then(r => r.json())
+.then(data => {
+    data.forEach(c => {
+        const checkbox = document.querySelector(`.col-toggle[data-col="${c.key}"]`);
+        if (checkbox) { checkbox.checked = c.value; }
+        document.querySelectorAll(`[data-col="${c.key}"]`).forEach(el => {
+            el.style.display = c.value ? "" : "none";
+        });
+    });
+});
+
+function toggleColumnPanel() {
+    document.getElementById("columnPanel").classList.toggle("hidden");
+}
+
+document.addEventListener("change", function (e) {
+    if (!e.target.classList.contains("col-toggle")) return;
+    const col = e.target.dataset.col;
+    const show = e.target.checked;
+    document.querySelectorAll(`[data-col="${col}"]`).forEach(el => {
+        el.style.display = show ? "" : "none";
+    });
+    fetch("{% url 'waste_save_column' %}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+        body: JSON.stringify({ key: col, value: show })
+    });
+});
+
+// ---- BULK ACTIONS ----
+function selectedIds() {
+    let selected = [];
+    document.querySelectorAll(".batch-checkbox:checked").forEach(cb => selected.push(cb.value));
+    return selected;
+}
+
+function submitBulk(action, ids) {
+    const form = document.getElementById("bulkForm");
+    const holder = document.getElementById("bulkIds");
+    holder.innerHTML = "";
+    ids.forEach(id => {
+        const input = document.createElement("input");
+        input.type = "hidden"; input.name = "ids"; input.value = id;
+        holder.appendChild(input);
+    });
+    form.action = action;
+    form.submit();
+}
+
+document.getElementById("mergeBtn").onclick = function () {
+    const ids = selectedIds();
+    if (ids.length < 2) { alert("{% trans 'Select at least two batches to merge.' %}"); return; }
+    submitBulk("{% url 'waste_merge' %}", ids);
+};
+
+document.getElementById("sendToAnalysisBtn").onclick = function () {
+    const ids = selectedIds();
+    if (ids.length === 0) { alert("{% trans 'Select at least one batch.' %}"); return; }
+    submitBulk("{% url 'waste_send_to_analysis' %}", ids);
+};
+
+document.getElementById("newMovementBtn").onclick = function () {
+    const ids = selectedIds();
+    if (ids.length !== 1) { alert("{% trans 'Select exactly one batch to record a movement for.' %}"); return; }
+    window.location.href = "/waste/" + ids[0] + "/edit/#movements";
+};
+</script>
+
+{% endblock %}

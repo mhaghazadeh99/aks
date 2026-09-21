@@ -1,8 +1,84 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
 
-<h2>Analysis for {{ sample.sample_id }}</h2>
+{% block title %}{% trans "Analysis" %}{% endblock %}
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Save Analysis</button>
-</form>
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3>{% trans "Analysis" %} — {{ sample.sample_id }}</h3>
+                </div>
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        {% if sample.batch %}
+                            {% trans "Saving this becomes the latest analysis for waste batch" %}
+                            <a href="{% url 'waste_detail' sample.batch.pk %}">{{ sample.batch.waste_id }}</a>,
+                            {% trans "and drives that batch's activity figures." %}
+                        {% else %}
+                            {% trans "Standalone sample — this analysis isn't tied to any waste batch." %}
+                        {% endif %}
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <h5 class="mb-3">{% trans "Gross Results" %}</h5>
+                        {% crispy form %}
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">{% trans "Per-Nuclide Results" %}</h5>
+                        <p class="text-muted small">
+                            {% trans "Add a row per radionuclide, choosing its radiation type. These are what the waste batch's decay-corrected current activity is calculated from." %}
+                        </p>
+
+                        {{ formset.management_form }}
+                        {% if formset.non_form_errors %}
+                            <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+                        {% endif %}
+
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Radionuclide" %}</th>
+                                    <th>{% trans "Radiation Type" %}</th>
+                                    <th>{% trans "Activity (Bq)" %}</th>
+                                    <th>{% trans "Uncertainty" %}</th>
+                                    <th>{% trans "MDA" %}</th>
+                                    <th>{% trans "Delete" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for f in formset %}
+                                <tr>
+                                    {{ f.id }}
+                                    <td>{{ f.radionuclide }}{{ f.radionuclide.errors }}</td>
+                                    <td>{{ f.radiation_type }}{{ f.radiation_type.errors }}</td>
+                                    <td>{{ f.activity_bq }}{{ f.activity_bq.errors }}</td>
+                                    <td>{{ f.uncertainty_bq }}</td>
+                                    <td>{{ f.mda_bq }}</td>
+                                    <td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{% url 'sample_detail' sample.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+                            <button type="submit" class="btn btn-primary">{% trans "Save Analysis" %}</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,36 +2,19 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("", views.waste_home, name="waste_home"),
+    path("list/", views.waste_table, name="waste_table"),
 
-    path("", views.waste_list, name="waste_list"),
-
-    path("create/", views.waste_create, name="waste_create"),
-
+    path("new/", views.waste_create, name="waste_create"),
+    path("<int:pk>/edit/", views.waste_edit, name="waste_edit"),
     path("<int:pk>/", views.waste_detail, name="waste_detail"),
 
-    path("<int:pk>/edit/", views.waste_edit, name="waste_edit"),
+    path("merge/", views.waste_merge, name="waste_merge"),
+    path("<int:pk>/split/", views.waste_split, name="waste_split"),
+    path("<int:pk>/condition/", views.waste_condition, name="waste_condition"),
+    path("send-to-analysis/", views.waste_send_to_analysis, name="waste_send_to_analysis"),
 
-    path("<int:pk>/delete/", views.waste_delete, name="waste_delete"),
+    path("save-column/", views.waste_save_column, name="waste_save_column"),
+    path("get-column/", views.waste_get_column, name="waste_get_column"),
+    path("export-csv/", views.waste_export_csv, name="waste_export_csv"),
 ]
-
-
-## operations
-# from django.urls import path
-
-# from . import views
-
-# urlpatterns = [
-
-#     path(
-#         'merge/',
-#         views.merge_operation,
-#         name='merge_operation'
-#     ),
-
-#     path(
-#         'split/<int:batch_id>/',
-#         views.split_operation,
-#         name='split_operation'
-#     ),
-
-# ]

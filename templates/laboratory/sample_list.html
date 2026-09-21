@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Samples" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.pagination { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; }
+.pagination a, .pagination span { padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; }
+.pagination .current { background:#0d6efd; color:#fff; border-color:#0d6efd; }
+.page-info { text-align:center; margin-top:10px; color:#666; }
+.urgent-row { background:#fff5f5 !important; }
+.badge-standalone { background:#f3f0ff; color:#6f42c1; padding:3px 8px; border-radius:12px; font-size:12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<div class="table-header">
+    <div class="header-group">
+        <form method="get">
+            <input type="text" name="search" placeholder="{% trans 'Search sample / batch / barcode...' %}" value="{{ search }}">
+            <input type="hidden" name="status" value="{{ status }}">
+            <input type="hidden" name="kind" value="{{ kind }}">
+            <button type="submit">🔍</button>
+        </form>
+    </div>
+
+    <div class="header-group">
+        <form method="get">
+            <input type="hidden" name="search" value="{{ search }}">
+            <label>{% trans "Status:" %}</label>
+            <select name="status" onchange="this.form.submit()">
+                <option value="">{% trans "All" %}</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <label>{% trans "Kind:" %}</label>
+            <select name="kind" onchange="this.form.submit()">
+                <option value="">{% trans "All" %}</option>
+                <option value="batch" {% if kind == "batch" %}selected{% endif %}>{% trans "Linked to waste batch" %}</option>
+                <option value="standalone" {% if kind == "standalone" %}selected{% endif %}>{% trans "Standalone" %}</option>
+            </select>
+            <label>{% trans "Items:" %}</label>
+            <select name="size" onchange="this.form.submit()">
+                <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
+                <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
+                <option value="all" {% if page_size == "all" %}selected{% endif %}>{% trans "All" %}</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="header-group">
+        <a href="{% url 'sample_export_csv' %}?status={{ status }}" class="btn-green">{% trans "Export CSV" %}</a>
+        <a href="{% url 'sample_create' %}" class="btn-blue">+ {% trans "New Sample" %}</a>
+    </div>
+</div>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Sample ID" %}</th>
+    <th>{% trans "Source" %}</th>
+    <th>{% trans "Stage" %}</th>
+    <th>{% trans "Sampling Date" %}</th>
+    <th>{% trans "Status" %}</th>
+    <th>{% trans "Analysis" %}</th>
+    <th>{% trans "Collected By" %}</th>
+    <th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for s in samples %}
+<tr {% if s.urgent %}class="urgent-row"{% endif %}>
+    <td>
+        {{ s.sample_id }}
+        {% if s.urgent %}<span class="badge bg-danger">{% trans "Urgent" %}</span>{% endif %}
+    </td>
+    <td>
+        {% if s.batch %}
+            <a href="{% url 'waste_detail' s.batch.pk %}">{{ s.batch.waste_id }}</a>
+        {% else %}
+            <span class="badge-standalone">{% trans "Standalone" %}</span>
+            {{ s.description|default:"-" }}
+        {% endif %}
+    </td>
+    <td>{{ s.get_sample_stage_display }}</td>
+    <td>{{ s.sampling_date }}</td>
+    <td>{{ s.get_status_display }}</td>
+    <td>
+        {% if s.analysis %}
+            {% if s.analysis.approved %}
+                <span class="badge bg-success">{% trans "Approved" %}</span>
+            {% else %}
+                <span class="badge bg-warning">{% trans "Pending review" %}</span>
+            {% endif %}
+        {% else %}
+            <span class="text-muted">-</span>
+        {% endif %}
+    </td>
+    <td>{{ s.collected_by|default:"-" }}</td>
+    <td>
+        <a href="{% url 'sample_detail' s.pk %}" class="btn btn-sm btn-outline-primary">{% trans "View" %}</a>
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="8" class="text-center">{% trans "No samples found." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&status={{ status }}&kind={{ kind }}&size={{ page_size }}">{% trans "Previous" %}</a>
+    {% endif %}
+    <span class="current">{{ page_obj.number }}</span>
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&status={{ status }}&kind={{ kind }}&size={{ page_size }}">{% trans "Next" %}</a>
+    {% endif %}
+</div>
+
+<div class="page-info">
+    {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+    ({{ page_obj.paginator.count }} {% trans "records" %})
+</div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><h3>{{ page_title }}</h3></div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% crispy form %}
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{% url 'waste_table' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+                            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if batch %}
+            <div class="card shadow-sm mb-4" id="movements">
+                <div class="card-header"><h5 class="mb-0">{% trans "Movements" %}</h5></div>
+                <div class="card-body">
+
+                    <form method="post" enctype="multipart/form-data" class="mb-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_movement">
+                        {% crispy movement_form %}
+                        <label class="form-label mt-2">{% trans "Attachments" %}</label>
+                        <input class="form-control" type="file" name="movement_attachments" multiple>
+                        <button type="submit" class="btn btn-success mt-2">{% trans "Record Movement" %}</button>
+                    </form>
+
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "From" %}</th>
+                                <th>{% trans "To" %}</th>
+                                <th>{% trans "Mass" %}</th>
+                                <th>{% trans "Volume" %}</th>
+                                <th>{% trans "By" %}</th>
+                                <th>{% trans "Remarks" %}</th>
+                                <th>{% trans "Files" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for m in movements %}
+                            <tr>
+                                <td>{{ m.movement_date }}</td>
+                                <td>{{ m.get_movement_type_display }}</td>
+                                <td>{{ m.from_facility|default:"-" }}</td>
+                                <td>{{ m.to_facility|default:"-" }}</td>
+                                <td>{{ m.mass_kg|default:"-" }}</td>
+                                <td>{{ m.volume_m3|default:"-" }}</td>
+                                <td>{{ m.performed_by|default:"-" }}</td>
+                                <td>{{ m.remarks|default:"-" }}</td>
+                                <td>
+                                    {% for att in m.attachments.all %}
+                                        <a href="{{ att.file.url }}" target="_blank">{% trans "File" %} {{ forloop.counter }}</a><br>
+                                    {% empty %}-{% endfor %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="9" class="text-center">{% trans "No movements yet." %}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide fields that only apply to certain waste types/states.
+// Driven by the data-show-when-* attributes set in forms.py, so the
+// rules live in exactly one place.
+(function () {
+    const typeField = document.getElementById("id_waste_type");
+    const stateField = document.getElementById("id_waste_state");
+    if (!typeField || !stateField) return;
+
+    function apply() {
+        const type = typeField.value;
+        const state = stateField.value;
+
+        document.querySelectorAll("[data-show-when-type], [data-show-when-state]").forEach(el => {
+            const wantType = el.dataset.showWhenType;
+            const wantState = el.dataset.showWhenState;
+            let visible = true;
+            if (wantType && wantType !== type) visible = false;
+            if (wantState && wantState !== state) visible = false;
+
+            // walk up to the crispy field wrapper so the label hides too
+            let wrapper = el.closest(".mb-3, .form-group, div");
+            if (wrapper) wrapper.style.display = visible ? "" : "none";
+        });
+    }
+
+    typeField.addEventListener("change", apply);
+    stateField.addEventListener("change", apply);
+    apply();
+})();
+</script>
+{% endblock %}

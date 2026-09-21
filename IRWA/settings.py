@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'contract',
-    # 'dyn_dt',
     'analytics',
     "waste",
     "laboratory",

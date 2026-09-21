@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Condition Waste Batch" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+
+            <div class="card shadow-sm">
+                <div class="card-header"><h3>{% trans "Condition" %} — {{ batch.waste_id }}</h3></div>
+                <div class="card-body">
+
+                    <div class="alert alert-info">
+                        {% trans "Conditioning consumes this batch and creates a new PROCESSED SOLID batch (even from a liquid parent — solidification is the point). Activity does not carry over: sample the new package and send it for analysis." %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>{% trans "Type" %}:</strong> {{ batch.get_waste_type_display }}</div>
+                        <div class="col-md-3"><strong>{% trans "Class" %}:</strong> {{ batch.get_waste_class_display|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "Mass (kg)" %}:</strong> {{ batch.mass_kg|default:"-" }}</div>
+                        <div class="col-md-3"><strong>{% trans "Volume (m³)" %}:</strong> {{ batch.volume_m3|default:"-" }}</div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {% crispy form %}
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{% url 'waste_detail' batch.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+                            <button type="submit" class="btn btn-primary">{% trans "Condition" %}</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

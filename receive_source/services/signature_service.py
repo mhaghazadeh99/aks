@@ -120,10 +120,12 @@ class ReceiveSpecificationSigner:
 
         name_cell.paragraphs[0].add_run(profile.full_name)
         date_cell.paragraphs[0].add_run(_format_jalali_date(timezone.localdate()))
-
+        signature_path = (
+            profile.signature_clean.path if profile.signature_clean else profile.signature_image.path
+        )
         self._add_floating_picture(
             signature_cell.paragraphs[0],
-            profile.signature_image.path,
+            signature_path,
             width=Mm(28),
             top_offset=Mm(-8),
             left_offset=Mm(0),
@@ -141,10 +143,12 @@ class ReceiveSpecificationSigner:
 
         name_cell.paragraphs[0].add_run(profile.full_name)
         date_cell.paragraphs[0].add_run(_format_jalali_date(timezone.localdate()))
-
+        signature_path = (
+            profile.signature_clean.path if profile.signature_clean else profile.signature_image.path
+        )
         self._add_floating_picture(
             signature_cell.paragraphs[0],
-            profile.signature_image.path,
+            signature_path,
             width=Mm(28),
             top_offset=Mm(-8),
             left_offset=Mm(0),

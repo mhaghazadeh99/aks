@@ -242,8 +242,11 @@ def regenerate_filled_form(sell_request):
             x0f, y0f, x1f, y1f = SIGNATURE_BOX
             box_w = int((x1f - x0f) * W)
             box_h = int((y1f - y0f) * H)
+            signature_path = (
+            profile.signature_clean.path if profile.signature_clean else profile.signature_image.path
+        )
 
-            sig = Image.open(profile.signature_image.path).convert("RGBA")
+            sig = Image.open(signature_path).convert("RGBA")
             sig.thumbnail((box_w, box_h))
 
             paste_x = int(x0f * W + (box_w - sig.width) / 2)

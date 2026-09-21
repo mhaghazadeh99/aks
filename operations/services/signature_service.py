@@ -168,9 +168,12 @@ class SpecificationSigner:
 
         # Floating signature over that same line - no full name and no
         # position are written for this step.
+        signature_path = (
+            profile.signature_clean.path if profile.signature_clean else profile.signature_image.path
+        )
         self._add_floating_picture(
             date_paragraph,
-            profile.signature_image.path,
+            signature_path,
             width=Mm(35),
             top_offset=Mm(-20),
             left_offset=Mm(0),
@@ -193,9 +196,12 @@ class SpecificationSigner:
 
         # Floating signature over the "امضا" cell - it does not affect
         # the row's height.
+        signature_path = (
+            profile.signature_clean.path if profile.signature_clean else profile.signature_image.path
+        )
         self._add_floating_picture(
             signature_cell.paragraphs[0],
-            profile.signature_image.path,
+            signature_path,
             width=Mm(28),
             top_offset=Mm(-8),
             left_offset=Mm(0),

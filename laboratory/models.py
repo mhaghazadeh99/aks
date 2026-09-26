@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
+from facilities.models import FacilityModel
 # FIX: your draft did `from dashboard.models import Nuclides`, but
 # Nuclides lives in reference.models (dashboard only imports it from
 # there). That import would have failed.
@@ -35,6 +35,9 @@ class RadiationType(models.TextChoices):
     BETA = "BETA", _("Beta")
     GAMMA = "GAMMA", _("Gamma")
 
+class CounterType(models.TextChoices):
+    ALPHABETA = "ALPHABETA", _("Gas proportional detector")
+    HPGE = "HPGE", _("Gamma spectrometry / HPGe")
 
 class Sample(models.Model):
 
@@ -53,6 +56,11 @@ class Sample(models.Model):
         null=True,
         blank=True,
     )
+    applicant_name = models.CharField(_("Applicant name"),max_length=255, blank=True, null=True,
+        help_text=_("Name of the applicant company or unit."), )
+    
+    sample_type = models.CharField(_("Sample type"),max_length=50, blank=True, null=True, )
+    
 
     # Only meaningful for standalone samples; batch-linked ones describe
     # themselves through the batch.
@@ -62,13 +70,17 @@ class Sample(models.Model):
     )
 
     sample_stage = models.CharField(_("Sample Stage"), max_length=20, choices=SampleStage.choices)
-    sampling_date = models.DateField(_("Sampling Date"))
-
+    sampling_date = models.DateTimeField(_("Sampling Date"))
+    sampling_location = models.CharField(_("Sampling location"),max_length=50, blank=True, null=True, )
     sample_mass_kg = models.DecimalField(
         _("Sample Mass (kg)"), max_digits=10, decimal_places=5, blank=True, null=True
     )
-    sample_volume_l = models.DecimalField(
-        _("Sample Volume (L)"), max_digits=10, decimal_places=5, blank=True, null=True
+    sample_volume_ml = models.DecimalField(
+        _("Sample Volume (ml)"),
+        max_digits=12,
+        decimal_places=3,
+        null=True,
+        blank=True
     )
 
     urgent = models.BooleanField(_("Urgent"), default=False)
@@ -120,9 +132,19 @@ class Analysis(models.Model):
     sample = models.OneToOneField(
         Sample, verbose_name=_("Sample"), on_delete=models.CASCADE, related_name="analysis"
     )
+    
 
+    detector_type = models.CharField(
+        _("Detector Type"),
+        max_length=30,
+        choices=CounterType.choices
+    )
     analysis_date = models.DateField(_("Analysis Date"))
-
+    counting_duration_seconds = models.PositiveIntegerField(
+        _("Counting Duration (seconds)"),
+        null=True,
+        blank=True
+    )
     # Gross alpha/beta totals stay here (that's how they're measured —
     # one number for the whole sample). Per-NUCLIDE alpha/beta/gamma
     # results live in NuclideActivity below.
@@ -131,6 +153,38 @@ class Analysis(models.Model):
     )
     total_beta = models.DecimalField(
         _("Total Beta (Bq)"), max_digits=20, decimal_places=5, blank=True, null=True
+    )
+
+    alpha_uncertainty = models.DecimalField(
+        _("Alpha uncertainty ±2s"),
+        max_digits=20,
+        decimal_places=5,
+        null=True,
+        blank=True
+    )
+
+    beta_uncertainty = models.DecimalField(
+        _("Beta uncertainty ±2s"),
+        max_digits=20,
+        decimal_places=5,
+        null=True,
+        blank=True
+    )
+
+    alpha_mda = models.DecimalField(
+        _("MDA Alpha"),
+        max_digits=20,
+        decimal_places=5,
+        null=True,
+        blank=True
+    )
+
+    beta_mda = models.DecimalField(
+        _("MDA Beta"),
+        max_digits=20,
+        decimal_places=5,
+        null=True,
+        blank=True
     )
 
     analyst = models.ForeignKey(
@@ -234,3 +288,51 @@ class NuclideActivity(models.Model):
             return float(self.activity_bq)
 
         return float(self.activity_bq) * math.exp(-LN2 * elapsed_seconds / half_life)
+
+
+
+class AnalysisAttachment(models.Model):
+
+    analysis = models.ForeignKey(
+        Analysis,
+        related_name="attachments",
+        on_delete=models.CASCADE
+    )
+
+    file = models.FileField(
+        upload_to="laboratory/spectra/"
+    )
+
+    description = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+
+
+class AnalysisApproval(models.Model):
+
+    analysis = models.ForeignKey(
+        Analysis,
+        related_name="approvals",
+        on_delete=models.CASCADE
+    )
+
+    role = models.CharField(
+        max_length=50
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True
+    )
+
+    signed_date = models.DateField(
+        null=True
+    )
+
+    signature = models.ImageField(
+        upload_to="laboratory/signatures/",
+        null=True
+    )

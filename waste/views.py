@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
+from laboratory.views import sample_edit
 from dashboard.models import HideShowFilterT
 
 from .forms import (
@@ -372,17 +372,19 @@ def waste_send_to_analysis(request):
 
     ids = request.POST.getlist("ids")
     batches = WasteBatch.objects.filter(pk__in=ids)
+    
 
     if not batches:
         messages.error(request, _("Select at least one batch."))
         return redirect("waste_table")
 
-    created = []
+    
+    batch = get_object_or_404(WasteBatch, pk=ids[0])
     today = timezone.now().date()
+  
 
-    for batch in batches:
-        sample_id = f"{batch.waste_id}-S{batch.samples.count() + 1}"
-        sample = Sample.objects.create(
+    sample_id = f"{batch.waste_id}-S{batch.samples.count() + 1}"
+    sample = Sample.objects.create(
             sample_id=sample_id,
             batch=batch,
             sample_stage=SampleStage.RECEIPT,
@@ -391,12 +393,14 @@ def waste_send_to_analysis(request):
             sent_to_lab_date=today,
             collected_by=request.user,
         )
-        created.append(sample)
 
     messages.success(
-        request, _("%(count)s sample(s) created and sent to the lab.") % {"count": len(created)}
+        request,
+        _("Sample %(id)s created and sent to the lab.") % {
+            "id": sample.sample_id
+        }
     )
-    return redirect("waste_table")
+    return redirect("sample_edit", pk=sample.pk)
 
 
 # =====================================================

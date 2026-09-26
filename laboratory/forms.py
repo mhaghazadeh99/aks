@@ -34,7 +34,7 @@ class SampleForm(forms.ModelForm):
             "sample_stage",
             "sampling_date",
             "sample_mass_kg",
-            "sample_volume_l",
+            "sample_volume_ml",
             "urgent",
             "sample_code_barcode",
             "remarks",

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-7">
+
+  <div class="card shadow-sm">
+    <div class="card-header"><h3 class="mb-0">{{ page_title }}</h3></div>
+    <div class="card-body">
+      <p class="text-muted">
+        {% trans "A counting run groups up to 12 Alpha/Beta analyses counted together. The MDA values entered here print on the shared report." %}
+      </p>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        {% crispy form %}
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <a href="{% url 'counting_run_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+          <button type="submit" class="btn btn-primary">{% trans "Create Run" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div></div></div>
+{% endblock %}

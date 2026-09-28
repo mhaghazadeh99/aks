@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Sign Report" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-8">
+
+  <nav class="mb-3">
+    {% if kind == "gamma" %}
+      <a href="{% url 'sample_detail' object.sample.pk %}">&larr; {% trans "Back to sample" %}</a>
+    {% else %}
+      <a href="{% url 'counting_run_detail' object.pk %}">&larr; {% trans "Back to counting run" %}</a>
+    {% endif %}
+  </nav>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header">
+      <h3 class="mb-0">
+        {% if kind == "gamma" %}{% trans "Gamma Report" %} — {{ object.sample.sample_id }}
+        {% else %}{% trans "Alpha/Beta Report" %} — {{ object.run_id }}{% endif %}
+      </h3>
+    </div>
+    <div class="card-body">
+
+      <h6>{% trans "Signature chain" %}</h6>
+      <ol class="list-group list-group-numbered mb-4">
+        {% for step in approvals %}
+        <li class="list-group-item d-flex justify-content-between align-items-start {% if step.pk == approval.pk %}list-group-item-primary{% endif %}">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold">{{ step.get_role_display }}
+              {% if step.pk == approval.pk %}<small>({% trans "your turn" %})</small>{% endif %}</div>
+            {% if step.user %}{{ step.user }} — {{ step.signed_date }}{% endif %}
+            {% if step.comments %}<div class="small text-muted">{{ step.comments }}</div>{% endif %}
+          </div>
+          <span class="badge {% if step.status == 'APPROVED' %}bg-success{% elif step.status == 'REJECTED' %}bg-danger{% else %}bg-secondary{% endif %}">{{ step.get_status_display }}</span>
+        </li>
+        {% endfor %}
+      </ol>
+
+      {% if not report %}
+        <div class="alert alert-danger">{% trans "No report file exists yet, so it can't be signed. Generate the report first." %}</div>
+      {% else %}
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <a href="{{ report.file.url }}" class="btn btn-outline-secondary">⬇ {% trans "Download current report" %}</a>
+          <span class="text-muted small">{{ report.file.name|cut:"reports/" }}</span>
+        </div>
+
+        {# ---- replace with hand-filled version ---- #}
+        <div class="border rounded p-3 mb-4">
+          <h6>{% trans "Replace with an edited version" %}</h6>
+          <p class="small text-muted mb-2">{% trans "Download, fill in by hand, and upload the .docx here before signing. Uploading replaces the current report." %}</p>
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="upload">
+            {% crispy upload_form %}
+            {{ upload_form.file.errors }}
+            <button type="submit" class="btn btn-outline-primary mt-2">{% trans "Upload" %}</button>
+          </form>
+        </div>
+
+        {# ---- approve / reject ---- #}
+        <form method="post">
+          {% csrf_token %}
+          <h6>{% trans "Your decision" %} — {{ approval.get_role_display }}</h6>
+          <label class="form-label">{% trans "Comment (optional)" %}</label>
+          <textarea name="comment" rows="2" class="form-control mb-3"></textarea>
+          <p class="small text-muted">{% trans "Approving stamps your name, date and signature image onto the report." %}</p>
+          <div class="d-flex gap-2 justify-content-end">
+            <button type="submit" name="reject" value="1" class="btn btn-danger"
+                    onclick="return confirm('{% trans "Reject this report?" %}');">{% trans "Reject" %}</button>
+            <button type="submit" name="approve" value="1" class="btn btn-success">✍ {% trans "Sign & Approve" %}</button>
+          </div>
+        </form>
+
+      {% endif %}
+    </div>
+  </div>
+
+</div></div></div>
+{% endblock %}

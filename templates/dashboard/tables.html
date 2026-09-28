@@ -190,8 +190,13 @@
 
   <div id="filterContainer"></div>
 
-  <button id="addFilter" class="btn-blue"> {% trans "Add Filter" %}</button>
-  <button id="applyFilters" class="btn-info"> {% trans "Apply" %}</button>
+  <button id="addFilter" class="btn-blue">
+      {% trans "Add Filter" %}
+  </button>
+
+  <button id="applyFilters" class="btn-info">
+      {% trans "Apply" %}
+  </button>
 
 </div>
 
@@ -474,13 +479,13 @@
 <div class="pagination">
 
     {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
+        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}&activity_min={{ activity_min|default:'' }}&activity_max={{ activity_max|default:'' }}">
             {% trans "Previous" %}
         </a>
     {% endif %}
 
     {% if page_obj.number > 3 %}
-        <a href="?page=1{% if page_size %}&size={{ page_size }}{% endif %}">1</a>
+        <a href="?page=1{% if page_size %}&size={{ page_size }}{% endif %}&activity_min={{ activity_min|default:'' }}&activity_max={{ activity_max|default:'' }}">1</a>
 
         {% if page_obj.number > 4 %}
             <span>...</span>
@@ -492,7 +497,7 @@
             {% if page_obj.number == num %}
                 <span class="current">{{ num }}</span>
             {% else %}
-                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">
+                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}&activity_min={{ activity_min|default:'' }}&activity_max={{ activity_max|default:'' }}">
                     {{ num }}
                 </a>
             {% endif %}
@@ -505,14 +510,14 @@
             <span>...</span>
         {% endif %}
 
-        <a href="?page={{ page_obj.paginator.num_pages }}{% if page_size %}&size={{ page_size }}{% endif %}">
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if page_size %}&size={{ page_size }}{% endif %}&activity_min={{ activity_min|default:'' }}&activity_max={{ activity_max|default:'' }}">
             {{ page_obj.paginator.num_pages }}
         </a>
 
     {% endif %}
 
     {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">
+        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}&activity_min={{ activity_min|default:'' }}&activity_max={{ activity_max|default:'' }}">
             {% trans "Next" %}
         </a>
     {% endif %}
@@ -614,6 +619,7 @@ document.getElementById("addFilter").onclick = function () {
         <option value="Responsible_Person">{% trans "Responsible" %}</option>
         <option value="Nuclide">{% trans "Nuclide" %}</option>
         <option value="activity_input">{% trans "Input" %}</option>
+        <option value="current_activity">{% trans "Current Activity Range" %}</option>
         <option value="activity_unit">{% trans "Unit" %}</option>
         
         <option value="Activity_reference_date">{% trans "Reference Date" %}</option>
@@ -638,23 +644,65 @@ document.getElementById("addFilter").onclick = function () {
         <option value="created_at">{% trans "Created" %}</option>
 </select>
         <input class="form-control mr-2 value" placeholder="{% trans 'Value' %}">
+<input class="form-control mr-2 value2"
+       placeholder="{% trans 'Max' %}"
+       style="display:none;">
         <button class="btn btn-danger">X</button>
     `;
     row.querySelector("button").onclick = () => row.remove();
     document.getElementById("filterContainer").appendChild(row);
+    row.querySelector(".key").onchange = function(){
+
+    let second =
+        row.querySelector(".value2");
+
+
+    if(this.value === "current_activity"){
+        second.style.display = "block";
+        row.querySelector(".value")
+            .placeholder = "Min";
+    }
+    else{
+        second.style.display = "none";
+        row.querySelector(".value")
+            .placeholder = "{% trans 'Value' %}";
+    }
+
+};
 };
 
 document.getElementById("applyFilters").onclick = function () {
+
     let k = document.querySelectorAll(".key");
     let v = document.querySelectorAll(".value");
+    let v2 = document.querySelectorAll(".value2");
+
     let p = new URLSearchParams();
 
+
+    // Existing filters
     k.forEach((x,i)=>{
         if(v[i].value){
-            p.append("key", x.value);
-            p.append("value", v[i].value);
-        }
+
+    p.append("key", x.value);
+    p.append("value", v[i].value);
+
+
+    if(x.value === "current_activity" && v2[i].value){
+
+        p.append(
+            "value_max",
+            v2[i].value
+        );
+
+    }
+}
     });
+
+
+    // Current Activity range
+  
+
 
     window.location.href = "?" + p.toString();
 };

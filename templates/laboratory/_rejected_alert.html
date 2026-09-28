@@ -1,0 +1,15 @@
+{% load i18n %}
+{% if samples %}
+<div class="alert alert-danger">
+    <strong>🔔 {% trans "Your samples were rejected by the lab:" %}</strong>
+    <ul class="mb-0 mt-2">
+    {% for s in samples %}
+        <li>
+            <a href="{% url 'sample_detail' s.pk %}" class="alert-link">{{ s.sample_id }}</a>
+            — {{ s.rejection_reason|default:"-"|truncatechars:80 }}
+            <small class="text-muted">({{ s.rejected_at|date:"Y-m-d H:i" }})</small>
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}

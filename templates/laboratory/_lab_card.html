@@ -1,0 +1,7 @@
+{% load i18n %}{% url card.url as target %}
+<a href="{{ target }}{{ card.query|default:'' }}" class="home-card">
+    <div class="home-icon">{{ card.icon }}</div>
+    <h3>{{ card.title }}</h3>
+    <p>{{ card.text }}</p>
+    {% if count is not None %}<p class="home-count {{ card.css|default:'' }}"># {{ count }} {{ card.unit }}</p>{% endif %}
+</a>

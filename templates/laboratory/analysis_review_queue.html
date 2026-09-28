@@ -6,7 +6,10 @@
 {% block content %}
 <div class="content">
 
-<h3 class="mb-3">{% trans "Analyses Pending Review" %}</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{% trans "Analyses Pending Review" %}</h3>
+    <a href="{% url 'lab_home' %}" class="btn btn-outline-secondary btn-sm">{% trans "Lab Home" %}</a>
+</div>
 
 <div class="table-scroll">
 <table class="table table-bordered table-striped">
@@ -24,7 +27,7 @@
 <tbody>
 {% for a in page_obj %}
 <tr>
-    <td>{{ a.sample.sample_id }}</td>
+    <td><a href="{% url 'sample_detail' a.sample.pk %}">{{ a.sample.sample_id }}</a></td>
     <td>
         {% if a.sample.batch %}
             <a href="{% url 'waste_detail' a.sample.batch.pk %}">{{ a.sample.batch.waste_id }}</a>
@@ -38,10 +41,16 @@
     <td>{{ a.analyst|default:"-" }}</td>
     <td>
         <a href="{% url 'sample_detail' a.sample.pk %}" class="btn btn-sm btn-outline-primary">{% trans "Review" %}</a>
-        <form method="post" action="{% url 'analysis_approve' a.pk %}" class="d-inline">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-success">{% trans "Approve" %}</button>
-        </form>
+        {% if a.approvals.all %}
+            <a href="{% url 'lab_report_sign' 'gamma' a.pk %}" class="btn btn-sm btn-primary">✍ {% trans "Sign" %}</a>
+        {% elif a.counting_run %}
+            <a href="{% url 'counting_run_detail' a.counting_run.pk %}" class="btn btn-sm btn-outline-secondary">{% trans "Counting Run" %}</a>
+        {% else %}
+            <form method="post" action="{% url 'analysis_approve' a.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-success">{% trans "Approve" %}</button>
+            </form>
+        {% endif %}
     </td>
 </tr>
 {% empty %}
@@ -50,6 +59,14 @@
 </tbody>
 </table>
 </div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="d-flex justify-content-center gap-2 mt-3">
+    {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
+    <span class="align-self-center">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>{% endif %}
+</div>
+{% endif %}
 
 </div>
 {% endblock %}

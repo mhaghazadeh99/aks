@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n lab_tags %}
+
+{% block title %}{% trans "Finalized Reports" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link" href="{% url 'signature_queue_analyst' %}">{% trans "Analyst" %} {% lab_badge "sig_analyst" "bg-secondary" %}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'signature_queue_lab_manager' %}">{% trans "Lab Manager" %} {% lab_badge "sig_lab_manager" "bg-secondary" %}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'signature_queue_ops_manager' %}">{% trans "Operations / Ops Control" %} {% lab_badge "sig_ops_manager" "bg-secondary" %}</a></li>
+    <li class="nav-item"><a class="nav-link active" href="{% url 'finalized_reports' %}">{% trans "Finalized" %}</a></li>
+</ul>
+
+<form method="get" class="d-flex gap-2 mb-3">
+    <input type="text" name="search" class="form-control" style="max-width:320px" placeholder="{% trans 'Sample / barcode / run ID...' %}" value="{{ search }}">
+    <select name="kind" class="form-select" style="max-width:200px" onchange="this.form.submit()">
+        <option value="">{% trans "All types" %}</option>
+        <option value="gamma" {% if kind == "gamma" %}selected{% endif %}>{% trans "Gamma" %}</option>
+        <option value="alpha-beta" {% if kind == "alpha-beta" %}selected{% endif %}>{% trans "Alpha/Beta" %}</option>
+    </select>
+    <button class="btn btn-outline-primary">🔍</button>
+</form>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped align-middle">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Type" %}</th><th>{% trans "Report for" %}</th><th>{% trans "Analysis / Run date" %}</th>
+    <th>{% trans "Finalized on" %}</th><th>{% trans "Signed by" %}</th><th>{% trans "Report" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for r in page_obj %}
+<tr>
+    <td>{% if r.kind == "gamma" %}<span class="badge bg-info text-dark">{% trans "Gamma" %}</span>{% else %}<span class="badge bg-secondary">{% trans "Alpha/Beta" %}</span>{% endif %}</td>
+    <td><a href="{{ r.url }}">{{ r.label }}</a>{% if r.extra %} <small class="text-muted">{{ r.extra }}</small>{% endif %}</td>
+    <td>{{ r.date|default:"-" }}</td>
+    <td>{{ r.finalized_on|default:"-" }}</td>
+    <td>{% for s in r.approvals %}<div class="small">{{ s.get_role_display }}: {{ s.user|default:"-" }}</div>{% endfor %}</td>
+    <td>
+        {% for att in r.attachments %}{% if att.attachment_type == "REPORT" %}
+            <a href="{{ att.file.url }}" class="btn btn-sm btn-outline-secondary">⬇ .docx</a>
+        {% endif %}{% endfor %}
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center text-muted">{% trans "No finalized reports yet." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="d-flex justify-content-center gap-2 mt-3">
+    {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}&search={{ search|urlencode }}&kind={{ kind }}">{% trans "Previous" %}</a>{% endif %}
+    <span class="align-self-center">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}&search={{ search|urlencode }}&kind={{ kind }}">{% trans "Next" %}</a>{% endif %}
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

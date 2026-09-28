@@ -1,4 +1,7 @@
+from functools import cached_property
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -37,9 +40,6 @@ class OriginOfWaste(models.TextChoices):
 
 
 class BatchStatus(models.TextChoices):
-    # NOTE: your original had default=BatchStatus.ACTIVE, which doesn't
-    # exist in these choices — that would have raised at runtime. STORED
-    # is the sensible default for a newly received/created batch.
     STORED = "STORED", _("Stored")
     IN_TREATMENT = "IN_TREATMENT", _("In Treatment")
     TRANSFERRED = "TRANSFERRED", _("Transferred")
@@ -104,17 +104,15 @@ class LineageOperation(models.TextChoices):
 # =====================================================
 # Main Waste Batch
 #
-# DELIBERATELY FLAT (one model, nullable type/state-specific
-# columns) rather than the LiquidWasteDetails / WasteConditioning
-# side-tables in your draft. Reasons:
-#   - it matches how DSRS is already modeled in this project (one
-#     wide model with nullable fields), so the inventory table,
-#     search, filters, column show/hide and CSV export all work the
-#     same way with no joins or special-casing;
-#   - which fields apply is a UI concern (see forms.py, which shows/
-#     hides per waste_type + waste_state) rather than a storage one.
-# Fields are grouped below by when they apply.
+# Deliberately FLAT (one model, nullable type/state-specific columns),
+# same as DSRS. Which fields apply is a UI concern (forms.py shows/hides
+# per waste_type + waste_state); clean() below only guards the rules that
+# must never be violated whatever the UI does.
 # =====================================================
+
+LIQUID_ONLY_FIELDS = ("ph", "density", "total_solids", "suspended_solids", "soluble_solids")
+PROCESSED_ONLY_FIELDS = ("pretreatment", "treatment", "package_type", "waste_matrix")
+
 
 class WasteBatch(models.Model):
 
@@ -126,9 +124,6 @@ class WasteBatch(models.Model):
         _("Waste State"), max_length=20, choices=WasteState.choices, default=WasteState.UNPROCESSED
     )
 
-    # FK, not OneToOne — a facility obviously holds many batches. Your
-    # draft had OneToOneField with related_name='' on BOTH facility
-    # fields, which would also have raised a reverse-accessor clash.
     facility = models.ForeignKey(
         FacilityModel,
         verbose_name=_("Current Facility"),
@@ -152,7 +147,16 @@ class WasteBatch(models.Model):
     material = models.CharField(_("Material"), max_length=100, blank=True, null=True)
     container_type = models.CharField(_("Container Type"), max_length=100, blank=True, null=True)
 
-    mass_kg = models.DecimalField(_("Mass (kg)"), max_digits=12, decimal_places=3, blank=True, null=True)
+    # NEW
+    waste_appearance = models.CharField(
+        _("Waste Appearance"), max_length=255, blank=True, null=True,
+        help_text=_("Physical appearance: colour, clarity, texture, visible solids…"),
+    )
+
+    mass_kg = models.DecimalField(
+        _("Mass (kg)"), max_digits=12, decimal_places=3, blank=True, null=True,
+        help_text=_("Total mass of the batch as held (including packaging, if any)."),
+    )
     volume_m3 = models.DecimalField(_("Volume (m³)"), max_digits=12, decimal_places=3, blank=True, null=True)
 
     # ---- Radiological ----
@@ -171,12 +175,8 @@ class WasteBatch(models.Model):
         _("Beta/Gamma Contamination (Bq/cm²)"), max_digits=20, decimal_places=5, blank=True, null=True
     )
 
-    # NOTE: current_gamma_bq / current_total_activity_bq are GONE as
-    # stored columns. They're now computed properties reading the
-    # latest laboratory Analysis (see below) — storing them meant they
-    # went stale the moment a new analysis came back, and the old
-    # `gamma_bq = models.OneToManyField()` wasn't a real Django field
-    # at all (that would not have migrated).
+    # Activity figures are NOT stored: they're computed from the latest
+    # laboratory Analysis (see the properties below).
 
     # ---- LIQUID only ----
     ph = models.DecimalField(_("pH"), max_digits=5, decimal_places=2, blank=True, null=True)
@@ -209,7 +209,10 @@ class WasteBatch(models.Model):
     waste_to_matrix_ratio = models.DecimalField(
         _("Waste to Matrix Ratio"), max_digits=10, decimal_places=4, blank=True, null=True
     )
-    waste_mass_kg = models.DecimalField(_("Waste Mass (kg)"), max_digits=12, decimal_places=3, blank=True, null=True)
+    waste_mass_kg = models.DecimalField(
+        _("Waste Mass (kg)"), max_digits=12, decimal_places=3, blank=True, null=True,
+        help_text=_("Mass of the waste itself, without matrix/package."),
+    )
     package_mass_kg = models.DecimalField(
         _("Package Mass (kg)"), max_digits=12, decimal_places=3, blank=True, null=True
     )
@@ -248,29 +251,69 @@ class WasteBatch(models.Model):
         ordering = ("-created_at", "waste_id")
         verbose_name = _("Waste Batch")
         verbose_name_plural = _("Waste Batches")
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["facility", "status"]),
+            models.Index(fields=["waste_type", "waste_state"]),
+        ]
 
     def __str__(self):
         return self.waste_id
 
     # =====================================================
-    # Activity — read from the laboratory app, never stored here.
-    # Imports are LOCAL to each method on purpose: laboratory.models
-    # imports WasteBatch, so a module-level import either way would be
-    # circular.
+    # Validation — only the rules that must hold whatever the UI does.
+    # Raised as NON-field errors on purpose, so it is safe even when a
+    # ModelForm doesn't include some of these fields.
     # =====================================================
 
-    @property
+    def clean(self):
+        super().clean()
+        problems = []
+
+        if self.waste_state == WasteState.PROCESSED:
+            if not self.treatment:
+                problems.append(_("A processed batch must have the treatment that was applied."))
+            if not self.waste_matrix:
+                problems.append(_("A processed batch must have a waste matrix."))
+        else:
+            filled = [f for f in PROCESSED_ONLY_FIELDS if getattr(self, f)]
+            if filled:
+                problems.append(_("Pre-treatment/treatment applied, package type and waste matrix only apply to processed batches."))
+
+        if self.waste_type != WasteType.LIQUID:
+            if any(getattr(self, f) is not None for f in LIQUID_ONLY_FIELDS):
+                problems.append(_("pH, density and solids only apply to liquid waste."))
+
+        if problems:
+            raise ValidationError(problems)
+
+    # =====================================================
+    # Activity — read from the laboratory app, never stored here.
+    # Imports are LOCAL because laboratory.models imports WasteBatch.
+    #
+    # `latest_analysis` is cached per instance (one query per batch per
+    # request instead of one per property) and picks the newest analysis
+    # by analysis date — it no longer depends on Analysis.is_latest, which
+    # flips back whenever an OLD analysis is re-saved. Its per-nuclide rows
+    # are prefetched, so everything below reuses them with no extra queries.
+    #
+    # After creating a new analysis inside the same request, call
+    # batch.refresh_activity() to drop the cache.
+    # =====================================================
+
+    @cached_property
     def latest_analysis(self):
-        """Most recent approved-or-not analysis across all this batch's
-        samples. laboratory.Analysis already maintains `is_latest` per
-        batch in its save()."""
         from laboratory.models import Analysis
         return (
             Analysis.objects
-            .filter(sample__batch=self, is_latest=True)
+            .filter(sample__batch=self)
             .prefetch_related("nuclide_activities__radionuclide")
+            .order_by("-analysis_date", "-created_at", "-id")
             .first()
         )
+
+    def refresh_activity(self):
+        self.__dict__.pop("latest_analysis", None)
 
     @property
     def total_alpha_bq(self):
@@ -285,46 +328,37 @@ class WasteBatch(models.Model):
     def nuclide_activities(self):
         """Per-nuclide activities (alpha/beta/gamma) from the latest analysis."""
         analysis = self.latest_analysis
-        if not analysis:
-            return []
-        return list(analysis.nuclide_activities.select_related("radionuclide").all())
+        return list(analysis.nuclide_activities.all()) if analysis else []
+
+    def _decayed_total(self, activities):
+        """Sum of decay-corrected activities, or None when there is nothing to sum.
+        (A genuine 0 stays 0 — only 'no data' is None.)"""
+        total, seen = 0.0, False
+        for na in activities:
+            value = na.current_activity_bq()
+            if value is not None:
+                total += value
+                seen = True
+        return total if seen else None
 
     def current_total_activity_bq(self):
-        """Sum of every per-nuclide activity, decay-corrected from the
-        analysis date to today (same approach as DSRS.current_activity_bq)."""
-        analysis = self.latest_analysis
-        if not analysis:
-            return None
-        total = 0.0
-        for na in analysis.nuclide_activities.select_related("radionuclide").all():
-            value = na.current_activity_bq()
-            if value:
-                total += value
-        return total or None
+        return self._decayed_total(self.nuclide_activities())
 
     def current_gamma_bq(self):
         from laboratory.models import RadiationType
-        analysis = self.latest_analysis
-        if not analysis:
-            return None
-        total = 0.0
-        for na in analysis.nuclide_activities.select_related("radionuclide").filter(
-            radiation_type=RadiationType.GAMMA
-        ):
-            value = na.current_activity_bq()
-            if value:
-                total += value
-        return total or None
+        return self._decayed_total(
+            na for na in self.nuclide_activities() if na.radiation_type == RadiationType.GAMMA
+        )
 
     @property
     def current_total_activity_bq_value(self):
         value = self.current_total_activity_bq()
-        return round(value, 3) if value else None
+        return round(value, 3) if value is not None else None
 
     @property
     def current_gamma_bq_value(self):
         value = self.current_gamma_bq()
-        return round(value, 3) if value else None
+        return round(value, 3) if value is not None else None
 
     @property
     def nuclide_summary(self):
@@ -356,7 +390,11 @@ class WasteBatch(models.Model):
         volume_m3=None,
     ):
         """Mirrors DSRS.register_movement: records the movement AND applies
-        its implied status/facility change in one place."""
+        its implied status/facility change in one place.
+
+        NOTE: mass_kg / volume_m3 are recorded on the movement only. They do
+        NOT reduce the batch — a partial removal must be done as a SPLIT
+        (which creates child batches through WasteBatchLineage)."""
 
         if movement_date is None:
             movement_date = timezone.now().date()
@@ -376,7 +414,8 @@ class WasteBatch(models.Model):
             self.facility = to_facility
         self.status = MOVEMENT_TO_STATUS.get(movement_type, self.status)
         self.status_date = movement_date
-        self.save(update_fields=["facility", "status", "status_date"])
+        # updated_at must be listed, otherwise auto_now is skipped by update_fields
+        self.save(update_fields=["facility", "status", "status_date", "updated_at"])
 
         return movement
 
@@ -441,15 +480,9 @@ class WasteMovementAttachment(models.Model):
 
 # =====================================================
 # Lineage — merge / split / conditioning
-#
-# All three are the same shape: N parent batches produce M child
-# batches, and the parents are consumed (fully or partially). One
-# table handles all of them so history is traceable in one place:
 #   MERGE        : many parents -> one child
 #   SPLIT        : one parent   -> many children
-#   CONDITIONING : one parent   -> one child (and the child is a
-#                  PROCESSED SOLID record, since conditioning
-#                  solidifies/packages the waste)
+#   CONDITIONING : one parent   -> one child (PROCESSED SOLID)
 # =====================================================
 
 class WasteBatchLineage(models.Model):

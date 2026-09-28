@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load i18n lab_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link {% if role_key == 'analyst' %}active{% endif %}" href="{% url 'signature_queue_analyst' %}">{% trans "Analyst" %} {% lab_badge "sig_analyst" "bg-secondary" %}</a></li>
+    <li class="nav-item"><a class="nav-link {% if role_key == 'lab-manager' %}active{% endif %}" href="{% url 'signature_queue_lab_manager' %}">{% trans "Lab Manager" %} {% lab_badge "sig_lab_manager" "bg-secondary" %}</a></li>
+    <li class="nav-item"><a class="nav-link {% if role_key == 'ops-manager' %}active{% endif %}" href="{% url 'signature_queue_ops_manager' %}">{% trans "Operations / Ops Control" %} {% lab_badge "sig_ops_manager" "bg-secondary" %}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'finalized_reports' %}">{% trans "Finalized" %}</a></li>
+</ul>
+
+<h3 class="mb-3">{{ title }}</h3>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped align-middle">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Type" %}</th>
+    <th>{% trans "Report" %}</th>
+    <th>{% trans "Date" %}</th>
+    <th>{% trans "Signed so far" %}</th>
+    <th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for item in items %}
+<tr>
+    <td>{% if item.kind == "gamma" %}<span class="badge bg-info text-dark">{% trans "Gamma" %}</span>{% else %}<span class="badge bg-secondary">{% trans "Alpha/Beta" %}</span>{% endif %}</td>
+    <td>
+        {% if item.kind == "gamma" %}
+            <a href="{% url 'sample_detail' item.target.sample_id %}">{{ item.target.sample.sample_id }}</a>
+        {% else %}
+            <a href="{% url 'counting_run_detail' item.target.pk %}">{{ item.target.run_id }}</a>
+            <small class="text-muted">({{ item.target.sample_count }} {% trans "samples" %})</small>
+        {% endif %}
+    </td>
+    <td>{% if item.kind == "gamma" %}{{ item.target.analysis_date }}{% else %}{{ item.target.run_date }}{% endif %}</td>
+    <td>
+        {% for s in item.target.approvals.all %}{% if s.status == "APPROVED" %}<span class="badge bg-success">{{ s.get_role_display }}</span> {% endif %}{% endfor %}
+    </td>
+    <td>
+        {% for att in item.target.attachments.all %}{% if att.attachment_type == "REPORT" %}
+            <a href="{{ att.file.url }}" class="btn btn-sm btn-outline-secondary">⬇</a>
+        {% endif %}{% endfor %}
+        <a href="{% url 'lab_report_sign' item.kind item.pk %}" class="btn btn-sm btn-primary">✍ {% trans "Review & Sign" %}</a>
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="text-center text-muted">{% trans "Nothing is waiting for this signature." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if rejected %}
+<h5 class="mt-4 text-danger">{% trans "Rejected reports — need rework" %}</h5>
+<div class="table-scroll">
+<table class="table table-bordered">
+<thead class="table-light"><tr><th>{% trans "Report" %}</th><th>{% trans "Rejected by" %}</th><th>{% trans "Comment" %}</th><th></th></tr></thead>
+<tbody>
+{% for step in rejected %}
+<tr>
+    <td>{% if step.analysis_id %}{{ step.analysis.sample.sample_id }}{% else %}{{ step.counting_run.run_id }}{% endif %}</td>
+    <td>{{ step.get_role_display }} — {{ step.user|default:"-" }} ({{ step.signed_date }})</td>
+    <td>{{ step.comments|default:"-" }}</td>
+    <td>
+        {% if step.analysis_id %}<a class="btn btn-sm btn-outline-primary" href="{% url 'sample_detail' step.analysis.sample_id %}">{% trans "Open sample" %}</a>
+        {% else %}<a class="btn btn-sm btn-outline-primary" href="{% url 'counting_run_detail' step.counting_run_id %}">{% trans "Open run" %}</a>{% endif %}
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

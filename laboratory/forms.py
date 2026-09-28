@@ -1,4 +1,6 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
@@ -7,14 +9,20 @@ from crispy_forms.helper import FormHelper
 from reference.models import Nuclides
 from waste.models import WasteBatch
 
-from .models import Analysis, NuclideActivity, Sample, SampleStatus
+from .models import (
+    AlphaBetaCountingRun, Analysis, CounterType, MAX_SAMPLES_PER_COUNTING_RUN,
+    NuclideActivity, Sample, SampleStatus,
+)
 
 
 def _bootstrap(fields):
     for field in fields.values():
         existing = field.widget.attrs.get("class", "")
-        if "form-control" not in existing and "form-select" not in existing:
+        if isinstance(field.widget, forms.CheckboxInput):
+            field.widget.attrs["class"] = f"{existing} form-check-input".strip()
+        elif "form-control" not in existing and "form-select" not in existing:
             field.widget.attrs["class"] = f"{existing} form-control".strip()
+
 
 
 class SampleForm(forms.ModelForm):
@@ -28,21 +36,12 @@ class SampleForm(forms.ModelForm):
     class Meta:
         model = Sample
         fields = [
-            "sample_id",
-            "batch",
-            "description",
-            "sample_stage",
-            "sampling_date",
-            "sample_mass_kg",
-            "sample_volume_ml",
-            "urgent",
-            "sample_code_barcode",
-            "remarks",
+            "sample_id", "batch", "analysis_type", "applicant_name", "sample_type",
+            "description", "sample_stage", "sampling_date", "sampling_location",
+            "sample_mass_kg", "sample_volume_ml", "urgent", "sample_code_barcode", "remarks",
         ]
         widgets = {
-            "sampling_date": forms.DateInput(
-                attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}
-            ),
+            "sampling_date": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
             "remarks": forms.Textarea(attrs={"rows": 2}),
         }
 
@@ -55,6 +54,8 @@ class SampleForm(forms.ModelForm):
         )
         self.fields["batch"].required = False
         self.fields["batch"].empty_label = _("— Standalone sample (no waste batch) —")
+        self.fields["analysis_type"].required = True
+        self.fields["analysis_type"].choices = [("", _("— Select analysis type —"))] + list(CounterType.choices)
 
         _bootstrap(self.fields)
         self.helper = FormHelper()
@@ -91,10 +92,15 @@ class LabReceiveForm(forms.ModelForm):
 
 
 class AnalysisForm(forms.ModelForm):
+    """Adapts to the sample's analysis type: Gamma (HPGE) or Alpha/Beta."""
 
     class Meta:
         model = Analysis
-        fields = ["analysis_date", "total_alpha", "total_beta", "analysis_notes"]
+        fields = [
+            "analysis_date", "counting_duration_seconds",
+            "total_alpha", "alpha_uncertainty", "total_beta", "beta_uncertainty",
+            "counting_run", "analysis_notes",
+        ]
         widgets = {
             "analysis_date": forms.DateInput(
                 attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}
@@ -102,13 +108,39 @@ class AnalysisForm(forms.ModelForm):
             "analysis_notes": forms.Textarea(attrs={"rows": 3}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, detector_type=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        if detector_type == CounterType.HPGE:
+            for name in ("total_alpha", "alpha_uncertainty", "total_beta", "beta_uncertainty", "counting_run"):
+                del self.fields[name]
+            self.fields["counting_duration_seconds"].required = True
+            self.fields["generate_report"] = forms.BooleanField(
+                required=False, label=_("Generate the Gamma report and start signatures"),
+                initial=(self.instance.approvals.exists() if self.instance.pk else True),
+            )
+        else:
+            del self.fields["counting_duration_seconds"]  # comes from the counting run
+            # only runs that haven't been finalized (no signature chain yet)
+            open_runs = Q(approvals__isnull=True)
+            if self.instance.counting_run_id:
+                open_runs |= Q(pk=self.instance.counting_run_id)
+            field = self.fields["counting_run"]
+            field.queryset = AlphaBetaCountingRun.objects.filter(open_runs).distinct().order_by("-run_date")
+            field.required = False
+            field.empty_label = _("— Not in a run yet —")
+
         _bootstrap(self.fields)
         self.helper = FormHelper()
         self.helper.form_tag = False
 
+    def clean_counting_run(self):
+        run = self.cleaned_data.get("counting_run")
+        if run and run.pk != self.instance.counting_run_id and run.sample_count >= MAX_SAMPLES_PER_COUNTING_RUN:
+            raise ValidationError(_("That run already has 12 samples."))
+        return run
 
+        
 class NuclideActivityForm(forms.ModelForm):
 
     class Meta:
@@ -130,3 +162,35 @@ NuclideActivityFormSet = inlineformset_factory(
     extra=3,
     can_delete=True,
 )
+
+
+
+
+class AlphaBetaCountingRunForm(forms.ModelForm):
+
+    class Meta:
+        model = AlphaBetaCountingRun
+        fields = ["run_id", "run_date", "counting_duration_seconds", "alpha_mda_mbq", "beta_mda_mbq", "notes"]
+        widgets = {
+            "run_date": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
+            "notes": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _bootstrap(self.fields)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+
+class LabReportUploadForm(forms.Form):
+    """Same replace-with-hand-filled-version pattern as the license/
+    receive apps' SpecificationUploadForm."""
+
+    file = forms.FileField(label=_("Upload Filled Report (.docx)"))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _bootstrap(self.fields)
+        self.helper = FormHelper()
+        self.helper.form_tag = False

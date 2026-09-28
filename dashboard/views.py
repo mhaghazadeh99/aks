@@ -373,6 +373,40 @@ def tables_view(request):
     values = request.GET.getlist("value")
 
     for k, v in zip(keys, values):
+        if k == "current_activity":
+
+            activity_min = float(v)
+
+            activity_max = request.GET.get("value_max")
+
+            filtered_ids = []
+
+
+            for source in queryset:
+
+                activity = source.current_activity_mci()
+
+                if activity is None:
+                    continue
+
+
+                if activity < activity_min:
+                    continue
+
+
+                if activity_max:
+                    if activity > float(activity_max):
+                        continue
+
+
+                filtered_ids.append(source.pk)
+
+
+            queryset = queryset.filter(
+                pk__in=filtered_ids
+            )
+
+            continue
         if not v:
             continue
         lookup = FIELD_FILTER_MAP.get(k)
@@ -385,7 +419,46 @@ def tables_view(request):
         # can duplicate rows when a DSRS has multiple matching movements —
         # this collapses those back down to one row per DSRS.
         queryset = queryset.distinct()
+        # ⚛️ CURRENT ACTIVITY RANGE FILTER
+    # Calculated value, therefore cannot be filtered in SQL
 
+    activity_min = request.GET.get("activity_min")
+    activity_max = request.GET.get("activity_max")
+
+    if activity_min or activity_max:
+
+        filtered_ids = []
+
+        try:
+            activity_min = float(activity_min) if activity_min else None
+            activity_max = float(activity_max) if activity_max else None
+        except ValueError:
+            activity_min = None
+            activity_max = None
+
+
+        for source in queryset:
+
+            current_activity = source.current_activity_mci()
+
+            if current_activity is None:
+                continue
+
+
+            if activity_min is not None:
+                if current_activity < activity_min:
+                    continue
+
+
+            if activity_max is not None:
+                if current_activity > activity_max:
+                    continue
+
+
+            filtered_ids.append(source.pk)
+
+
+        queryset = queryset.filter(pk__in=filtered_ids)
     # 📄 PAGE SIZE
     size = request.GET.get("size", "10")
 
@@ -409,6 +482,8 @@ def tables_view(request):
     "search": search,
     "keys": keys,
     "values": values,
+     "activity_min": activity_min,
+    "activity_max": activity_max,
     })
 
 

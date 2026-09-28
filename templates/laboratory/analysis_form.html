@@ -2,83 +2,115 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Analysis" %}{% endblock %}
+{% block title %}{% trans "Analysis" %} — {{ sample.sample_id }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-xl-9">
+<div class="row justify-content-center">
+<div class="col-xl-10">
 
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h3>{% trans "Analysis" %} — {{ sample.sample_id }}</h3>
-                </div>
-                <div class="card-body">
+  <div class="card shadow-sm">
+    <div class="card-header"><h3 class="mb-0">{% trans "Analysis" %} — {{ sample.sample_id }} <span class="badge bg-info text-dark fs-6">{{ sample.get_analysis_type_display }}</span></h3></div>
+    <div class="card-body">
 
-                    <p class="text-muted">
-                        {% if sample.batch %}
-                            {% trans "Saving this becomes the latest analysis for waste batch" %}
-                            <a href="{% url 'waste_detail' sample.batch.pk %}">{{ sample.batch.waste_id }}</a>,
-                            {% trans "and drives that batch's activity figures." %}
-                        {% else %}
-                            {% trans "Standalone sample — this analysis isn't tied to any waste batch." %}
-                        {% endif %}
-                    </p>
+      <p class="text-muted">
+        {% if sample.batch %}
+          {% trans "Saving this becomes the latest analysis for waste batch" %}
+          <a href="{% url 'waste_detail' sample.batch.pk %}">{{ sample.batch.waste_id }}</a>,
+          {% trans "and drives that batch's activity figures." %}
+        {% else %}
+          {% trans "Standalone sample — this analysis isn't tied to any waste batch." %}
+        {% endif %}
+      </p>
 
-                    <form method="post">
-                        {% csrf_token %}
+      <form method="post" novalidate>
+        {% csrf_token %}
 
-                        <h5 class="mb-3">{% trans "Gross Results" %}</h5>
-                        {% crispy form %}
+        {% if not formset %}
+        <div class="alert alert-info small">{% trans "Alpha/Beta: enter the gross results, then choose a counting run (optional here — you can also add it from the run page). The report is produced per run, not per sample." %}</div>
+        {% endif %}
+        <h5 class="mb-3">{% trans "Gross Results" %}</h5>
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        {% crispy form %}
 
-                        <hr class="my-4">
+        {% if formset %}
+        <hr class="my-4">
 
-                        <h5 class="mb-3">{% trans "Per-Nuclide Results" %}</h5>
-                        <p class="text-muted small">
-                            {% trans "Add a row per radionuclide, choosing its radiation type. These are what the waste batch's decay-corrected current activity is calculated from." %}
-                        </p>
+        <h5 class="mb-1">{% trans "Per-Nuclide Results" %}</h5>
+        <p class="text-muted small">
+          {% trans "Add a row per radionuclide, choosing its radiation type. Only Gamma rows go into the Gamma report (max 5). Tick Delete to remove an existing row." %}
+        </p>
 
-                        {{ formset.management_form }}
-                        {% if formset.non_form_errors %}
-                            <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
-                        {% endif %}
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
 
-                        <table class="table table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>{% trans "Radionuclide" %}</th>
-                                    <th>{% trans "Radiation Type" %}</th>
-                                    <th>{% trans "Activity (Bq)" %}</th>
-                                    <th>{% trans "Uncertainty" %}</th>
-                                    <th>{% trans "MDA" %}</th>
-                                    <th>{% trans "Delete" %}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            {% for f in formset %}
-                                <tr>
-                                    {{ f.id }}
-                                    <td>{{ f.radionuclide }}{{ f.radionuclide.errors }}</td>
-                                    <td>{{ f.radiation_type }}{{ f.radiation_type.errors }}</td>
-                                    <td>{{ f.activity_bq }}{{ f.activity_bq.errors }}</td>
-                                    <td>{{ f.uncertainty_bq }}</td>
-                                    <td>{{ f.mda_bq }}</td>
-                                    <td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <a href="{% url 'sample_detail' sample.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
-                            <button type="submit" class="btn btn-primary">{% trans "Save Analysis" %}</button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-
+        <div class="table-responsive">
+        <table class="table table-bordered align-middle" id="nuclide-table">
+          <thead class="table-light">
+            <tr>
+              <th>{% trans "Radionuclide" %}</th><th>{% trans "Radiation Type" %}</th>
+              <th>{% trans "Activity (Bq)" %}</th><th>{% trans "Uncertainty" %}</th>
+              <th>{% trans "MDA" %}</th><th>{% trans "Delete" %}</th>
+            </tr>
+          </thead>
+          <tbody id="nuclide-body">
+          {% for f in formset %}
+            <tr>
+              {{ f.id }}
+              <td>{{ f.radionuclide }}{{ f.radionuclide.errors }}</td>
+              <td>{{ f.radiation_type }}{{ f.radiation_type.errors }}</td>
+              <td>{{ f.activity_bq }}{{ f.activity_bq.errors }}</td>
+              <td>{{ f.uncertainty_bq }}{{ f.uncertainty_bq.errors }}</td>
+              <td>{{ f.mda_bq }}{{ f.mda_bq.errors }}</td>
+              <td class="text-center">{% if f.instance.pk %}{{ f.DELETE }}{% endif %}{{ f.non_field_errors }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
         </div>
+
+        <button type="button" class="btn btn-outline-primary btn-sm" id="add-row">+ {% trans "Add row" %}</button>
+
+        <template id="empty-row">
+          <tr>
+            {{ formset.empty_form.id }}
+            <td>{{ formset.empty_form.radionuclide }}</td>
+            <td>{{ formset.empty_form.radiation_type }}</td>
+            <td>{{ formset.empty_form.activity_bq }}</td>
+            <td>{{ formset.empty_form.uncertainty_bq }}</td>
+            <td>{{ formset.empty_form.mda_bq }}</td>
+            <td></td>
+          </tr>
+        </template>
+
+        {% endif %}
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="{% url 'sample_detail' sample.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+          <button type="submit" class="btn btn-primary">{% trans "Save Analysis" %}</button>
+        </div>
+      </form>
+
     </div>
-</div>
+  </div>
+
+</div></div></div>
+
+{% if formset %}
+<script>
+(function () {
+    const total = document.getElementById("id_{{ formset.prefix }}-TOTAL_FORMS");
+    const body = document.getElementById("nuclide-body");
+    const tpl = document.getElementById("empty-row");
+    document.getElementById("add-row").addEventListener("click", function () {
+        const idx = parseInt(total.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, idx);
+        const tmp = document.createElement("tbody");
+        tmp.innerHTML = html;
+        body.appendChild(tmp.querySelector("tr"));
+        total.value = idx + 1;
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

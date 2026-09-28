@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Counting Runs" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{% trans "Alpha/Beta Counting Runs" %}</h3>
+    <div class="d-flex gap-2">
+        <a href="{% url 'lab_home' %}" class="btn btn-outline-secondary btn-sm">{% trans "Lab Home" %}</a>
+        <a href="{% url 'counting_run_create' %}" class="btn btn-primary btn-sm">+ {% trans "New Counting Run" %}</a>
+    </div>
+</div>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Run ID" %}</th>
+    <th>{% trans "Run Date" %}</th>
+    <th>{% trans "Duration (s)" %}</th>
+    <th>{% trans "Samples" %}</th>
+    <th>{% trans "Status" %}</th>
+    <th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for run in runs %}
+<tr>
+    <td><a href="{% url 'counting_run_detail' run.pk %}">{{ run.run_id }}</a></td>
+    <td>{{ run.run_date|default:"-" }}</td>
+    <td>{{ run.counting_duration_seconds|default:"-" }}</td>
+    <td>{{ run.sample_count }} / 12</td>
+    <td>
+        {% if run.approved %}
+            <span class="badge bg-success">{% trans "Approved" %}</span>
+        {% elif run.approvals.exists %}
+            <span class="badge bg-warning text-dark">{% trans "In signature chain" %}</span>
+        {% else %}
+            <span class="badge bg-secondary">{% trans "Draft" %}</span>
+        {% endif %}
+    </td>
+    <td><a href="{% url 'counting_run_detail' run.pk %}" class="btn btn-sm btn-outline-primary">{% trans "Open" %}</a></td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center">{% trans "No counting runs yet." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+</div>
+{% endblock %}

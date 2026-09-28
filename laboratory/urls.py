@@ -20,4 +20,15 @@ urlpatterns = [
     path("analysis/review/", views.analysis_review_queue, name="analysis_review_queue"),
 
     path("samples/export-csv/", views.sample_export_csv, name="sample_export_csv"),
+    path("counting-runs/", views.counting_run_list, name="counting_run_list"),
+    path("counting-runs/new/", views.counting_run_create, name="counting_run_create"),
+    path("counting-runs/<int:pk>/", views.counting_run_detail, name="counting_run_detail"),
+    path("reports/<str:kind>/<int:pk>/sign/", views.lab_report_sign, name="lab_report_sign"),
+        path("samples/<int:pk>/resubmit/", views.sample_resubmit, name="sample_resubmit"),
+    path("analysis/<int:pk>/generate-report/", views.analysis_generate_report, name="analysis_generate_report"),
+
+    path("signatures/analyst/", views.signature_queue, {"role_key": "analyst"}, name="signature_queue_analyst"),
+    path("signatures/lab-manager/", views.signature_queue, {"role_key": "lab-manager"}, name="signature_queue_lab_manager"),
+    path("signatures/ops-manager/", views.signature_queue, {"role_key": "ops-manager"}, name="signature_queue_ops_manager"),
+    path("reports/finalized/", views.finalized_reports, name="finalized_reports"),
 ]

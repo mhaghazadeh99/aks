@@ -2,153 +2,255 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Sample" %}{% endblock %}
+{% block title %}{% trans "Sample" %} {{ sample.sample_id }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-xl-9">
+<div class="row justify-content-center">
+<div class="col-xl-10">
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">
-                        {{ sample.sample_id }}
-                        {% if sample.urgent %}<span class="badge bg-danger">{% trans "Urgent" %}</span>{% endif %}
-                    </h3>
-                    <span class="badge bg-primary">{{ sample.get_status_display }}</span>
-                </div>
-                <div class="card-body">
+  <nav class="mb-3"><a href="{% url 'sample_list' %}">&larr; {% trans "All samples" %}</a></nav>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>{% trans "Source" %}:</strong>
-                            {% if sample.batch %}
-                                <a href="{% url 'waste_detail' sample.batch.pk %}">{{ sample.batch.waste_id }}</a>
-                            {% else %}
-                                {% trans "Standalone" %} — {{ sample.description|default:"-" }}
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4"><strong>{% trans "Stage" %}:</strong> {{ sample.get_sample_stage_display }}</div>
-                        <div class="col-md-4"><strong>{% trans "Sampling Date" %}:</strong> {{ sample.sampling_date }}</div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-4"><strong>{% trans "Mass (kg)" %}:</strong> {{ sample.sample_mass_kg|default:"-" }}</div>
-                        <div class="col-md-4"><strong>{% trans "Volume (L)" %}:</strong> {{ sample.sample_volume_l|default:"-" }}</div>
-                        <div class="col-md-4"><strong>{% trans "Barcode" %}:</strong> {{ sample.sample_code_barcode|default:"-" }}</div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-4"><strong>{% trans "Collected By" %}:</strong> {{ sample.collected_by|default:"-" }}</div>
-                        <div class="col-md-4"><strong>{% trans "Sent To Lab" %}:</strong> {{ sample.sent_to_lab_date|default:"-" }}</div>
-                        <div class="col-md-4"><strong>{% trans "Lab Received" %}:</strong> {{ sample.lab_received_date|default:"-" }}</div>
-                    </div>
-                    {% if sample.remarks %}
-                    <p class="mt-2"><strong>{% trans "Remarks" %}:</strong> {{ sample.remarks }}</p>
-                    {% endif %}
-                    {% if sample.lab_comments %}
-                    <p class="mt-2"><strong>{% trans "Lab Comments" %}:</strong> {{ sample.lab_comments }}</p>
-                    {% endif %}
-
-                    <hr>
-
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="{% url 'sample_edit' sample.pk %}" class="btn btn-warning">{% trans "Edit" %}</a>
-
-                        {% if sample.status == "COLLECTED" %}
-                        <form method="post" action="{% url 'sample_send_to_lab' sample.pk %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">{% trans "Send to Lab" %}</button>
-                        </form>
-                        {% endif %}
-
-                        {% if sample.status == "RECEIVED_BY_LAB" or sample.status == "IN_ANALYSIS" %}
-                        <a href="{% url 'analysis_edit' sample.pk %}" class="btn btn-success">
-                            {% if analysis %}{% trans "Edit Analysis" %}{% else %}{% trans "Enter Analysis" %}{% endif %}
-                        </a>
-                        {% endif %}
-
-                        {% if sample.status == "RECEIVED_BY_LAB" %}
-                        <form method="post" action="{% url 'sample_start_analysis' sample.pk %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-primary">{% trans "Start Analysis" %}</button>
-                        </form>
-                        {% endif %}
-                    </div>
-
-                    {% if sample.status == "SENT_TO_LAB" %}
-                    <hr>
-                    <h6>{% trans "Lab Receipt" %}</h6>
-                    <form method="post" action="{% url 'sample_lab_receive' sample.pk %}">
-                        {% csrf_token %}
-                        {% crispy receive_form %}
-                        <button type="submit" class="btn btn-primary mt-2">{% trans "Mark as Received" %}</button>
-                    </form>
-                    {% endif %}
-
-                </div>
-            </div>
-
-            {% if analysis %}
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">{% trans "Analysis" %}</h5>
-                    {% if analysis.approved %}
-                        <span class="badge bg-success">{% trans "Approved" %}</span>
-                    {% else %}
-                        <span class="badge bg-warning">{% trans "Pending review" %}</span>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-3"><strong>{% trans "Analysis Date" %}:</strong> {{ analysis.analysis_date }}</div>
-                        <div class="col-md-3"><strong>{% trans "Total Alpha (Bq)" %}:</strong> {{ analysis.total_alpha|default:"-" }}</div>
-                        <div class="col-md-3"><strong>{% trans "Total Beta (Bq)" %}:</strong> {{ analysis.total_beta|default:"-" }}</div>
-                        <div class="col-md-3"><strong>{% trans "Analyst" %}:</strong> {{ analysis.analyst|default:"-" }}</div>
-                    </div>
-
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>{% trans "Radionuclide" %}</th>
-                                <th>{% trans "Radiation Type" %}</th>
-                                <th>{% trans "Activity (Bq)" %}</th>
-                                <th>{% trans "Uncertainty" %}</th>
-                                <th>{% trans "MDA" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for na in nuclide_activities %}
-                            <tr>
-                                <td>{{ na.radionuclide }}</td>
-                                <td>{{ na.get_radiation_type_display }}</td>
-                                <td>{{ na.activity_bq }}</td>
-                                <td>{{ na.uncertainty_bq|default:"-" }}</td>
-                                <td>{{ na.mda_bq|default:"-" }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr><td colspan="5" class="text-center">{% trans "No per-nuclide rows." %}</td></tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-
-                    {% if analysis.analysis_notes %}
-                    <p><strong>{% trans "Notes" %}:</strong> {{ analysis.analysis_notes }}</p>
-                    {% endif %}
-
-                    {% if not analysis.approved %}
-                    <form method="post" action="{% url 'analysis_approve' analysis.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success">{% trans "Approve Analysis" %}</button>
-                    </form>
-                    {% else %}
-                    <p class="text-muted small">
-                        {% trans "Reviewed by" %} {{ analysis.reviewed_by }} — {{ analysis.review_date }}
-                    </p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-        </div>
+  {# ================= SAMPLE ================= #}
+  <div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3 class="mb-0">
+        {{ sample.sample_id }}
+        {% if sample.urgent %}<span class="badge bg-danger">{% trans "Urgent" %}</span>{% endif %}
+      </h3>
+      <span class="badge fs-6
+        {% if sample.status == 'COMPLETED' %}bg-success
+        {% elif sample.status == 'REJECTED' %}bg-danger
+        {% elif sample.status == 'IN_ANALYSIS' %}bg-info text-dark
+        {% else %}bg-primary{% endif %}">{{ sample.get_status_display }}</span>
     </div>
-</div>
+    <div class="card-body">
+
+      <div class="row g-3">
+        <div class="col-md-4"><strong>{% trans "Source" %}:</strong>
+          {% if sample.batch %}
+            <a href="{% url 'waste_detail' sample.batch.pk %}">{{ sample.batch.waste_id }}</a>
+          {% else %}
+            <span class="badge bg-secondary">{% trans "Standalone" %}</span>
+          {% endif %}
+        </div>
+        <div class="col-md-4"><strong>{% trans "Stage" %}:</strong> {{ sample.get_sample_stage_display|default:"-" }}</div>
+        <div class="col-md-4"><strong>{% trans "Sampling Date" %}:</strong> {{ sample.sampling_date|default:"-" }}</div>
+
+        <div class="col-md-3"><strong>{% trans "Analysis Type" %}:</strong>
+          {% if sample.analysis_type %}<span class="badge bg-info text-dark">{{ sample.get_analysis_type_display }}</span>
+          {% else %}<span class="text-danger">{% trans "Not set — edit the sample" %}</span>{% endif %}</div>
+        <div class="col-md-3"><strong>{% trans "Applicant" %}:</strong> {{ sample.applicant_name|default:"-" }}</div>
+        <div class="col-md-3"><strong>{% trans "Sample Type" %}:</strong> {{ sample.sample_type|default:"-" }}</div>
+        <div class="col-md-3"><strong>{% trans "Location" %}:</strong> {{ sample.sampling_location|default:"-" }}</div>
+
+        {% if sample.description %}
+        <div class="col-12"><strong>{% trans "Description" %}:</strong> {{ sample.description }}</div>
+        {% endif %}
+
+        <div class="col-md-4"><strong>{% trans "Mass (kg)" %}:</strong> {{ sample.sample_mass_kg|default:"-" }}</div>
+        <div class="col-md-4"><strong>{% trans "Volume (mL)" %}:</strong> {{ sample.sample_volume_ml|default:"-" }}</div>
+        <div class="col-md-4"><strong>{% trans "Barcode" %}:</strong> {{ sample.sample_code_barcode|default:"-" }}</div>
+
+        <div class="col-md-4"><strong>{% trans "Collected By" %}:</strong> {{ sample.collected_by|default:"-" }}</div>
+        <div class="col-md-4"><strong>{% trans "Sent To Lab" %}:</strong> {{ sample.sent_to_lab_date|default:"-" }}</div>
+        <div class="col-md-4"><strong>{% trans "Lab Received" %}:</strong> {{ sample.lab_received_date|default:"-" }}</div>
+      </div>
+
+      {% if sample.remarks %}<p class="mt-3 mb-1"><strong>{% trans "Remarks" %}:</strong> {{ sample.remarks }}</p>{% endif %}
+      {% if sample.lab_comments %}<p class="mt-2 mb-1"><strong>{% trans "Lab Comments" %}:</strong> {{ sample.lab_comments }}</p>{% endif %}
+
+      <hr>
+
+      {% if sample.status == "REJECTED" %}
+      <div class="alert alert-danger">
+        <strong>⛔ {% trans "Rejected" %}</strong>
+        {% if sample.rejected_by %}{% trans "by" %} {{ sample.rejected_by }}{% endif %}
+        {% if sample.rejected_at %}— {{ sample.rejected_at|date:"Y-m-d H:i" }}{% endif %}
+        <div class="mt-1">{{ sample.rejection_reason|default:"-" }}</div>
+        <form method="post" action="{% url 'sample_resubmit' sample.pk %}" class="mt-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger">{% trans "Fixed — resubmit as Collected" %}</button>
+        </form>
+      </div>
+      {% endif %}
+
+      {# ---- actions ---- #}
+      <div class="d-flex gap-2 flex-wrap align-items-start">
+        <a href="{% url 'sample_edit' sample.pk %}" class="btn btn-warning">{% trans "Edit" %}</a>
+
+        {% if sample.status == "COLLECTED" %}
+        <form method="post" action="{% url 'sample_send_to_lab' sample.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Send to Lab" %}</button>
+        </form>
+        {% endif %}
+
+        {% if sample.status == "RECEIVED_BY_LAB" %}
+        <form method="post" action="{% url 'sample_start_analysis' sample.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-primary">{% trans "Start Analysis" %}</button>
+        </form>
+        {% endif %}
+
+        {% if sample.status == "RECEIVED_BY_LAB" or sample.status == "IN_ANALYSIS" or sample.status == "COMPLETED" %}
+          {% if not analysis.approved %}
+          <a href="{% url 'analysis_edit' sample.pk %}" class="btn btn-success">
+            {% if analysis %}{% trans "Edit Analysis" %}{% else %}{% trans "Enter Analysis" %}{% endif %}
+          </a>
+          {% endif %}
+        {% endif %}
+
+        {% if sample.status != "COMPLETED" and sample.status != "REJECTED" %}
+        <button class="btn btn-outline-danger ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#rejectBox">
+          {% trans "Reject Sample" %}
+        </button>
+        {% endif %}
+      </div>
+
+      {% if sample.status != "COMPLETED" and sample.status != "REJECTED" %}
+      <div class="collapse mt-3" id="rejectBox">
+        <form method="post" action="{% url 'sample_reject' sample.pk %}"
+              onsubmit="return confirm('{% trans "Reject this sample?" %}');">
+          {% csrf_token %}
+          <label class="form-label">{% trans "Reason for rejection" %}</label>
+          <textarea name="reason" rows="2" class="form-control mb-2" required></textarea>
+          <button type="submit" class="btn btn-danger">{% trans "Confirm Rejection" %}</button>
+        </form>
+      </div>
+      {% endif %}
+
+      {# ---- lab receipt ---- #}
+      {% if sample.status == "SENT_TO_LAB" %}
+      <hr>
+      <h6>{% trans "Lab Receipt" %}</h6>
+      <form method="post" action="{% url 'sample_lab_receive' sample.pk %}">
+        {% csrf_token %}
+        {% crispy receive_form %}
+        <button type="submit" class="btn btn-primary mt-2">{% trans "Mark as Received" %}</button>
+      </form>
+      {% endif %}
+
+    </div>
+  </div>
+
+  {# ================= ANALYSIS ================= #}
+  {% if analysis %}
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">{% trans "Analysis" %}
+        <small class="text-muted">— {{ analysis.get_detector_type_display|default:"" }}</small>
+      </h5>
+      {% if analysis.approved %}
+        <span class="badge bg-success">{% trans "Approved" %}</span>
+      {% else %}
+        <span class="badge bg-warning text-dark">{% trans "Pending review" %}</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-3"><strong>{% trans "Analysis Date" %}:</strong> {{ analysis.analysis_date|default:"-" }}</div>
+        <div class="col-md-3"><strong>{% trans "Total Alpha (Bq)" %}:</strong>
+          {{ analysis.total_alpha|default:"-" }}{% if analysis.alpha_uncertainty %} ± {{ analysis.alpha_uncertainty }}{% endif %}</div>
+        <div class="col-md-3"><strong>{% trans "Total Beta (Bq)" %}:</strong>
+          {{ analysis.total_beta|default:"-" }}{% if analysis.beta_uncertainty %} ± {{ analysis.beta_uncertainty }}{% endif %}</div>
+        <div class="col-md-3"><strong>{% trans "Analyst" %}:</strong> {{ analysis.analyst|default:"-" }}</div>
+        {% if analysis.counting_run %}
+        <div class="col-md-6"><strong>{% trans "Counting Run" %}:</strong>
+          <a href="{% url 'counting_run_detail' analysis.counting_run.pk %}">{{ analysis.counting_run.run_id }}</a></div>
+        {% endif %}
+        {% if analysis.counting_duration_seconds %}
+        <div class="col-md-3"><strong>{% trans "Counting Time (s)" %}:</strong> {{ analysis.counting_duration_seconds }}</div>
+        {% endif %}
+      </div>
+
+      <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>{% trans "Radionuclide" %}</th><th>{% trans "Radiation Type" %}</th>
+            <th>{% trans "Activity (Bq)" %}</th><th>{% trans "Uncertainty" %}</th><th>{% trans "MDA" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for na in nuclide_activities %}
+          <tr>
+            <td>{{ na.radionuclide }}</td>
+            <td>{{ na.get_radiation_type_display }}</td>
+            <td>{{ na.activity_bq }}</td>
+            <td>{{ na.uncertainty_bq|default:"-" }}</td>
+            <td>{{ na.mda_bq|default:"-" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center text-muted">{% trans "No per-nuclide rows." %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      {% if analysis.analysis_notes %}<p><strong>{% trans "Notes" %}:</strong> {{ analysis.analysis_notes }}</p>{% endif %}
+
+      {% if analysis.detector_type == "ALPHABETA" and not analysis.counting_run %}
+      <div class="alert alert-warning">
+        {% trans "This Alpha/Beta analysis isn't in a counting run yet, so it has no report." %}
+        <a href="{% url 'analysis_edit' sample.pk %}">{% trans "Pick a run" %}</a>
+        {% trans "or" %} <a href="{% url 'counting_run_list' %}">{% trans "open a counting run" %}</a>.
+      </div>
+      {% endif %}
+
+      {# ---- report + signature chain (gamma reports are per analysis) ---- #}
+      {% with chain=analysis.approvals.all %}
+      {% if chain %}
+      <hr>
+      <h6>{% trans "Report & Signatures" %}</h6>
+      <ol class="list-group list-group-numbered mb-3">
+        {% for step in chain|dictsort:"order" %}
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div class="ms-2 me-auto">
+            <div class="fw-bold">{{ step.get_role_display }}</div>
+            {% if step.user %}{{ step.user }} — {{ step.signed_date }}{% endif %}
+            {% if step.comments %}<div class="small text-muted">{{ step.comments }}</div>{% endif %}
+          </div>
+          <span class="badge {% if step.status == 'APPROVED' %}bg-success{% elif step.status == 'REJECTED' %}bg-danger{% else %}bg-secondary{% endif %}">
+            {{ step.get_status_display }}
+          </span>
+        </li>
+        {% endfor %}
+      </ol>
+      <div class="d-flex gap-2 flex-wrap">
+        {% for att in analysis.attachments.all %}
+          <a href="{{ att.file.url }}" class="btn btn-outline-secondary btn-sm">⬇ {{ att.get_attachment_type_display }}</a>
+        {% endfor %}
+        {% if not analysis.approved %}
+          <a href="{% url 'lab_report_sign' 'gamma' analysis.pk %}" class="btn btn-primary btn-sm">✍ {% trans "Review & Sign" %}</a>
+        {% endif %}
+      </div>
+      {% elif analysis.counting_run %}
+      <hr>
+      <p class="mb-0">{% trans "Report & signatures are handled on counting run" %}
+        <a href="{% url 'counting_run_detail' analysis.counting_run.pk %}">{{ analysis.counting_run.run_id }}</a>.</p>
+      {% elif not analysis.approved and analysis.detector_type != "ALPHABETA" %}
+      <hr>
+      {% if analysis.detector_type == "HPGE" %}
+      <form method="post" action="{% url 'analysis_generate_report' analysis.pk %}" class="d-inline me-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-primary">{% trans "Generate Report & Start Signatures" %}</button>
+      </form>
+      {% endif %}
+      <form method="post" action="{% url 'analysis_approve' analysis.pk %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">{% trans "Approve Analysis" %}</button>
+      </form>
+      {% endif %}
+      {% endwith %}
+
+      {% if analysis.approved and analysis.reviewed_by %}
+      <p class="text-muted small mt-3 mb-0">{% trans "Reviewed by" %} {{ analysis.reviewed_by }} — {{ analysis.review_date }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div></div></div>
 {% endblock %}

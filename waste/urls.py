@@ -17,4 +17,6 @@ urlpatterns = [
     path("save-column/", views.waste_save_column, name="waste_save_column"),
     path("get-column/", views.waste_get_column, name="waste_get_column"),
     path("export-csv/", views.waste_export_csv, name="waste_export_csv"),
+    path("<int:pk>/release/", views.waste_release, name="waste_release"),
+    path("release-report/", views.release_annual_report, name="release_annual_report"),
 ]

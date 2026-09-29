@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Annual Release Report" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{% trans "Annual Release Report" %} — {{ year }}</h3>
+    <a href="{% url 'waste_home' %}" class="btn btn-outline-secondary btn-sm">{% trans "Waste Home" %}</a>
+</div>
+
+<form method="get" class="d-flex gap-2 mb-3">
+    <select name="year" class="form-select" style="max-width:140px" onchange="this.form.submit()">
+        {% for y in year_choices %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}
+    </select>
+    <select name="route" class="form-select" style="max-width:220px" onchange="this.form.submit()">
+        <option value="">{% trans "All routes" %}</option>
+        {% for value, label in routes %}<option value="{{ value }}" {% if route == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+</form>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped align-middle">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Line" %}</th><th>{% trans "Route" %}</th><th>{% trans "Facility" %}</th>
+    <th>{% trans "Released this year (Bq)" %}</th><th>{% trans "Annual limit (Bq)" %}</th><th>{% trans "% used" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for row in rows %}
+<tr class="{% if row.percent >= 100 %}table-danger{% elif row.percent >= 80 %}table-warning{% endif %}">
+    <td>{% if row.limit.radionuclide %}{{ row.limit.radionuclide }}{% else %}{{ row.limit.get_category_display }}{% endif %}</td>
+    <td>{{ row.limit.get_route_display }}</td>
+    <td>{{ row.limit.facility|default:"—" }}</td>
+    <td>{{ row.released_bq|floatformat:3 }}</td>
+    <td>{{ row.limit.annual_limit_bq }}</td>
+    <td>{% if row.percent is not None %}{{ row.percent|floatformat:1 }}%{% else %}-{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center text-muted">{% trans "No release limits defined yet." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+</div>
+{% endblock %}

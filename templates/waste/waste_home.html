@@ -54,6 +54,12 @@
             <p>{% trans "Batches being treated" %}</p>
             <p class="home-count"># {{ in_treatment }} {% trans "Batches" %}</p>
         </a>
+
+        <a href="{% url 'release_annual_report' %}" class="home-card">
+            <div class="home-icon">📊</div>
+            <h3>{% trans "Annual Release Report" %}</h3>
+            <p>{% trans "Released activity vs. annual limits, per nuclide" %}</p>
+        </a>
     </div>
 </div>
 {% endblock %}

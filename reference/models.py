@@ -25,6 +25,7 @@ class Nuclides(models.Model):
     beta_max_energy_mev = models.FloatField(null=True, blank=True)
     gamma_energy_mev = models.FloatField(null=True, blank=True)
     gamma_yield = models.FloatField(null=True, blank=True)  # photons/decay
+    
 
     neutron_emitter = models.BooleanField(default=False)
     neutron_yield_n_per_s = models.FloatField(null=True, blank=True)
@@ -40,7 +41,16 @@ class Nuclides(models.Model):
     # Misc
     parent_nuclide = models.CharField(max_length=20, null=True, blank=True)
     daughter_nuclide = models.CharField(max_length=20, null=True, blank=True)
-
+    emits_beta = models.BooleanField(
+        default=False,
+        help_text="This nuclide's own decay includes beta emission (β⁻/β⁺) — used to net its "
+                   "activity out of gross beta counting when it's also identified by gamma spec.",
+    )
+    emits_alpha = models.BooleanField(
+        default=False,
+        help_text="This nuclide's own decay includes alpha emission — netted out of gross alpha "
+                   "counting the same way.",
+    )
     is_sealed_source_common = models.BooleanField(default=False)
 
     def __str__(self):

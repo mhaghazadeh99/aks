@@ -20,6 +20,8 @@ from django.utils.translation import gettext_lazy as _
 
 from ..models import (
     BatchStatus,
+    ConditioningIngredient,
+    ConditioningMaterial,
     LineageOperation,
     WasteBatch,
     WasteBatchLineage,
@@ -80,7 +82,6 @@ def merge_batches(parents, new_waste_id, performed_by, remarks="", **child_overr
     total_mass = sum((p.mass_kg or 0) for p in parents) or None
     total_volume = sum((p.volume_m3 or 0) for p in parents) or None
 
-    # Worst (highest) waste class among the parents wins.
     class_rank = {"VLLW": 0, "LLW": 1, "ILW": 2, "HLW": 3}
     parent_classes = [p.waste_class for p in parents if p.waste_class]
     merged_class = max(parent_classes, key=lambda c: class_rank.get(c, -1)) if parent_classes else None
@@ -127,18 +128,13 @@ def merge_batches(parents, new_waste_id, performed_by, remarks="", **child_overr
 @transaction.atomic
 def split_batch(parent, portions, performed_by, remarks=""):
     """
-    Splits one or more portions OFF a parent batch. Unlike before, this
-    is no longer all-or-nothing: the parent's mass/volume is reduced by
-    whatever was taken, and the parent stays STORED (fully usable —
-    splittable and mergeable again) as long as anything measurable
-    remains. It only becomes CONSUMED once its mass AND volume (whichever
-    are tracked) are fully exhausted by one or more of these calls over
-    time — there's no separate "close" action needed.
+    Splits one or more portions OFF a parent batch. The parent's
+    mass/volume is reduced by whatever was taken, and the parent stays
+    STORED as long as anything measurable remains — it only becomes
+    CONSUMED once its tracked mass/volume is fully exhausted.
 
     `portions` is a list of dicts, each REQUIRING "waste_id" and
-    optionally mass_kg / volume_m3 / any other WasteBatch field to
-    override. A single portion is a valid call (take one piece now,
-    leave the rest for later).
+    optionally mass_kg / volume_m3 / any other WasteBatch field.
     """
 
     if len(portions) < 1:
@@ -199,17 +195,11 @@ def split_batch(parent, portions, performed_by, remarks=""):
             remarks=remarks,
         )
 
-    # Deduct what was taken from the parent's remaining mass/volume —
-    # this is what makes the split partial rather than all-or-nothing.
     if parent.mass_kg is not None:
         parent.mass_kg = parent.mass_kg - requested_mass
     if parent.volume_m3 is not None:
         parent.volume_m3 = parent.volume_m3 - requested_volume
 
-    # Figure out whether anything measurable is left. If NEITHER
-    # mass_kg nor volume_m3 is tracked on this batch, there's no way to
-    # know what "remaining" means, so it's treated as fully taken (the
-    # old, only-possible, all-or-nothing behavior).
     if parent.mass_kg is None and parent.volume_m3 is None:
         fully_consumed = True
     else:
@@ -223,10 +213,6 @@ def split_batch(parent, portions, performed_by, remarks=""):
         parent.save(update_fields=["mass_kg", "volume_m3"])
         _consume(parent, WasteMovementType.SPLIT, performed_by, parent_remarks)
     else:
-        # Record the movement WITHOUT going through register_movement's
-        # automatic status mapping — SPLIT maps to CONSUMED there, which
-        # is wrong for a partial split. The batch stays STORED and fully
-        # usable (splittable/mergeable again) at its own facility.
         parent.movements.create(
             movement_type=WasteMovementType.SPLIT,
             from_facility=parent.facility,
@@ -243,25 +229,97 @@ def split_batch(parent, portions, performed_by, remarks=""):
     return children
 
 
-@transaction.atomic
-def condition_batch(parent, new_waste_id, performed_by, remarks="", **child_overrides):
-    """
-    Conditioning: treat + immobilise + package a batch. Per your
-    description this always produces a PROCESSED SOLID record — even
-    from a liquid parent, since cementation/solidification is exactly
-    what turns liquid waste into a solid package.
+# =====================================================================
+# Conditioning ingredients
+#
+# Each ingredient row carries EITHER a mass, a volume, or both; if only
+# one is given together with a density, the other is derived. The waste
+# itself is entered as one row with material=WASTE (defaults to the
+# parent batch's mass/volume) so "waste-to-matrix ratio" falls out of
+# the same totals as everything else, with no special-casing.
+# =====================================================================
 
-    The processed-only fields (pretreatment, treatment, package_type,
-    waste_matrix, and for liquid parents waste_to_matrix_ratio /
-    waste_mass_kg / package_mass_kg / package_volume_m3) are passed in
-    via child_overrides — that's the data the operator fills in on the
-    conditioning form.
+def compute_conditioning_totals(ingredients):
+    """
+    ingredients: list of (unsaved) ConditioningIngredient instances.
+    Returns {package_mass_kg, package_volume_m3, waste_mass_kg,
+             waste_to_matrix_ratio, warnings}.
+    """
+    total_mass = 0.0
+    total_volume_l = 0.0
+    waste_mass = 0.0
+    matrix_mass = 0.0
+    warnings = []
+
+    for ing in ingredients:
+        mass = ing.resolved_mass_kg
+        volume = ing.resolved_volume_l
+        label = ing.material_other or ing.get_material_display()
+
+        if mass is None and volume is None:
+            warnings.append(_("%(label)s: no mass or volume given — left out of the totals.") % {"label": label})
+            continue
+
+        if mass is not None:
+            total_mass += float(mass)
+            if ing.material == ConditioningMaterial.WASTE:
+                waste_mass += float(mass)
+            else:
+                matrix_mass += float(mass)
+        else:
+            warnings.append(
+                _("%(label)s: only a volume was given, with no density — its mass isn't counted "
+                  "in the package total or the waste-to-matrix ratio.") % {"label": label}
+            )
+
+        if volume is not None:
+            total_volume_l += float(volume)
+
+    return {
+        "package_mass_kg": round(total_mass, 3) if total_mass else None,
+        "package_volume_m3": round(total_volume_l / 1000, 5) if total_volume_l else None,
+        "waste_mass_kg": round(waste_mass, 3) if waste_mass else None,
+        "waste_to_matrix_ratio": round(waste_mass / matrix_mass, 4) if matrix_mass else None,
+        "warnings": warnings,
+    }
+
+
+@transaction.atomic
+def condition_batch(parent, new_waste_id, performed_by, ingredients=None, remarks="", **child_overrides):
+    """
+    Conditioning: treat + immobilise + package a batch. Always produces
+    a PROCESSED SOLID record — even from a liquid parent, since
+    cementation/solidification is exactly what turns liquid waste into
+    a solid package.
+
+    `ingredients`: optional list of unsaved ConditioningIngredient
+    instances (cement, water, NaOH, microsilica, Penetron, the waste
+    itself, …). When given, the package's mass_kg / volume_m3 /
+    waste_mass_kg / waste_to_matrix_ratio are CALCULATED from them —
+    an explicit value in child_overrides (a measured final weight, say)
+    always wins over the calculated one. The ingredient rows themselves
+    are saved against the resulting lineage record once the child batch
+    is created.
     """
 
     if parent.status == BatchStatus.CONSUMED:
         raise ValueError(
             _("Batch %(id)s has already been consumed by another operation.") % {"id": parent.waste_id}
         )
+
+    computed = {}
+    if ingredients:
+        totals = compute_conditioning_totals(ingredients)
+        if totals["package_mass_kg"] is not None:
+            computed["mass_kg"] = totals["package_mass_kg"]
+            computed["package_mass_kg"] = totals["package_mass_kg"]
+        if totals["package_volume_m3"] is not None:
+            computed["volume_m3"] = totals["package_volume_m3"]
+            computed["package_volume_m3"] = totals["package_volume_m3"]
+        if totals["waste_mass_kg"] is not None:
+            computed["waste_mass_kg"] = totals["waste_mass_kg"]
+        if totals["waste_to_matrix_ratio"] is not None:
+            computed["waste_to_matrix_ratio"] = totals["waste_to_matrix_ratio"]
 
     child_data = {
         "waste_id": new_waste_id,
@@ -270,23 +328,21 @@ def condition_batch(parent, new_waste_id, performed_by, remarks="", **child_over
         "waste_class": parent.waste_class,
         "facility": parent.facility,
         "origin_facility": parent.facility,
-        # Conditioning output is waste generated BY processing, not
-        # received — this is exactly what OriginOfWaste.PROCESSING is for.
+        # Conditioning output is waste generated BY processing, not received.
         "origin_of_waste": "PROCESSING",
         "date_received": timezone.now().date(),
         "material": parent.material,
         "status": BatchStatus.STORED,
         "status_date": timezone.now().date(),
         "created_by": performed_by,
-        # Carry the liquid parent's own mass across as the waste (not
-        # package) mass, so the waste-to-matrix picture stays sensible.
-        "waste_mass_kg": parent.mass_kg,
+        "waste_mass_kg": parent.mass_kg,  # default, overridden by computed/child_overrides below
     }
+    child_data.update(computed)
     child_data.update(child_overrides)
 
     child = WasteBatch.objects.create(**child_data)
 
-    WasteBatchLineage.objects.create(
+    lineage = WasteBatchLineage.objects.create(
         parent=parent,
         child=child,
         operation=LineageOperation.CONDITIONING,
@@ -295,6 +351,11 @@ def condition_batch(parent, new_waste_id, performed_by, remarks="", **child_over
         performed_by=performed_by,
         remarks=remarks,
     )
+
+    if ingredients:
+        for ing in ingredients:
+            ing.lineage = lineage
+        ConditioningIngredient.objects.bulk_create(ingredients)
 
     _consume(
         parent, WasteMovementType.CONDITIONING, performed_by,

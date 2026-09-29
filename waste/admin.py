@@ -1,12 +1,13 @@
 from django.contrib import admin
 
-from .models import WasteBatch, WasteMovement, WasteMovementAttachment, WasteBatchLineage
+from .models import WasteBatch, WasteMovement, WasteMovementAttachment, WasteBatchLineage, ReleaseLimit
 
 
 class WasteMovementInline(admin.TabularInline):
     model = WasteMovement
     extra = 0
 
+admin.site.register(ReleaseLimit)
 
 @admin.register(WasteBatch)
 class WasteBatchAdmin(admin.ModelAdmin):

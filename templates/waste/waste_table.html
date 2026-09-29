@@ -104,6 +104,7 @@
 <th data-col="material">{% trans "Material" %}</th>
 <th data-col="waste_arising_from">{% trans "Arising From" %}</th>
 <th data-col="container_type">{% trans "Container Type" %}</th>
+<th data-col="waste_appearance">{% trans "Appearance" %}</th>
 <th data-col="mass_kg">{% trans "Mass (kg)" %}</th>
 <th data-col="volume_m3">{% trans "Volume (m³)" %}</th>
 <th data-col="nuclides">{% trans "Nuclides" %}</th>
@@ -111,6 +112,7 @@
 <th data-col="total_beta">{% trans "Total Beta (Bq)" %}</th>
 <th data-col="current_gamma">{% trans "Current Gamma (Bq)" %}</th>
 <th data-col="current_total">{% trans "Current Total Activity (Bq)" %}</th>
+<th data-col="release_status">{% trans "Release Status" %}</th>
 <th data-col="dose_rate_surface_uSv">{% trans "Surface Dose (µSv/h)" %}</th>
 <th data-col="dose_rate_1m_uSv">{% trans "Dose @1m (µSv/h)" %}</th>
 <th data-col="dose_rate_date">{% trans "Dose Date" %}</th>
@@ -163,6 +165,7 @@
 <td data-col="material">{{ b.material|default:"-" }}</td>
 <td data-col="waste_arising_from">{{ b.waste_arising_from|default:"-" }}</td>
 <td data-col="container_type">{{ b.container_type|default:"-" }}</td>
+<td data-col="waste_appearance">{{ b.waste_appearance|default:"-" }}</td>
 <td data-col="mass_kg">{{ b.mass_kg|default:"-" }}</td>
 <td data-col="volume_m3">{{ b.volume_m3|default:"-" }}</td>
 <td data-col="nuclides">{{ b.nuclide_summary|default:"-" }}</td>
@@ -170,6 +173,14 @@
 <td data-col="total_beta">{{ b.total_beta_bq|default:"-" }}</td>
 <td data-col="current_gamma">{{ b.current_gamma_bq_value|default:"-" }}</td>
 <td data-col="current_total">{{ b.current_total_activity_bq_value|default:"-" }}</td>
+<td data-col="release_status">
+    {% with last_release=b.release_records.first %}
+        {% if last_release %}
+            {% if last_release.over_limit %}<span class="badge bg-danger">{% trans "Over limit" %}</span>{% endif %}
+            {{ last_release.release_date }}
+        {% else %}-{% endif %}
+    {% endwith %}
+</td>
 <td data-col="dose_rate_surface_uSv">{{ b.dose_rate_surface_uSv|default:"-" }}</td>
 <td data-col="dose_rate_1m_uSv">{{ b.dose_rate_1m_uSv|default:"-" }}</td>
 <td data-col="dose_rate_date">{{ b.dose_rate_date|default:"-" }}</td>
@@ -210,10 +221,11 @@
   <a href="{% url 'waste_edit' b.id %}" class="icon-btn edit" title="{% trans 'Edit' %}">✏️</a>
   <a href="{% url 'waste_split' b.id %}" class="icon-btn" title="{% trans 'Split' %}">✂️</a>
   <a href="{% url 'waste_condition' b.id %}" class="icon-btn" title="{% trans 'Condition' %}">🧱</a>
+  {% if b.status != "CONSUMED" %}<a href="{% url 'waste_release' b.id %}" class="icon-btn" title="{% trans 'Release' %}">💧</a>{% endif %}
 </td>
 </tr>
 {% empty %}
-<tr><td colspan="47" class="text-center">{% trans "No waste batches found." %}</td></tr>
+<tr><td colspan="49" class="text-center">{% trans "No waste batches found." %}</td></tr>
 {% endfor %}
 </tbody>
 </table>
@@ -308,6 +320,7 @@ document.getElementById("addFilter").onclick = function () {
         <option value="material">{% trans "Material" %}</option>
         <option value="waste_arising_from">{% trans "Arising From" %}</option>
         <option value="container_type">{% trans "Container Type" %}</option>
+        <option value="waste_appearance">{% trans "Appearance" %}</option>
         <option value="package_type">{% trans "Package Type" %}</option>
         <option value="waste_matrix">{% trans "Waste Matrix" %}</option>
         <option value="mass_kg">{% trans "Mass" %}</option>

@@ -9,7 +9,7 @@ from simple_history.models import HistoricalRecords
 
 from common.utils.fileValidator import validate_attachment
 from facilities.models import FacilityModel
-
+from django.core.exceptions import ValidationError
 
 # =====================================================
 # Choices
@@ -302,67 +302,78 @@ class WasteBatch(models.Model):
     # =====================================================
 
     @cached_property
-    def latest_analysis(self):
-        from laboratory.models import Analysis
+    def latest_gamma_analysis(self):
+        from laboratory.models import Analysis, CounterType
         return (
             Analysis.objects
-            .filter(sample__batch=self)
+            .filter(sample__batch=self, detector_type=CounterType.HPGE)
             .prefetch_related("nuclide_activities__radionuclide")
             .order_by("-analysis_date", "-created_at", "-id")
             .first()
         )
 
-    def refresh_activity(self):
-        self.__dict__.pop("latest_analysis", None)
-
-    @property
-    def total_alpha_bq(self):
-        analysis = self.latest_analysis
-        return analysis.total_alpha if analysis else None
-
-    @property
-    def total_beta_bq(self):
-        analysis = self.latest_analysis
-        return analysis.total_beta if analysis else None
-
-    def nuclide_activities(self):
-        """Per-nuclide activities (alpha/beta/gamma) from the latest analysis."""
-        analysis = self.latest_analysis
-        return list(analysis.nuclide_activities.all()) if analysis else []
-
-    def _decayed_total(self, activities):
-        """Sum of decay-corrected activities, or None when there is nothing to sum.
-        (A genuine 0 stays 0 — only 'no data' is None.)"""
-        total, seen = 0.0, False
-        for na in activities:
-            value = na.current_activity_bq()
-            if value is not None:
-                total += value
-                seen = True
-        return total if seen else None
-
-    def current_total_activity_bq(self):
-        return self._decayed_total(self.nuclide_activities())
-
-    def current_gamma_bq(self):
-        from laboratory.models import RadiationType
-        return self._decayed_total(
-            na for na in self.nuclide_activities() if na.radiation_type == RadiationType.GAMMA
+    @cached_property
+    def latest_alpha_beta_analysis(self):
+        from laboratory.models import Analysis, CounterType
+        return (
+            Analysis.objects
+            .filter(sample__batch=self, detector_type=CounterType.ALPHABETA)
+            .order_by("-analysis_date", "-created_at", "-id")
+            .first()
         )
 
     @property
+    def latest_analysis(self):
+        """Kept for anything (templates, CSV) that just wants 'the most recent
+        analysis, whichever kind' for display purposes."""
+        candidates = [a for a in (self.latest_gamma_analysis, self.latest_alpha_beta_analysis) if a]
+        return max(candidates, key=lambda a: (a.analysis_date, a.created_at), default=None)
+
+    def refresh_activity(self):
+        for attr in ("latest_gamma_analysis", "latest_alpha_beta_analysis", "_default_activity_breakdown"):
+            self.__dict__.pop(attr, None)
+
+    def activity_breakdown(self, as_of=None):
+        """Gamma per-nuclide activity + gross alpha/beta netted against it.
+        See laboratory/services/activity.py for the method and its caveats.
+        Cached for the default (as_of=None, i.e. "today") case only — a
+        specific as_of (e.g. a release preview for a past date) is always
+        computed fresh."""
+        from laboratory.services.activity import total_activity_breakdown
+        if as_of is not None:
+            return total_activity_breakdown(self.latest_gamma_analysis, self.latest_alpha_beta_analysis, as_of=as_of)
+        if "_default_activity_breakdown" not in self.__dict__:
+            self.__dict__["_default_activity_breakdown"] = total_activity_breakdown(
+                self.latest_gamma_analysis, self.latest_alpha_beta_analysis, as_of=None,
+            )
+        return self.__dict__["_default_activity_breakdown"]
+
+    @property
+    def total_alpha_bq(self):
+        a = self.latest_alpha_beta_analysis
+        return a.total_alpha if a else None
+
+    @property
+    def total_beta_bq(self):
+        a = self.latest_alpha_beta_analysis
+        return a.total_beta if a else None
+
+    def nuclide_activities(self):
+        a = self.latest_gamma_analysis
+        return list(a.nuclide_activities.all()) if a else []
+
+    @property
     def current_total_activity_bq_value(self):
-        value = self.current_total_activity_bq()
+        value = self.activity_breakdown()["total_bq"]
         return round(value, 3) if value is not None else None
 
     @property
     def current_gamma_bq_value(self):
-        value = self.current_gamma_bq()
-        return round(value, 3) if value is not None else None
+        value = self.activity_breakdown()["gamma_total_bq"]
+        return round(value, 3) if value else None
 
     @property
     def nuclide_summary(self):
-        """Short 'Cs-137, Co-60' style string for the inventory table."""
         names = []
         for na in self.nuclide_activities():
             name = str(na.radionuclide)
@@ -516,3 +527,153 @@ class WasteBatchLineage(models.Model):
 
     def __str__(self):
         return f"{self.get_operation_display()}: {self.parent} → {self.child}"
+
+    
+
+class ConditioningMaterial(models.TextChoices):
+    WASTE = "WASTE", _("Waste / Sludge")
+    CEMENT = "CEMENT", _("Cement")
+    WATER = "WATER", _("Water")
+    NAOH = "NAOH", _("Sodium Hydroxide (NaOH)")
+    MICROSILICA = "MICROSILICA", _("Microsilica")
+    PENETRON = "PENETRON", _("Penetron")
+    OTHER = "OTHER", _("Other")
+
+
+class ConditioningIngredient(models.Model):
+    """One row per material used in a conditioning operation — including the
+    waste itself, so package totals and the waste-to-matrix ratio come out of
+    the same calculation as everything else. Linked to the WasteBatchLineage
+    row that records the conditioning event (not to the batch directly,
+    since a batch can be conditioned only once but lineage already models
+    'this operation, these inputs')."""
+
+    lineage = models.ForeignKey(
+        "WasteBatchLineage", verbose_name=_("Conditioning Operation"),
+        on_delete=models.CASCADE, related_name="ingredients",
+    )
+    material = models.CharField(_("Material"), max_length=20, choices=ConditioningMaterial.choices)
+    material_other = models.CharField(_("Material (if Other)"), max_length=100, blank=True, null=True)
+
+    mass_kg = models.DecimalField(_("Mass (kg)"), max_digits=12, decimal_places=3, blank=True, null=True)
+    volume_l = models.DecimalField(_("Volume (L)"), max_digits=12, decimal_places=3, blank=True, null=True)
+    density_kg_per_l = models.DecimalField(
+        _("Density (kg/L)"), max_digits=8, decimal_places=4, blank=True, null=True,
+        help_text=_("Used to work out mass from volume, or volume from mass, when only one is measured."),
+    )
+
+    class Meta:
+        verbose_name = _("Conditioning Ingredient")
+        verbose_name_plural = _("Conditioning Ingredients")
+
+    def __str__(self):
+        return self.material_other or self.get_material_display()
+
+    @property
+    def resolved_mass_kg(self):
+        if self.mass_kg is not None:
+            return self.mass_kg
+        if self.volume_l is not None and self.density_kg_per_l:
+            return self.volume_l * self.density_kg_per_l
+        return None
+
+    @property
+    def resolved_volume_l(self):
+        if self.volume_l is not None:
+            return self.volume_l
+        if self.mass_kg is not None and self.density_kg_per_l:
+            return self.mass_kg / self.density_kg_per_l
+        return None
+
+
+
+class ReleaseRoute(models.TextChoices):
+    LIQUID = "LIQUID", _("Liquid Discharge")
+    GASEOUS = "GASEOUS", _("Gaseous Discharge")
+
+
+class ReleaseLimitCategory(models.TextChoices):
+    NUCLIDE = "NUCLIDE", _("Specific Radionuclide")
+    GROSS_BETA = "GROSS_BETA", _("Unidentified Gross Beta")
+    GROSS_ALPHA = "GROSS_ALPHA", _("Unidentified Gross Alpha")
+
+
+class ReleaseLimit(models.Model):
+    """An annual (Bq/year) limit. Nuclide-specific limits need `radionuclide`
+    set; the two gross categories cover activity gross alpha/beta counting
+    found that gamma spec couldn't identify (see laboratory/services/activity.py).
+    Leave `facility` blank for a limit that applies everywhere; a facility-
+    specific row overrides the site-wide one for that facility."""
+
+    category = models.CharField(_("Category"), max_length=12, choices=ReleaseLimitCategory.choices, default=ReleaseLimitCategory.NUCLIDE)
+    radionuclide = models.ForeignKey(
+        "reference.Nuclides", verbose_name=_("Radionuclide"), on_delete=models.CASCADE,
+        null=True, blank=True, related_name="release_limits",
+    )
+    route = models.CharField(_("Discharge Route"), max_length=10, choices=ReleaseRoute.choices)
+    facility = models.ForeignKey(
+        FacilityModel, verbose_name=_("Facility"), on_delete=models.CASCADE,
+        null=True, blank=True, related_name="release_limits",
+        help_text=_("Leave blank for a limit that applies to every facility."),
+    )
+    annual_limit_bq = models.DecimalField(_("Annual Limit (Bq/year)"), max_digits=20, decimal_places=3)
+    effective_from = models.DateField(_("Effective From"))
+    effective_to = models.DateField(_("Effective To"), null=True, blank=True)
+    reference = models.CharField(_("Regulatory Reference"), max_length=255, blank=True)
+    notes = models.TextField(_("Notes"), blank=True)
+
+    class Meta:
+        ordering = ["route", "radionuclide__name"]
+        verbose_name = _("Release Limit")
+        verbose_name_plural = _("Release Limits")
+
+    def __str__(self):
+        label = str(self.radionuclide) if self.radionuclide else self.get_category_display()
+        return f"{label} ({self.get_route_display()}) — {self.annual_limit_bq} Bq/yr"
+
+    def clean(self):
+        if self.category == ReleaseLimitCategory.NUCLIDE and not self.radionuclide_id:
+            raise ValidationError(_("Select a radionuclide for a nuclide-specific limit."))
+        if self.category != ReleaseLimitCategory.NUCLIDE and self.radionuclide_id:
+            raise ValidationError(_("Gross-category limits shouldn't have a radionuclide selected."))
+
+
+class ReleaseRecord(models.Model):
+    """One row per release event. `over_limit` is set (not enforced/blocked)
+    when any of its lines pushed a nuclide/category over its annual limit —
+    a flag for review, not an automatic refusal."""
+
+    batch = models.ForeignKey(WasteBatch, verbose_name=_("Batch"), on_delete=models.PROTECT, related_name="release_records")
+    movement = models.OneToOneField(WasteMovement, verbose_name=_("Movement"), on_delete=models.CASCADE, related_name="release_record", null=True, blank=True)
+    route = models.CharField(_("Discharge Route"), max_length=10, choices=ReleaseRoute.choices)
+    release_date = models.DateField(_("Release Date"))
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("Performed By"), on_delete=models.SET_NULL, null=True)
+    remarks = models.TextField(_("Remarks"), blank=True)
+    over_limit = models.BooleanField(_("Exceeded an annual limit"), default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-release_date", "-id"]
+        verbose_name = _("Release Record")
+        verbose_name_plural = _("Release Records")
+
+    def __str__(self):
+        return f"{self.batch.waste_id} — {self.release_date}"
+
+
+class ReleaseActivityLine(models.Model):
+    """Snapshot of one nuclide's (or gross category's) activity at release time —
+    frozen so later decay/edits never change a past release's recorded figures."""
+
+    release = models.ForeignKey(ReleaseRecord, verbose_name=_("Release"), on_delete=models.CASCADE, related_name="lines")
+    category = models.CharField(_("Category"), max_length=12, choices=ReleaseLimitCategory.choices)
+    radionuclide = models.ForeignKey("reference.Nuclides", verbose_name=_("Radionuclide"), on_delete=models.PROTECT, null=True, blank=True)
+    activity_bq = models.DecimalField(_("Activity (Bq)"), max_digits=20, decimal_places=5)
+
+    class Meta:
+        verbose_name = _("Release Activity Line")
+        verbose_name_plural = _("Release Activity Lines")
+
+    def __str__(self):
+        label = str(self.radionuclide) if self.radionuclide else self.get_category_display()
+        return f"{label}: {self.activity_bq} Bq"

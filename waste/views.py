@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from laboratory.views import sample_edit
 from dashboard.models import HideShowFilterT
+from decimal import Decimal
 
 from .forms import (
     ConditionBatchForm,
@@ -21,10 +22,10 @@ from .models import (
     BatchStatus,
     WasteBatch,
     WasteBatchLineage,
-    WasteMovementAttachment,
+    WasteMovementAttachment, ConditioningIngredient, ReleaseLimit, ReleaseLimitCategory, ReleaseRoute,ConditioningMaterial
 )
-from .services.batch_ops import condition_batch, merge_batches, split_batch
-
+from .services.batch_ops import condition_batch, merge_batches, split_batch, compute_conditioning_totals
+from .services.release import preview_release, register_release, year_released_bq
 
 # Same idea as dashboard.views.FIELD_FILTER_MAP: maps each filter key to
 # a real Django lookup path, traversing FKs to their display field.
@@ -43,6 +44,7 @@ FIELD_FILTER_MAP = {
     "material": "material",
     "waste_arising_from": "waste_arising_from",
     "container_type": "container_type",
+    "waste_appearance": "waste_appearance",
     "package_type": "package_type",
     "waste_matrix": "waste_matrix",
     "mass_kg": "mass_kg",
@@ -82,6 +84,7 @@ def waste_table(request):
             "movements__from_facility",
             "movements__to_facility",
             "samples__analysis__nuclide_activities__radionuclide",
+            "release_records",
         )
         .order_by("-created_at")
     )
@@ -222,12 +225,19 @@ def waste_detail(request, pk):
         "batch": batch,
         "movements": batch.movements.select_related("from_facility", "to_facility").order_by("-movement_date"),
         "nuclide_activities": batch.nuclide_activities(),
-        "analysis": batch.latest_analysis,
-        "parent_links": batch.parent_links.select_related("parent").all(),
+        "analysis_gamma": batch.latest_gamma_analysis,
+        "analysis_ab": batch.latest_alpha_beta_analysis,
+        "breakdown": batch.activity_breakdown(),
+        "parent_links": batch.parent_links.select_related("parent").prefetch_related("ingredients").all(),
         "child_links": batch.child_links.select_related("child").all(),
         "samples": batch.samples.all(),
+        "release_records": (
+            batch.release_records
+            .select_related("performed_by")
+            .prefetch_related("lines__radionuclide")
+            .order_by("-release_date")
+        ),
     })
-
 
 # =====================================================
 # Bulk actions from the table (selected checkboxes)
@@ -288,16 +298,15 @@ def waste_split(request, pk):
         waste_ids = request.POST.getlist("portion_waste_id")
         masses = request.POST.getlist("portion_mass")
         volumes = request.POST.getlist("portion_volume")
-
         portions = []
         for i, waste_id in enumerate(waste_ids):
             if not waste_id.strip():
                 continue
             portion = {"waste_id": waste_id.strip()}
             if i < len(masses) and masses[i]:
-                portion["mass_kg"] = masses[i]
+                portion["mass_kg"] = Decimal(masses[i])
             if i < len(volumes) and volumes[i]:
-                portion["volume_m3"] = volumes[i]
+                portion["volume_m3"] = Decimal(volumes[i])
             portions.append(portion)
 
         try:
@@ -319,9 +328,32 @@ def waste_condition(request, pk):
 
     batch = get_object_or_404(WasteBatch, pk=pk)
 
+    def _parse_ingredients(post):
+        materials = post.getlist("ing_material")
+        others = post.getlist("ing_material_other")
+        masses = post.getlist("ing_mass")
+        volumes = post.getlist("ing_volume")
+        densities = post.getlist("ing_density")
+        rows = []
+        for i, material in enumerate(materials):
+            if not material:
+                continue
+            mass = masses[i] if i < len(masses) and masses[i] else None
+            volume = volumes[i] if i < len(volumes) and volumes[i] else None
+            density = densities[i] if i < len(densities) and densities[i] else None
+            if not mass and not volume:
+                continue
+            rows.append(ConditioningIngredient(
+                material=material,
+                material_other=(others[i] if i < len(others) else "") or "",
+                mass_kg=mass, volume_l=volume, density_kg_per_l=density,
+            ))
+        return rows
+
     if request.method == "POST":
 
         form = ConditionBatchForm(request.POST)
+        ingredients = _parse_ingredients(request.POST)
 
         if form.is_valid():
             data = form.cleaned_data
@@ -337,26 +369,31 @@ def waste_condition(request, pk):
 
             try:
                 child = condition_batch(
-                    batch,
-                    new_waste_id=data["new_waste_id"],
-                    performed_by=request.user,
-                    remarks=data.get("remarks", ""),
-                    **overrides,
+                    batch, new_waste_id=data["new_waste_id"], performed_by=request.user,
+                    remarks=data.get("remarks", ""), ingredients=ingredients, **overrides,
                 )
             except ValueError as exc:
                 messages.error(request, str(exc))
                 return redirect("waste_condition", pk=pk)
 
-            messages.success(
-                request, _("Conditioned into %(id)s.") % {"id": child.waste_id}
-            )
+            messages.success(request, _("Conditioned into %(id)s.") % {"id": child.waste_id})
             return redirect("waste_detail", pk=child.pk)
 
     else:
         form = ConditionBatchForm()
+        # pre-fill one row for the waste itself, from what the batch already has
+        ingredients = [ConditioningIngredient(
+            material=ConditioningMaterial.WASTE,
+            mass_kg=batch.mass_kg,
+            volume_l=(batch.volume_m3 * 1000) if batch.volume_m3 else None,
+        )]
 
-    return render(request, "waste/waste_condition.html", {"batch": batch, "form": form})
+    preview = compute_conditioning_totals(ingredients) if ingredients else None
 
+    return render(request, "waste/waste_condition.html", {
+        "batch": batch, "form": form, "ingredients": ingredients,
+        "material_choices": ConditioningMaterial.choices, "preview": preview,
+    })
 
 def waste_send_to_analysis(request):
     """
@@ -470,3 +507,58 @@ def waste_export_csv(request):
         ])
 
     return response
+
+
+def waste_release(request, pk):
+
+    batch = get_object_or_404(WasteBatch, pk=pk)
+    release_date = timezone.now().date()
+
+    if request.method == "POST" and request.POST.get("confirm") == "1":
+        route = request.POST.get("route")
+        try:
+            record, breakdown, checks = register_release(
+                batch, route=route, performed_by=request.user,
+                remarks=request.POST.get("remarks", ""), release_date=release_date,
+            )
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect("waste_detail", pk=pk)
+
+        if record.over_limit:
+            messages.warning(request, _("Release recorded — but it pushes one or more nuclides over their annual limit. See the release record."))
+        else:
+            messages.success(request, _("Release recorded."))
+        return redirect("waste_detail", pk=pk)
+
+    route = request.GET.get("route") or ReleaseRoute.LIQUID
+    breakdown, checks = preview_release(batch, route=route, release_date=release_date)
+
+    return render(request, "waste/waste_release.html", {
+        "batch": batch, "breakdown": breakdown, "checks": checks,
+        "route": route, "routes": ReleaseRoute.choices, "release_date": release_date,
+    })
+
+
+def release_annual_report(request):
+
+    year = int(request.GET.get("year") or timezone.now().year)
+    route = request.GET.get("route", "")
+
+    limits = ReleaseLimit.objects.filter(effective_from__year__lte=year).select_related("radionuclide", "facility")
+    if route:
+        limits = limits.filter(route=route)
+
+    rows = []
+    for limit in limits:
+        released = year_released_bq(limit.category, limit.route, limit.facility, radionuclide=limit.radionuclide, year=year)
+        percent = (released / float(limit.annual_limit_bq) * 100) if limit.annual_limit_bq else None
+        rows.append({"limit": limit, "released_bq": released, "percent": percent})
+
+    current_year = timezone.now().year
+    year_choices = list(range(current_year - 5, current_year + 1))
+
+    return render(request, "waste/release_annual_report.html", {
+        "rows": rows, "year": year, "route": route,
+        "routes": ReleaseRoute.choices, "year_choices": year_choices,
+    })

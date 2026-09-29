@@ -2,41 +2,114 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Condition Waste Batch" %}{% endblock %}
+{% block title %}{% trans "Condition Batch" %} — {{ batch.waste_id }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-xl-8">
+<div class="row justify-content-center">
+<div class="col-xl-9">
 
-            <div class="card shadow-sm">
-                <div class="card-header"><h3>{% trans "Condition" %} — {{ batch.waste_id }}</h3></div>
-                <div class="card-body">
+  <nav class="mb-3"><a href="{% url 'waste_detail' batch.pk %}">&larr; {{ batch.waste_id }}</a></nav>
 
-                    <div class="alert alert-info">
-                        {% trans "Conditioning consumes this batch and creates a new PROCESSED SOLID batch (even from a liquid parent — solidification is the point). Activity does not carry over: sample the new package and send it for analysis." %}
-                    </div>
+  <div class="card shadow-sm mb-4">
+    <div class="card-header"><h3 class="mb-0">{% trans "Condition Batch" %} — {{ batch.waste_id }}</h3></div>
+    <div class="card-body">
+      <p class="text-muted">{% trans "Conditioning always produces a processed SOLID batch. Add every ingredient used (including the waste itself) below — the package's total mass, volume and waste-to-matrix ratio are calculated from them." %}</p>
 
-                    <div class="row mb-3">
-                        <div class="col-md-3"><strong>{% trans "Type" %}:</strong> {{ batch.get_waste_type_display }}</div>
-                        <div class="col-md-3"><strong>{% trans "Class" %}:</strong> {{ batch.get_waste_class_display|default:"-" }}</div>
-                        <div class="col-md-3"><strong>{% trans "Mass (kg)" %}:</strong> {{ batch.mass_kg|default:"-" }}</div>
-                        <div class="col-md-3"><strong>{% trans "Volume (m³)" %}:</strong> {{ batch.volume_m3|default:"-" }}</div>
-                    </div>
+      <form method="post" id="condition-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        {% crispy form %}
 
-                    <form method="post">
-                        {% csrf_token %}
-                        {% crispy form %}
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <a href="{% url 'waste_detail' batch.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
-                            <button type="submit" class="btn btn-primary">{% trans "Condition" %}</button>
-                        </div>
-                    </form>
+        <hr class="my-4">
+        <h5 class="mb-1">{% trans "Ingredients" %}</h5>
+        <p class="text-muted small">{% trans "Give a mass, a volume, or both. If you only have a volume, add a density (kg/L) so the mass can be worked out — e.g. sludge measured by volume." %}</p>
 
-                </div>
-            </div>
-
+        <div class="table-responsive">
+        <table class="table table-bordered align-middle" id="ingredient-table">
+          <thead class="table-light">
+            <tr>
+              <th style="width:20%">{% trans "Material" %}</th>
+              <th>{% trans "Name (if Other)" %}</th>
+              <th>{% trans "Mass (kg)" %}</th>
+              <th>{% trans "Volume (L)" %}</th>
+              <th>{% trans "Density (kg/L)" %}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ingredient-body">
+          {% for ing in ingredients %}
+            <tr>
+              <td>
+                <select name="ing_material" class="form-select">
+                  {% for value, label in material_choices %}
+                  <option value="{{ value }}" {% if ing.material == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td><input type="text" name="ing_material_other" class="form-control" value="{{ ing.material_other|default:'' }}"></td>
+              <td><input type="number" step="0.001" name="ing_mass" class="form-control" value="{{ ing.mass_kg|default:'' }}"></td>
+              <td><input type="number" step="0.001" name="ing_volume" class="form-control" value="{{ ing.volume_l|default:'' }}"></td>
+              <td><input type="number" step="0.0001" name="ing_density" class="form-control" value="{{ ing.density_kg_per_l|default:'' }}"></td>
+              <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row">✕</button></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
         </div>
+        <button type="button" class="btn btn-outline-primary btn-sm" id="add-ingredient">+ {% trans "Add ingredient" %}</button>
+
+        {% if preview %}
+        <div class="alert alert-info mt-3">
+          <strong>{% trans "Calculated from the ingredients currently on the page" %}</strong>
+          {% trans "(recalculated on save):" %}
+          <div>{% trans "Package mass" %}: {{ preview.package_mass_kg|default:"-" }} kg</div>
+          <div>{% trans "Package volume" %}: {{ preview.package_volume_m3|default:"-" }} m³</div>
+          <div>{% trans "Waste-to-matrix ratio" %}: {{ preview.waste_to_matrix_ratio|default:"-" }}</div>
+          {% for w in preview.warnings %}<div class="text-warning small">⚠ {{ w }}</div>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="{% url 'waste_detail' batch.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+          <button type="submit" class="btn btn-primary">{% trans "Condition Batch" %}</button>
+        </div>
+      </form>
+
     </div>
-</div>
+  </div>
+
+</div></div></div>
+
+<template id="ingredient-row-template">
+  <tr>
+    <td>
+      <select name="ing_material" class="form-select">
+        {% for value, label in material_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+    </td>
+    <td><input type="text" name="ing_material_other" class="form-control"></td>
+    <td><input type="number" step="0.001" name="ing_mass" class="form-control"></td>
+    <td><input type="number" step="0.001" name="ing_volume" class="form-control"></td>
+    <td><input type="number" step="0.0001" name="ing_density" class="form-control"></td>
+    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row">✕</button></td>
+  </tr>
+</template>
+
+<script>
+(function () {
+    const body = document.getElementById("ingredient-body");
+    const tpl = document.getElementById("ingredient-row-template");
+    document.getElementById("add-ingredient").addEventListener("click", function () {
+        const tmp = document.createElement("tbody");
+        tmp.innerHTML = tpl.innerHTML;
+        body.appendChild(tmp.querySelector("tr"));
+    });
+    body.addEventListener("click", function (e) {
+        if (e.target.classList.contains("remove-row")) {
+            e.target.closest("tr").remove();
+        }
+    });
+})();
+</script>
 {% endblock %}

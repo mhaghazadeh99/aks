@@ -125,6 +125,8 @@ def radionuclide_import_csv(request):
                     "gamma_yield": parse_float(row.get("gamma_yield"), "gamma_yield", row_errors, row_num),
 
                     "neutron_emitter": parse_bool(row.get("neutron_emitter")),
+                    "emits_beta": parse_bool(row.get("emits_beta")),
+                    "emits_alpha": parse_bool(row.get("emits_alpha")),
                     "neutron_yield_n_per_s": parse_float(row.get("neutron_yield_n_per_s"), "neutron_yield_n_per_s", row_errors, row_num),
 
                     "dose_rate_constant_usv_m2_per_h_gbq": parse_float(row.get("dose_rate_constant_usv_m2_per_h_gbq"), "dose_rate_constant_usv_m2_per_h_gbq", row_errors, row_num),

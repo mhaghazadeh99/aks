@@ -26,6 +26,8 @@
             <th>{% trans "Half-life (s)" %}</th>
             <th>{% trans "D-value (Bq)" %}</th>
             <th>{% trans "Decay Mode" %}</th>
+            <th>{% trans "Emits β" %}</th>
+            <th>{% trans "Emits α" %}</th>
             <th>{% trans "Gamma (MeV)" %}</th>
             <th>{% trans "IAEA Cat" %}</th>
             <th>{% trans "Actions" %}</th>
@@ -39,6 +41,8 @@
             <td>{{ obj.half_life }}</td>
             <td>{{ obj.d_value_bq }}</td>
             <td>{{ obj.decay_mode }}</td>
+            <td>{% if obj.emits_beta %}✓{% else %}-{% endif %}</td>
+            <td>{% if obj.emits_alpha %}✓{% else %}-{% endif %}</td>
             <td>{{ obj.gamma_energy_mev }}</td>
             <td>{{ obj.iaea_category }}</td>
 

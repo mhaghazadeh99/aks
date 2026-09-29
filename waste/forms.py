@@ -8,8 +8,8 @@ from .models import (
     WasteMovement,
     WasteState,
     WasteType,
+    ConditioningMaterial,
 )
-
 
 def _bootstrap(fields):
     for field in fields.values():
@@ -49,6 +49,7 @@ class WasteBatchForm(forms.ModelForm):
             "waste_arising_from",
             "material",
             "container_type",
+            "waste_appearance",
             "mass_kg",
             "volume_m3",
             "dose_rate_surface_uSv",

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Release Batch" %} — {{ batch.waste_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-9">
+
+  <nav class="mb-3"><a href="{% url 'waste_detail' batch.pk %}">&larr; {{ batch.waste_id }}</a></nav>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header"><h3 class="mb-0">{% trans "Release" %} — {{ batch.waste_id }}</h3></div>
+    <div class="card-body">
+
+      <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+          <label class="form-label">{% trans "Discharge route" %}</label>
+          <select name="route" class="form-select" onchange="this.form.submit()">
+            {% for value, label in routes %}
+            <option value="{{ value }}" {% if route == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+
+      {% for w in breakdown.warnings %}<div class="alert alert-warning">⚠ {{ w }}</div>{% endfor %}
+
+      <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>{% trans "Line" %}</th><th>{% trans "This release (Bq)" %}</th>
+            <th>{% trans "Already released this year (Bq)" %}</th>
+            <th>{% trans "Total after this release (Bq)" %}</th>
+            <th>{% trans "Annual limit (Bq)" %}</th><th>{% trans "% of limit" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for c in checks %}
+          <tr class="{% if c.over_limit %}table-danger{% elif c.percent_of_limit >= 80 %}table-warning{% endif %}">
+            <td>{% if c.radionuclide %}{{ c.radionuclide }}{% elif c.category == "GROSS_BETA" %}{% trans "Unidentified gross beta" %}{% else %}{% trans "Unidentified gross alpha" %}{% endif %}</td>
+            <td>{{ c.activity_bq|floatformat:3 }}</td>
+            <td>{{ c.year_total_before_bq|floatformat:3 }}</td>
+            <td>{{ c.year_total_after_bq|floatformat:3 }}</td>
+            <td>{% if c.limit %}{{ c.limit.annual_limit_bq }}{% else %}<span class="text-muted">{% trans "no limit set" %}</span>{% endif %}</td>
+            <td>{% if c.percent_of_limit is not None %}{{ c.percent_of_limit|floatformat:1 }}%{% else %}-{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-muted">{% trans "No measured activity on this batch yet — nothing to release against a limit." %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      {% with any_over=checks|dictsort:"over_limit"|last %}
+      {% if any_over.over_limit %}
+      <div class="alert alert-danger"><strong>⚠ {% trans "One or more nuclides would exceed their annual limit if this release goes ahead." %}</strong></div>
+      {% endif %}
+      {% endwith %}
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="confirm" value="1">
+        <input type="hidden" name="route" value="{{ route }}">
+        <label class="form-label">{% trans "Remarks" %}</label>
+        <textarea name="remarks" rows="2" class="form-control mb-3"></textarea>
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{% url 'waste_detail' batch.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+          <button type="submit" class="btn btn-danger" onclick="return confirm('{% trans "Record this release? This can't be undone." %}');">
+            {% trans "Confirm Release" %}
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div></div></div>
+{% endblock %}

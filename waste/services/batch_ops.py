@@ -242,8 +242,17 @@ def split_batch(parent, portions, performed_by, remarks=""):
 def compute_conditioning_totals(ingredients):
     """
     ingredients: list of (unsaved) ConditioningIngredient instances.
-    Returns {package_mass_kg, package_volume_m3, waste_mass_kg,
+    Returns {result_mass_kg, result_volume_m3, waste_mass_kg,
              waste_to_matrix_ratio, warnings}.
+
+    `result_mass_kg` / `result_volume_m3` are the CALCULATED sum of what was
+    poured in — theoretical, not measured. They set the resulting batch's own
+    `mass_kg` / `volume_m3`. They are deliberately NOT the same thing as
+    `package_mass_kg` / `package_volume_m3` on WasteBatch: those stay a pure
+    USER input — the operator's own measurement or estimate of the actual
+    finished package (which can differ from the ingredient sum: water loss on
+    curing, spillage, container tare, air voids...). This function never sets
+    them; only an explicit child_overrides value does.
     """
     total_mass = 0.0
     total_volume_l = 0.0
@@ -276,8 +285,8 @@ def compute_conditioning_totals(ingredients):
             total_volume_l += float(volume)
 
     return {
-        "package_mass_kg": round(total_mass, 3) if total_mass else None,
-        "package_volume_m3": round(total_volume_l / 1000, 5) if total_volume_l else None,
+        "result_mass_kg": round(total_mass, 3) if total_mass else None,
+        "result_volume_m3": round(total_volume_l / 1000, 5) if total_volume_l else None,
         "waste_mass_kg": round(waste_mass, 3) if waste_mass else None,
         "waste_to_matrix_ratio": round(waste_mass / matrix_mass, 4) if matrix_mass else None,
         "warnings": warnings,
@@ -310,12 +319,13 @@ def condition_batch(parent, new_waste_id, performed_by, ingredients=None, remark
     computed = {}
     if ingredients:
         totals = compute_conditioning_totals(ingredients)
-        if totals["package_mass_kg"] is not None:
-            computed["mass_kg"] = totals["package_mass_kg"]
-            computed["package_mass_kg"] = totals["package_mass_kg"]
-        if totals["package_volume_m3"] is not None:
-            computed["volume_m3"] = totals["package_volume_m3"]
-            computed["package_volume_m3"] = totals["package_volume_m3"]
+        # Only the CALCULATED result (mass_kg/volume_m3) is auto-set. Package
+        # mass/volume are never touched here — they only come from an explicit
+        # child_overrides value (the operator's own measurement/estimate).
+        if totals["result_mass_kg"] is not None:
+            computed["mass_kg"] = totals["result_mass_kg"]
+        if totals["result_volume_m3"] is not None:
+            computed["volume_m3"] = totals["result_volume_m3"]
         if totals["waste_mass_kg"] is not None:
             computed["waste_mass_kg"] = totals["waste_mass_kg"]
         if totals["waste_to_matrix_ratio"] is not None:

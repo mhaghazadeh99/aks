@@ -5,7 +5,11 @@
 {% block title %}{% trans "Radionuclides" %}{% endblock %}
 
 {% block content %}
-
+{% if messages %}
+<div class="mb-3">
+{% for m in messages %}<div class="alert alert-{{ m.tags }}">{{ m }}</div>{% endfor %}
+</div>
+{% endif %}
 <div class="page-header">
     <h2>{% trans "Radionuclides" %}</h2>
 
@@ -26,10 +30,11 @@
             <th>{% trans "Half-life (s)" %}</th>
             <th>{% trans "D-value (Bq)" %}</th>
             <th>{% trans "Decay Mode" %}</th>
-            <th>{% trans "Emits β" %}</th>
-            <th>{% trans "Emits α" %}</th>
+          
             <th>{% trans "Gamma (MeV)" %}</th>
             <th>{% trans "IAEA Cat" %}</th>
+            <th>{% trans "Beta emission probability" %}</th>
+            <th>{% trans "Alpha emission probability" %}</th>
             <th>{% trans "Actions" %}</th>
         </tr>
     </thead>
@@ -41,19 +46,20 @@
             <td>{{ obj.half_life }}</td>
             <td>{{ obj.d_value_bq }}</td>
             <td>{{ obj.decay_mode }}</td>
-            <td>{% if obj.emits_beta %}✓{% else %}-{% endif %}</td>
-            <td>{% if obj.emits_alpha %}✓{% else %}-{% endif %}</td>
             <td>{{ obj.gamma_energy_mev }}</td>
             <td>{{ obj.iaea_category }}</td>
+            <td>{{ obj.beta_emission_probability|default:"-" }}</td>
+            <td>{{ obj.alpha_emission_probability|default:"-" }}</td>
+            
 
             <td>
                 <div class="action-icons">
-                    <a href="{% url 'radionuclide_edit' obj.id %}" class="icon-btn edit">
-                        ✏️
-                    </a>
-                    <a href="{% url 'radionuclide_delete' obj.id %}" class="icon-btn history">
-                        🗑️
-                    </a>
+                    <a href="{% url 'radionuclide_edit' obj.id %}" class="icon-btn edit">✏️</a>
+                    <form method="post" action="{% url 'radionuclide_delete' obj.id %}" class="d-inline"
+                          onsubmit="return confirm('Delete {{ obj.name }}? This can\'t be undone.');">
+                        {% csrf_token %}
+                        <button type="submit" class="icon-btn history" style="border:none;background:none;">🗑️</button>
+                    </form>
                 </div>
             </td>
         </tr>

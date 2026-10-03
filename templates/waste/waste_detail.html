@@ -53,14 +53,18 @@
                         <div class="alert alert-warning py-2">⚠ {{ w }}</div>
                         {% endfor %}
 
+                        <div class="row mb-2">
+                            <div class="col-md-3"><strong>{% trans "Gamma — whole batch (Bq)" %}:</strong> {{ breakdown.gamma_total_bq|floatformat:3|default:"-" }}</div>
+                            <div class="col-md-3"><strong>{% trans "Pure Beta — whole batch (Bq)" %}:</strong> {{ breakdown.pure_beta_bq|floatformat:3|default:"-" }}</div>
+                            <div class="col-md-3"><strong>{% trans "Pure Alpha — whole batch (Bq)" %}:</strong> {{ breakdown.pure_alpha_bq|floatformat:3|default:"-" }}</div>
+                            <div class="col-md-3"><strong>{% trans "Total Activity — whole batch (Bq)" %}:</strong> {{ breakdown.total_bq|floatformat:3|default:"-" }}</div>
+                        </div>
                         <div class="row mb-3">
-                            <div class="col-md-3"><strong>{% trans "Gamma Total (Bq)" %}:</strong> {{ breakdown.gamma_total_bq|floatformat:3 }}</div>
-                            <div class="col-md-3"><strong>{% trans "Pure Beta (Bq)" %}:</strong> {{ breakdown.pure_beta_bq|floatformat:3|default:"-" }}</div>
-                            <div class="col-md-3"><strong>{% trans "Pure Alpha (Bq)" %}:</strong> {{ breakdown.pure_alpha_bq|floatformat:3|default:"-" }}</div>
-                            <div class="col-md-3"><strong>{% trans "Total Activity (Bq)" %}:</strong> {{ breakdown.total_bq|floatformat:3|default:"-" }}</div>
+                            <div class="col-md-6"><strong>{% trans "Concentration (Bq/kg)" %}:</strong> {{ breakdown.concentration_bq_per_kg|floatformat:3|default:"-" }}</div>
+                            <div class="col-md-6"><strong>{% trans "Concentration (Bq/L)" %}:</strong> {{ breakdown.concentration_bq_per_l|floatformat:3|default:"-" }}</div>
                         </div>
                         <p class="text-muted small mb-3">
-                            {% trans "\"Pure\" beta/alpha is the gross count minus whatever gamma-identified nuclides already account for — see the batch's samples for the raw figures." %}
+                            {% trans "Figures above are scaled from the sample(s) up to the batch's own recorded mass/volume — not the raw sample reading. \"Pure\" beta/alpha is the gross count minus whatever gamma-identified nuclides already account for (weighted by each nuclide's own beta/alpha emission probability, not assumed 100%). See the table below for the as-measured, per-sample figures." %}
                         </p>
 
                         {% if analysis_ab %}

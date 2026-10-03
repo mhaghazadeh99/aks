@@ -334,17 +334,15 @@ class WasteBatch(models.Model):
             self.__dict__.pop(attr, None)
 
     def activity_breakdown(self, as_of=None):
-        """Gamma per-nuclide activity + gross alpha/beta netted against it.
-        See laboratory/services/activity.py for the method and its caveats.
-        Cached for the default (as_of=None, i.e. "today") case only — a
-        specific as_of (e.g. a release preview for a past date) is always
-        computed fresh."""
+        """Gamma per-nuclide activity + gross alpha/beta netted against it, scaled to this
+        batch's own mass/volume. See laboratory/services/activity.py for the method,
+        its caveats, and what happens when a stream can't be scaled."""
         from laboratory.services.activity import total_activity_breakdown
         if as_of is not None:
-            return total_activity_breakdown(self.latest_gamma_analysis, self.latest_alpha_beta_analysis, as_of=as_of)
+            return total_activity_breakdown(self.latest_gamma_analysis, self.latest_alpha_beta_analysis, batch=self, as_of=as_of)
         if "_default_activity_breakdown" not in self.__dict__:
             self.__dict__["_default_activity_breakdown"] = total_activity_breakdown(
-                self.latest_gamma_analysis, self.latest_alpha_beta_analysis, as_of=None,
+                self.latest_gamma_analysis, self.latest_alpha_beta_analysis, batch=self, as_of=None,
             )
         return self.__dict__["_default_activity_breakdown"]
 

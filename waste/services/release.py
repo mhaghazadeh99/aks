@@ -63,14 +63,22 @@ def year_released_bq(category, route, facility, radionuclide=None, year=None):
 
 def _release_lines(breakdown):
     """Turns an activity breakdown into the (category, radionuclide, activity_bq)
-    lines a release is made of — shared by preview and register so they can't drift apart."""
+    lines a release is made of — shared by preview and register so they can't drift apart.
+
+    Uses each gamma line's `batch_activity_bq` (the whole-batch figure, already
+    scaled from the sample by laboratory.services.activity) — NEVER the raw
+    `sample_activity_bq`, which is just whatever the lab sample happened to
+    weigh/measure and says nothing on its own about the batch being released.
+    A line with no `batch_activity_bq` (couldn't be scaled — see the
+    breakdown's warnings) is left out of the release rather than included at
+    the wrong scale."""
     lines = []
     for gline in breakdown["gamma_lines"]:
-        if gline["activity_bq"]:
+        if gline["batch_activity_bq"]:
             lines.append({
                 "category": ReleaseLimitCategory.NUCLIDE,
                 "radionuclide": gline["nuclide"],
-                "activity_bq": gline["activity_bq"],
+                "activity_bq": gline["batch_activity_bq"],
             })
     if breakdown["pure_beta_bq"]:
         lines.append({"category": ReleaseLimitCategory.GROSS_BETA, "radionuclide": None, "activity_bq": breakdown["pure_beta_bq"]})

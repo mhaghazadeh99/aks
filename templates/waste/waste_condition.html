@@ -61,12 +61,14 @@
 
         {% if preview %}
         <div class="alert alert-info mt-3">
-          <strong>{% trans "Calculated from the ingredients currently on the page" %}</strong>
-          {% trans "(recalculated on save):" %}
-          <div>{% trans "Package mass" %}: {{ preview.package_mass_kg|default:"-" }} kg</div>
-          <div>{% trans "Package volume" %}: {{ preview.package_volume_m3|default:"-" }} m³</div>
+          <strong>{% trans "Calculated result (sum of ingredients above, recalculated on save)" %}</strong>
+          <div>{% trans "Result mass" %}: {{ preview.result_mass_kg|default:"-" }} kg</div>
+          <div>{% trans "Result volume" %}: {{ preview.result_volume_m3|default:"-" }} m³</div>
           <div>{% trans "Waste-to-matrix ratio" %}: {{ preview.waste_to_matrix_ratio|default:"-" }}</div>
           {% for w in preview.warnings %}<div class="text-warning small">⚠ {{ w }}</div>{% endfor %}
+          <div class="small text-muted mt-2">
+            {% trans "This is the calculated sum of what was added, not a measurement. Enter your own weighed/estimated final package figures in "Package Mass" and "Package Volume" below if they differ — those are never overwritten by this calculation." %}
+          </div>
         </div>
         {% endif %}
 

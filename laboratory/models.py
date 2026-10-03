@@ -158,6 +158,28 @@ class AlphaBetaCountingRun(models.Model):
     beta_mda_mbq = models.DecimalField(
         _("MDA Beta (mBq)"), max_digits=20, decimal_places=5, null=True, blank=True,
     )
+    alpha_calibration_nuclide = models.ForeignKey(
+        "reference.Nuclides", verbose_name=_("Alpha Calibration Nuclide"), on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+        help_text=_("Nuclide this counter's alpha channel was calibrated against. \"Pure alpha\" is "
+                    "reported as this nuclide's equivalent activity."),
+    )
+    beta_calibration_nuclide = models.ForeignKey(
+        "reference.Nuclides", verbose_name=_("Beta Calibration Nuclide"), on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+        help_text=_("Same idea, for the beta channel."),
+    )
+    alpha_efficiency_correction_factor = models.FloatField(
+        _("Alpha Efficiency Correction Factor"), null=True, blank=True,
+        help_text=_("Optional manual multiplier for pure alpha — only if you've independently "
+                    "determined the efficiency ratio between the calibration nuclide and whatever you "
+                    "believe actually dominates the unidentified fraction. Leave blank for no "
+                    "correction (recommended unless you have that data)."),
+    )
+    beta_efficiency_correction_factor = models.FloatField(
+        _("Beta Efficiency Correction Factor"), null=True, blank=True,
+        help_text=_("Same idea, for pure beta."),
+    )
 
     notes = models.TextField(_("Notes"), blank=True, null=True)
 

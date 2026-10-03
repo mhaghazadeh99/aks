@@ -2,13 +2,13 @@ from django.db import models
 
 # Create your models here.
 class Nuclides(models.Model):
-    name = models.CharField(max_length=8)
+    name = models.CharField(max_length=8, unique=True)
 
     # store in seconds
-    half_life = models.FloatField()
+    half_life = models.FloatField(null=True, blank=True)
 
     # D-value MUST be in Bq
-    d_value_bq = models.FloatField()
+    d_value_bq = models.FloatField(null=True, blank=True)
 
     # --- ADD THESE BELOW ---
 
@@ -41,17 +41,21 @@ class Nuclides(models.Model):
     # Misc
     parent_nuclide = models.CharField(max_length=20, null=True, blank=True)
     daughter_nuclide = models.CharField(max_length=20, null=True, blank=True)
-    emits_beta = models.BooleanField(
-        default=False,
-        help_text="This nuclide's own decay includes beta emission (β⁻/β⁺) — used to net its "
-                   "activity out of gross beta counting when it's also identified by gamma spec.",
+    beta_emission_probability = models.FloatField(
+        null=True, blank=True,
+        help_text="Fraction (0-1) of this nuclide's decays that emit a beta particle. 1.0 for a "
+                   "single-mode beta emitter (Cs-137, Co-60, Sr-90...); the real branching fraction "
+                   "for a mixed-mode nuclide (e.g. K-40 = 0.8928, 89.28% beta / 10.72% EC); leave blank "
+                   "if this nuclide doesn't emit beta at all.",
     )
-    emits_alpha = models.BooleanField(
-        default=False,
-        help_text="This nuclide's own decay includes alpha emission — netted out of gross alpha "
-                   "counting the same way.",
+    alpha_emission_probability = models.FloatField(
+        null=True, blank=True,
+        help_text="Same idea, for alpha emission. 1.0 for a pure alpha emitter (Am-241, Ra-226...); "
+                   "the branching fraction for a mixed-mode nuclide; blank if not an alpha emitter.",
     )
     is_sealed_source_common = models.BooleanField(default=False)
-
+    def save(self, *args, **kwargs):
+        self.name = self.name.strip()
+        super().save(*args, **kwargs)
     def __str__(self):
         return self.name

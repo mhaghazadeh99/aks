@@ -1,49 +1,64 @@
 """
-Combined activity inventory for a waste batch: Gamma spectrometry gives
-per-nuclide activity; the gas-proportional counter gives only GROSS
-totals (total_alpha, total_beta) with no nuclide identification.
+Combined, mass/volume-scaled activity inventory for a waste batch.
 
-METHOD (this is the standard "scaling factor" idea used in radwaste
-characterization, e.g. ISO 21238 / IAEA correlation methods — using
-easy-to-measure key nuclides to account for hard-to-measure ones):
+THE PROBLEM WITH THE PREVIOUS VERSION: it treated a lab sample's measured
+Bq figures as if they already WERE the batch's total activity. They aren't
+— a sample is a small fraction of the batch's mass or volume, so the raw
+Bq reading needs scaling up before it means anything about the whole batch.
+This version does that scaling, and does it correctly even though a Gamma
+analysis and an Alpha/Beta analysis on the same batch come from DIFFERENT
+physical samples (Sample.analysis_type picks one detector per sample), each
+with its own mass/volume.
 
-  1. Every nuclide identified by gamma spectrometry already has its
-     TOTAL decay activity (not just "gamma decays") — that's what a
-     correctly calibrated gamma-spec analysis reports, using the
-     nuclide's gamma emission probability/branching ratio to convert
-     photon count rate back to Bq. So a gamma-identified nuclide's
-     activity_bq already represents 100% of its decays, including any
-     beta or alpha particles it emits as part of that decay.
-  2. Some of those decays ALSO show up in the gross alpha/beta count
-     (e.g. Cs-137 beta-decays to Ba-137m; Am-241 both alpha- and
-     gamma-decays). Left alone, that activity would be counted TWICE:
-     once from the gamma line, once inside the gross total.
-  3. So: subtract the gamma-identified nuclides' beta (or alpha)
-     contribution from the matching gross total BEFORE adding it to
-     the inventory. What's left ("pure" beta/alpha) is activity from
-     nuclides gamma spec can't see at all (H-3, C-14, Sr-90/Y-90,
-     Pu-alpha, etc.).
-  4. total = sum(gamma-identified activities) + pure_beta + pure_alpha
+METHOD, in order:
 
-CAVEATS (real ones — read before trusting this for a regulatory number):
-  - Gross alpha/beta counters are normally calibrated against ONE
-    reference nuclide (e.g. Am-241 for alpha, Cs-137 or Sr/Y-90 for
-    beta) and report an "as X" equivalent activity. Counting
-    efficiency is energy-dependent, so subtracting a true Bq value
-    (from gamma spec) from a reference-equivalent Bq value (from the
-    counter) is an approximation, not an exact physical subtraction.
-    It's the standard practice for this kind of screening, but it is
-    NOT interchangeable with a per-nuclide-calibrated measurement.
-  - Only nuclides flagged `emits_beta` / `emits_alpha` on the
-    Nuclides reference table are netted out. A gamma emitter that
-    decays purely by electron capture or isomeric transition (no
-    accompanying beta/alpha) must NOT be flagged, or its activity
-    would be wrongly subtracted from the gross total.
-  - If the net comes out negative (gross count lower than what gamma
-    spec alone implies), that's a red flag — mismatched geometry,
-    bad calibration, or a counting error — not a real "negative
-    activity". This function floors it at 0 and returns a warning
-    string instead of silently hiding the problem.
+  1. Every measured Bq figure (a gamma nuclide's activity, or the gross
+     alpha/beta total) is first turned into a CONCENTRATION — Bq per kg
+     and/or Bq per L of the sample it was actually measured on, using
+     whichever of that sample's sample_mass_kg / sample_volume_ml is
+     recorded. This is the number that's actually representative of "the
+     waste", assuming the sample was representative of the batch.
+
+  2. Netting gamma-identified nuclides out of gross alpha/beta happens AT
+     THE CONCENTRATION LEVEL, not on raw Bq — because the gamma sample and
+     the alpha/beta sample are generally different physical samples of
+     different size. Subtracting raw Bq values from two different-sized
+     samples would silently assume they were the same size. Netting only
+     happens when both sides share a basis (both have a recorded mass, or
+     both have a recorded volume); if they don't share one, netting is
+     skipped and flagged rather than guessed.
+
+     Each gamma-identified nuclide contributes to that netting scaled by
+     its `beta_emission_probability` / `alpha_emission_probability` (a
+     fraction, not a flag) — see reference.Nuclides. A nuclide whose own
+     decay is 100% beta contributes all of its activity; one with real
+     branching (K-40: 89.28% beta / 10.72% EC) contributes only that
+     fraction, not the whole thing.
+
+  3. Every concentration (gamma nuclides, and the netted "pure" gross
+     beta/alpha) is then scaled to the BATCH's total mass or volume to get
+     a real total activity for the whole batch, in Bq. A stream that can't
+     be scaled (its sample recorded no mass/volume, or the batch itself
+     has neither) is excluded from the totals — not silently included as
+     if the sample-sized number were the batch total — and flagged with a
+     warning, since the reported total will then understate the batch.
+
+  4. The whole-batch total is also expressed as a concentration
+     (Bq/kg and/or Bq/L of the BATCH itself) for comparison against
+     concentration-based limits (clearance/exemption levels etc).
+
+CALIBRATION CAVEAT (still applies, now made explicit and adjustable):
+gas-proportional gross alpha/beta counters are calibrated against ONE
+reference nuclide and report an equivalent activity in that nuclide's
+terms — efficiency is energy-dependent, so "pure beta"/"pure alpha" is an
+approximation, not a per-nuclide-calibrated measurement, UNLESS a manual
+efficiency correction factor has been set on the counting run (see
+AlphaBetaCountingRun.alpha/beta_efficiency_correction_factor). We do NOT
+attempt to auto-derive that correction: the "pure" fraction is by
+definition unidentified, so there is no nuclide to look an efficiency up
+for without an assumption only the analyst can responsibly make. Left
+uncorrected by default; the calibration nuclide (if recorded) is named in
+a note so the equivalence is explicit rather than implied.
 """
 
 from django.utils import timezone
@@ -52,72 +67,190 @@ from django.utils.translation import gettext_lazy as _
 from ..models import RadiationType
 
 
-def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, as_of=None):
+def _concentration(value_bq, sample):
+    """(Bq/kg, Bq/L) for value_bq as measured on `sample`. Either element is
+    None if that basis isn't recorded on the sample. value_bq may be None."""
+    if value_bq is None:
+        return None, None
+    per_kg = float(value_bq) / float(sample.sample_mass_kg) if sample.sample_mass_kg else None
+    per_l = float(value_bq) / (float(sample.sample_volume_ml) / 1000.0) if sample.sample_volume_ml else None
+    return per_kg, per_l
+
+
+def _scale_to_batch(conc_per_kg, conc_per_l, batch):
+    """A whole-batch Bq total from a concentration, preferring mass. (None, None)
+    if neither the concentration nor the matching batch quantity is available."""
+    if batch is None:
+        return None, None
+    if conc_per_kg is not None and batch.mass_kg:
+        return conc_per_kg * float(batch.mass_kg), "mass"
+    if conc_per_l is not None and batch.volume_m3:
+        return conc_per_l * float(batch.volume_m3) * 1000.0, "volume"
+    return None, None
+
+
+def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as_of=None):
     """
     gamma_analysis: an Analysis with detector_type=HPGE (or None)
     alpha_beta_analysis: an Analysis with detector_type=ALPHABETA (or None)
+    batch: the WasteBatch to scale up to (or None — figures then stay at
+           sample/concentration level and totals are not computed, since a
+           "batch total" means nothing without a batch)
     as_of: date to decay-correct every nuclide activity to (default: today)
 
     Returns a dict:
-      as_of, gamma_total_bq, pure_beta_bq, pure_alpha_bq,
-      beta_emitting_gamma_bq, alpha_emitting_gamma_bq, total_bq,
-      gamma_lines (list of {"nuclide": Nuclides, "activity_bq": float}),
-      warnings (list of str), gamma_analysis, alpha_beta_analysis
+      as_of,
+      gamma_total_bq, pure_beta_bq, pure_alpha_bq, total_bq  (whole-batch Bq, or
+        None where that stream couldn't be scaled — see warnings)
+      concentration_bq_per_kg, concentration_bq_per_l  (whole-batch, from total_bq)
+      gamma_lines: [{"nuclide", "sample_activity_bq", "batch_activity_bq", "basis"}]
+      warnings: list of str
+      gamma_analysis, alpha_beta_analysis
     """
     as_of = as_of or timezone.now().date()
-
-    gamma_lines = []
-    gamma_total = 0.0
-    beta_emitting_gamma_total = 0.0
-    alpha_emitting_gamma_total = 0.0
     warnings = []
 
+    # ---------- gamma: per-nuclide, scaled to the whole batch ----------
+    gamma_lines = []
+    gamma_total_bq = 0.0
+    gamma_total_known = False
+
+    beta_emit_conc_kg = beta_emit_conc_l = 0.0
+    alpha_emit_conc_kg = alpha_emit_conc_l = 0.0
+    have_beta_mass = have_beta_vol = have_alpha_mass = have_alpha_vol = False
+
     if gamma_analysis:
+        gsample = gamma_analysis.sample
         for na in gamma_analysis.nuclide_activities.filter(radiation_type=RadiationType.GAMMA).select_related("radionuclide"):
-            value = na.current_activity_bq(as_of=as_of) or 0.0
-            gamma_lines.append({"nuclide": na.radionuclide, "activity_bq": value})
-            gamma_total += value
-            if getattr(na.radionuclide, "emits_beta", False):
-                beta_emitting_gamma_total += value
-            if getattr(na.radionuclide, "emits_alpha", False):
-                alpha_emitting_gamma_total += value
+            sample_bq = na.current_activity_bq(as_of=as_of) or 0.0
+            conc_kg, conc_l = _concentration(sample_bq, gsample)
+            batch_bq, basis = _scale_to_batch(conc_kg, conc_l, batch)
 
-    pure_beta = None
-    if alpha_beta_analysis and alpha_beta_analysis.total_beta is not None:
-        gross_beta = float(alpha_beta_analysis.total_beta)
-        pure_beta = gross_beta - beta_emitting_gamma_total
-        if pure_beta < 0:
+            gamma_lines.append({
+                "nuclide": na.radionuclide,
+                "sample_activity_bq": sample_bq,
+                "batch_activity_bq": batch_bq,
+                "basis": basis,
+            })
+
+            if batch_bq is not None:
+                gamma_total_bq += batch_bq
+                gamma_total_known = True
+            elif batch is not None:
+                warnings.append(
+                    _("%(n)s: sample %(s)s has no recorded mass or volume, so its activity couldn't "
+                      "be scaled to the batch — the gamma total below likely understates the batch.")
+                    % {"n": na.radionuclide, "s": gsample.sample_id}
+                )
+
+            beta_p = getattr(na.radionuclide, "beta_emission_probability", None)
+            alpha_p = getattr(na.radionuclide, "alpha_emission_probability", None)
+            if beta_p:
+                if conc_kg is not None:
+                    beta_emit_conc_kg += conc_kg * beta_p; have_beta_mass = True
+                if conc_l is not None:
+                    beta_emit_conc_l += conc_l * beta_p; have_beta_vol = True
+            if alpha_p:
+                if conc_kg is not None:
+                    alpha_emit_conc_kg += conc_kg * alpha_p; have_alpha_mass = True
+                if conc_l is not None:
+                    alpha_emit_conc_l += conc_l * alpha_p; have_alpha_vol = True
+
+    # ---------- gross alpha/beta: net (at concentration level) then scale ----------
+    pure_beta_bq = pure_alpha_bq = None
+    counting_run = getattr(alpha_beta_analysis, "counting_run", None) if alpha_beta_analysis else None
+
+    def _net_and_scale(gross_value, have_mass, have_vol, emit_kg, emit_l, ab_sample, label):
+        gross_kg, gross_l = _concentration(gross_value, ab_sample)
+        net_kg = net_l = None
+        netted = False
+        if gross_kg is not None and have_mass:
+            net_kg = gross_kg - emit_kg; netted = True
+        if gross_l is not None and have_vol:
+            net_l = gross_l - emit_l; netted = True
+        if not netted:
+            net_kg, net_l = gross_kg, gross_l
+            if have_mass or have_vol:
+                warnings.append(
+                    _("Gross %(label)s and the gamma-identified %(label)s emitters were measured on "
+                      "samples with no shared mass/volume basis, so they couldn't be netted against "
+                      "each other — pure %(label)s is the unmodified gross reading.") % {"label": label}
+                )
+        if net_kg is not None and net_kg < 0:
             warnings.append(
-                _("Gross beta (%(g).3f Bq) is lower than the beta activity already identified "
-                  "by gamma spectrometry (%(b).3f Bq) for this batch — check counter calibration "
-                  "or geometry. Pure beta was floored at 0 for this total.")
-                % {"g": gross_beta, "b": beta_emitting_gamma_total}
+                _("Gross %(label)s concentration is lower than the %(label)s activity already identified "
+                  "by gamma spectrometry — check counter calibration/geometry. Pure %(label)s floored at "
+                  "0 (mass basis).") % {"label": label}
             )
-            pure_beta = 0.0
-
-    pure_alpha = None
-    if alpha_beta_analysis and alpha_beta_analysis.total_alpha is not None:
-        gross_alpha = float(alpha_beta_analysis.total_alpha)
-        pure_alpha = gross_alpha - alpha_emitting_gamma_total
-        if pure_alpha < 0:
+            net_kg = 0.0
+        if net_l is not None and net_l < 0:
             warnings.append(
-                _("Gross alpha (%(g).3f Bq) is lower than the alpha activity already identified "
-                  "by gamma spectrometry (%(b).3f Bq) for this batch — check counter calibration "
-                  "or geometry. Pure alpha was floored at 0 for this total.")
-                % {"g": gross_alpha, "b": alpha_emitting_gamma_total}
+                _("Gross %(label)s concentration is lower than the %(label)s activity already identified "
+                  "by gamma spectrometry — check counter calibration/geometry. Pure %(label)s floored at "
+                  "0 (volume basis).") % {"label": label}
             )
-            pure_alpha = 0.0
+            net_l = 0.0
+        result_bq, _basis = _scale_to_batch(net_kg, net_l, batch)
+        if result_bq is None and batch is not None:
+            warnings.append(
+                _("Sample %(s)s (Alpha/Beta) has no recorded mass or volume, so pure %(label)s "
+                  "couldn't be scaled to the batch.") % {"s": ab_sample.sample_id, "label": label}
+            )
+        return result_bq
 
-    total = gamma_total + (pure_beta or 0.0) + (pure_alpha or 0.0)
+    if alpha_beta_analysis:
+        ab_sample = alpha_beta_analysis.sample
+
+        if alpha_beta_analysis.total_beta is not None:
+            pure_beta_bq = _net_and_scale(
+                float(alpha_beta_analysis.total_beta), have_beta_mass, have_beta_vol,
+                beta_emit_conc_kg, beta_emit_conc_l, ab_sample, "beta",
+            )
+            if pure_beta_bq is not None and counting_run and counting_run.beta_efficiency_correction_factor:
+                pure_beta_bq *= counting_run.beta_efficiency_correction_factor
+                warnings.append(
+                    _("Pure beta includes a manual efficiency correction factor of %(f)s.")
+                    % {"f": counting_run.beta_efficiency_correction_factor}
+                )
+            if pure_beta_bq is not None and counting_run and counting_run.beta_calibration_nuclide:
+                warnings.append(
+                    _("Pure beta is expressed as %(n)s-equivalent activity (the counter's beta "
+                      "calibration source) — not a per-nuclide-calibrated measurement.")
+                    % {"n": counting_run.beta_calibration_nuclide}
+                )
+
+        if alpha_beta_analysis.total_alpha is not None:
+            pure_alpha_bq = _net_and_scale(
+                float(alpha_beta_analysis.total_alpha), have_alpha_mass, have_alpha_vol,
+                alpha_emit_conc_kg, alpha_emit_conc_l, ab_sample, "alpha",
+            )
+            if pure_alpha_bq is not None and counting_run and counting_run.alpha_efficiency_correction_factor:
+                pure_alpha_bq *= counting_run.alpha_efficiency_correction_factor
+                warnings.append(
+                    _("Pure alpha includes a manual efficiency correction factor of %(f)s.")
+                    % {"f": counting_run.alpha_efficiency_correction_factor}
+                )
+            if pure_alpha_bq is not None and counting_run and counting_run.alpha_calibration_nuclide:
+                warnings.append(
+                    _("Pure alpha is expressed as %(n)s-equivalent activity (the counter's alpha "
+                      "calibration source) — not a per-nuclide-calibrated measurement.")
+                    % {"n": counting_run.alpha_calibration_nuclide}
+                )
+
+    parts = [x for x in (gamma_total_bq if gamma_total_known else None, pure_beta_bq, pure_alpha_bq) if x is not None]
+    total_bq = sum(parts) if parts else None
+
+    concentration_bq_per_kg = (total_bq / float(batch.mass_kg)) if (total_bq is not None and batch and batch.mass_kg) else None
+    concentration_bq_per_l = (total_bq / (float(batch.volume_m3) * 1000.0)) if (total_bq is not None and batch and batch.volume_m3) else None
 
     return {
         "as_of": as_of,
-        "gamma_total_bq": gamma_total,
-        "pure_beta_bq": pure_beta,
-        "pure_alpha_bq": pure_alpha,
-        "beta_emitting_gamma_bq": beta_emitting_gamma_total,
-        "alpha_emitting_gamma_bq": alpha_emitting_gamma_total,
-        "total_bq": total if (gamma_lines or pure_beta is not None or pure_alpha is not None) else None,
+        "gamma_total_bq": gamma_total_bq if gamma_total_known else None,
+        "pure_beta_bq": pure_beta_bq,
+        "pure_alpha_bq": pure_alpha_bq,
+        "total_bq": total_bq,
+        "concentration_bq_per_kg": concentration_bq_per_kg,
+        "concentration_bq_per_l": concentration_bq_per_l,
         "gamma_lines": gamma_lines,
         "warnings": warnings,
         "gamma_analysis": gamma_analysis,

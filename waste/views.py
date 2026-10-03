@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from laboratory.views import sample_edit
 from dashboard.models import HideShowFilterT
 from decimal import Decimal
-
+import decimal
 from .forms import (
     ConditionBatchForm,
     MergeBatchesForm,
@@ -19,13 +19,21 @@ from .forms import (
     WasteMovementForm,
 )
 from .models import (
-    BatchStatus,
-    WasteBatch,
+    BatchStatus, OriginOfWaste, PreTreatmentOption, TreatmentOption,
+    WasteBatch, WasteClass, WasteState, WasteType,
     WasteBatchLineage,
     WasteMovementAttachment, ConditioningIngredient, ReleaseLimit, ReleaseLimitCategory, ReleaseRoute,ConditioningMaterial
 )
 from .services.batch_ops import condition_batch, merge_batches, split_batch, compute_conditioning_totals
 from .services.release import preview_release, register_release, year_released_bq
+
+import datetime
+
+
+
+from facilities.models import FacilityModel
+
+from .forms import WasteCSVImportForm
 
 # Same idea as dashboard.views.FIELD_FILTER_MAP: maps each filter key to
 # a real Django lookup path, traversing FKs to their display field.
@@ -562,3 +570,200 @@ def release_annual_report(request):
         "rows": rows, "year": year, "route": route,
         "routes": ReleaseRoute.choices, "year_choices": year_choices,
     })
+
+
+
+
+
+
+# Fields grouped by how they're parsed. Anything not listed here (attachment,
+# created_by, created_at/updated_at, history) can't be set through this import.
+DECIMAL_FIELDS = [
+    "mass_kg", "volume_m3", "dose_rate_surface_uSv", "dose_rate_1m_uSv",
+    "alpha_contamination_bq_cm2", "beta_gamma_contamination_bq_cm2",
+    "ph", "density", "total_solids", "suspended_solids", "soluble_solids",
+    "waste_to_matrix_ratio", "waste_mass_kg", "package_mass_kg", "package_volume_m3",
+]
+DATE_FIELDS = ["date_received", "dose_rate_date", "status_date"]
+TEXT_FIELDS = [
+    "description", "waste_arising_from", "material", "container_type",
+    "waste_appearance", "package_type", "waste_matrix", "location",
+]
+# choice fields: validated against the model's own TextChoices, so a typo is
+# caught at import time instead of silently saving an invalid value.
+CHOICE_FIELDS = {
+    "waste_type": WasteType, "waste_class": WasteClass, "waste_state": WasteState,
+    "origin_of_waste": OriginOfWaste, "status": BatchStatus,
+    "possible_pretreatment": PreTreatmentOption, "possible_treatment": PreTreatmentOption,
+    "pretreatment": PreTreatmentOption, "treatment": TreatmentOption,
+}
+# Hard requirements to CREATE a new batch -- facility is handled separately (FK lookup).
+REQUIRED_FOR_CREATE = ["waste_type", "origin_of_waste"]
+
+
+def parse_decimal(value, field_name, errors, row_num):
+    if value in (None, ""):
+        return None
+    try:
+        return decimal.Decimal(str(value).strip())
+    except (decimal.InvalidOperation, ValueError):
+        errors.append(f"Row {row_num}: invalid number for {field_name}: '{value}'")
+        return None
+
+
+def parse_iso_date(value, field_name, errors, row_num):
+    if value in (None, ""):
+        return None
+    try:
+        return datetime.date.fromisoformat(value.strip())
+    except ValueError:
+        errors.append(f"Row {row_num}: invalid date for {field_name}: '{value}' (use YYYY-MM-DD)")
+        return None
+
+
+def _parse_batch_row(row, row_num, row_errors):
+    """Same idea as reference app's _parse_row: only columns with an actual
+    value in this row end up in the result -- a blank cell never clears an
+    existing field on an update."""
+    data = {}
+
+    for field in DECIMAL_FIELDS:
+        raw = row.get(field)
+        if raw not in (None, ""):
+            value = parse_decimal(raw, field, row_errors, row_num)
+            if value is not None:
+                data[field] = value
+
+    for field in DATE_FIELDS:
+        raw = row.get(field)
+        if raw not in (None, ""):
+            value = parse_iso_date(raw, field, row_errors, row_num)
+            if value is not None:
+                data[field] = value
+
+    for field in TEXT_FIELDS:
+        raw = row.get(field)
+        if raw not in (None, ""):
+            data[field] = raw.strip()
+
+    for field, choices in CHOICE_FIELDS.items():
+        raw = row.get(field)
+        if raw not in (None, ""):
+            raw = raw.strip()
+            valid = {c[0] for c in choices.choices}
+            if raw not in valid:
+                row_errors.append(
+                    f"Row {row_num}: '{raw}' isn't a valid {field} "
+                    f"(expected one of: {', '.join(sorted(valid))})"
+                )
+            else:
+                data[field] = raw
+
+    return data
+
+
+def waste_import_csv(request):
+    report = {"created": 0, "updated": 0, "skipped": 0, "errors": []}
+
+    if request.method == "POST":
+        form = WasteCSVImportForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            file = request.FILES["file"]
+
+            try:
+                decoded = file.read().decode("utf-8-sig").splitlines()
+                reader = csv.DictReader(decoded)
+            except Exception:
+                report["errors"].append("File is not a valid UTF-8 CSV.")
+                return render(request, "waste/waste_import.html", {"form": form, "report": report})
+
+            if not reader.fieldnames or "waste_id" not in reader.fieldnames:
+                report["errors"].append("Missing required column: waste_id")
+                return render(request, "waste/waste_import.html", {"form": form, "report": report})
+
+            for row_num, row in enumerate(reader, start=2):
+
+                row_errors = []
+                waste_id = (row.get("waste_id") or "").strip()
+                if not waste_id:
+                    report["errors"].append(f"Row {row_num}: Missing 'waste_id'")
+                    report["skipped"] += 1
+                    continue
+
+                data = _parse_batch_row(row, row_num, row_errors)
+
+                # facility: resolved by name (as your CSV export already writes it).
+                # Required to CREATE; on an UPDATE it's only changed if the column is filled in.
+                facility_name = (row.get("facility") or "").strip()
+                facility = None
+                if facility_name:
+                    facility = FacilityModel.objects.filter(name=facility_name).first()
+                    if facility is None:
+                        row_errors.append(f"Row {row_num}: no facility named '{facility_name}'")
+                    else:
+                        data["facility"] = facility
+
+                origin_facility_name = (row.get("origin_facility") or "").strip()
+                if origin_facility_name:
+                    origin_facility = FacilityModel.objects.filter(name=origin_facility_name).first()
+                    if origin_facility is None:
+                        row_errors.append(f"Row {row_num}: no origin_facility named '{origin_facility_name}'")
+                    else:
+                        data["origin_facility"] = origin_facility
+
+                if row_errors:
+                    report["errors"].extend(row_errors)
+                    report["skipped"] += 1
+                    continue
+
+                existing = WasteBatch.objects.filter(waste_id=waste_id).first()
+
+                if existing is None:
+                    missing = [f for f in REQUIRED_FOR_CREATE if f not in data]
+                    if "facility" not in data:
+                        missing.append("facility")
+                    if missing:
+                        report["errors"].append(
+                            f"Row {row_num}: '{waste_id}' doesn't exist yet, and {', '.join(missing)} "
+                            f"are required to create a new batch (this row only patches existing data)."
+                        )
+                        report["skipped"] += 1
+                        continue
+                    try:
+                        batch = WasteBatch(
+                            waste_id=waste_id, created_by=request.user if request.user.is_authenticated else None,
+                            **data,
+                        )
+                        if not batch.status_date:
+                            batch.status_date = datetime.date.today()
+                        batch.full_clean(exclude=["attachment"])
+                        batch.save()
+                        report["created"] += 1
+                    except Exception as exc:
+                        report["errors"].append(f"Row {row_num}: {exc}")
+                        report["skipped"] += 1
+
+                else:
+                    if not data:
+                        report["skipped"] += 1
+                        continue
+                    try:
+                        for field, value in data.items():
+                            setattr(existing, field, value)
+                        existing.full_clean(exclude=["attachment"])
+                        existing.save()
+                        report["updated"] += 1
+                    except Exception as exc:
+                        report["errors"].append(f"Row {row_num}: {exc}")
+                        report["skipped"] += 1
+
+            messages.success(
+                request,
+                f"Import complete: {report['created']} created, {report['updated']} updated, {report['skipped']} skipped",
+            )
+
+    else:
+        form = WasteCSVImportForm()
+
+    return render(request, "waste/waste_import.html", {"form": form, "report": report})

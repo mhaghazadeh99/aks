@@ -19,4 +19,5 @@ urlpatterns = [
     path("export-csv/", views.waste_export_csv, name="waste_export_csv"),
     path("<int:pk>/release/", views.waste_release, name="waste_release"),
     path("release-report/", views.release_annual_report, name="release_annual_report"),
+    path("import/", views.waste_import_csv, name="waste_import_csv"),
 ]

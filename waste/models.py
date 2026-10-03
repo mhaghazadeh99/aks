@@ -345,16 +345,16 @@ class WasteBatch(models.Model):
                 self.latest_gamma_analysis, self.latest_alpha_beta_analysis, batch=self, as_of=None,
             )
         return self.__dict__["_default_activity_breakdown"]
-
     @property
     def total_alpha_bq(self):
-        a = self.latest_alpha_beta_analysis
-        return a.total_alpha if a else None
+        value = self.activity_breakdown()["gross_alpha_bq"]
+        return round(value, 3) if value is not None else None
 
     @property
     def total_beta_bq(self):
-        a = self.latest_alpha_beta_analysis
-        return a.total_beta if a else None
+        value = self.activity_breakdown()["gross_beta_bq"]
+        return round(value, 3) if value is not None else None
+
 
     def nuclide_activities(self):
         a = self.latest_gamma_analysis

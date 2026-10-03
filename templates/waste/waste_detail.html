@@ -69,7 +69,7 @@
 
                         {% if analysis_ab %}
                         <p class="text-muted small">
-                            {% trans "Gross Alpha/Beta from sample" %} {{ analysis_ab.sample.sample_id }} ({{ analysis_ab.analysis_date }}):
+                            {% trans "As measured on sample" %} {{ analysis_ab.sample.sample_id }} ({{ analysis_ab.analysis_date }}), {% trans "before scaling to the batch" %}:
                             {% trans "Total Alpha" %} {{ analysis_ab.total_alpha|default:"-" }} Bq,
                             {% trans "Total Beta" %} {{ analysis_ab.total_beta|default:"-" }} Bq
                             {% if not analysis_ab.approved %}<span class="badge bg-warning">{% trans "Not yet approved" %}</span>{% endif %}

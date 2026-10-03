@@ -158,10 +158,17 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
 
     # ---------- gross alpha/beta: net (at concentration level) then scale ----------
     pure_beta_bq = pure_alpha_bq = None
+    gross_beta_bq = gross_alpha_bq = None
     counting_run = getattr(alpha_beta_analysis, "counting_run", None) if alpha_beta_analysis else None
 
     def _net_and_scale(gross_value, have_mass, have_vol, emit_kg, emit_l, ab_sample, label):
+        """Returns (gross_batch_bq, pure_batch_bq) -- the raw gross reading scaled to the
+        whole batch (no netting), and the gamma-netted "pure" reading also scaled.
+        `gross_batch_bq` is what Total Alpha/Total Beta should show: the counting result,
+        scaled up the same way gamma already is -- NOT the as-measured sample figure."""
         gross_kg, gross_l = _concentration(gross_value, ab_sample)
+        gross_batch_bq, _basis0 = _scale_to_batch(gross_kg, gross_l, batch)
+
         net_kg = net_l = None
         netted = False
         if gross_kg is not None and have_mass:
@@ -190,19 +197,19 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
                   "0 (volume basis).") % {"label": label}
             )
             net_l = 0.0
-        result_bq, _basis = _scale_to_batch(net_kg, net_l, batch)
-        if result_bq is None and batch is not None:
+        pure_batch_bq, _basis = _scale_to_batch(net_kg, net_l, batch)
+        if pure_batch_bq is None and batch is not None:
             warnings.append(
-                _("Sample %(s)s (Alpha/Beta) has no recorded mass or volume, so pure %(label)s "
+                _("Sample %(s)s (Alpha/Beta) has no recorded mass or volume, so total/pure %(label)s "
                   "couldn't be scaled to the batch.") % {"s": ab_sample.sample_id, "label": label}
             )
-        return result_bq
+        return gross_batch_bq, pure_batch_bq
 
     if alpha_beta_analysis:
         ab_sample = alpha_beta_analysis.sample
 
         if alpha_beta_analysis.total_beta is not None:
-            pure_beta_bq = _net_and_scale(
+            gross_beta_bq, pure_beta_bq = _net_and_scale(
                 float(alpha_beta_analysis.total_beta), have_beta_mass, have_beta_vol,
                 beta_emit_conc_kg, beta_emit_conc_l, ab_sample, "beta",
             )
@@ -220,7 +227,7 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
                 )
 
         if alpha_beta_analysis.total_alpha is not None:
-            pure_alpha_bq = _net_and_scale(
+            gross_alpha_bq, pure_alpha_bq = _net_and_scale(
                 float(alpha_beta_analysis.total_alpha), have_alpha_mass, have_alpha_vol,
                 alpha_emit_conc_kg, alpha_emit_conc_l, ab_sample, "alpha",
             )
@@ -246,6 +253,8 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
     return {
         "as_of": as_of,
         "gamma_total_bq": gamma_total_bq if gamma_total_known else None,
+        "gross_alpha_bq": gross_alpha_bq,
+        "gross_beta_bq": gross_beta_bq,
         "pure_beta_bq": pure_beta_bq,
         "pure_alpha_bq": pure_alpha_bq,
         "total_bq": total_bq,

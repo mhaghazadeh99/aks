@@ -201,3 +201,16 @@ class ConditionBatchForm(forms.Form):
         _bootstrap(self.fields)
         self.helper = FormHelper()
         self.helper.form_tag = False
+
+
+
+
+
+class WasteCSVImportForm(forms.Form):
+    file = forms.FileField(label=_("CSV file"))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _bootstrap(self.fields)
+        self.helper = FormHelper()
+        self.helper.form_tag = False

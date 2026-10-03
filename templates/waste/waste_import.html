@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Import Waste Batches" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-8">
+
+  <nav class="mb-3"><a href="{% url 'waste_table' %}">&larr; {% trans "Waste Inventory" %}</a></nav>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header"><h3 class="mb-0">{% trans "Import Waste Batches" %}</h3></div>
+    <div class="card-body">
+      <p class="text-muted small">
+        {% trans "A row whose waste_id already exists only updates the columns that row actually has a value in — it never clears a field you've already filled in. A new waste_id needs at least waste_type, origin_of_waste and facility to be created." %}
+      </p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% crispy form %}
+        <button type="submit" class="btn btn-primary mt-2">{% trans "Import" %}</button>
+      </form>
+    </div>
+  </div>
+
+  {% if report %}
+  <div class="card shadow-sm">
+    <div class="card-header"><h5 class="mb-0">{% trans "Import Report" %}</h5></div>
+    <div class="card-body">
+      <ul>
+        <li>{% trans "Created" %}: {{ report.created }}</li>
+        <li>{% trans "Updated" %}: {{ report.updated }}</li>
+        <li>{% trans "Skipped" %}: {{ report.skipped }}</li>
+      </ul>
+      {% if report.errors %}
+      <h6 class="text-danger">{% trans "Errors" %}</h6>
+      <ul class="small">
+        {% for error in report.errors %}<li>{{ error }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div></div></div>
+{% endblock %}

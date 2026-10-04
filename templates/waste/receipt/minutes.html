@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load receipt_tags %}
+
+{% block title %}{% trans "Minutes data" %}{% endblock %}
+
+{% block content %}
+{% include "waste/receipt/_style.html" %}
+<div class="content">
+<h2>{% trans "Minutes data" %} - {{ receipt.letter_number }}</h2>
+<p class="text-muted">
+  {{ receipt.get_waste_type_display }} &middot; {% trans "From" %}: {{ receipt.origin_facility }}
+  &middot; {% trans "Letter date" %}: {{ receipt.letter_date|jdate }}
+</p>
+
+<form method="post">
+  {% csrf_token %}
+  {% include "waste/receipt/_messages_errors.html" %}
+
+  <div class="receipt-card">
+    <h3>{% trans "Minutes details" %}</h3>
+    {% include "waste/receipt/_form_grid.html" %}
+  </div>
+
+  <div class="receipt-card">
+    <h3>{% trans "Measurements per material / package" %}</h3>
+    {% include "waste/receipt/_line_formset.html" with show_identity=True %}
+  </div>
+
+  <button type="submit" class="btn-blue">{% trans "Save and prepare the form" %}</button>
+  <a href="{% url 'waste_receipt_detail' receipt.pk %}" class="btn-gray">{% trans "Cancel" %}</a>
+</form>
+</div>
+{% endblock %}

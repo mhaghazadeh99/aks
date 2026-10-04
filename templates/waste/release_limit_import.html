@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Import Release Limits" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-8">
+
+  <nav class="mb-3"><a href="{% url 'release_limit_list' %}">&larr; {% trans "Release Limits" %}</a></nav>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header"><h3 class="mb-0">{% trans "Import Release Limits" %}</h3></div>
+    <div class="card-body">
+      <p class="text-muted small">
+        {% trans "A row matching an existing limit's category, nuclide, route, facility and effective_from updates its annual_limit_bq (and effective_to/reference/notes, if given). Anything else creates a new limit." %}
+      </p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% crispy form %}
+        <button type="submit" class="btn btn-primary mt-2">{% trans "Import" %}</button>
+      </form>
+    </div>
+  </div>
+
+  {% if report %}
+  <div class="card shadow-sm">
+    <div class="card-header"><h5 class="mb-0">{% trans "Import Report" %}</h5></div>
+    <div class="card-body">
+      <ul>
+        <li>{% trans "Created" %}: {{ report.created }}</li>
+        <li>{% trans "Updated" %}: {{ report.updated }}</li>
+        <li>{% trans "Skipped" %}: {{ report.skipped }}</li>
+      </ul>
+      {% if report.errors %}
+      <h6 class="text-danger">{% trans "Errors" %}</h6>
+      <ul class="small">{% for error in report.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div></div></div>
+{% endblock %}

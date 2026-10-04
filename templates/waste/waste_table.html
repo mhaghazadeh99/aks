@@ -71,8 +71,9 @@
     <button class="btn-blue" id="newMovementBtn">{% trans "New Movement" %}</button>
     <button class="btn-blue" id="mergeBtn">{% trans "Merge" %}</button>
     <button class="btn-blue" id="sendToAnalysisBtn">{% trans "Send to Analysis" %}</button>
+    <a href="{% url 'waste_receipt_list' %}" class="btn-blue">{% trans "Received Waste" %}</a>
     <a href="{% url 'waste_create' %}" class="btn-blue">+ {% trans "Add Waste" %}</a>
-    <a href="{% url 'waste_import_csv' %}" class="btn-gray">{% trans "Import CSV" %}</a>
+    <a href="{% url 'waste_import_csv' %}" class="btn-blue">{% trans "Import CSV" %}</a>
   </div>
 
 </div>
@@ -109,10 +110,10 @@
 <th data-col="mass_kg">{% trans "Mass (kg)" %}</th>
 <th data-col="volume_m3">{% trans "Volume (m³)" %}</th>
 <th data-col="nuclides">{% trans "Nuclides" %}</th>
-<th data-col="total_alpha">{% trans "Total Alpha (Bq)" %}</th>
-<th data-col="total_beta">{% trans "Total Beta (Bq)" %}</th>
-<th data-col="current_gamma">{% trans "Current Gamma (Bq)" %}</th>
-<th data-col="current_total">{% trans "Current Total Activity (Bq)" %}</th>
+<th data-col="total_alpha">{% trans "Total Alpha (GBq/Pkge)" %}</th>
+<th data-col="total_beta">{% trans "Total Beta (GBq/Pkge)" %}</th>
+<th data-col="current_gamma">{% trans "Current Gamma (GBq/Pkge)" %}</th>
+<th data-col="current_total">{% trans "Current Total Activity (GBq/Pkge)" %}</th>
 <th data-col="release_status">{% trans "Release Status" %}</th>
 <th data-col="dose_rate_surface_uSv">{% trans "Surface Dose (µSv/h)" %}</th>
 <th data-col="dose_rate_1m_uSv">{% trans "Dose @1m (µSv/h)" %}</th>
@@ -121,6 +122,7 @@
 <th data-col="beta_gamma_contamination">{% trans "Beta/Gamma Contamination" %}</th>
 <th data-col="ph">{% trans "pH" %}</th>
 <th data-col="density">{% trans "Density" %}</th>
+<th data-col="hardness">{% trans "Hardness" %}</th>
 <th data-col="total_solids">{% trans "Total Solids" %}</th>
 <th data-col="suspended_solids">{% trans "Suspended Solids" %}</th>
 <th data-col="soluble_solids">{% trans "Soluble Solids" %}</th>
@@ -163,17 +165,17 @@
 <td data-col="origin_facility">{{ b.origin_facility|default:"-" }}</td>
 <td data-col="origin_of_waste">{{ b.get_origin_of_waste_display }}</td>
 <td data-col="date_received">{{ b.date_received|default:"-" }}</td>
-<td data-col="material">{{ b.material|default:"-" }}</td>
+<td data-col="material">{{ b.get_material_display|default:"-" }}</td>
 <td data-col="waste_arising_from">{{ b.waste_arising_from|default:"-" }}</td>
 <td data-col="container_type">{{ b.container_type|default:"-" }}</td>
 <td data-col="waste_appearance">{{ b.waste_appearance|default:"-" }}</td>
 <td data-col="mass_kg">{{ b.mass_kg|default:"-" }}</td>
 <td data-col="volume_m3">{{ b.volume_m3|default:"-" }}</td>
 <td data-col="nuclides">{{ b.nuclide_summary|default:"-" }}</td>
-<td data-col="total_alpha">{{ b.total_alpha_bq|default:"-" }}</td>
-<td data-col="total_beta">{{ b.total_beta_bq|default:"-" }}</td>
-<td data-col="current_gamma">{{ b.current_gamma_bq_value|default:"-" }}</td>
-<td data-col="current_total">{{ b.current_total_activity_bq_value|default:"-" }}</td>
+<td data-col="total_alpha">{{ b.total_alpha_gbq_pkg |default:"-" }}</td>
+<td data-col="total_beta">{{ b.total_beta_gbq_pkg |default:"-" }}</td>
+<td data-col="current_gamma">{{ b.current_gamma_gbq_pkg |default:"-" }}</td>
+<td data-col="current_total">{{ b.current_total_activity_gbq_pkg |default:"-" }}</td>
 <td data-col="release_status">
     {% with last_release=b.release_records.first %}
         {% if last_release %}
@@ -189,6 +191,7 @@
 <td data-col="beta_gamma_contamination">{{ b.beta_gamma_contamination_bq_cm2|default:"-" }}</td>
 <td data-col="ph">{{ b.ph|default:"-" }}</td>
 <td data-col="density">{{ b.density|default:"-" }}</td>
+<td data-col="hardness">{{ b.hardness|default:"-" }}</td>
 <td data-col="total_solids">{{ b.total_solids|default:"-" }}</td>
 <td data-col="suspended_solids">{{ b.suspended_solids|default:"-" }}</td>
 <td data-col="soluble_solids">{{ b.soluble_solids|default:"-" }}</td>
@@ -196,7 +199,7 @@
 <td data-col="possible_treatment">{{ b.get_possible_treatment_display|default:"-" }}</td>
 <td data-col="pretreatment">{{ b.get_pretreatment_display|default:"-" }}</td>
 <td data-col="treatment">{{ b.get_treatment_display|default:"-" }}</td>
-<td data-col="package_type">{{ b.package_type|default:"-" }}</td>
+<td data-col="package_type">{{ b.get_package_type_display|default:"-" }}</td>
 <td data-col="waste_matrix">{{ b.waste_matrix|default:"-" }}</td>
 <td data-col="waste_to_matrix_ratio">{{ b.waste_to_matrix_ratio|default:"-" }}</td>
 <td data-col="waste_mass_kg">{{ b.waste_mass_kg|default:"-" }}</td>
@@ -226,7 +229,7 @@
 </td>
 </tr>
 {% empty %}
-<tr><td colspan="49" class="text-center">{% trans "No waste batches found." %}</td></tr>
+<tr><td colspan="50" class="text-center">{% trans "No waste batches found." %}</td></tr>
 {% endfor %}
 </tbody>
 </table>
@@ -427,8 +430,10 @@ document.getElementById("sendToAnalysisBtn").onclick = function () {
 
 document.getElementById("newMovementBtn").onclick = function () {
     const ids = selectedIds();
-    if (ids.length !== 1) { alert("{% trans 'Select exactly one batch to record a movement for.' %}"); return; }
-    window.location.href = "/waste/" + ids[0] + "/edit/#movements";
+    if (ids.length === 0) { alert("{% trans 'Select at least one batch.' %}"); return; }
+    // 1 batch or many -- same bulk-movement screen either way, so there's no
+    // special-case single-batch path to keep in sync with the bulk one.
+    submitBulk("{% url 'waste_bulk_movement' %}", ids);
 };
 </script>
 

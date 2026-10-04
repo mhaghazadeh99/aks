@@ -1,0 +1,7 @@
+{% load crispy_forms_filters %}
+{# crispy-rendered form fields in a responsive grid; description spans the full row #}
+<div class="row">
+  {% for field in form.visible_fields %}
+  <div class="{% if field.name == 'description' %}col-12{% else %}col-md-4{% endif %}">{{ field|as_crispy_field }}</div>
+  {% endfor %}
+</div>

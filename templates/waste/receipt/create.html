@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Register Received Waste" %}{% endblock %}
+
+{% block content %}
+{% include "waste/receipt/_style.html" %}
+<div class="content">
+<h2>{% trans "Register Received Waste" %}</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {% include "waste/receipt/_messages_errors.html" %}
+
+  <div class="receipt-card">
+    <h3>{% trans "Delivery letter" %}</h3>
+    {% include "waste/receipt/_form_grid.html" %}
+  </div>
+
+  <div class="receipt-card">
+    <h3>{% trans "Materials and packages in this delivery" %}</h3>
+    <p class="text-muted small">{% trans "One row per material + package type. Mass, volume and dose are entered later, with the minutes." %}</p>
+    {% include "waste/receipt/_line_formset.html" %}
+    <button type="button" id="add-line" class="btn-gray">+ {% trans "Add line" %}</button>
+    <template id="empty-row">{% include "waste/receipt/_line_row.html" with form=formset.empty_form %}</template>
+  </div>
+
+  <button type="submit" class="btn-blue">{% trans "Save" %}</button>
+  <a href="{% url 'waste_receipt_list' %}" class="btn-gray">{% trans "Cancel" %}</a>
+</form>
+</div>
+
+<script>
+(function () {
+  const typeSel = document.getElementById("id_waste_type");
+  const body = document.getElementById("lines-body");
+  const total = document.getElementById("id_{{ formset.prefix }}-TOTAL_FORMS");
+
+  // only offer materials that fit the chosen waste type
+  function filterMaterials() {
+    const liquid = typeSel.value === "LIQUID";
+    document.querySelectorAll('select[name$="-material"]').forEach(function (s) {
+      Array.from(s.options).forEach(function (o) {
+        if (!o.value) return;
+        const hide = liquid ? o.value !== "LIQUID" : o.value === "LIQUID";
+        o.hidden = hide; o.disabled = hide;
+      });
+      if (s.selectedOptions[0] && s.selectedOptions[0].disabled) s.value = "";
+    });
+  }
+  typeSel.addEventListener("change", filterMaterials);
+
+  document.getElementById("add-line").addEventListener("click", function () {
+    const html = document.getElementById("empty-row").innerHTML.replace(/__prefix__/g, total.value);
+    body.insertAdjacentHTML("beforeend", html);
+    total.value = parseInt(total.value, 10) + 1;
+    filterMaterials();
+  });
+  filterMaterials();
+})();
+</script>
+{% endblock %}

@@ -141,7 +141,10 @@ def register_release(batch, route, performed_by, remarks="", release_date=None):
         ReleaseActivityLine(release=record, category=ln["category"], radionuclide=ln["radionuclide"], activity_bq=ln["activity_bq"])
         for ln in lines
     ])
-
+    # The entire waste batch has now been discharged/released.
+    batch.status = BatchStatus.CONSUMED
+    batch.status_date = release_date
+    batch.save(update_fields=["status", "status_date"])
     # Re-check AFTER the lines are saved, so "released this year" includes this release.
     checks = _check_lines(lines, route, batch.facility, release_date)
     if any(c["over_limit"] for c in checks):

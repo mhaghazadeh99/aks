@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Record Movement" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-9">
+
+  <div class="card shadow-sm">
+    <div class="card-header"><h3 class="mb-0">{% trans "Record Movement" %} — {{ batches|length }} {% trans "batch(es)" %}</h3></div>
+    <div class="card-body">
+
+      <p class="text-muted small">
+        {% trans "The same movement (type, date, destination, remarks) is recorded for every batch below. Leave \"From Facility\" blank to use each batch's own current facility — useful when the selected batches aren't all at the same place. Leave Mass/Volume Moved blank unless the same figure genuinely applies to every one of them; it rarely does across differently-sized batches." %}
+      </p>
+
+      <div class="table-responsive mb-4">
+      <table class="table table-bordered table-sm">
+        <thead class="table-light">
+          <tr><th>{% trans "Waste ID" %}</th><th>{% trans "Type" %}</th><th>{% trans "Current Facility" %}</th><th>{% trans "Status" %}</th></tr>
+        </thead>
+        <tbody>
+        {% for b in batches %}
+          <tr{% if b.status == "CONSUMED" %} class="table-secondary"{% endif %}>
+            <td>{{ b.waste_id }}{% if b.status == "CONSUMED" %} <span class="badge bg-secondary">{% trans "consumed — will be skipped" %}</span>{% endif %}</td>
+            <td>{{ b.get_waste_type_display }}</td>
+            <td>{{ b.facility }}</td>
+            <td>{{ b.get_status_display }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="confirm">
+        {% for id in ids %}<input type="hidden" name="ids" value="{{ id }}">{% endfor %}
+        {% crispy form %}
+        <label class="form-label mt-2">{% trans "Attachments" %}</label>
+        <input class="form-control" type="file" name="movement_attachments" multiple>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <a href="{% url 'waste_table' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+          <button type="submit" class="btn btn-primary">{% trans "Record Movement" %}</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div></div></div>
+{% endblock %}

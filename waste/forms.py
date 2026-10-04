@@ -214,3 +214,57 @@ class WasteCSVImportForm(forms.Form):
         _bootstrap(self.fields)
         self.helper = FormHelper()
         self.helper.form_tag = False
+
+
+
+# Add to waste/forms.py
+# (uses forms, FormHelper, _bootstrap already imported there)
+
+from .models import ReleaseLimit, ReleaseLimitCategory
+
+
+class ReleaseLimitForm(forms.ModelForm):
+
+    class Meta:
+        model = ReleaseLimit
+        fields = [
+            "category", "radionuclide", "route", "facility",
+            "annual_limit_bq", "effective_from", "effective_to", "reference", "notes",
+        ]
+        widgets = {
+            "effective_from": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
+            "effective_to": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
+            "notes": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["radionuclide"].required = False
+        self.fields["radionuclide"].empty_label = _("— Not applicable for this category —")
+        self.fields["facility"].required = False
+        self.fields["facility"].empty_label = _("— Applies to every facility —")
+        self.fields["effective_to"].required = False
+        self.fields["reference"].required = False
+        self.fields["notes"].required = False
+
+        # tag so the template JS can show/hide the radionuclide row --
+        # same data-attribute convention WasteBatchForm already uses.
+        self.fields["radionuclide"].widget.attrs["data-show-when-category"] = "NUCLIDE"
+
+        _bootstrap(self.fields)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+    def clean(self):
+        cleaned = super().clean()
+        category = cleaned.get("category")
+        nuclide = cleaned.get("radionuclide")
+
+        if category == ReleaseLimitCategory.NUCLIDE and not nuclide:
+            self.add_error("radionuclide", _("Select a radionuclide for a nuclide-specific limit."))
+        if category != ReleaseLimitCategory.NUCLIDE and nuclide:
+            # category isn't NUCLIDE -- radionuclide doesn't apply, clear it rather than error,
+            # same convention WasteBatchForm.clean() uses for its own conditional fields.
+            cleaned["radionuclide"] = None
+
+        return cleaned

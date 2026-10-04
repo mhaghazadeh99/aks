@@ -1,6 +1,6 @@
 import csv
 import json
-
+from .utils import parse_decimal, parse_iso_date 
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -13,7 +13,7 @@ from dashboard.models import HideShowFilterT
 from decimal import Decimal
 import decimal
 from .forms import (
-    ConditionBatchForm,
+    ConditionBatchForm, ReleaseLimitForm,
     MergeBatchesForm,
     WasteBatchForm,
     WasteMovementForm,
@@ -28,6 +28,9 @@ from .services.batch_ops import condition_batch, merge_batches, split_batch, com
 from .services.release import preview_release, register_release, year_released_bq
 
 import datetime
+
+
+from reference.models import Nuclides
 
 
 
@@ -494,7 +497,7 @@ def waste_export_csv(request):
         "Dose_Surface_uSv", "Dose_1m_uSv", "Dose_Date",
         "pH", "Density", "Total_Solids", "Suspended_Solids", "Soluble_Solids",
         "Waste_To_Matrix_Ratio", "Waste_Mass_kg", "Package_Mass_kg", "Package_Volume_m3",
-        "Total_Alpha_Bq", "Total_Beta_Bq", "Current_Gamma_Bq", "Current_Total_Activity_Bq",
+        "Total_Alpha_GBq_Pkge", "Total_Beta_GBq_Pkge", "Current_Gamma_GBq_Pkge", "Current_Total_Activity_GBq_Pkge",
         "Nuclides", "Created_By", "Created_At",
     ])
 
@@ -509,8 +512,10 @@ def waste_export_csv(request):
             b.dose_rate_surface_uSv, b.dose_rate_1m_uSv, b.dose_rate_date,
             b.ph, b.density, b.total_solids, b.suspended_solids, b.soluble_solids,
             b.waste_to_matrix_ratio, b.waste_mass_kg, b.package_mass_kg, b.package_volume_m3,
-            b.total_alpha_bq, b.total_beta_bq, b.current_gamma_bq_value,
-            b.current_total_activity_bq_value, b.nuclide_summary,
+           (b.total_alpha_bq / 1_000_000_000) if b.total_alpha_bq is not None else None,
+(b.total_beta_bq / 1_000_000_000) if b.total_beta_bq is not None else None,
+(b.current_gamma_bq_value / 1_000_000_000) if b.current_gamma_bq_value is not None else None,
+(b.current_total_activity_bq_value / 1_000_000_000) if b.current_total_activity_bq_value is not None else None, b.nuclide_summary,
             b.created_by.username if b.created_by else None, b.created_at,
         ])
 
@@ -767,3 +772,281 @@ def waste_import_csv(request):
         form = WasteCSVImportForm()
 
     return render(request, "waste/waste_import.html", {"form": form, "report": report})
+
+
+"""
+waste/views.py additions -- Release Limit CRUD + CSV import.
+
+Needs, added to waste/views.py's imports:
+    from django.core.paginator import Paginator           (already there)
+    from django.db.models import Q                         (already there)
+    from .forms import ReleaseLimitForm                     (new)
+    from .models import ReleaseLimit, ReleaseLimitCategory, ReleaseRoute   (ReleaseLimit/Category
+                                                              already imported from earlier rounds;
+                                                              add ReleaseRoute if not already there)
+    from .utils import parse_decimal, parse_iso_date        (new file, see waste/utils.py -- or, if
+                                                              you pasted those two functions straight
+                                                              into views.py last round, just use them
+                                                              as they are and skip this import)
+    from reference.models import Nuclides
+    from facilities.models import FacilityModel             (already there)
+    import csv                                              (already there)
+"""
+
+
+# =====================================================
+# RELEASE LIMITS -- CRUD
+# =====================================================
+
+def release_limit_list(request):
+    qs = ReleaseLimit.objects.select_related("radionuclide", "facility").order_by("route", "radionuclide__name", "-effective_from")
+
+    route = request.GET.get("route", "")
+    category = request.GET.get("category", "")
+    search = request.GET.get("search", "")
+
+    if route:
+        qs = qs.filter(route=route)
+    if category:
+        qs = qs.filter(category=category)
+    if search:
+        qs = qs.filter(
+            Q(radionuclide__name__icontains=search)
+            | Q(reference__icontains=search)
+            | Q(facility__name__icontains=search)
+        )
+
+    paginator = Paginator(qs, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(request, "waste/release_limit_list.html", {
+        "page_obj": page_obj, "route": route, "category": category, "search": search,
+        "routes": ReleaseRoute.choices, "categories": ReleaseLimitCategory.choices,
+    })
+
+
+def release_limit_create(request):
+    if request.method == "POST":
+        form = ReleaseLimitForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Release limit created."))
+            return redirect("release_limit_list")
+    else:
+        form = ReleaseLimitForm()
+
+    return render(request, "waste/release_limit_form.html", {"form": form, "page_title": _("New Release Limit")})
+
+
+def release_limit_edit(request, pk):
+    obj = get_object_or_404(ReleaseLimit, pk=pk)
+
+    if request.method == "POST":
+        form = ReleaseLimitForm(request.POST, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Release limit updated."))
+            return redirect("release_limit_list")
+    else:
+        form = ReleaseLimitForm(instance=obj)
+
+    return render(request, "waste/release_limit_form.html", {"form": form, "page_title": _("Edit Release Limit"), "obj": obj})
+
+
+def release_limit_delete(request, pk):
+    obj = get_object_or_404(ReleaseLimit, pk=pk)
+    if request.method == "POST":
+        obj.delete()
+        messages.success(request, _("Release limit deleted."))
+    return redirect("release_limit_list")
+
+
+# =====================================================
+# RELEASE LIMITS -- CSV import
+#
+# There's no single natural unique field on ReleaseLimit (two limits can
+# legitimately share a nuclide, e.g. one per route, or a new one superseding
+# an old one from a later effective_from). The match key for "is this row an
+# update or a new row" is the combination that WOULD be a duplicate limit:
+# (category, radionuclide, route, facility, effective_from). Same category
+# as everywhere else: an existing match is patched (annual_limit_bq always
+# updates; effective_to/reference/notes only if the row actually has them),
+# a non-match creates a new row.
+# =====================================================
+
+def release_limit_import_csv(request):
+    report = {"created": 0, "updated": 0, "skipped": 0, "errors": []}
+
+    if request.method == "POST":
+        form = WasteCSVImportForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            file = request.FILES["file"]
+
+            try:
+                decoded = file.read().decode("utf-8-sig").splitlines()
+                reader = csv.DictReader(decoded)
+            except Exception:
+                report["errors"].append("File is not a valid UTF-8 CSV.")
+                return render(request, "waste/release_limit_import.html", {"form": form, "report": report})
+
+            required_cols = {"category", "route", "annual_limit_bq", "effective_from"}
+            missing_cols = required_cols - set(reader.fieldnames or [])
+            if missing_cols:
+                report["errors"].append(f"Missing required columns: {sorted(missing_cols)}")
+                return render(request, "waste/release_limit_import.html", {"form": form, "report": report})
+
+            valid_categories = {c[0] for c in ReleaseLimitCategory.choices}
+            valid_routes = {c[0] for c in ReleaseRoute.choices}
+
+            for row_num, row in enumerate(reader, start=2):
+                row_errors = []
+
+                category = (row.get("category") or "").strip()
+                route = (row.get("route") or "").strip()
+                if category not in valid_categories:
+                    row_errors.append(f"Row {row_num}: invalid category '{category}' (expected one of: {sorted(valid_categories)})")
+                if route not in valid_routes:
+                    row_errors.append(f"Row {row_num}: invalid route '{route}' (expected one of: {sorted(valid_routes)})")
+
+                annual_limit = parse_decimal(row.get("annual_limit_bq"), "annual_limit_bq", row_errors, row_num)
+                effective_from = parse_iso_date(row.get("effective_from"), "effective_from", row_errors, row_num)
+                effective_to = None
+                if row.get("effective_to"):
+                    effective_to = parse_iso_date(row.get("effective_to"), "effective_to", row_errors, row_num)
+
+                radionuclide = None
+                nuclide_name = (row.get("radionuclide") or "").strip()
+                if category == ReleaseLimitCategory.NUCLIDE:
+                    if not nuclide_name:
+                        row_errors.append(f"Row {row_num}: category is NUCLIDE but no radionuclide given")
+                    else:
+                        radionuclide = Nuclides.objects.filter(name=nuclide_name).first()
+                        if radionuclide is None:
+                            row_errors.append(f"Row {row_num}: no radionuclide named '{nuclide_name}'")
+                elif nuclide_name:
+                    row_errors.append(f"Row {row_num}: category is {category}, radionuclide should be blank")
+
+                facility = None
+                facility_name = (row.get("facility") or "").strip()
+                if facility_name:
+                    facility = FacilityModel.objects.filter(name=facility_name).first()
+                    if facility is None:
+                        row_errors.append(f"Row {row_num}: no facility named '{facility_name}'")
+
+                if row_errors or annual_limit is None or effective_from is None:
+                    report["errors"].extend(row_errors)
+                    report["skipped"] += 1
+                    continue
+
+                reference = (row.get("reference") or "").strip()
+                notes = (row.get("notes") or "").strip()
+
+                existing = ReleaseLimit.objects.filter(
+                    category=category, radionuclide=radionuclide, route=route,
+                    facility=facility, effective_from=effective_from,
+                ).first()
+
+                try:
+                    if existing:
+                        existing.annual_limit_bq = annual_limit
+                        if row.get("effective_to") is not None:
+                            existing.effective_to = effective_to
+                        if reference:
+                            existing.reference = reference
+                        if notes:
+                            existing.notes = notes
+                        existing.full_clean()
+                        existing.save()
+                        report["updated"] += 1
+                    else:
+                        obj = ReleaseLimit(
+                            category=category, radionuclide=radionuclide, route=route, facility=facility,
+                            annual_limit_bq=annual_limit, effective_from=effective_from, effective_to=effective_to,
+                            reference=reference, notes=notes,
+                        )
+                        obj.full_clean()
+                        obj.save()
+                        report["created"] += 1
+                except Exception as exc:
+                    report["errors"].append(f"Row {row_num}: {exc}")
+                    report["skipped"] += 1
+
+            messages.success(
+                request,
+                f"Import complete: {report['created']} created, {report['updated']} updated, {report['skipped']} skipped",
+            )
+
+    else:
+        form = WasteCSVImportForm()
+
+    return render(request, "waste/release_limit_import.html", {"form": form, "report": report})
+
+
+"""
+waste/views.py addition -- record the SAME movement against multiple batches
+at once. Same two-step pattern as waste_merge: first POST (no action) shows
+the selected batches + one shared form, second POST (action=confirm) applies it.
+
+Needs, already imported in waste/views.py from earlier rounds:
+    WasteMovementForm, WasteMovementAttachment, BatchStatus
+"""
+
+def waste_bulk_movement(request):
+
+    ids = request.POST.getlist("ids") or request.GET.getlist("ids")
+    batches = list(WasteBatch.objects.filter(pk__in=ids).select_related("facility"))
+
+    if not batches:
+        messages.error(request, _("Select at least one batch."))
+        return redirect("waste_table")
+
+    if request.method == "POST" and request.POST.get("action") == "confirm":
+
+        form = WasteMovementForm(request.POST)
+
+        if form.is_valid():
+            data = form.cleaned_data
+            done, skipped = [], []
+
+            for batch in batches:
+                if batch.status == BatchStatus.CONSUMED:
+                    skipped.append(f"{batch.waste_id} ({_('already consumed')})")
+                    continue
+                try:
+                    movement = batch.register_movement(
+                        movement_type=data["movement_type"],
+                        to_facility=data["to_facility"],
+                        # blank from_facility -> register_movement defaults it to this
+                        # batch's OWN current facility, which is what you want for a
+                        # bulk move across batches sitting at different facilities.
+                        from_facility=data.get("from_facility"),
+                        performed_by=request.user,
+                        remarks=data.get("remarks", ""),
+                        movement_date=data["movement_date"],
+                        mass_kg=data.get("mass_kg"),
+                        volume_m3=data.get("volume_m3"),
+                    )
+                    for f in request.FILES.getlist("movement_attachments"):
+                        WasteMovementAttachment.objects.create(movement=movement, file=f)
+                    done.append(batch.waste_id)
+                except Exception as exc:
+                    skipped.append(f"{batch.waste_id} ({exc})")
+
+            if done:
+                messages.success(
+                    request,
+                    _("Movement recorded for %(n)s batch(es): %(ids)s") % {"n": len(done), "ids": ", ".join(done)},
+                )
+            if skipped:
+                messages.warning(request, _("Skipped: %(ids)s") % {"ids": "; ".join(skipped)})
+            return redirect("waste_table")
+
+    else:
+        # If every selected batch currently sits at the same facility, pre-fill
+        # from_facility with it -- otherwise leave blank (each batch uses its own).
+        facility_ids = {b.facility_id for b in batches}
+        initial = {"from_facility": batches[0].facility} if len(facility_ids) == 1 else {}
+        form = WasteMovementForm(initial=initial)
+
+    return render(request, "waste/waste_bulk_movement.html", {"batches": batches, "form": form, "ids": ids})

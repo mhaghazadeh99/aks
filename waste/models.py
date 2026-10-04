@@ -48,6 +48,31 @@ class BatchStatus(models.TextChoices):
     CONSUMED = "CONSUMED", _("Consumed (merged/split/conditioned into another batch)")
 
 
+
+class MaterialType(models.TextChoices):
+    LIQUID = "LIQUID", _("Liquid")
+    LIGHTWEIGHT = "LIGHTWEIGHT", _("Lightweight Materials (Paper, Cloth, Plastic, etc.)")
+    HEAVY = "HEAVY", _("Heavy Materials (Metals, Glass, Syringes, etc.)")
+    FILTERS = "FILTERS", _("Filters")
+    RESINS = "RESINS", _("Resins")
+    BIOLOGICAL = "BIOLOGICAL", _("Biological")
+    CHARCOAL = "CHARCOAL", _("Charcoal")
+    OTHER = "OTHER", _("Other")
+    SPECIAL_OTHER = "SPECIAL_OTHER", _("Special Other")
+    SOIL_SEDIMENTS_SLUDGE = "SOIL_SEDIMENTS_SLUDGE", _("Soil, Sediments and Sludge")
+
+class PackageType(models.TextChoices):
+    BAG = "BAG", _("Bag")
+    LARGE_BIN = "LARGE_BIN", _("Large Bin")
+    BOX = "BOX", _("Box")
+    CONTAINER = "CONTAINER", _("Container")
+    DRUM = "DRUM", _("Drum")
+    NON_STANDARD = "NON_STANDARD", _("Non-standard")
+    CAN = "CAN", _("Can")
+    SMALL_BIN = "SMALL_BIN", _("Small Bin")
+    SMALL_PIPE = "SMALL_PIPE", _("Small Pipe")
+    LIQUID = "LIQUID", _("Liquid")
+
 class PreTreatmentOption(models.TextChoices):
     DISMANTLING = "DISMANTLING", _("Dismantling")
     SAWING = "SAWING", _("Sawing")
@@ -110,8 +135,8 @@ class LineageOperation(models.TextChoices):
 # must never be violated whatever the UI does.
 # =====================================================
 
-LIQUID_ONLY_FIELDS = ("ph", "density", "total_solids", "suspended_solids", "soluble_solids")
-PROCESSED_ONLY_FIELDS = ("pretreatment", "treatment", "package_type", "waste_matrix")
+LIQUID_ONLY_FIELDS = ("ph","hardness", "density", "total_solids", "suspended_solids", "soluble_solids")
+PROCESSED_ONLY_FIELDS = ("pretreatment", "treatment", "waste_matrix")
 
 
 class WasteBatch(models.Model):
@@ -144,7 +169,7 @@ class WasteBatch(models.Model):
 
     description = models.TextField(_("Description"), blank=True, null=True)
     waste_arising_from = models.CharField(_("Waste Arising From"), max_length=100, blank=True, null=True)
-    material = models.CharField(_("Material"), max_length=100, blank=True, null=True)
+    material = models.CharField( _("Material"), max_length=30, choices=MaterialType.choices, blank=True, null=True,)
     container_type = models.CharField(_("Container Type"), max_length=100, blank=True, null=True)
 
     # NEW
@@ -152,7 +177,7 @@ class WasteBatch(models.Model):
         _("Waste Appearance"), max_length=255, blank=True, null=True,
         help_text=_("Physical appearance: colour, clarity, texture, visible solids…"),
     )
-
+    hardness = models.DecimalField(_("Hardness"), max_digits=10, decimal_places=3, blank=True, null=True)
     mass_kg = models.DecimalField(
         _("Mass (kg)"), max_digits=12, decimal_places=3, blank=True, null=True,
         help_text=_("Total mass of the batch as held (including packaging, if any)."),
@@ -202,7 +227,8 @@ class WasteBatch(models.Model):
     treatment = models.CharField(
         _("Treatment Applied"), max_length=30, choices=TreatmentOption.choices, blank=True, null=True
     )
-    package_type = models.CharField(_("Package Type"), max_length=100, blank=True, null=True)
+    package_type = models.CharField( _("Package Type"), max_length=20, choices=PackageType.choices, blank=True, null=True,)
+
     waste_matrix = models.CharField(_("Waste Matrix"), max_length=100, blank=True, null=True)
 
     # ---- PROCESSED + LIQUID only ----
@@ -370,6 +396,28 @@ class WasteBatch(models.Model):
         value = self.activity_breakdown()["gamma_total_bq"]
         return round(value, 3) if value else None
 
+    @property
+    def total_alpha_gbq_pkg(self):
+        value = self.total_alpha_bq
+        return value / 1_000_000_000 if value is not None else None
+
+
+    @property
+    def total_beta_gbq_pkg(self):
+        value = self.total_beta_bq
+        return value / 1_000_000_000 if value is not None else None
+
+
+    @property
+    def current_gamma_gbq_pkg(self):
+        value = self.current_gamma_bq_value
+        return value / 1_000_000_000 if value is not None else None
+
+
+    @property
+    def current_total_activity_gbq_pkg(self):
+        value = self.current_total_activity_bq_value
+        return value / 1_000_000_000 if value is not None else None
     @property
     def nuclide_summary(self):
         names = []
@@ -675,3 +723,6 @@ class ReleaseActivityLine(models.Model):
     def __str__(self):
         label = str(self.radionuclide) if self.radionuclide else self.get_category_display()
         return f"{label}: {self.activity_bq} Bq"
+    
+from .models_receipt import (  # noqa: E402,F401
+    WasteReceipt, WasteReceiptLine, WasteIdCounter, ReceiptStatus, HalfLifeClass)

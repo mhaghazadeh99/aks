@@ -1,0 +1,11 @@
+{# one formset row. `show_identity` adds a read-only material/package cell (step 2) #}
+<tr class="line-row">
+  {% if show_identity %}
+  <td><strong>{{ form.instance.get_material_display }}</strong><br><small>{{ form.instance.get_package_type_display }}</small></td>
+  {% endif %}
+  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+  {% for field in form.visible_fields %}
+  <td>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors|join:" " }}</div>{% endif %}</td>
+  {% endfor %}
+  {% if form.non_field_errors %}<td class="text-danger small">{{ form.non_field_errors }}</td>{% endif %}
+</tr>

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from .urls_receipt import receipt_urlpatterns
 urlpatterns = [
     path("", views.waste_home, name="waste_home"),
     path("list/", views.waste_table, name="waste_table"),
@@ -20,4 +20,12 @@ urlpatterns = [
     path("<int:pk>/release/", views.waste_release, name="waste_release"),
     path("release-report/", views.release_annual_report, name="release_annual_report"),
     path("import/", views.waste_import_csv, name="waste_import_csv"),
+    path("release-limits/", views.release_limit_list, name="release_limit_list"),
+    path("release-limits/new/", views.release_limit_create, name="release_limit_create"),
+    path("release-limits/<int:pk>/edit/", views.release_limit_edit, name="release_limit_edit"),
+    path("release-limits/<int:pk>/delete/", views.release_limit_delete, name="release_limit_delete"),
+    path("release-limits/import/", views.release_limit_import_csv, name="release_limit_import_csv"),
+    path("bulk-movement/", views.waste_bulk_movement, name="waste_bulk_movement"),
 ]
+
+urlpatterns += receipt_urlpatterns

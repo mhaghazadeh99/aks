@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_filters %}
+
+{% block title %}{% trans "Finalize" %}{% endblock %}
+
+{% block content %}
+{% include "waste/receipt/_style.html" %}
+<div class="content">
+<h2>{% trans "Upload the signed minutes and finalize" %} - {{ receipt.letter_number }}</h2>
+
+<div class="alert alert-warning">
+  {% trans "Finalizing creates one waste record per material/package line and cannot be undone from this page." %}
+</div>
+
+<div class="receipt-card">
+  <h3>{% trans "Waste records that will be created" %}</h3>
+  <ul class="mb-0">
+    {% for l in receipt.lines.all %}
+    <li>{{ l.get_material_display }} / {{ l.get_package_type_display }} -
+        {{ l.mass_kg|default:"-" }} {% trans "kg" %}, {{ l.volume_m3|default:"-" }} {% trans "m³" %}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {% include "waste/receipt/_messages_errors.html" %}
+  <div class="receipt-card">
+    {% for field in form.visible_fields %}{{ field|as_crispy_field }}{% endfor %}
+  </div>
+  <button type="submit" class="btn-blue">{% trans "Finalize" %}</button>
+  <a href="{% url 'waste_receipt_detail' receipt.pk %}" class="btn-gray">{% trans "Cancel" %}</a>
+</form>
+</div>
+{% endblock %}

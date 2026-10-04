@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load receipt_tags %}
+
+{% block title %}{% trans "Received Waste" %}{% endblock %}
+
+{% block content %}
+{% include "waste/receipt/_style.html" %}
+
+<div class="content">
+
+<form method="get" class="table-header">
+  <div class="header-group">
+    <input type="text" name="search" value="{{ search }}" placeholder="{% trans 'Search letter, minutes, waste ID...' %}">
+    <button type="submit">🔍</button>
+  </div>
+
+  <div class="header-group">
+    <label for="statusFilter">{% trans "Status" %}</label>
+    <select id="statusFilter" name="status" onchange="this.form.submit()">
+      <option value="">{% trans "All" %}</option>
+      {% for value, label in statuses %}
+      <option value="{{ value }}" {% if value == current_status %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="header-group">
+    <label for="pageSize">{% trans "Items:" %}</label>
+    <select id="pageSize" name="size" onchange="this.form.submit()">
+      <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
+      <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
+      <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
+      <option value="all" {% if page_size == "all" %}selected{% endif %}>{% trans "All" %}</option>
+    </select>
+  </div>
+
+  <div class="header-group">
+    <a href="{% url 'waste_receipt_create' %}" class="btn-blue">+ {% trans "Register Received Waste" %}</a>
+  </div>
+</form>
+
+<div class="table-scroll">
+<table id="mainTable">
+<thead>
+<tr>
+  <th>{% trans "Letter No." %}</th>
+  <th>{% trans "Letter Date" %}</th>
+  <th>{% trans "Waste Type" %}</th>
+  <th>{% trans "Delivering Facility" %}</th>
+  <th>{% trans "Receiving Facility" %}</th>
+  <th>{% trans "Responsible" %}</th>
+  <th>{% trans "Delivery Date" %}</th>
+  <th>{% trans "Lines" %}</th>
+  <th>{% trans "Status" %}</th>
+  <th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for r in page_obj %}
+<tr>
+  <td>{{ r.letter_number }}</td>
+  <td>{{ r.letter_date|jdate }}</td>
+  <td>
+    {% if r.waste_type == "LIQUID" %}<span class="badge-liquid">{{ r.get_waste_type_display }}</span>
+    {% else %}<span class="badge-solid">{{ r.get_waste_type_display }}</span>{% endif %}
+  </td>
+  <td>{{ r.origin_facility }}</td>
+  <td>{{ r.facility }}</td>
+  <td>{{ r.received_by }}</td>
+  <td>{{ r.delivery_date|jdate }}</td>
+  <td>{{ r.line_count }}</td>
+  <td><span class="badge-status st-{{ r.status }}">{{ r.get_status_display }}</span></td>
+  <td class="action-icons">
+    <a href="{% url 'waste_receipt_detail' r.pk %}" class="icon-btn" title="{% trans 'View' %}">👁</a>
+    {% if r.can_complete %}
+      {% if r.status == S.DRAFT or r.status == S.MINUTES_READY %}
+      <a href="{% url 'waste_receipt_minutes' r.pk %}" class="icon-btn edit" title="{% trans 'Minutes data' %}">✏️</a>
+      {% endif %}
+      {% if r.status == S.MINUTES_READY %}
+      <a href="{% url 'waste_receipt_finalize' r.pk %}" class="icon-btn" title="{% trans 'Upload signed copy and finalize' %}">✅</a>
+      {% endif %}
+    {% endif %}
+    {% if r.status == S.MINUTES_READY or r.status == S.FINALIZED %}
+    <a href="{% url 'waste_receipt_print' r.pk %}" class="icon-btn" title="{% trans 'Download the form (Word)' %}">🖨</a>
+    {% endif %}
+  </td>
+</tr>
+{% empty %}
+<tr><td colspan="10" class="text-center">{% trans "No received waste found." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="pagination">
+  {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{{ extra_qs }}">{% trans "Previous" %}</a>{% endif %}
+  {% for num in page_obj.paginator.page_range %}
+    {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+      {% if page_obj.number == num %}<span class="current">{{ num }}</span>
+      {% else %}<a href="?page={{ num }}{{ extra_qs }}">{{ num }}</a>{% endif %}
+    {% endif %}
+  {% endfor %}
+  {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{{ extra_qs }}">{% trans "Next" %}</a>{% endif %}
+</div>
+<div class="page-info">
+  {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+  ({{ page_obj.paginator.count }} {% trans "records" %})
+</div>
+{% endblock %}

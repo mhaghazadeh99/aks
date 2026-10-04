@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Release Limits" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{% trans "Release Limits" %}</h3>
+    <div class="d-flex gap-2">
+        <a href="{% url 'release_annual_report' %}" class="btn btn-outline-secondary btn-sm">{% trans "Annual Release Report" %}</a>
+        <a href="{% url 'release_limit_import_csv' %}" class="btn btn-outline-primary btn-sm">{% trans "Import CSV" %}</a>
+        <a href="{% url 'release_limit_create' %}" class="btn btn-primary btn-sm">+ {% trans "New Limit" %}</a>
+    </div>
+</div>
+
+<form method="get" class="d-flex gap-2 mb-3 flex-wrap">
+    <input type="text" name="search" class="form-control" style="max-width:260px" placeholder="{% trans 'Nuclide / facility / reference...' %}" value="{{ search }}">
+    <select name="route" class="form-select" style="max-width:200px" onchange="this.form.submit()">
+        <option value="">{% trans "All routes" %}</option>
+        {% for value, label in routes %}<option value="{{ value }}" {% if route == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="category" class="form-select" style="max-width:220px" onchange="this.form.submit()">
+        <option value="">{% trans "All categories" %}</option>
+        {% for value, label in categories %}<option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button class="btn btn-outline-primary">🔍</button>
+</form>
+
+<div class="table-scroll">
+<table class="table table-bordered table-striped align-middle">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Category / Nuclide" %}</th>
+    <th>{% trans "Route" %}</th>
+    <th>{% trans "Facility" %}</th>
+    <th>{% trans "Annual Limit (Bq/yr)" %}</th>
+    <th>{% trans "Effective" %}</th>
+    <th>{% trans "Reference" %}</th>
+    <th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for limit in page_obj %}
+<tr>
+    <td>{% if limit.radionuclide %}{{ limit.radionuclide }}{% else %}<span class="badge bg-secondary">{{ limit.get_category_display }}</span>{% endif %}</td>
+    <td>{{ limit.get_route_display }}</td>
+    <td>{{ limit.facility|default:"— all —" }}</td>
+    <td>{{ limit.annual_limit_bq }}</td>
+    <td>{{ limit.effective_from }}{% if limit.effective_to %} → {{ limit.effective_to }}{% else %} →{% trans " ongoing" %}{% endif %}</td>
+    <td class="small">{{ limit.reference|default:"-"|truncatechars:40 }}</td>
+    <td>
+        <a href="{% url 'release_limit_edit' limit.pk %}" class="btn btn-sm btn-outline-warning">{% trans "Edit" %}</a>
+        <form method="post" action="{% url 'release_limit_delete' limit.pk %}" class="d-inline"
+              onsubmit="return confirm('{% trans "Delete this release limit?" %}');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger">{% trans "Delete" %}</button>
+        </form>
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="7" class="text-center text-muted">{% trans "No release limits yet." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="d-flex justify-content-center gap-2 mt-3">
+    {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}&search={{ search|urlencode }}&route={{ route }}&category={{ category }}">{% trans "Previous" %}</a>{% endif %}
+    <span class="align-self-center">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}&search={{ search|urlencode }}&route={{ route }}&category={{ category }}">{% trans "Next" %}</a>{% endif %}
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

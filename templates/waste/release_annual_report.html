@@ -6,9 +6,14 @@
 {% block content %}
 <div class="content">
 
+
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">{% trans "Annual Release Report" %} — {{ year }}</h3>
-    <a href="{% url 'waste_home' %}" class="btn btn-outline-secondary btn-sm">{% trans "Waste Home" %}</a>
+    <h3 class="mb-0">{% trans "Annual Release Report" %}</h3>
+    <div class="d-flex gap-2">
+        <a href="{% url 'waste_home' %}" class="btn btn-outline-secondary btn-sm">{% trans "Waste Home" %}</a>
+        <a href="{% url  'release_limit_list' %}" class="btn btn-primary btn-sm">+ {% trans "Release Limits" %}</a>
+    </div>
 </div>
 
 <form method="get" class="d-flex gap-2 mb-3">

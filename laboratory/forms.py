@@ -120,6 +120,7 @@ class AnalysisForm(forms.ModelForm):
                 initial=(self.instance.approvals.exists() if self.instance.pk else True),
             )
         else:
+            self.fields["analysis_date"].required=False
             del self.fields["counting_duration_seconds"]  # comes from the counting run
             # only runs that haven't been finalized (no signature chain yet)
             open_runs = Q(approvals__isnull=True)
@@ -170,8 +171,10 @@ class AlphaBetaCountingRunForm(forms.ModelForm):
 
     class Meta:
         model = AlphaBetaCountingRun
-        fields = ["run_id", "run_date", "counting_duration_seconds", "alpha_mda_mbq", "beta_mda_mbq", "notes"]
+        fields = ["run_id", "run_date", "applicant_name", "sampling_location", "sampling_date_from", "sampling_date_to","counting_duration_seconds", "alpha_mda_mbq", "beta_mda_mbq", "notes"]
         widgets = {
+            "sampling_date_from": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
+            "sampling_date_to": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
             "run_date": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
             "notes": forms.Textarea(attrs={"rows": 2}),
         }
@@ -191,6 +194,29 @@ class LabReportUploadForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        _bootstrap(self.fields)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+
+
+class CollectorRunForm(forms.ModelForm):
+    """Run creation, collector-facing: no run_id (auto-generated), no counting
+    data (duration/MDAs/calibration — the lab adds those later via CountingRunEditForm)."""
+
+    class Meta:
+        model = AlphaBetaCountingRun
+        fields = ["applicant_name", "sampling_location", "sampling_date_from", "sampling_date_to", "sample_stage", "notes"]
+        widgets = {
+            "sampling_date_from": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
+            "sampling_date_to": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
+            "notes": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ("sampling_location", "sampling_date_to", "notes"):
+            self.fields[name].required = False
         _bootstrap(self.fields)
         self.helper = FormHelper()
         self.helper.form_tag = False

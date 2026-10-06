@@ -31,4 +31,5 @@ urlpatterns = [
     path("signatures/lab-manager/", views.signature_queue, {"role_key": "lab-manager"}, name="signature_queue_lab_manager"),
     path("signatures/ops-manager/", views.signature_queue, {"role_key": "ops-manager"}, name="signature_queue_ops_manager"),
     path("reports/finalized/", views.finalized_reports, name="finalized_reports"),
+     path("counting-runs/<int:pk>/edit/", views.counting_run_edit, name="counting_run_edit"),
 ]

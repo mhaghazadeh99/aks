@@ -8,16 +8,15 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
 from .forms import (
-    AnalysisForm,
+    AnalysisForm, CollectorRunForm,
     LabReceiveForm,
     NuclideActivityFormSet,
     SampleForm,
 )
 from .models import (
     AlphaBetaCountingRun, Analysis, AnalysisApproval, AnalysisAttachment, CounterType,
-    LabApprovalRole, LabApprovalStatus, LabAttachmentType, Sample, SampleStatus,
+    LabApprovalRole, LabApprovalStatus, LabAttachmentType, Sample, SampleStatus,SampleStage,
 )
 
 import os
@@ -34,8 +33,9 @@ from .services.workflow import (
     create_analysis_approval_chain, create_counting_run_approval_chain,
     current_step_for, approve_step, reject_step,
 )
-from .services.report_generator import generate_gamma_report, generate_alpha_beta_report
-from .services.signature_service import LabReportSigner
+from .services import report_generator, signature_service
+from .services.report_generator import generate_gamma_report, generate_alpha_beta_report,ALPHA_BETA_ROWS_PER_PAGE
+from .services.signature_service import PdfReportSigner # LabReportSigner
 
 import datetime
 from django.urls import reverse
@@ -62,19 +62,89 @@ def counting_run_list(request):
 def counting_run_create(request):
 
     if request.method == "POST":
-        form = AlphaBetaCountingRunForm(request.POST)
-        if form.is_valid():
-            run = form.save(commit=False)
-            run.created_by = request.user
-            run.save()
-            messages.success(request, _("Counting run created — now add samples to it."))
+        form = CollectorRunForm(request.POST)
+
+        codes = request.POST.getlist("sample_code")
+        masses = request.POST.getlist("sample_mass")
+        volumes = request.POST.getlist("sample_volume")
+
+        rows = []
+        row_errors = []
+        for i, code in enumerate(codes):
+            code = code.strip()
+            if not code:
+                continue
+            mass = masses[i].strip() if i < len(masses) else ""
+            volume = volumes[i].strip() if i < len(volumes) else ""
+            if not mass and not volume:
+                row_errors.append(f"{code}: needs a mass or a volume")
+                continue
+            if Sample.objects.filter(sample_id=code).exists() or Sample.objects.filter(sample_code_barcode=code).exists():
+                row_errors.append(f"{code}: this sample ID/barcode is already in use")
+                continue
+            rows.append({"code": code, "mass": mass or None, "volume": volume or None})
+
+        if not rows:
+            row_errors.append("Add at least one sample.")
+
+        if form.is_valid() and not row_errors:
+            with transaction.atomic():
+                run = form.save(commit=False)
+                run.created_by = request.user
+                run.save()
+
+                today = timezone.now().date()
+                for row in rows:
+                    sample = Sample.objects.create(
+                        sample_id=row["code"],
+                        sample_code_barcode=row["code"],
+                        sample_stage=run.sample_stage or SampleStage.RECEIPT,
+                        sampling_date=run.sampling_date_from or today,
+                        sampling_location=run.sampling_location,
+                        applicant_name=run.applicant_name,
+                        sample_mass_kg=row["mass"],
+                        sample_volume_ml=row["volume"],
+                        status=SampleStatus.SENT_TO_LAB,
+                        sent_to_lab_date=today,
+                        analysis_type=CounterType.ALPHABETA,
+                        collected_by=request.user,
+                    )
+                    Analysis.objects.create(
+                        sample=sample, counting_run=run, detector_type=CounterType.ALPHABETA,
+                    )
+
+            messages.success(request, _("Run %(id)s created with %(n)s sample(s).") % {"id": run.run_id, "n": len(rows)})
             return redirect("counting_run_detail", pk=run.pk)
+        else:
+            for e in row_errors:
+                messages.error(request, e)
     else:
-        form = AlphaBetaCountingRunForm()
+        form = CollectorRunForm()
 
     return render(request, "laboratory/counting_run_form.html", {"form": form, "page_title": _("New Counting Run")})
 
+def counting_run_edit(request, pk):
+    run = get_object_or_404(AlphaBetaCountingRun, pk=pk)
 
+    if run.approvals.exists():
+        messages.error(request, _("This run is already in the signature chain and can't be edited."))
+        return redirect("counting_run_detail", pk=pk)
+
+    if request.method == "POST":
+        form = AlphaBetaCountingRunForm(request.POST, instance=run)
+        if form.is_valid():
+            run = form.save()
+            if run.counting_duration_seconds and (run.alpha_mda_mbq or run.beta_mda_mbq):
+                run.counting_completed = True
+                run.save(update_fields=["counting_completed"])
+            messages.success(request, _("Counting data saved."))
+            return redirect("counting_run_detail", pk=pk)
+    else:
+        form = AlphaBetaCountingRunForm(instance=run)
+
+    return render(request, "laboratory/counting_run_edit.html", {"form": form, "run": run})
+
+    
 def counting_run_detail(request, pk):
 
     run = get_object_or_404(AlphaBetaCountingRun, pk=pk)
@@ -101,13 +171,10 @@ def counting_run_detail(request, pk):
 
         if action == "add_analysis":
             analysis_id = request.POST.get("analysis_id")
-            if run.sample_count >= 12:
-                messages.error(request, _("This run already has 12 samples — the maximum the printed form supports."))
-            else:
-                analysis = get_object_or_404(Analysis, pk=analysis_id, detector_type=CounterType.ALPHABETA, counting_run__isnull=True)
-                analysis.counting_run = run
-                analysis.save(update_fields=["counting_run"])
-                messages.success(request, _("Sample added to the run."))
+            analysis = get_object_or_404(Analysis, pk=analysis_id, detector_type=CounterType.ALPHABETA, counting_run__isnull=True)
+            analysis.counting_run = run
+            analysis.save(update_fields=["counting_run"])
+            messages.success(request, _("Sample added to the run."))
             return redirect("counting_run_detail", pk=pk)
 
         elif action == "remove_analysis":
@@ -122,13 +189,13 @@ def counting_run_detail(request, pk):
             if run.sample_count == 0:
                 messages.error(request, _("Add at least one sample before finalizing."))
             else:
-                generate_alpha_beta_report(run, request.user)
+                unit = request.POST.get("unit", "KG")
+                generate_alpha_beta_report(run, request.user, unit=unit)
                 create_counting_run_approval_chain(run)
                 messages.success(request, _("Report generated — now goes through the signature chain."))
             return redirect("counting_run_detail", pk=pk)
 
     report = run.attachments.filter(attachment_type=LabAttachmentType.REPORT).first()
-
     return render(request, "laboratory/counting_run_detail.html", {
         "run": run,
         "unassigned": unassigned,
@@ -136,6 +203,7 @@ def counting_run_detail(request, pk):
         "report": report,
         "rejected": run.approvals.filter(status=LabApprovalStatus.REJECTED).exists(),
         "locked": run.approvals.exists() and not run.approvals.filter(status=LabApprovalStatus.REJECTED).exists(),
+        "rows_per_page": ALPHA_BETA_ROWS_PER_PAGE ,
     })
 
 
@@ -194,28 +262,14 @@ def lab_report_sign(request, kind, pk):
             return redirect("lab_home")
 
         elif "approve" in request.POST:
-
             profile = request.user.profile
-
-            if not profile.signature_clean:
+            if not profile.signature_image:
                 messages.error(request, _("Please upload your signature image first."))
                 return redirect("profile")
-            
-            if report is None:
-                messages.error(request, _("There is no report file to sign. Generate or upload one first."))
-                return redirect("lab_report_sign", kind=kind, pk=pk)
 
-            tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
-            tmp.close()
-
-            signer = LabReportSigner(report.file.path, report_kind)
-            signer.sign(profile, approval.role)
-            signer.save(tmp.name)
-
-            with open(tmp.name, "rb") as f:
-                report.file.save(os.path.basename(report.file.name), File(f), save=False)
-            report.save()
-            os.remove(tmp.name)
+            from .services.signature_service import PdfReportSigner
+            signer = PdfReportSigner(report.file.path, approvals)
+            signer.sign(approval, profile)   # mutates the attachment's file in place
 
             approve_step(approval, request.user, request.POST.get("comment", ""))
             messages.success(request, _("Signed successfully."))
@@ -595,7 +649,8 @@ def analysis_edit(request, pk):
                     analysis.approvals.all().delete()
                     if form.cleaned_data.get("generate_report"):
                         create_analysis_approval_chain(analysis)
-                        generate_gamma_report(analysis, request.user)
+                        unit = request.POST.get("unit", "KG")
+                        generate_gamma_report(analysis, request.user, unit=unit)
                     else:
                         for att in analysis.attachments.filter(attachment_type=LabAttachmentType.REPORT):
                             att.file.delete(save=False)
@@ -630,7 +685,8 @@ def analysis_generate_report(request, pk):
         else:
             with transaction.atomic():
                 create_analysis_approval_chain(analysis)
-                generate_gamma_report(analysis, request.user)
+                unit = request.POST.get("unit", "KG")
+                generate_gamma_report(analysis, request.user, unit=unit)
             messages.success(request, _("Report generated — waiting for signatures."))
     return redirect("sample_detail", pk=analysis.sample_id)
 

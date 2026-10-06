@@ -141,10 +141,31 @@ class AlphaBetaCountingRun(models.Model):
 
     run_id = models.CharField(_("Run ID"), max_length=50, unique=True)
 
-    run_date = models.DateField(_("Counting Date"))
+    run_date = models.DateField(_("Counting Date"),null=True)
 
     counting_duration_seconds = models.PositiveIntegerField(
         _("Counting Duration (seconds)"), null=True, blank=True,
+    )
+
+    applicant_name = models.CharField(
+        _("Applicant Name"), max_length=255, blank=True, null=True,
+        help_text=_("Printed on the report header. Leave blank to fall back to listing the "
+                    "applicant names recorded on this run's own samples."),
+    )
+    sample_stage = models.CharField(
+        _("Sample Stage"), max_length=20, choices=SampleStage.choices, blank=True, null=True,
+        help_text=_("Applied to every sample added at run creation — they're all collected together."),
+    )
+    counting_completed = models.BooleanField(
+        _("Counting Completed"), default=False,
+        help_text=_("Set once the lab has entered counting duration and MDAs — distinguishes "
+                    "'awaiting counting' from 'ready to report' at a glance."),
+    )
+    sampling_location = models.CharField(_("Sampling Location"), max_length=255, blank=True, null=True)
+    sampling_date_from = models.DateField(_("Sampling Date (From)"), null=True, blank=True)
+    sampling_date_to = models.DateField(
+        _("Sampling Date (To)"), null=True, blank=True,
+        help_text=_("Leave blank if sampling happened on a single date."),
     )
 
     # NOTE: the printed form's MDA fields are explicitly labeled "(mBq)"
@@ -195,13 +216,20 @@ class AlphaBetaCountingRun(models.Model):
         ordering = ["-run_date", "-id"]
         verbose_name = _("Alpha/Beta Counting Run")
         verbose_name_plural = _("Alpha/Beta Counting Runs")
-
+    def save(self, *args, **kwargs):
+        if not self.run_id:
+            from django.utils import timezone
+            today = timezone.now().strftime("%Y%m%d")
+            seq = AlphaBetaCountingRun.objects.filter(run_id__startswith=f"AB-{today}").count() + 1
+            self.run_id = f"AB-{today}-{seq}"
+        super().save(*args, **kwargs)
     def __str__(self):
         return self.run_id
 
     @property
     def sample_count(self):
         return self.analyses.count()
+
 
 
 class Analysis(models.Model):
@@ -220,7 +248,7 @@ class Analysis(models.Model):
     )
 
     detector_type = models.CharField(_("Detector Type"), max_length=30, choices=CounterType.choices)
-    analysis_date = models.DateField(_("Analysis Date"))
+    analysis_date = models.DateField(_("Analysis Date"), null=True, blank=True)
     counting_duration_seconds = models.PositiveIntegerField(
         _("Counting Duration (seconds)"), null=True, blank=True,
     )
@@ -314,6 +342,16 @@ class NuclideActivity(models.Model):
             return None
         return raw / float(mass)
 
+    def specific_activity_bq_per_l(self, decay_corrected=False, as_of=None):
+        """Volume-basis twin of specific_activity_bq_per_kg — used for a sample recorded by
+        volume instead of mass. None if the sample has no recorded volume."""
+        volume_ml = self.analysis.sample.sample_volume_ml
+        if not volume_ml:
+            return None
+        raw = self.current_activity_bq(as_of=as_of) if decay_corrected else float(self.activity_bq)
+        if raw is None:
+            return None
+        return raw / (float(volume_ml) / 1000.0)
 
 class LabAttachmentType(models.TextChoices):
     REPORT = "REPORT", _("Generated Report")
@@ -339,6 +377,12 @@ class AnalysisAttachment(models.Model):
         _("Attachment Type"), max_length=15, choices=LabAttachmentType.choices, default=LabAttachmentType.OTHER,
     )
     file = models.FileField(_("File"), upload_to="laboratory/attachments/")
+    content_page_count = models.PositiveSmallIntegerField(
+        _("Content Page Count"), null=True, blank=True,
+        help_text=_("Set automatically when the report is generated — how many pages are the actual "
+                    "report, before any signature page. Lets re-signing strip the old signature page "
+                    "and append a fresh one without cutting into real content."),
+    )
     description = models.CharField(_("Description"), max_length=200, blank=True)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,

@@ -26,12 +26,12 @@
         <div class="col-md-3"><strong>{% trans "Duration (s)" %}:</strong> {{ run.counting_duration_seconds|default:"-" }}</div>
         <div class="col-md-3"><strong>{% trans "Alpha MDA (mBq)" %}:</strong> {{ run.alpha_mda_mbq|default:"-" }}</div>
         <div class="col-md-3"><strong>{% trans "Beta MDA (mBq)" %}:</strong> {{ run.beta_mda_mbq|default:"-" }}</div>
-        <div class="col-12"><strong>{% trans "Samples" %}:</strong> {{ run.sample_count }} / 12</div>
+        <div class="col-12"><strong>{% trans "Samples" %}:</strong> {{ run.sample_count }} </div>
         {% if run.notes %}<div class="col-12"><strong>{% trans "Notes" %}:</strong> {{ run.notes }}</div>{% endif %}
       </div>
-      <div class="progress mt-3" style="height:8px;">
+      <!-- <div class="progress mt-3" style="height:8px;">
         <div class="progress-bar {% if run.sample_count >= 12 %}bg-danger{% endif %}" style="width: {% widthratio run.sample_count 12 100 %}%"></div>
-      </div>
+      </div> -->
     </div>
   </div>
 
@@ -77,9 +77,9 @@
       {% if not locked %}
       <hr>
       <h6>{% trans "Add an Alpha/Beta analysis" %}</h6>
-      {% if run.sample_count >= 12 %}
+      <!-- {% if run.sample_count >= 12 %}
         <div class="alert alert-warning mb-0">{% trans "This run already has 12 samples — the maximum the printed form supports." %}</div>
-      {% elif unassigned %}
+      {% elif unassigned %} -->
         <form method="post" class="row g-2">
           {% csrf_token %}
           <input type="hidden" name="action" value="add_analysis">
@@ -107,9 +107,15 @@
 
       {% if not run.approvals.exists %}
         <p class="text-muted">{% trans "Finalizing generates the report from the samples above and starts the signature chain. Samples can't be changed afterwards." %}</p>
-        <form method="post" onsubmit="return confirm('{% trans "Generate the report and start signatures? The sample list will be locked." %}');">
+        <form method="post" onsubmit="return confirm('...');">
           {% csrf_token %}
           <input type="hidden" name="action" value="finalize">
+          <label class="form-label">{% trans "Report unit" %}</label>
+          <select name="unit" class="form-select mb-2" style="max-width:220px">
+            <option value="KG">Bq / kg</option>
+            <option value="L">Bq / L</option>
+            <option value="SAMPLE">Bq / sample (raw)</option>
+          </select>
           <button class="btn btn-success" {% if run.sample_count == 0 %}disabled{% endif %}>{% trans "Finalize & Generate Report" %}</button>
         </form>
       {% else %}

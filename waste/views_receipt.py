@@ -16,7 +16,7 @@ from .forms_receipt import (MinutesForm, ReceiptForm, SignedMinutesForm, StartLi
                             minutes_line_formset)
 from .models import WasteType
 from .models_receipt import ReceiptStatus, WasteReceipt
-from .receipt_services import ReceiptError, finalize_receipt, receipt_to_context
+from .receipt_services import ReceiptError, finalize_receipt, planned_batch_count, receipt_to_context
 
 PAGE_SIZES = ("10", "25", "50", "all")
 
@@ -29,7 +29,7 @@ def _can_complete(user, receipt):
 @login_required
 def receipt_list(request):
     qs = (WasteReceipt.objects
-          .select_related("origin_facility", "facility", "received_by")
+          .select_related("origin_facility", "facility", "received_by__profile")
           .annotate(line_count=Count("lines", distinct=True)))
 
     search = request.GET.get("search", "").strip()
@@ -37,6 +37,7 @@ def receipt_list(request):
         qs = qs.filter(
             Q(letter_number__icontains=search) | Q(minutes_number__icontains=search)
             | Q(laboratory__icontains=search) | Q(lines__batch__waste_id__icontains=search)
+            | Q(lines__packages__batch__waste_id__icontains=search)
         ).distinct()
 
     status = request.GET.get("status", "")
@@ -66,10 +67,11 @@ def receipt_list(request):
 @login_required
 def receipt_detail(request, pk):
     receipt = get_object_or_404(
-        WasteReceipt.objects.select_related("origin_facility", "facility", "received_by"), pk=pk)
+        WasteReceipt.objects.select_related("origin_facility", "facility", "received_by__profile")
+        .prefetch_related("nuclides"), pk=pk)
     return render(request, "waste/receipt/detail.html", {
         "receipt": receipt,
-        "lines": receipt.lines.select_related("batch"),
+        "lines": receipt.lines.select_related("batch").prefetch_related("packages__batch"),
         "can_complete": _can_complete(request.user, receipt),
         "S": ReceiptStatus,
     })
@@ -122,7 +124,8 @@ def receipt_minutes(request, pk):                    # STEP 2
 
 @login_required
 def receipt_print(request, pk):                      # filled Word form, to print and sign
-    receipt = get_object_or_404(WasteReceipt.objects.select_related("origin_facility", "received_by"), pk=pk)
+    receipt = get_object_or_404(WasteReceipt.objects.select_related("origin_facility", "received_by__profile")
+        .prefetch_related("nuclides", "lines"), pk=pk)
     if receipt.status == ReceiptStatus.DRAFT:
         messages.error(request, _("Complete the minutes data first."))
         return redirect("waste_receipt_minutes", pk=pk)
@@ -151,4 +154,5 @@ def receipt_finalize(request, pk):                   # STEP 3: signed copy + cre
         else:
             messages.success(request, _("Finalized - waste records created."))
             return redirect("waste_receipt_detail", pk=pk)
-    return render(request, "waste/receipt/finalize.html", {"receipt": receipt, "form": form})
+    return render(request, "waste/receipt/finalize.html", {
+        "receipt": receipt, "form": form, "batch_count": planned_batch_count(receipt)})

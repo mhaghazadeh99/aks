@@ -2,58 +2,39 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block title %}{{ page_title }}{% endblock %}
+{% block title %}{% trans "Enter Counting Data" %} — {{ run.run_id }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
 <div class="row justify-content-center">
 <div class="col-xl-7">
 
-  <div class="card shadow-sm">
-    <div class="card-header"><h3 class="mb-0">{{ page_title }}</h3></div>
+  <nav class="mb-3"><a href="{% url 'counting_run_detail' run.pk %}">&larr; {{ run.run_id }}</a></nav>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header"><h3 class="mb-0">{% trans "Enter Counting Data" %}</h3></div>
     <div class="card-body">
-      <p class="text-muted">
-        {% trans "A counting run groups Alpha/Beta analyses counted together. The MDA values entered here print on the shared report." %}
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-4"><strong>{% trans "Run ID" %}:</strong> {{ run.run_id }}</div>
+        <div class="col-md-4"><strong>{% trans "Samples" %}:</strong> {{ run.sample_count }}</div>
+        <div class="col-md-4"><strong>{% trans "Applicant" %}:</strong> {{ run.applicant_name|default:"-" }}</div>
+      </div>
+
+      <p class="text-muted small">
+        {% trans "This is what the lab fills in after counting is done — run date, counting duration, MDAs, and (if used) the calibration source for each channel. Applicant/sampling info was already set by whoever created the run and is shown above for reference; edit it here only if it needs correcting." %}
       </p>
+
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
         {% crispy form %}
-        <h5 class="mt-4">{% trans "Samples" %}</h5>
-<table class="table table-bordered" id="sample-table">
-  <thead class="table-light"><tr><th>{% trans "Sample Code" %}</th><th>{% trans "Mass (kg)" %}</th><th>{% trans "Volume (mL)" %}</th><th></th></tr></thead>
-  <tbody id="sample-body"></tbody>
-</table>
-<button type="button" class="btn btn-outline-primary btn-sm" id="add-sample-row">+ {% trans "Add Sample" %}</button>
-
-<template id="sample-row-template">
-  <tr>
-    <td><input type="text" name="sample_code" class="form-control"></td>
-    <td><input type="number" step="0.001" name="sample_mass" class="form-control"></td>
-    <td><input type="number" step="0.001" name="sample_volume" class="form-control"></td>
-    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row">✕</button></td>
-  </tr>
-</template>
-
-<script>
-(function () {
-    const body = document.getElementById("sample-body");
-    const tpl = document.getElementById("sample-row-template");
-    function addRow() {
-        const tmp = document.createElement("tbody");
-        tmp.innerHTML = tpl.innerHTML;
-        body.appendChild(tmp.querySelector("tr"));
-    }
-    document.getElementById("add-sample-row").addEventListener("click", addRow);
-    body.addEventListener("click", e => { if (e.target.classList.contains("remove-row")) e.target.closest("tr").remove(); });
-    addRow(); addRow();   // start with two rows
-})();
-</script>
         <div class="d-flex justify-content-end gap-2 mt-3">
-          <a href="{% url 'counting_run_list' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
-          <button type="submit" class="btn btn-primary">{% trans "Create Run" %}</button>
+          <a href="{% url 'counting_run_detail' run.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+          <button type="submit" class="btn btn-primary">{% trans "Save Counting Data" %}</button>
         </div>
       </form>
+
     </div>
   </div>
 

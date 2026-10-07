@@ -21,7 +21,7 @@
         - <a href="{{ receipt.letter_file.url }}" target="_blank">{% trans "File" %}</a></td></tr>
     <tr><th>{% trans "Delivering Facility" %}</th><td>{{ receipt.origin_facility }}</td></tr>
     <tr><th>{% trans "Receiving Facility" %}</th><td>{{ receipt.facility }}</td></tr>
-    <tr><th>{% trans "Responsible" %}</th><td>{{ receipt.received_by }}</td></tr>
+    <tr><th>{% trans "Responsible" %}</th><td>{{ receipt.receiver_name }}{% if receipt.receiver_position %} - {{ receipt.receiver_position }}{% endif %}</td></tr>
     <tr><th>{% trans "Description" %}</th><td>{{ receipt.description|default:"-" }}</td></tr>
   </table>
 </div>
@@ -32,7 +32,7 @@
   <table class="table table-sm mb-0">
     <tr><th style="width:240px">{% trans "Minutes Number" %} / {% trans "Date" %}</th><td>{{ receipt.minutes_number|default:"-" }} / {{ receipt.minutes_date|jdate }}</td></tr>
     <tr><th>{% trans "Delivery Date" %}</th><td>{{ receipt.delivery_date|jdate }}</td></tr>
-    <tr><th>{% trans "Radionuclides Present" %}</th><td>{{ receipt.radionuclides|default:"-" }}</td></tr>
+    <tr><th>{% trans "Radionuclides Present" %}</th><td>{{ receipt.nuclide_names|default:"-" }}</td></tr>
     <tr><th>{% trans "Waste Generation Place" %}</th><td>{{ receipt.waste_origin_place|default:"-" }}</td></tr>
     <tr><th>{% trans "Cabin / container dose (µSv/h)" %}</th><td>{{ receipt.cabin_dose_uSv|default:"-" }} / {{ receipt.container_dose_uSv|default:"-" }}</td></tr>
     {% if receipt.signed_minutes_file %}
@@ -49,14 +49,14 @@
     <thead><tr>
       <th>{% trans "Material" %}</th><th>{% trans "Package Type" %}</th><th>{% trans "Number of Packages" %}</th>
       <th>{% trans "Mass (kg)" %}</th><th>{% trans "Volume (m³)" %}</th><th>{% trans "Surface Dose (µSv/h)" %}</th>
-      <th>{% trans "Waste ID" %}</th>
+      <th>{% trans "Waste ID(s)" %}</th>
     </tr></thead>
     <tbody>
     {% for l in lines %}
     <tr>
       <td>{{ l.get_material_display }}</td><td>{{ l.get_package_type_display }}</td><td>{{ l.package_count }}</td>
       <td>{{ l.mass_kg|default:"-" }}</td><td>{{ l.volume_m3|default:"-" }}</td><td>{{ l.surface_dose_uSv|default:"-" }}</td>
-      <td>{% if l.batch %}<a href="{% url 'waste_detail' l.batch.id %}">{{ l.batch.waste_id }}</a>{% else %}-{% endif %}</td>
+      <td>{% for b in l.batches %}<a href="{% url 'waste_detail' b.id %}">{{ b.waste_id }}</a>{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
     </tr>
     {% endfor %}
     </tbody>

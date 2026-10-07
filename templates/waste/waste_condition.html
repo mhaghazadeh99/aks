@@ -67,7 +67,7 @@
           <div>{% trans "Waste-to-matrix ratio" %}: {{ preview.waste_to_matrix_ratio|default:"-" }}</div>
           {% for w in preview.warnings %}<div class="text-warning small">⚠ {{ w }}</div>{% endfor %}
           <div class="small text-muted mt-2">
-            {% trans "This is the calculated sum of what was added, not a measurement. Enter your own weighed/estimated final package figures in "Package Mass" and "Package Volume" below if they differ — those are never overwritten by this calculation." %}
+            {% trans "This is the calculated sum of what was added, not a measurement. Enter your own weighed/estimated final package figures in 'Package Mass' and 'Package Volume' below if they differ — those are never overwritten by this calculation." %}
           </div>
         </div>
         {% endif %}

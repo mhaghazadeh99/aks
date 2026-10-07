@@ -1,34 +1,54 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load i18n %}
+{% load crispy_forms_tags %}
 {% load receipt_tags %}
 
-{% block title %}{% trans "Minutes data" %}{% endblock %}
+{% block title %}{% trans "Minutes Data" %}{% endblock %}
 
 {% block content %}
-{% include "waste/receipt/_style.html" %}
-<div class="content">
-<h2>{% trans "Minutes data" %} - {{ receipt.letter_number }}</h2>
-<p class="text-muted">
-  {{ receipt.get_waste_type_display }} &middot; {% trans "From" %}: {{ receipt.origin_facility }}
-  &middot; {% trans "Letter date" %}: {{ receipt.letter_date|jdate }}
-</p>
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-xl-10">
+      <div class="card shadow-sm">
 
-<form method="post">
-  {% csrf_token %}
-  {% include "waste/receipt/_messages_errors.html" %}
+        <div class="card-header">
+          <h3>{% trans "Minutes Data" %} - {{ receipt.letter_number }}</h3>
+          <div class="text-muted small">
+            {{ receipt.get_waste_type_display }} &middot; {% trans "From" %}: {{ receipt.origin_facility }}
+            &middot; {% trans "Letter Date" %}: {{ receipt.letter_date|jdate }}
+          </div>
+        </div>
 
-  <div class="receipt-card">
-    <h3>{% trans "Minutes details" %}</h3>
-    {% include "waste/receipt/_form_grid.html" %}
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            {% include "waste/receipt/_messages_errors.html" %}
+
+            <div class="card mb-4">
+              <div class="card-header"><h5 class="mb-0">① {% trans "Minutes Details" %}</h5></div>
+              <div class="card-body">{% crispy form %}</div>
+            </div>
+
+            <div class="card mb-4">
+              <div class="card-header"><h5 class="mb-0">② {% trans "Measurements per Material / Package" %}</h5></div>
+              <div class="card-body">
+                {% if receipt.waste_type == "SOLID" %}
+                <p class="text-muted small">
+                  {% trans "Enter the TOTAL mass and volume of each row. When the records are created, the totals are shared evenly over the packages (one record per package) and can be corrected on each record afterwards." %}
+                </p>
+                {% endif %}
+                {% include "waste/receipt/_line_formset.html" with show_identity=True %}
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'waste_receipt_detail' receipt.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+              <button type="submit" class="btn btn-primary">{% trans "Save and Prepare the Form" %}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="receipt-card">
-    <h3>{% trans "Measurements per material / package" %}</h3>
-    {% include "waste/receipt/_line_formset.html" with show_identity=True %}
-  </div>
-
-  <button type="submit" class="btn-blue">{% trans "Save and prepare the form" %}</button>
-  <a href="{% url 'waste_receipt_detail' receipt.pk %}" class="btn-gray">{% trans "Cancel" %}</a>
-</form>
 </div>
 {% endblock %}

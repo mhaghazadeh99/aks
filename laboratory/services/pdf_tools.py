@@ -11,7 +11,9 @@ WHY THE OLD PDF CAME OUT BROKEN (found by converting a real generated report)
      the next page, and a 13-sample run became 5 pages instead of 2.
   2. The footer said "Page N of 1" -- the "of 1" is typed text in the template,
      not a field.
-  3. (Gamma) a vertically merged "Code No." cell with rotated text
+  3. LibreOffice mirrored the floating Alpha/Beta report + signature table (columns in reverse
+     order) although Word draws it left-to-right -> pin_ltr_tables().
+  4. (Gamma) a vertically merged "Code No." cell with rotated text
      (w:textDirection) is mis-drawn by LibreOffice.
   prepare_docx_for_pdf() fixes all three on a COPY; the Word file is untouched.
 
@@ -113,6 +115,32 @@ def fix_footer_page_count(doc, total_pages=1):
                 cursor = r
 
 
+_TBLPR_AFTER_BIDI = (
+    "tblStyleRowBandSize", "tblStyleColBandSize", "tblW", "jc", "tblCellSpacing", "tblInd",
+    "tblBorders", "shd", "tblLayout", "tblCellMar", "tblLook", "tblCaption", "tblDescription",
+)
+
+
+def pin_ltr_tables(doc):
+    """A table with no <w:bidiVisual> is a left-to-right table in Word: first cell on the LEFT.
+    LibreOffice mirrors some of these (the floating report/signature table in the Alpha/Beta
+    form: "No." jumped to the right edge and the signature columns came out reversed). Writing
+    <w:bidiVisual w:val="0"/> removes the ambiguity. Tables that already say bidiVisual (the
+    right-to-left Gamma tables) are left exactly as they are."""
+    for tbl in doc.element.body.iter(qn("w:tbl")):
+        tblPr = tbl.tblPr
+        if tblPr is None or tblPr.find(qn("w:bidiVisual")) is not None:
+            continue
+        el = OxmlElement("w:bidiVisual")
+        el.set(qn("w:val"), "0")
+        for child in tblPr:
+            if child.tag.split("}")[1] in _TBLPR_AFTER_BIDI:
+                child.addprevious(el)
+                break
+        else:
+            tblPr.append(el)
+
+
 # ---------------------------------------------------------------------
 # PDF preparation + conversion
 # ---------------------------------------------------------------------
@@ -133,6 +161,7 @@ def prepare_docx_for_pdf(docx_bytes):
             tidy_cell_paragraph(Paragraph(p, None))
 
     # reports made before the footer fix, or edited by hand, still get a real page count
+    pin_ltr_tables(doc)
     fix_footer_page_count(doc)      # LibreOffice recomputes the field, so the cached value doesn't matter
     out = BytesIO()
     doc.save(out)

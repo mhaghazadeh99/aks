@@ -1,58 +1,71 @@
 import csv
+import datetime
+import os
+import tempfile
 
 from django.contrib import messages
+from django.core.files import File
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
 from .forms import (
-    AnalysisForm, CollectorRunForm,
+    AlphaBetaCountingRunForm,
+    AnalysisForm,
+    CollectorRunForm,
     LabReceiveForm,
+    LabReportUploadForm,
     NuclideActivityFormSet,
     SampleForm,
 )
 from .models import (
-    AlphaBetaCountingRun, Analysis, AnalysisApproval, AnalysisAttachment, CounterType,
-    LabApprovalRole, LabApprovalStatus, LabAttachmentType, Sample, SampleStatus,SampleStage,
+    AlphaBetaCountingRun,
+    Analysis,
+    AnalysisApproval,
+    AnalysisAttachment,
+    CounterType,
+    LabApprovalRole,
+    LabApprovalStatus,
+    LabAttachmentType,
+    Sample,
+    SampleStage,
+    SampleStatus,
 )
-
-import os
-import tempfile
-
-from django.core.files import File
-
-from .models import (
-    AlphaBetaCountingRun, AnalysisApproval, LabApprovalRole, LabApprovalStatus,
-    LabAttachmentType, AnalysisAttachment, CounterType,
+from .services.final_report import finalize_report_pdf
+from .services.pdf_tools import PdfConversionError
+from .services.report_generator import (
+    ALPHA_BETA_ROWS_PER_PAGE,
+    generate_alpha_beta_report,
+    generate_gamma_report,
 )
-from .forms import AlphaBetaCountingRunForm, LabReportUploadForm
+from .services.signature_service import LabReportSigner
 from .services.workflow import (
-    create_analysis_approval_chain, create_counting_run_approval_chain,
-    current_step_for, approve_step, reject_step,
+    approve_step,
+    create_analysis_approval_chain,
+    create_counting_run_approval_chain,
+    current_step_for,
+    pending_steps_for_role,
+    reject_step,
+    rejected_steps,
 )
-from .services import report_generator, signature_service
-from .services.report_generator import generate_gamma_report, generate_alpha_beta_report,ALPHA_BETA_ROWS_PER_PAGE
-from .services.signature_service import PdfReportSigner # LabReportSigner
 
-import datetime
-from django.urls import reverse
-from .services.workflow import pending_steps_for_role, rejected_steps
 
-# ---- hook into your EXISTING analysis_edit, right after the analysis+formset save succeeds ----
-# Add this block inside analysis_edit's `with transaction.atomic():`, right
-# after `sample.save(update_fields=["status"])`:
-#
-#     if analysis.detector_type == CounterType.HPGE:
-#         create_analysis_approval_chain(analysis)
-#         generate_gamma_report(analysis, request.user)
-#
-# (Alpha/Beta analyses are NOT auto-reported here — they get added to a
-# CountingRun separately, see below.)
+# =====================================================
+# HOME
+# =====================================================
+
 def lab_home(request):
     return render(request, "laboratory/lab_home.html")
+
+
+# =====================================================
+# ALPHA/BETA COUNTING RUNS
+# =====================================================
 
 def counting_run_list(request):
     runs = AlphaBetaCountingRun.objects.order_by("-run_date", "-id")
@@ -123,6 +136,7 @@ def counting_run_create(request):
 
     return render(request, "laboratory/counting_run_form.html", {"form": form, "page_title": _("New Counting Run")})
 
+
 def counting_run_edit(request, pk):
     run = get_object_or_404(AlphaBetaCountingRun, pk=pk)
 
@@ -144,7 +158,7 @@ def counting_run_edit(request, pk):
 
     return render(request, "laboratory/counting_run_edit.html", {"form": form, "run": run})
 
-    
+
 def counting_run_detail(request, pk):
 
     run = get_object_or_404(AlphaBetaCountingRun, pk=pk)
@@ -189,10 +203,14 @@ def counting_run_detail(request, pk):
             if run.sample_count == 0:
                 messages.error(request, _("Add at least one sample before finalizing."))
             else:
-                unit = request.POST.get("unit", "KG")
-                generate_alpha_beta_report(run, request.user, unit=unit)
-                create_counting_run_approval_chain(run)
-                messages.success(request, _("Report generated — now goes through the signature chain."))
+                try:
+                    with transaction.atomic():
+                        generate_alpha_beta_report(run, request.user)
+                        create_counting_run_approval_chain(run)
+                except ValueError as exc:
+                    messages.error(request, str(exc))
+                else:
+                    messages.success(request, _("Report generated — now goes through the signature chain."))
             return redirect("counting_run_detail", pk=pk)
 
     report = run.attachments.filter(attachment_type=LabAttachmentType.REPORT).first()
@@ -201,16 +219,17 @@ def counting_run_detail(request, pk):
         "unassigned": unassigned,
         "analyses": run.analyses.select_related("sample").all(),
         "report": report,
+        "final_report": run.attachments.filter(attachment_type=LabAttachmentType.FINAL_REPORT).first(),
         "rejected": run.approvals.filter(status=LabApprovalStatus.REJECTED).exists(),
         "locked": run.approvals.exists() and not run.approvals.filter(status=LabApprovalStatus.REJECTED).exists(),
-        "rows_per_page": ALPHA_BETA_ROWS_PER_PAGE ,
+        "rows_per_page": ALPHA_BETA_ROWS_PER_PAGE,
     })
 
 
 # =====================================================================
 # SIGNING — one view handles BOTH report kinds via a `kind` URL param,
-# since the underlying approve/reject/sign mechanics are identical; only
-# the docx template + LabReportSigner row map differ.
+# since the approve/reject/sign mechanics are identical; only the docx
+# template and LabReportSigner row map differ.
 # =====================================================================
 
 def _sign_target(kind, pk):
@@ -252,7 +271,11 @@ def lab_report_sign(request, kind, pk):
                 report = AnalysisAttachment.objects.create(
                     attachment_type=LabAttachmentType.REPORT, uploaded_by=request.user, **target_kwargs,
                 )
-                report.file.save(os.path.basename(upload_form.cleaned_data["file"].name), upload_form.cleaned_data["file"], save=True)
+                report.file.save(
+                    os.path.basename(upload_form.cleaned_data["file"].name),
+                    upload_form.cleaned_data["file"],
+                    save=True,
+                )
                 messages.success(request, _("Updated report uploaded."))
                 return redirect("lab_report_sign", kind=kind, pk=pk)
 
@@ -262,112 +285,65 @@ def lab_report_sign(request, kind, pk):
             return redirect("lab_home")
 
         elif "approve" in request.POST:
+            if report is None:
+                messages.error(request, _("There is no report file to sign."))
+                return redirect("lab_report_sign", kind=kind, pk=pk)
+
             profile = request.user.profile
             if not profile.signature_image:
                 messages.error(request, _("Please upload your signature image first."))
                 return redirect("profile")
 
-            from .services.signature_service import PdfReportSigner
-            signer = PdfReportSigner(report.file.path, approvals)
-            signer.sign(approval, profile)   # mutates the attachment's file in place
+            # Stamp the signature into the Word file (original cell-stamping signer).
+            signer = LabReportSigner(report.file.path, report_kind)
+            signer.sign(profile, approval.role)
+            with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+                tmp_path = tmp.name
+            try:
+                signer.save(tmp_path)
+                with open(tmp_path, "rb") as fh:
+                    report.file.save(os.path.basename(report.file.name), File(fh), save=True)
+            finally:
+                os.unlink(tmp_path)
 
             approve_step(approval, request.user, request.POST.get("comment", ""))
-            messages.success(request, _("Signed successfully."))
+
+            target = approval.analysis or approval.counting_run
+            target.refresh_from_db()
+            if target.approved:                      # that was the last signature
+                try:
+                    finalize_report_pdf(report, request.user)
+                    messages.success(request, _("All signatures are in — the final PDF has been created."))
+                except PdfConversionError as exc:
+                    messages.warning(request, _("Signed, but the final PDF couldn't be created: %(e)s") % {"e": exc})
+            else:
+                messages.success(request, _("Signed successfully."))
             return redirect("lab_home")
 
     return render(request, "laboratory/lab_report_sign.html", {
         "kind": kind, "object": obj, "approval": approval, "approvals": approvals,
         "report": report, "upload_form": upload_form,
     })
-# =====================================================
-# HOME / QUEUES
-# =====================================================
-
-def sample_reject(request, pk):
-    sample = get_object_or_404(Sample, pk=pk)
-
-    if request.method == "POST":
-        if sample.status in (SampleStatus.COMPLETED, SampleStatus.REJECTED):
-            messages.error(request, _("This sample can't be rejected in its current status."))
-        else:
-            sample.status = SampleStatus.REJECTED
-            sample.rejection_reason = request.POST.get("reason", "").strip()
-            sample.rejected_by = request.user
-            sample.rejected_at = timezone.now()
-            sample.rejection_seen = False          # <- this is the notification
-            sample.save(update_fields=["status", "rejection_reason", "rejected_by", "rejected_at", "rejection_seen"])
-            messages.success(request, _("Sample rejected. The collector will be notified."))
-
-    return redirect("sample_detail", pk=pk)
 
 
-def sample_resubmit(request, pk):
-    sample = get_object_or_404(Sample, pk=pk, status=SampleStatus.REJECTED)
-    if request.method == "POST":
-        sample.status = SampleStatus.COLLECTED
-        sample.rejection_seen = True
-        sample.save(update_fields=["status", "rejection_seen"])
-        messages.success(request, _("Sample resubmitted as Collected."))
-    return redirect("sample_detail", pk=pk)
-
-
-def sample_list(request):
-
-    queryset = (
-        Sample.objects
-        .select_related("batch", "collected_by")
-        .prefetch_related("analysis__nuclide_activities__radionuclide")
-        .order_by("-urgent", "-sampling_date", "-id")
-    )
-
-    search = request.GET.get("search", "")
-    if search:
-        queryset = queryset.filter(
-            Q(sample_id__icontains=search)
-            | Q(sample_code_barcode__icontains=search)
-            | Q(description__icontains=search)
-            | Q(batch__waste_id__icontains=search)
-        )
-
-    status = request.GET.get("status", "")
-    if status:
-        queryset = queryset.filter(status=status)
-
-    kind = request.GET.get("kind", "")
-    if kind == "standalone":
-        queryset = queryset.filter(batch__isnull=True)
-    elif kind == "batch":
-        queryset = queryset.filter(batch__isnull=False)
-    mine = "1" if request.GET.get("mine") else ""
-    if mine:
-        queryset = queryset.filter(collected_by=request.user)
-    atype = request.GET.get("type", "")
-    if atype:
-        queryset = queryset.filter(analysis_type=atype)
-    size = request.GET.get("size", "25")
-    if size == "all":
-        page_size = max(queryset.count(), 1)
+def lab_report_final_pdf(request, kind, pk):
+    """Retry the PDF conversion after the last signature (e.g. after installing LibreOffice/fonts)."""
+    obj, report_kind, target_kwargs = _sign_target(kind, pk)
+    report = AnalysisAttachment.objects.filter(attachment_type=LabAttachmentType.REPORT, **target_kwargs).first()
+    if not obj.approved or report is None:
+        messages.error(request, _("The final PDF can only be made once every signature is in."))
     else:
         try:
-            page_size = max(1, int(size))
-        except (ValueError, TypeError):
-            page_size = 25
+            finalize_report_pdf(report, request.user)
+            messages.success(request, _("Final PDF created."))
+        except PdfConversionError as exc:
+            messages.error(request, str(exc))
+    return redirect("finalized_reports")
 
-    paginator = Paginator(queryset, page_size)
-    page_obj = paginator.get_page(request.GET.get("page"))
 
-    return render(request, "laboratory/sample_list.html", {
-        "samples": page_obj,
-        "page_obj": page_obj,
-        "page_size": size,
-        "search": search,
-        "status": status,
-        "kind": kind,
-        "atype":atype,
-        "mine":mine,
-        "status_choices": SampleStatus.choices,
-    })
-
+# =====================================================
+# SIGNATURE QUEUES / FINALIZED REPORTS
+# =====================================================
 
 SIGNATURE_PAGES = {
     "analyst": (LabApprovalRole.ANALYST, _("Waiting for the Analysis Lab Expert")),
@@ -434,6 +410,73 @@ def finalized_reports(request):
     rows.sort(key=lambda r: r["finalized_on"] or datetime.date.min, reverse=True)
     page_obj = Paginator(rows, 25).get_page(request.GET.get("page"))
     return render(request, "laboratory/finalized_reports.html", {"page_obj": page_obj, "search": search, "kind": kind})
+
+
+# =====================================================
+# SAMPLES: LIST
+# =====================================================
+
+def sample_list(request):
+
+    queryset = (
+        Sample.objects
+        .select_related("batch", "collected_by")
+        .prefetch_related("analysis__nuclide_activities__radionuclide")
+        .order_by("-urgent", "-sampling_date", "-id")
+    )
+
+    search = request.GET.get("search", "")
+    if search:
+        queryset = queryset.filter(
+            Q(sample_id__icontains=search)
+            | Q(sample_code_barcode__icontains=search)
+            | Q(description__icontains=search)
+            | Q(batch__waste_id__icontains=search)
+        )
+
+    status = request.GET.get("status", "")
+    if status:
+        queryset = queryset.filter(status=status)
+
+    kind = request.GET.get("kind", "")
+    if kind == "standalone":
+        queryset = queryset.filter(batch__isnull=True)
+    elif kind == "batch":
+        queryset = queryset.filter(batch__isnull=False)
+
+    mine = "1" if request.GET.get("mine") else ""
+    if mine:
+        queryset = queryset.filter(collected_by=request.user)
+
+    atype = request.GET.get("type", "")
+    if atype:
+        queryset = queryset.filter(analysis_type=atype)
+
+    size = request.GET.get("size", "25")
+    if size == "all":
+        page_size = max(queryset.count(), 1)
+    else:
+        try:
+            page_size = max(1, int(size))
+        except (ValueError, TypeError):
+            page_size = 25
+
+    paginator = Paginator(queryset, page_size)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(request, "laboratory/sample_list.html", {
+        "samples": page_obj,
+        "page_obj": page_obj,
+        "page_size": size,
+        "search": search,
+        "status": status,
+        "kind": kind,
+        "atype": atype,
+        "mine": mine,
+        "status_choices": SampleStatus.choices,
+    })
+
+
 # =====================================================
 # SAMPLE CRUD
 # =====================================================
@@ -499,10 +542,11 @@ def sample_detail(request, pk):
     if (
         sample.status == SampleStatus.REJECTED
         and not sample.rejection_seen
-        and sample.collected_by_id == request.user.id):
+        and sample.collected_by_id == request.user.id
+    ):
+        sample.rejection_seen = True
+        sample.save(update_fields=["rejection_seen"])
 
-            sample.rejection_seen = True
-            sample.save(update_fields=["rejection_seen"])
     return render(request, "laboratory/sample_detail.html", {
         "sample": sample,
         "analysis": analysis,
@@ -571,11 +615,27 @@ def sample_reject(request, pk):
     sample = get_object_or_404(Sample, pk=pk)
 
     if request.method == "POST":
-        sample.status = SampleStatus.REJECTED
-        sample.lab_comments = request.POST.get("reason", sample.lab_comments)
-        sample.save(update_fields=["status", "lab_comments"])
-        messages.success(request, _("Sample rejected."))
+        if sample.status in (SampleStatus.COMPLETED, SampleStatus.REJECTED):
+            messages.error(request, _("This sample can't be rejected in its current status."))
+        else:
+            sample.status = SampleStatus.REJECTED
+            sample.rejection_reason = request.POST.get("reason", "").strip()
+            sample.rejected_by = request.user
+            sample.rejected_at = timezone.now()
+            sample.rejection_seen = False          # <- this is the notification
+            sample.save(update_fields=["status", "rejection_reason", "rejected_by", "rejected_at", "rejection_seen"])
+            messages.success(request, _("Sample rejected. The collector will be notified."))
 
+    return redirect("sample_detail", pk=pk)
+
+
+def sample_resubmit(request, pk):
+    sample = get_object_or_404(Sample, pk=pk, status=SampleStatus.REJECTED)
+    if request.method == "POST":
+        sample.status = SampleStatus.COLLECTED
+        sample.rejection_seen = True
+        sample.save(update_fields=["status", "rejection_seen"])
+        messages.success(request, _("Sample resubmitted as Collected."))
     return redirect("sample_detail", pk=pk)
 
 
@@ -607,6 +667,7 @@ def analysis_edit(request, pk):
         form = AnalysisForm(request.POST, instance=analysis, detector_type=detector_type)
 
         if form.is_valid():
+            report_generated = False
             with transaction.atomic():
                 analysis = form.save(commit=False)
                 analysis.sample = sample
@@ -622,7 +683,7 @@ def analysis_edit(request, pk):
                         transaction.set_rollback(True)
                         messages.error(request, _("Please correct the nuclide rows below."))
                         return render(request, "laboratory/analysis_form.html", {
-                            "sample": sample, "form": form, "formset": formset,
+                            "sample": sample, "analysis": analysis, "form": form, "formset": formset,
                         })
                     formset.save()
 
@@ -630,34 +691,28 @@ def analysis_edit(request, pk):
                     sample.status = SampleStatus.COMPLETED
                     sample.save(update_fields=["status"])
 
-                def _analysis_locked(analysis):
-                    if not analysis:
-                        return False
-                    steps = list(analysis.approvals.all())
-                    if any(s.status == LabApprovalStatus.REJECTED for s in steps):
-                        return False                       # rejected -> allowed to rework
-                    if any(s.status == LabApprovalStatus.APPROVED for s in steps):
-                        return True                        # someone already signed
-                    run = analysis.counting_run
-                    if run and run.approvals.exists() and not run.approvals.filter(status=LabApprovalStatus.REJECTED).exists():
-                        return True
-                    return analysis.approved
-                if _analysis_locked(analysis):
-                    messages.error(request, _("This analysis is already in/through the signature chain and can't be edited."))
-                    return redirect("sample_detail", pk=sample.pk)
                 if is_gamma:
                     analysis.approvals.all().delete()
                     if form.cleaned_data.get("generate_report"):
                         create_analysis_approval_chain(analysis)
-                        unit = request.POST.get("unit", "KG")
-                        generate_gamma_report(analysis, request.user, unit=unit)
+                        try:
+                            generate_gamma_report(analysis, request.user)
+                            report_generated = True
+                        except ValueError as exc:
+                            transaction.set_rollback(True)
+                            messages.error(request, str(exc))
+                            return render(request, "laboratory/analysis_form.html", {
+                                "sample": sample, "analysis": analysis, "form": form, "formset": formset,
+                            })
                     else:
                         for att in analysis.attachments.filter(attachment_type=LabAttachmentType.REPORT):
                             att.file.delete(save=False)
                             att.delete()
 
-            if is_gamma:
+            if is_gamma and report_generated:
                 messages.success(request, _("Analysis saved — report generated, waiting for signatures."))
+            elif is_gamma:
+                messages.success(request, _("Analysis saved."))
             elif analysis.counting_run_id:
                 messages.success(request, _("Analysis saved and added to the counting run."))
             else:
@@ -673,7 +728,7 @@ def analysis_edit(request, pk):
     return render(request, "laboratory/analysis_form.html", {
         "sample": sample, "analysis": analysis, "form": form, "formset": formset,
     })
-    
+
 
 def analysis_generate_report(request, pk):
     analysis = get_object_or_404(Analysis.objects.select_related("sample"), pk=pk, detector_type=CounterType.HPGE)
@@ -683,11 +738,14 @@ def analysis_generate_report(request, pk):
         elif analysis.approved:
             messages.error(request, _("This analysis was already approved without a report."))
         else:
-            with transaction.atomic():
-                create_analysis_approval_chain(analysis)
-                unit = request.POST.get("unit", "KG")
-                generate_gamma_report(analysis, request.user, unit=unit)
-            messages.success(request, _("Report generated — waiting for signatures."))
+            try:
+                with transaction.atomic():
+                    create_analysis_approval_chain(analysis)
+                    generate_gamma_report(analysis, request.user)
+            except ValueError as exc:
+                messages.error(request, str(exc))
+            else:
+                messages.success(request, _("Report generated — waiting for signatures."))
     return redirect("sample_detail", pk=analysis.sample_id)
 
 

@@ -1,45 +1,150 @@
 """
-laboratory/services/pdf_tools.py -- DOCX -> PDF conversion, PDF merging, and a
-generated signature page. New file; used by report_generator.py (final output
-is now PDF, not an editable .docx) and signature_service.py (signatures are
-stamped onto an appended page, not into cells of the original document --
-see the long comment in signature_service.py for why).
+laboratory/services/pdf_tools.py -- DOCX -> PDF, used ONLY for the final report
+once every signature is in. Until then reports stay as editable Word files.
 
-SERVER REQUIREMENT: LibreOffice must be installed (`apt-get install
-libreoffice` on Debian/Ubuntu, or `libreoffice-writer` for a smaller
-install). This shells out to `soffice --headless`. Tested end-to-end in a
-Linux sandbox against the actual Alpha/Beta template — conversion, a 2-file
-merge, and a reportlab-generated signature page all round-tripped correctly.
+WHY THE OLD PDF CAME OUT BROKEN (found by converting a real generated report)
+  1. Every table cell paragraph in the templates carries "space after 200" and
+     the No. column also a 360-twip left indent inside a 672-twip cell. In Word
+     that is tolerable; in LibreOffice (and with fallback fonts) two-digit
+     numbers wrapped ("1 / 3") and every row grew, so the page overflowed:
+     the logo table ended up alone on page 1, the signature table split over
+     the next page, and a 13-sample run became 5 pages instead of 2.
+  2. The footer said "Page N of 1" -- the "of 1" is typed text in the template,
+     not a field.
+  3. (Gamma) a vertically merged "Code No." cell with rotated text
+     (w:textDirection) is mis-drawn by LibreOffice.
+  prepare_docx_for_pdf() fixes all three on a COPY; the Word file is untouched.
 
-Each conversion runs with an ISOLATED user profile (`-env:UserInstallation`)
-and is cleaned up afterward. This matters under a real web server: LibreOffice
-headless has known lock/crash issues when two conversions share a profile at
-the same time, which WILL happen the moment two reports generate concurrently
-across worker processes. Without this, expect intermittent failures under load.
+SERVER REQUIREMENTS
+  * LibreOffice (`apt-get install libreoffice-writer`).
+  * The fonts the templates use: B Nazanin, B Lotus, IPT Lotus (and B Zar for the
+    footer). Copy the .ttf files to /usr/local/share/fonts and run `fc-cache -f`.
+    Without them LibreOffice substitutes wider fonts; the layout fixes above keep
+    the page count right, but letter shapes will differ from Word.
+
+Each conversion uses its own throwaway LibreOffice profile
+(-env:UserInstallation) so concurrent conversions don't fight over one profile.
 """
 
+import copy
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 from io import BytesIO
 
-from pypdf import PdfReader, PdfWriter
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
-from reportlab.pdfgen import canvas
+from docx import Document
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Pt
+from docx.text.paragraph import Paragraph
 
 
 class PdfConversionError(RuntimeError):
     pass
 
 
-def docx_bytes_to_pdf_bytes(docx_bytes, timeout=60):
-    """Converts one in-memory .docx to PDF via a headless LibreOffice
-    subprocess with its own throwaway profile. Raises PdfConversionError
-    with LibreOffice's own stderr if conversion fails (missing/corrupt
-    template, LibreOffice not installed, timeout, ...) -- never returns a
-    silently-empty or partial PDF."""
+# ---------------------------------------------------------------------
+# helpers shared with report_generator (these are fine to keep in the Word file too)
+# ---------------------------------------------------------------------
+
+def tidy_cell_paragraph(paragraph, align=None):
+    """Zero spacing before/after, single line spacing, no indent, no
+    'contextual spacing' -- so a table row keeps the height the template set
+    instead of growing, and short numbers don't wrap."""
+    pf = paragraph.paragraph_format
+    pf.space_before = Pt(0)
+    pf.space_after = Pt(0)
+    pf.line_spacing = 1.0
+    pf.left_indent = Pt(0)
+    pf.first_line_indent = Pt(0)
+    pPr = paragraph._p.pPr
+    if pPr is not None:
+        for el in pPr.findall(qn("w:contextualSpacing")):
+            pPr.remove(el)
+    if align is not None:
+        pf.alignment = align
+
+
+def fix_footer_page_count(doc, total_pages=1):
+    """The templates' footer reads 'Page <PAGE field> of 1' with the '1' typed in.
+    Replace that typed text with a real NUMPAGES field."""
+    seen = set()
+    for section in doc.sections:
+        footer = section.footer
+        if footer.is_linked_to_previous:
+            continue
+        root = footer._element
+        if id(root) in seen:
+            continue
+        seen.add(id(root))
+        if any("NUMPAGES" in (e.text or "") for e in root.iter(qn("w:instrText"))):
+            continue
+        for t in list(root.iter(qn("w:t"))):
+            if not (t.text and re.fullmatch(r"\s*of\s+\d+\s*", t.text)):
+                continue
+            run = t.getparent()
+            t.text = " of "
+            t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+            rpr = run.find(qn("w:rPr"))
+
+            def new_run():
+                r = OxmlElement("w:r")
+                if rpr is not None:
+                    r.append(copy.deepcopy(rpr))
+                return r
+
+            cursor = run
+            for kind in ("begin", "instr", "separate", "text", "end"):
+                r = new_run()
+                if kind == "instr":
+                    el = OxmlElement("w:instrText")
+                    el.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+                    el.text = " NUMPAGES "
+                elif kind == "text":
+                    el = OxmlElement("w:t")
+                    el.text = str(total_pages)
+                else:
+                    el = OxmlElement("w:fldChar")
+                    el.set(qn("w:fldCharType"), kind)
+                r.append(el)
+                cursor.addnext(r)
+                cursor = r
+
+
+# ---------------------------------------------------------------------
+# PDF preparation + conversion
+# ---------------------------------------------------------------------
+
+def prepare_docx_for_pdf(docx_bytes):
+    """Returns docx bytes adjusted for LibreOffice (see module docstring).
+    The input is not modified."""
+    doc = Document(BytesIO(docx_bytes))
+    body = doc.element.body
+
+    for tc in body.iter(qn("w:tc")):
+        pr = tc.tcPr
+        if pr is not None:
+            td = pr.find(qn("w:textDirection"))
+            if td is not None:
+                pr.remove(td)
+        for p in tc.iter(qn("w:p")):
+            tidy_cell_paragraph(Paragraph(p, None))
+
+    # reports made before the footer fix, or edited by hand, still get a real page count
+    fix_footer_page_count(doc)      # LibreOffice recomputes the field, so the cached value doesn't matter
+    out = BytesIO()
+    doc.save(out)
+    return out.getvalue()
+
+
+def docx_bytes_to_pdf_bytes(docx_bytes, timeout=90):
+    """Converts one in-memory .docx to PDF with headless LibreOffice. Raises
+    PdfConversionError (with LibreOffice's own stderr) on any failure; never
+    returns a partial or empty PDF."""
+    docx_bytes = prepare_docx_for_pdf(docx_bytes)
+
     workdir = tempfile.mkdtemp(prefix="docx2pdf_")
     profile = tempfile.mkdtemp(prefix="lo_profile_")
     try:
@@ -57,7 +162,7 @@ def docx_bytes_to_pdf_bytes(docx_bytes, timeout=60):
         except FileNotFoundError:
             raise PdfConversionError(
                 "LibreOffice ('soffice') isn't installed on this server. "
-                "Install it (e.g. `apt-get install libreoffice-writer`) to generate PDF reports."
+                "Install it (e.g. `apt-get install libreoffice-writer`) to produce the final PDF."
             )
         except subprocess.TimeoutExpired:
             raise PdfConversionError(f"PDF conversion timed out after {timeout}s.")
@@ -73,106 +178,3 @@ def docx_bytes_to_pdf_bytes(docx_bytes, timeout=60):
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
         shutil.rmtree(profile, ignore_errors=True)
-
-
-def merge_pdfs(pdf_byte_chunks):
-    """Concatenates several in-memory PDFs (each a bytes object) into one,
-    in order. Returns the merged PDF's bytes."""
-    writer = PdfWriter()
-    for data in pdf_byte_chunks:
-        reader = PdfReader(BytesIO(data))
-        for page in reader.pages:
-            writer.add_page(page)
-    out = BytesIO()
-    writer.write(out)
-    out.seek(0)
-    return out.read()
-
-
-def strip_trailing_pages(pdf_bytes, keep_first_n_pages):
-    """Returns a PDF containing only the first `keep_first_n_pages` pages --
-    used to remove a previously-appended signature page before appending a
-    freshly regenerated one (see signature_service.py)."""
-    reader = PdfReader(BytesIO(pdf_bytes))
-    writer = PdfWriter()
-    for page in reader.pages[:keep_first_n_pages]:
-        writer.add_page(page)
-    out = BytesIO()
-    writer.write(out)
-    out.seek(0)
-    return out.read()
-
-
-def page_count(pdf_bytes):
-    return len(PdfReader(BytesIO(pdf_bytes)).pages)
-
-
-def build_signature_page(title, steps):
-    """
-    Builds a single-page PDF listing every signature step and its status --
-    this is appended as the LAST page of a report, rather than stamping
-    signatures into specific cells of the original content pages.
-
-    WHY a separate page instead of inline stamping (like the old .docx
-    signer did, placing a picture into a specific table cell): once the
-    report is PDF, "which cell" has no good answer any more -- the content
-    came from a .docx template whose exact page/coordinate layout after
-    LibreOffice's own pagination isn't something this code can reliably
-    predict, especially across a multi-page (chunked, >12 sample) report.
-    A dedicated page is unambiguous, always has room for N signers, and
-    works identically whether the report is 1 page or 20. The tradeoff:
-    signatures no longer appear next to the data they're approving, only
-    at the end. If you want them stamped inline instead, I'd need the
-    exact page/coordinate layout of your real templates (same way sending
-    the Alpha/Beta .docx let me fix the header-label issue precisely).
-
-    `steps`: list of dicts with role, name, date, status, comments (any may
-    be blank/None for a step not yet reached).
-    """
-    buf = BytesIO()
-    c = canvas.Canvas(buf, pagesize=A4)
-    width, height = A4
-
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(20 * mm, height - 25 * mm, str(title))
-
-    c.setFont("Helvetica", 9)
-    c.drawString(20 * mm, height - 32 * mm, "Signatures")
-
-    y = height - 42 * mm
-    row_h = 22 * mm
-    col_role = 20 * mm
-    col_name = 80 * mm
-    col_date = 130 * mm
-    col_status = 160 * mm
-
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(col_role, y, "Role")
-    c.drawString(col_name, y, "Name")
-    c.drawString(col_date, y, "Date")
-    c.drawString(col_status, y, "Status")
-    y -= 6 * mm
-    c.line(20 * mm, y, width - 20 * mm, y)
-    y -= 8 * mm
-
-    c.setFont("Helvetica", 9)
-    for step in steps:
-        if y < 20 * mm:
-            c.showPage()
-            y = height - 25 * mm
-            c.setFont("Helvetica", 9)
-        c.drawString(col_role, y, str(step.get("role") or "-"))
-        c.drawString(col_name, y, str(step.get("name") or "-"))
-        c.drawString(col_date, y, str(step.get("date") or "-"))
-        c.drawString(col_status, y, str(step.get("status") or "-"))
-        comment = step.get("comments")
-        if comment:
-            y -= 5 * mm
-            c.setFont("Helvetica-Oblique", 8)
-            c.drawString(col_name, y, f"Comment: {comment}"[:110])
-            c.setFont("Helvetica", 9)
-        y -= row_h - (5 * mm if comment else 0)
-
-    c.save()
-    buf.seek(0)
-    return buf.read()

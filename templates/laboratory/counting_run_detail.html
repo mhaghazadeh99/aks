@@ -118,12 +118,10 @@
         <form method="post" onsubmit="return confirm('{% trans "Generate the report and start signatures? The sample list will be locked." %}');">
           {% csrf_token %}
           <input type="hidden" name="action" value="finalize">
-          <label class="form-label">{% trans "Report unit" %}</label>
-          <select name="unit" class="form-select mb-2" style="max-width:220px">
-            <option value="KG">Bq / kg</option>
-            <option value="L">Bq / L</option>
-            <option value="SAMPLE">Bq / sample (raw)</option>
-          </select>
+          <p class="mb-2">
+            <strong>{% trans "Report unit" %}:</strong> {{ run.get_result_unit_display }}
+            <span class="text-muted small">— {% trans "the unit the results were entered in (set under Counting Data). Values are printed exactly as entered, never converted." %}</span>
+          </p>
           <button class="btn btn-success" {% if run.sample_count == 0 %}disabled{% endif %}>{% trans "Finalize & Generate Report" %}</button>
         </form>
       {% else %}
@@ -140,7 +138,8 @@
           {% endfor %}
         </ol>
         <div class="d-flex gap-2 flex-wrap">
-          {% if report %}<a href="{{ report.file.url }}" class="btn btn-outline-secondary">⬇ {% trans "Download Report (.docx)" %}</a>{% endif %}
+          {% if final_report %}<a href="{{ final_report.file.url }}" class="btn btn-success">⬇ {% trans "Final Report (PDF)" %}</a>{% endif %}
+          {% if report %}<a href="{{ report.file.url }}" class="btn btn-outline-secondary">⬇ {% if final_report %}{% trans "Signed Word file" %}{% else %}{% trans "Download Report (.docx)" %}{% endif %}</a>{% endif %}
           {% if rejected %}
             <form method="post" onsubmit="return confirm('{% trans "Reopen this run? The current report and signatures are discarded." %}');">
               {% csrf_token %}

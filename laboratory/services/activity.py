@@ -1,4 +1,8 @@
 """
+NOTE (result_unit): the lab types results in the unit chosen on the analysis
+(Bq/kg, Bq/L or whole-sample Bq). _concentration() below honours that and never
+divides a value that is already per-kg / per-L by the sample size again.
+
 Combined, mass/volume-scaled activity inventory for a waste batch.
 
 THE PROBLEM WITH THE PREVIOUS VERSION: it treated a lab sample's measured
@@ -67,13 +71,26 @@ from django.utils.translation import gettext_lazy as _
 from ..models import RadiationType
 
 
-def _concentration(value_bq, sample):
-    """(Bq/kg, Bq/L) for value_bq as measured on `sample`. Either element is
-    None if that basis isn't recorded on the sample. value_bq may be None."""
-    if value_bq is None:
+def _concentration(value, sample, unit="SAMPLE"):
+    """(Bq/kg, Bq/L) for a lab-entered `value`, given the unit the lab entered
+    it in (Analysis.effective_result_unit):
+
+      "KG"     -- already Bq/kg. Used as-is; NOT divided by the sample's mass
+                  again (that would double-divide). No Bq/L figure is implied.
+      "L"      -- already Bq/L. Used as-is, same reasoning.
+      "SAMPLE" -- the whole-sample total in Bq (what every analysis entered
+                  before result_unit existed is): divided by the sample's own
+                  recorded mass and/or volume, as before.
+
+    Either element is None when that basis can't be known. value may be None."""
+    if value is None:
         return None, None
-    per_kg = float(value_bq) / float(sample.sample_mass_kg) if sample.sample_mass_kg else None
-    per_l = float(value_bq) / (float(sample.sample_volume_ml) / 1000.0) if sample.sample_volume_ml else None
+    if unit == "KG":
+        return float(value), None
+    if unit == "L":
+        return None, float(value)
+    per_kg = float(value) / float(sample.sample_mass_kg) if sample.sample_mass_kg else None
+    per_l = float(value) / (float(sample.sample_volume_ml) / 1000.0) if sample.sample_volume_ml else None
     return per_kg, per_l
 
 
@@ -121,9 +138,10 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
 
     if gamma_analysis:
         gsample = gamma_analysis.sample
+        gamma_unit = gamma_analysis.effective_result_unit
         for na in gamma_analysis.nuclide_activities.filter(radiation_type=RadiationType.GAMMA).select_related("radionuclide"):
             sample_bq = na.current_activity_bq(as_of=as_of) or 0.0
-            conc_kg, conc_l = _concentration(sample_bq, gsample)
+            conc_kg, conc_l = _concentration(sample_bq, gsample, gamma_unit)
             batch_bq, basis = _scale_to_batch(conc_kg, conc_l, batch)
 
             gamma_lines.append({
@@ -161,12 +179,12 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
     gross_beta_bq = gross_alpha_bq = None
     counting_run = getattr(alpha_beta_analysis, "counting_run", None) if alpha_beta_analysis else None
 
-    def _net_and_scale(gross_value, have_mass, have_vol, emit_kg, emit_l, ab_sample, label):
+    def _net_and_scale(gross_value, have_mass, have_vol, emit_kg, emit_l, ab_sample, label, unit):
         """Returns (gross_batch_bq, pure_batch_bq) -- the raw gross reading scaled to the
         whole batch (no netting), and the gamma-netted "pure" reading also scaled.
         `gross_batch_bq` is what Total Alpha/Total Beta should show: the counting result,
         scaled up the same way gamma already is -- NOT the as-measured sample figure."""
-        gross_kg, gross_l = _concentration(gross_value, ab_sample)
+        gross_kg, gross_l = _concentration(gross_value, ab_sample, unit)
         gross_batch_bq, _basis0 = _scale_to_batch(gross_kg, gross_l, batch)
 
         net_kg = net_l = None
@@ -207,11 +225,12 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
 
     if alpha_beta_analysis:
         ab_sample = alpha_beta_analysis.sample
+        ab_unit = alpha_beta_analysis.effective_result_unit
 
         if alpha_beta_analysis.total_beta is not None:
             gross_beta_bq, pure_beta_bq = _net_and_scale(
                 float(alpha_beta_analysis.total_beta), have_beta_mass, have_beta_vol,
-                beta_emit_conc_kg, beta_emit_conc_l, ab_sample, "beta",
+                beta_emit_conc_kg, beta_emit_conc_l, ab_sample, "beta", ab_unit,
             )
             if pure_beta_bq is not None and counting_run and counting_run.beta_efficiency_correction_factor:
                 pure_beta_bq *= counting_run.beta_efficiency_correction_factor
@@ -229,7 +248,7 @@ def total_activity_breakdown(gamma_analysis, alpha_beta_analysis, batch=None, as
         if alpha_beta_analysis.total_alpha is not None:
             gross_alpha_bq, pure_alpha_bq = _net_and_scale(
                 float(alpha_beta_analysis.total_alpha), have_alpha_mass, have_alpha_vol,
-                alpha_emit_conc_kg, alpha_emit_conc_l, ab_sample, "alpha",
+                alpha_emit_conc_kg, alpha_emit_conc_l, ab_sample, "alpha", ab_unit,
             )
             if pure_alpha_bq is not None and counting_run and counting_run.alpha_efficiency_correction_factor:
                 pure_alpha_bq *= counting_run.alpha_efficiency_correction_factor

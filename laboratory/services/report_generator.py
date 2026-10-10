@@ -1,31 +1,50 @@
+import copy
+import math
 import os
 import re
+from decimal import Decimal
 from io import BytesIO
 
 from django.conf import settings
 from django.core.files.base import ContentFile
 from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt
 
 from ..models import AnalysisAttachment, LabAttachmentType, RadiationType
-from .pdf_tools import docx_bytes_to_pdf_bytes, merge_pdfs, page_count
+from .jalali import as_date, format_jalali
+from .pdf_tools import fix_footer_page_count, tidy_cell_paragraph
 
-# ---- Gamma: three templates, one per unit, same row/column layout ----
-GAMMA_TEMPLATE_PATH_KG = os.path.join(settings.BASE_DIR, "laboratory", "templates_docx", "Gamma_analysis_Report_form_kg.docx")
-GAMMA_TEMPLATE_PATH_L = os.path.join(settings.BASE_DIR, "laboratory", "templates_docx", "Gamma_analysis_Report_form_l.docx")
-GAMMA_TEMPLATE_PATH_SAMPLE = os.path.join(settings.BASE_DIR, "laboratory", "templates_docx", "Gamma_analysis_Report_form_sample.docx")
+TEMPLATE_DIR = os.path.join(settings.BASE_DIR, "laboratory", "templates_docx")
 
-# ---- Alpha/Beta: three templates, one per unit, same row/column layout ----
-ALPHA_BETA_TEMPLATE_PATH_KG = os.path.join(settings.BASE_DIR, "laboratory", "templates_docx", "Gross_Alpha___Beta_analysis_Report_form_kg.docx")
-ALPHA_BETA_TEMPLATE_PATH_L = os.path.join(settings.BASE_DIR, "laboratory", "templates_docx", "Gross_Alpha___Beta_analysis_Report_form_l.docx")
-ALPHA_BETA_TEMPLATE_PATH_SAMPLE = os.path.join(settings.BASE_DIR, "laboratory", "templates_docx", "Gross_Alpha___Beta_analysis_Report_form_sample.docx")
+# Dates on every report are printed as Jalali (Solar Hijri). True = Persian digits
+# (\u06f1\u06f4\u06f0\u06f5/\u06f0\u06f7/\u06f1\u06f8, the same as the signature rows);
+# False = Latin digits (1405/07/18).
+JALALI_PERSIAN_DIGITS = True
 
-GAMMA_MAX_ROWS = 10
-ALPHA_BETA_ROWS_PER_PAGE = 12   # the printed form's row count -- a run with MORE samples than this
-                                 # gets split across multiple pages of the same template and merged
-                                 # into one PDF, rather than being capped.
+# One template per unit. All three of a kind share the same row/column layout;
+# only the printed unit text differs. NOTE the double underscore in the
+# Alpha/Beta kg file name -- that is how the file was uploaded; rename the file
+# and this line together if you want it tidied.
+GAMMA_TEMPLATES = {
+    "KG": "Gamma_analysis_Report_form_kg.docx",
+    "L": "Gamma_analysis_Report_form_l.docx",
+    "SAMPLE": "Gamma_analysis_Report_form_sample.docx",
+}
+ALPHA_BETA_TEMPLATES = {
+    "KG": "Gross_Alpha___Beta_analysis_Report_form__kg.docx",
+    "L": "Gross_Alpha___Beta_analysis_Report_form_l.docx",
+    "SAMPLE": "Gross_Alpha___Beta_analysis_Report_form_sample.docx",
+}
+
+GAMMA_FIRST_DATA_ROW = 6
+GAMMA_DATA_ROWS = 14            # rows 6..19 of the Gamma data table
+GAMMA_TABLE_ROWS = 20
+ALPHA_BETA_FIRST_DATA_ROW = 6
+ALPHA_BETA_ROWS_PER_PAGE = 12   # rows 6..17; a run with more samples gets more pages
+ALPHA_BETA_TABLE_ROWS = 23
 
 UNIT_CHOICES = ("KG", "L", "SAMPLE")
 
@@ -41,9 +60,7 @@ def _allow_row_to_grow(cell):
 
 
 # =====================================================================
-# Persian (RTL) label + value filling -- unchanged from the version that
-# fixed the alpha/beta header misalignment; see earlier notes for why this
-# exists (paragraph bidi, LTR-wrapped numbers).
+# Persian (RTL) label + value filling -- paragraph bidi, LTR-wrapped numbers.
 # =====================================================================
 
 _PPR_SUCCESSORS = {
@@ -53,7 +70,7 @@ _PPR_SUCCESSORS = {
 }
 
 
-def _make_paragraph_rtl(paragraph):
+def _make_paragraph_rtl(paragraph, keep_center=False):
     """Persian form: the paragraph itself must be right-to-left, otherwise Word lays the
     runs out left-to-right and the value lands on the wrong side of the label."""
     pPr = paragraph._p.get_or_add_pPr()
@@ -66,11 +83,18 @@ def _make_paragraph_rtl(paragraph):
         else:
             pPr.append(bidi)
     jc = pPr.find(qn("w:jc"))
-    if jc is not None:          # in an RTL paragraph the default (start) is already the right edge
-        pPr.remove(jc)
+    if jc is not None and not (keep_center and jc.get(qn("w:val")) == "center"):
+        pPr.remove(jc)          # in an RTL paragraph the default (start) is already the right edge
 
 
-_LTR_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-/:±_]*")
+# A Latin "island": one or more Latin words / numbers / codes (spaces allowed BETWEEN them, so
+# "Test Co" or "12.5 \u00b1 1" stays one unit). A lone " - " is deliberately not part of it.
+_LATIN_WORD = r"(?:[A-Za-z0-9][A-Za-z0-9.\-/:\u00b1_]*|\u00b1)"
+_LATIN_ISLAND = re.compile(_LATIN_WORD + r"(?:[ \u00a0]+" + _LATIN_WORD + r")*")
+_HAS_RTL = re.compile("[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff]")
+
+LRM = "\u200e"
+RLM = "\u200f"
 
 
 def _add_run(paragraph, text, rtl):
@@ -85,10 +109,44 @@ def _add_run(paragraph, text, rtl):
     rPr.find(qn("w:sz")).addnext(szCs)
 
 
+def _write_mixed(paragraph, text):
+    """Write `text` (Persian and/or Latin) into an RTL paragraph so that it reads in LOGICAL order.
+
+    Why this is more than add_run(text): the bidi algorithm gives neutral characters (space, dash,
+    brackets) the direction of the strong text around them. If every Latin chunk is wrapped in LRM
+    and the Persian chunks are left bare, the neutrals BETWEEN two Latin chunks fall into the
+    left-to-right side and "<date> - <place>" turns into "<place> - <date>". So:
+      * every Latin island that contains digits gets LRM on both sides (so 2026-10-05 or AB-20261010-1
+        can't be mirrored), and
+      * every non-Latin chunk (Persian words, Jalali dates, the " - " between values) gets RLM on both
+        sides, which pins those neutrals to the right-to-left side.
+    Latin runs are flagged non-RTL, everything else RTL."""
+    def rtl_chunk(chunk):
+        # keep the direction marks away from the spaces so the line can still break at a space
+        core = chunk.strip(" \u00a0")
+        if not core:
+            _add_run(paragraph, chunk, rtl=True)
+            return
+        lead = chunk[:len(chunk) - len(chunk.lstrip(" \u00a0"))]
+        trail = chunk[len(chunk.rstrip(" \u00a0")):]
+        _add_run(paragraph, lead + RLM + core + RLM + trail, rtl=True)
+
+    pos = 0
+    for m in _LATIN_ISLAND.finditer(text):
+        if m.start() > pos:
+            rtl_chunk(text[pos:m.start()])
+        island = m.group()
+        # LRM only where digits could be mirrored (codes, numbers); plain words keep a clean
+        # line-break opportunity, otherwise LibreOffice splits "Test" into "Te" / "st"
+        mark = LRM if re.search(r"\d", island) else ""
+        _add_run(paragraph, mark + island + mark, rtl=False)
+        pos = m.end()
+    if pos < len(text):
+        rtl_chunk(text[pos:])
+
+
 def _fill_after_colon(cell, value):
-    """Append `value` after the label, keeping the template's own label runs (bold, rtl, fonts) untouched.
-    Latin/number chunks (dates, IDs, 12.5 ± 1) go in LTR runs so they are not mirrored;
-    Persian chunks go in RTL runs."""
+    """Append `value` after the label, keeping the template's own label runs (bold, rtl, fonts) untouched."""
     if value in (None, ""):
         return
     _allow_row_to_grow(cell)
@@ -98,17 +156,7 @@ def _fill_after_colon(cell, value):
     text = str(value)
     if not paragraph.text.endswith((" ", "\u00a0")):
         text = " " + text
-
-    pos = 0
-    for m in _LTR_TOKEN.finditer(text):
-        if m.start() > pos:
-            _add_run(paragraph, text[pos:m.start()], rtl=True)
-        # LRM before/after: stops the bidi algorithm from treating digits after Persian letters as
-        # Arabic numbers (which mirrors 2026-08-23 into 23-08-2026)
-        _add_run(paragraph, "\u200e" + m.group() + "\u200e", rtl=False)
-        pos = m.end()
-    if pos < len(text):
-        _add_run(paragraph, text[pos:], rtl=True)
+    _write_mixed(paragraph, text)
 
 
 def _append_value(cell, value, sep=" "):
@@ -122,30 +170,66 @@ def _append_value(cell, value, sep=" "):
     run.font.size = Pt(12)
 
 
-def _set_cell_value(cell, value):
+def _set_cell_value(cell, value, align=None):
+    """Replace a data cell's text. The template's cell paragraphs carry 'space after' and (in the
+    No. column) a left indent bigger than the cell can spare, which made two-digit numbers wrap and
+    rows grow -- so the paragraph is reset to single spacing, no indent. `align` (e.g.
+    WD_ALIGN_PARAGRAPH.CENTER) overrides the template's alignment; None keeps it."""
     if value is None:
         value = ""
     _allow_row_to_grow(cell)
     paragraph = cell.paragraphs[0] if cell.paragraphs else cell.add_paragraph()
     for run in list(paragraph.runs):
         run._r.getparent().remove(run._r)
-    run = paragraph.add_run(str(value))
+    text = str(value)
+    if _HAS_RTL.search(text):
+        # Persian (or mixed) text in a data cell: right-to-left paragraph + the same direction-safe runs
+        _make_paragraph_rtl(paragraph, keep_center=True)
+        tidy_cell_paragraph(paragraph, align=align)
+        _write_mixed(paragraph, text)
+        return
+    tidy_cell_paragraph(paragraph, align=align)
+    run = paragraph.add_run(text)
     run.font.name = "B Nazanin"
     run.font.size = Pt(12)
 
 
 def _fmt_dt(value):
-    return value.strftime("%Y-%m-%d") if value else ""
+    """Any date/datetime -> Jalali string (1405/07/18), '' when empty."""
+    return format_jalali(value, persian_digits=JALALI_PERSIAN_DIGITS)
 
 
-def _replace_attachment(target_kwargs, attachment_type, filename, buffer, user):
-    """buffer: raw bytes (PDF) or a BytesIO -- both accepted."""
-    if hasattr(buffer, "read"):
-        buffer.seek(0)
-        content = buffer.read()
-    else:
-        content = buffer
+def _fmt_num(value):
+    """A lab-entered number exactly as entered, minus trailing zeros from the
+    DecimalField's fixed 5 places (12.40000 -> 12.4). No rounding, no unit
+    conversion: the lab already typed it in the report's unit."""
+    if value is None or value == "":
+        return ""
+    s = format(Decimal(str(value)), "f")
+    if "." in s:
+        s = s.rstrip("0").rstrip(".")
+    return s
 
+
+def _check_unit(unit):
+    unit = (unit or "SAMPLE").upper()
+    if unit not in UNIT_CHOICES:
+        raise ValueError(f"unit must be one of {UNIT_CHOICES}, got {unit!r}")
+    return unit
+
+
+def _sample_size_cell_text(sample, unit):
+    """Value for the Alpha/Beta 'Sample's mass/volume' column, matching what
+    each template's own column header says (kg -> mass in kg, l -> volume in
+    litres, sample -> volume in ml)."""
+    if unit == "KG":
+        return _fmt_num(sample.sample_mass_kg)
+    if unit == "L":
+        return _fmt_num(Decimal(str(sample.sample_volume_ml)) / Decimal(1000)) if sample.sample_volume_ml is not None else ""
+    return _fmt_num(sample.sample_volume_ml)
+
+
+def _replace_attachment(target_kwargs, attachment_type, filename, content, user):
     old = AnalysisAttachment.objects.filter(attachment_type=attachment_type, **target_kwargs).first()
     if old:
         old.file.delete(save=False)
@@ -158,52 +242,41 @@ def _replace_attachment(target_kwargs, attachment_type, filename, buffer, user):
     return attachment
 
 
-def _check_unit(unit):
-    unit = (unit or "KG").upper()
-    if unit not in UNIT_CHOICES:
-        raise ValueError(f"unit must be one of {UNIT_CHOICES}, got {unit!r}")
-    return unit
-
-
 # =====================================================================
-# GAMMA -- one report per Analysis. Output is now PDF (converted from
-# whichever of the three templates matches the chosen unit), not an
-# editable .docx.
+# GAMMA -- one Word report per Analysis.
 #
-# unit="KG"/"L": specific activity, MDA and uncertainty are divided by the
-#   sample's recorded mass or volume (same figures as before this unit
-#   choice existed). A sample missing that basis prints blank for that row
-#   rather than silently falling back to a different unit within the same
-#   report.
-# unit="SAMPLE": no division at all -- the raw measured/decay-corrected
-#   activity, MDA and uncertainty in Bq, exactly as counted on that sample.
+# Unit = analysis.effective_result_unit ("KG" / "L" / "SAMPLE"): the unit the
+# lab TYPED the results in. Nothing is converted or divided by the sample's
+# mass or volume here -- the entered activity, MDA and uncertainty are printed
+# exactly as entered, on the template whose headers say that unit.
+#
+# Layout (verified against the three uploaded templates): 14 per-nuclide rows
+# (6..19) with MDA / Uncertainty / Activity / Radionuclide in columns 1-4, and
+# two cells that are vertically merged across all of them -- column 0 "Total
+# Activity" and column 5 "Code No." -- written once, into the top cell.
+# Total Activity is the sum of the Activity values printed in the column, so a
+# reader can check it by adding up the page.
 # =====================================================================
 
-def generate_gamma_report(analysis, user, unit="KG"):
+def generate_gamma_report(analysis, user):
 
-    unit = _check_unit(unit)
+    unit = _check_unit(analysis.effective_result_unit)
     sample = analysis.sample
 
-    template_path = {
-        "KG": GAMMA_TEMPLATE_PATH_KG,
-        "L": GAMMA_TEMPLATE_PATH_L,
-        "SAMPLE": GAMMA_TEMPLATE_PATH_SAMPLE,
-    }[unit]
-
-    if unit == "KG":
-        denom = float(sample.sample_mass_kg) if sample.sample_mass_kg else None
-    elif unit == "L":
-        denom = float(sample.sample_volume_ml) / 1000.0 if sample.sample_volume_ml else None
-    else:
-        denom = 1.0   # SAMPLE: raw Bq, no division
-
-    doc = Document(template_path)
-
-    assert len(doc.tables) == 3, (
-        f"Expected 3 tables in the Gamma template, found {len(doc.tables)}."
+    activities = list(
+        analysis.nuclide_activities.filter(radiation_type=RadiationType.GAMMA).select_related("radionuclide")
     )
-    assert len(doc.tables[1].rows) == 12, (
-        f"Expected 12 rows in the Gamma data table, found {len(doc.tables[1].rows)}."
+    if len(activities) > GAMMA_DATA_ROWS:
+        raise ValueError(
+            f"This analysis has {len(activities)} gamma nuclides but the Gamma form only has "
+            f"{GAMMA_DATA_ROWS} rows. Nothing was dropped silently -- remove or merge some rows."
+        )
+
+    doc = Document(os.path.join(TEMPLATE_DIR, GAMMA_TEMPLATES[unit]))
+
+    assert len(doc.tables) == 3, f"Expected 3 tables in the Gamma template, found {len(doc.tables)}."
+    assert len(doc.tables[1].rows) == GAMMA_TABLE_ROWS, (
+        f"Expected {GAMMA_TABLE_ROWS} rows in the Gamma data table, found {len(doc.tables[1].rows)}."
     )
     assert len(doc.tables[2].rows) == 4, (
         f"Expected 4 rows in the Gamma signature table, found {len(doc.tables[2].rows)}."
@@ -218,199 +291,163 @@ def generate_gamma_report(analysis, user, unit="KG"):
     location_bits = " - ".join(filter(None, [_fmt_dt(sample.sampling_date), sample.sampling_location]))
     _fill_after_colon(table.cell(2, 0), location_bits)
     _fill_after_colon(table.cell(2, 3), _fmt_dt(analysis.analysis_date))
-
     _fill_after_colon(table.cell(3, 3), analysis.counting_duration_seconds)
 
-    activities = list(
-        analysis.nuclide_activities.filter(radiation_type=RadiationType.GAMMA).select_related("radionuclide")
-    )
-    if len(activities) > GAMMA_MAX_ROWS:
-        activities = activities[:GAMMA_MAX_ROWS]   # only 5 fit the printed table
-
-    FIRST_DATA_ROW = 6
+    total = Decimal(0)
     for i, na in enumerate(activities):
-        row = FIRST_DATA_ROW + i
-
-        if unit == "L":
-            total_specific = na.specific_activity_bq_per_l(decay_corrected=True)
-            as_measured_specific = na.specific_activity_bq_per_l(decay_corrected=False)
-        elif unit == "KG":
-            total_specific = na.specific_activity_bq_per_kg(decay_corrected=True)
-            as_measured_specific = na.specific_activity_bq_per_kg(decay_corrected=False)
-        else:
-            total_specific = na.current_activity_bq()
-            as_measured_specific = float(na.activity_bq) if na.activity_bq is not None else None
-
-        mdc_specific = (float(na.mda_bq) / denom) if (na.mda_bq and denom) else None
-        unc_specific = (float(na.uncertainty_bq) / denom) if (na.uncertainty_bq and denom) else None
-
-        _set_cell_value(table.cell(row, 0), f"{total_specific:.3f}" if total_specific is not None else "")
-        _set_cell_value(table.cell(row, 1), f"{mdc_specific:.3f}" if mdc_specific is not None else "")
-        _set_cell_value(table.cell(row, 2), f"{unc_specific:.3f}" if unc_specific is not None else "")
-        _set_cell_value(table.cell(row, 3), f"{as_measured_specific:.3f}" if as_measured_specific is not None else "")
+        row = GAMMA_FIRST_DATA_ROW + i
+        _set_cell_value(table.cell(row, 1), _fmt_num(na.mda_bq))
+        _set_cell_value(table.cell(row, 2), _fmt_num(na.uncertainty_bq))
+        _set_cell_value(table.cell(row, 3), _fmt_num(na.activity_bq))
         _set_cell_value(table.cell(row, 4), str(na.radionuclide))
-        _set_cell_value(table.cell(row, 5), str(i + 1))
+        total += Decimal(str(na.activity_bq))
 
-    docx_buffer = BytesIO()
-    doc.save(docx_buffer)
-    pdf_bytes = docx_bytes_to_pdf_bytes(docx_buffer.getvalue())
+    # merged cells: written once, into the top cell of the merge
+    _set_cell_value(table.cell(GAMMA_FIRST_DATA_ROW, 0), _fmt_num(total) if activities else "")
+    _set_cell_value(table.cell(GAMMA_FIRST_DATA_ROW, 5), sample.sample_code_barcode or sample.sample_id)
 
-    attachment = _replace_attachment(
-        {"analysis": analysis}, LabAttachmentType.REPORT, "gamma_report.pdf", pdf_bytes, user,
-    )
-    # Recorded BEFORE any signature page exists, so signing later knows exactly
-    # where the real content ends and a (re)appended signature page begins.
-    attachment.content_page_count = page_count(pdf_bytes)
-    attachment.save(update_fields=["content_page_count"])
-    return attachment
-
-
-# =====================================================================
-# ALPHA/BETA -- one report per CountingRun, any number of samples.
-#
-# The "first table" (applicant, sampling time/location, run id, counting
-# duration) comes from the counting run's own fields -- set once, not
-# re-derived per sample (see LAB_REPORT_UNITS.md from the previous round).
-#
-# More than ALPHA_BETA_ROWS_PER_PAGE (12) samples: the run is split into
-# chunks of 12, each rendered as its own copy of the page (full header
-# repeated on every page, so each page is independently readable), every
-# chunk converted to PDF, then all chunks merged into ONE final PDF in
-# sample order. This is what "added as attachments to the report form"
-# becomes once the output is PDF rather than a fixed-size printed form --
-# there's no 12-sample ceiling on the run any more, only on how many rows
-# fit one page of output.
-# =====================================================================
-
-def _alpha_beta_template_path(unit):
-    return {
-        "KG": ALPHA_BETA_TEMPLATE_PATH_KG,
-        "L": ALPHA_BETA_TEMPLATE_PATH_L,
-        "SAMPLE": ALPHA_BETA_TEMPLATE_PATH_SAMPLE,
-    }[unit]
-
-
-def _alpha_beta_denom(sample, unit):
-    if unit == "KG":
-        return float(sample.sample_mass_kg) if sample.sample_mass_kg else None
-    if unit == "L":
-        return float(sample.sample_volume_ml) / 1000.0 if sample.sample_volume_ml else None
-    return 1.0   # SAMPLE
-
-
-def _render_alpha_beta_page(counting_run, analyses_chunk, unit, applicant_text, sampling_text):
-    """Renders ONE page's worth (<= ALPHA_BETA_ROWS_PER_PAGE samples) of the
-    Alpha/Beta report as a .docx, returns its raw bytes. The header/MDA rows
-    are filled on every page so each one stands alone if printed separately."""
-
-    doc = Document(_alpha_beta_template_path(unit))
-
-    assert len(doc.tables) == 2, (
-        f"Expected 2 tables in the Alpha/Beta template, found {len(doc.tables)}."
-    )
-    assert len(doc.tables[1].rows) == 23, (
-        f"Expected 23 rows in the Alpha/Beta data table, found {len(doc.tables[1].rows)}."
-    )
-
-    table = doc.tables[1]
-
-    _fill_after_colon(table.cell(1, 0), counting_run.run_id)
-    _fill_after_colon(table.cell(1, 4), applicant_text)
-    _fill_after_colon(table.cell(2, 0), _fmt_dt(counting_run.run_date))
-    _fill_after_colon(table.cell(2, 4), sampling_text)
-    _fill_after_colon(table.cell(3, 0), counting_run.counting_duration_seconds)
-
-    FIRST_DATA_ROW = 6
-    for i, analysis in enumerate(analyses_chunk):
-        row = FIRST_DATA_ROW + i
-        sample = analysis.sample
-        denom = _alpha_beta_denom(sample, unit)
-
-        _set_cell_value(table.cell(row, 0), str(i + 1))
-        _set_cell_value(table.cell(row, 1), sample.sample_code_barcode or sample.sample_id)
-        _set_cell_value(table.cell(row, 3), str(sample.sample_volume_ml) if sample.sample_volume_ml is not None else "")
-
-        alpha_text = ""
-        if analysis.total_alpha is not None:
-            if denom:
-                value = float(analysis.total_alpha) / denom
-                unc = (float(analysis.alpha_uncertainty) / denom) if analysis.alpha_uncertainty else 0
-                alpha_text = f"{value:.3f} ± {unc:.3f}"
-            # denom is None only for KG/L when this sample has no recorded mass/volume --
-            # left blank rather than silently printing a different unit on this row.
-        _set_cell_value(table.cell(row, 4), alpha_text)
-
-        beta_text = ""
-        if analysis.total_beta is not None:
-            if denom:
-                value = float(analysis.total_beta) / denom
-                unc = (float(analysis.beta_uncertainty) / denom) if analysis.beta_uncertainty else 0
-                beta_text = f"{value:.3f} ± {unc:.3f}"
-        _set_cell_value(table.cell(row, 6), beta_text)
-
-    if unit == "SAMPLE":
-        _append_value(table.cell(18, 0), counting_run.alpha_mda_mbq)
-        _append_value(table.cell(18, 4), counting_run.beta_mda_mbq)
-    else:
-        # alpha/beta_mda_mbq are counter-level mBq figures (see the model's own
-        # comment) -- not sample-normalized, so they're only meaningful as-is
-        # on the SAMPLE-unit report. Printed blank on KG/L pages rather than a
-        # number whose unit wouldn't match the rest of that page.
-        pass
+    fix_footer_page_count(doc, total_pages=1)
 
     buffer = BytesIO()
     doc.save(buffer)
-    return buffer.getvalue()
-
-
-def generate_alpha_beta_report(counting_run, user, unit="KG"):
-
-    unit = _check_unit(unit)
-
-    analyses = list(
-        counting_run.analyses.select_related("sample").order_by("id")
+    return _replace_attachment(
+        {"analysis": analysis}, LabAttachmentType.REPORT, "gamma_report.docx", buffer.getvalue(), user,
     )
+
+
+# =====================================================================
+# ALPHA/BETA -- one Word report per CountingRun, any number of samples.
+#
+# Unit = counting_run.result_unit: the lab types the run's alpha/beta results
+# and MDAs in that unit (e.g. Bq/Kg, mBq/Kg), and they are printed as entered.
+#
+# Header block comes from the run's own fields (applicant, sampling
+# place/dates, run id, counting duration) -- the same for every sample.
+#
+# More than 12 samples: the page (header table + data table with its
+# signature rows) is repeated, with a page break between copies, inside ONE
+# Word document -- so there is still a single file to download, edit and sign.
+# Each page carries its own header, MDA row and signature block; the signer
+# stamps all of them.
+# =====================================================================
+
+def _append_template_pages(doc, extra_pages):
+    """Appends `extra_pages` more copies of the template's body content (every
+    element except the final section properties).
+
+    Each copy ends with a 'next page' SECTION break (carried by that copy's last, empty
+    paragraph) rather than a separate page-break paragraph: when a page is completely full
+    a break paragraph is pushed to the next page and leaves a blank page behind it. A
+    section break can't do that, and it keeps the same footer on every page."""
+    body = doc.element.body
+    sect_pr = body.find(qn("w:sectPr"))
+    originals = [copy.deepcopy(el) for el in body if el.tag != qn("w:sectPr")]
+
+    def end_section_after(paragraph_el):
+        s = copy.deepcopy(sect_pr)
+        for old in s.findall(qn("w:type")):
+            s.remove(old)
+        section_type = OxmlElement("w:type")
+        section_type.set(qn("w:val"), "nextPage")
+        s.find(qn("w:pgSz")).addprevious(section_type)
+        paragraph_el.get_or_add_pPr().append(s)
+
+    last_p = [el for el in body if el.tag == qn("w:p")][-1]
+    for _ in range(extra_pages):
+        end_section_after(last_p)
+        page = [copy.deepcopy(el) for el in originals]
+        for el in page:
+            sect_pr.addprevious(el)
+        last_p = [el for el in page if el.tag == qn("w:p")][-1]
+
+
+def _date_range_text(first, last):
+    first, last = as_date(first), as_date(last)
+    if first and last and last != first:
+        return f"{_fmt_dt(first)} \u062a\u0627 {_fmt_dt(last)}"      # "<from> \u062a\u0627 <to>"
+    return _fmt_dt(first or last)
+
+
+def generate_alpha_beta_report(counting_run, user):
+
+    unit = _check_unit(counting_run.result_unit)
+
+    analyses = list(counting_run.analyses.select_related("sample").order_by("id"))
     if not analyses:
-        raise ValueError("This counting run has no analyses attached — nothing to report.")
+        raise ValueError("This counting run has no analyses attached \u2014 nothing to report.")
 
     if counting_run.applicant_name:
         applicant_text = counting_run.applicant_name
     else:
         applicant_names = sorted({a.sample.applicant_name for a in analyses if a.sample.applicant_name})
-        applicant_text = "، ".join(applicant_names)
+        applicant_text = "\u060c ".join(applicant_names)
 
     if counting_run.sampling_location or counting_run.sampling_date_from:
         parts = []
         if counting_run.sampling_date_from:
-            if counting_run.sampling_date_to and counting_run.sampling_date_to != counting_run.sampling_date_from:
-                parts.append(f"{_fmt_dt(counting_run.sampling_date_from)} تا {_fmt_dt(counting_run.sampling_date_to)}")
-            else:
-                parts.append(_fmt_dt(counting_run.sampling_date_from))
+            parts.append(_date_range_text(counting_run.sampling_date_from, counting_run.sampling_date_to))
         if counting_run.sampling_location:
             parts.append(counting_run.sampling_location)
         sampling_text = " - ".join(parts)
     else:
-        dates = sorted({a.sample.sampling_date.date() for a in analyses if a.sample.sampling_date})
+        dates = sorted({as_date(a.sample.sampling_date) for a in analyses if a.sample.sampling_date})
         places = sorted({a.sample.sampling_location for a in analyses if a.sample.sampling_location})
         parts = []
         if dates:
-            parts.append(_fmt_dt(dates[0]) if len(dates) == 1 else f"{_fmt_dt(dates[0])} تا {_fmt_dt(dates[-1])}")
+            parts.append(_date_range_text(dates[0], dates[-1]))
         if places:
-            parts.append("، ".join(places))
+            parts.append("\u060c ".join(places))
         sampling_text = " - ".join(parts)
 
-    chunks = [analyses[i:i + ALPHA_BETA_ROWS_PER_PAGE] for i in range(0, len(analyses), ALPHA_BETA_ROWS_PER_PAGE)]
+    pages = math.ceil(len(analyses) / ALPHA_BETA_ROWS_PER_PAGE)
+    doc = Document(os.path.join(TEMPLATE_DIR, ALPHA_BETA_TEMPLATES[unit]))
+    if pages > 1:
+        _append_template_pages(doc, pages - 1)
 
-    pdf_chunks = []
-    for chunk in chunks:
-        docx_bytes = _render_alpha_beta_page(counting_run, chunk, unit, applicant_text, sampling_text)
-        pdf_chunks.append(docx_bytes_to_pdf_bytes(docx_bytes))
-
-    final_pdf = pdf_chunks[0] if len(pdf_chunks) == 1 else merge_pdfs(pdf_chunks)
-
-    attachment = _replace_attachment(
-        {"counting_run": counting_run}, LabAttachmentType.REPORT, "alpha_beta_report.pdf", final_pdf, user,
+    page_tables = [t for t in doc.tables if len(t.rows) == ALPHA_BETA_TABLE_ROWS]
+    assert len(page_tables) == pages, (
+        f"Expected {pages} Alpha/Beta data table(s) after building the pages, found {len(page_tables)}. "
+        f"Check the template still has exactly one {ALPHA_BETA_TABLE_ROWS}-row table."
     )
-    attachment.content_page_count = page_count(final_pdf)
-    attachment.save(update_fields=["content_page_count"])
-    return attachment
+
+    center = WD_ALIGN_PARAGRAPH.CENTER
+
+    for page_index, table in enumerate(page_tables):
+        chunk = analyses[page_index * ALPHA_BETA_ROWS_PER_PAGE:(page_index + 1) * ALPHA_BETA_ROWS_PER_PAGE]
+
+        _fill_after_colon(table.cell(1, 0), counting_run.run_id)
+        _fill_after_colon(table.cell(1, 4), applicant_text)
+        _fill_after_colon(table.cell(2, 0), _fmt_dt(counting_run.run_date))
+        _fill_after_colon(table.cell(2, 4), sampling_text)
+        _fill_after_colon(table.cell(3, 0), counting_run.counting_duration_seconds)
+
+        for i, analysis in enumerate(chunk):
+            row = ALPHA_BETA_FIRST_DATA_ROW + i
+            sample = analysis.sample
+
+            _set_cell_value(table.cell(row, 0), str(page_index * ALPHA_BETA_ROWS_PER_PAGE + i + 1), align=center)
+            _set_cell_value(table.cell(row, 1), sample.sample_code_barcode or sample.sample_id, align=center)
+            _set_cell_value(table.cell(row, 3), _sample_size_cell_text(sample, unit), align=center)
+
+            alpha_text = ""
+            if analysis.total_alpha is not None:
+                alpha_text = f"{_fmt_num(analysis.total_alpha)} \u00b1 {_fmt_num(analysis.alpha_uncertainty) or '0'}"
+            _set_cell_value(table.cell(row, 4), alpha_text, align=center)
+
+            beta_text = ""
+            if analysis.total_beta is not None:
+                beta_text = f"{_fmt_num(analysis.total_beta)} \u00b1 {_fmt_num(analysis.beta_uncertainty) or '0'}"
+            _set_cell_value(table.cell(row, 6), beta_text, align=center)
+
+        # MDA labels in the templates carry their own unit (mBq/Kg, mBq/l, ...);
+        # the value is printed as entered, in that unit.
+        _append_value(table.cell(18, 0), _fmt_num(counting_run.alpha_mda_mbq))
+        _append_value(table.cell(18, 4), _fmt_num(counting_run.beta_mda_mbq))
+
+    fix_footer_page_count(doc, total_pages=pages)
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    return _replace_attachment(
+        {"counting_run": counting_run}, LabAttachmentType.REPORT, "alpha_beta_report.docx", buffer.getvalue(), user,
+    )

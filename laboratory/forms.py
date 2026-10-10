@@ -99,7 +99,7 @@ class AnalysisForm(forms.ModelForm):
         fields = [
             "analysis_date", "counting_duration_seconds",
             "total_alpha", "alpha_uncertainty", "total_beta", "beta_uncertainty",
-            "counting_run", "analysis_notes",
+            "counting_run", "analysis_notes","result_unit"
         ]
         widgets = {
             "analysis_date": forms.DateInput(
@@ -124,6 +124,7 @@ class AnalysisForm(forms.ModelForm):
             del self.fields["counting_duration_seconds"]  # comes from the counting run
             # only runs that haven't been finalized (no signature chain yet)
             open_runs = Q(approvals__isnull=True)
+            if self.instance.counting_run_id: del self.fields["result_unit"]
             if self.instance.counting_run_id:
                 open_runs |= Q(pk=self.instance.counting_run_id)
             field = self.fields["counting_run"]
@@ -171,7 +172,7 @@ class AlphaBetaCountingRunForm(forms.ModelForm):
 
     class Meta:
         model = AlphaBetaCountingRun
-        fields = ["run_id", "run_date", "applicant_name", "sampling_location", "sampling_date_from", "sampling_date_to","counting_duration_seconds", "alpha_mda_mbq", "beta_mda_mbq", "notes"]
+        fields = ["run_id", "run_date", "applicant_name", "sampling_location", "sampling_date_from", "sampling_date_to","counting_duration_seconds", "alpha_mda_mbq", "beta_mda_mbq", "notes","result_unit"]
         widgets = {
             "sampling_date_from": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
             "sampling_date_to": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),

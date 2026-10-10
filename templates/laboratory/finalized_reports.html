@@ -40,8 +40,11 @@
     <td>{{ r.finalized_on|default:"-" }}</td>
     <td>{% for s in r.approvals %}<div class="small">{{ s.get_role_display }}: {{ s.user|default:"-" }}</div>{% endfor %}</td>
     <td>
+        {% for att in r.attachments %}{% if att.attachment_type == "FINAL_REPORT" %}
+            <a href="{{ att.file.url }}" class="btn btn-sm btn-success">⬇ PDF</a>
+        {% endif %}{% endfor %}
         {% for att in r.attachments %}{% if att.attachment_type == "REPORT" %}
-            <a href="{{ att.file.url }}" class="btn btn-sm btn-outline-secondary">⬇ .docx</a>
+            <a href="{{ att.file.url }}" class="btn btn-sm btn-outline-secondary">⬇ {% trans "signed .docx" %}</a>
         {% endif %}{% endfor %}
     </td>
 </tr>

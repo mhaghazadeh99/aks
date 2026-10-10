@@ -10,6 +10,10 @@ from waste.models import WasteBatch
 
 LN2 = math.log(2)
 
+class ResultUnit(models.TextChoices):
+    KG = "KG", _("Bq/kg")
+    L = "L", _("Bq/L")
+    SAMPLE = "SAMPLE", _("Bq per sample (whole-sample total)")
 
 class SampleStage(models.TextChoices):
     RECEIPT = "RECEIPT", _("Receipt")
@@ -167,17 +171,20 @@ class AlphaBetaCountingRun(models.Model):
         _("Sampling Date (To)"), null=True, blank=True,
         help_text=_("Leave blank if sampling happened on a single date."),
     )
-
+    result_unit = models.CharField(
+        _("Result Unit"), max_length=10, choices=ResultUnit.choices, default=ResultUnit.SAMPLE,
+        help_text=_("Unit the alpha/beta results and MDAs of this run are entered in."),
+    )
     # NOTE: the printed form's MDA fields are explicitly labeled "(mBq)"
     # — different unit than the Gamma form's Bq/Kg figures. Whatever
     # value is entered here is written into the report AS-IS; make sure
     # it's genuinely in mBq when entering it, this app does no unit
     # conversion for these two fields.
     alpha_mda_mbq = models.DecimalField(
-        _("MDA Alpha (mBq)"), max_digits=20, decimal_places=5, null=True, blank=True,
+        _("MDA Alpha in the same unit as the report (mBq/Kg, mBq/l or mBq)"), max_digits=20, decimal_places=5, null=True, blank=True,
     )
     beta_mda_mbq = models.DecimalField(
-        _("MDA Beta (mBq)"), max_digits=20, decimal_places=5, null=True, blank=True,
+        _("MDA Beta in the same unit as the report (mBq/Kg, mBq/l or mBq)"), max_digits=20, decimal_places=5, null=True, blank=True,
     )
     alpha_calibration_nuclide = models.ForeignKey(
         "reference.Nuclides", verbose_name=_("Alpha Calibration Nuclide"), on_delete=models.SET_NULL,
@@ -271,6 +278,19 @@ class Analysis(models.Model):
     review_date = models.DateField(_("Review Date"), blank=True, null=True)
     analysis_notes = models.TextField(_("Analysis Notes"), blank=True, null=True)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    result_unit = models.CharField(
+        _("Result Unit"), max_length=10, choices=ResultUnit.choices, default=ResultUnit.SAMPLE,
+        help_text=_("The unit the values you enter (activity, MDA, uncertainty, total alpha/beta) are "
+                    "already in. The app never converts them; the report uses the matching form."),
+    )
+
+    @property
+    def effective_result_unit(self):
+        """Alpha/Beta analyses inside a counting run use the RUN's unit (one counting session,
+        one report, one unit); everything else uses its own."""
+        if self.counting_run_id:
+            return self.counting_run.result_unit
+        return self.result_unit
 
     class Meta:
         ordering = ["-analysis_date", "-created_at"]
@@ -302,10 +322,10 @@ class NuclideActivity(models.Model):
     radiation_type = models.CharField(
         _("Radiation Type"), max_length=10, choices=RadiationType.choices, default=RadiationType.GAMMA
     )
-    activity_bq = models.DecimalField(_("Activity (Bq)"), max_digits=20, decimal_places=5)
-    uncertainty_bq = models.DecimalField(_("Uncertainty (Bq)"), max_digits=20, decimal_places=5, blank=True, null=True)
+    activity_bq = models.DecimalField(_("Activity (in the analysis's unit)"), max_digits=20, decimal_places=5)
+    uncertainty_bq = models.DecimalField(_("Uncertainty (in the analysis's unit)"), max_digits=20, decimal_places=5, blank=True, null=True)
     mda_bq = models.DecimalField(
-        _("MDA (Bq)"), max_digits=20, decimal_places=5, blank=True, null=True,
+        _("MDA (in the analysis's unit)"), max_digits=20, decimal_places=5, blank=True, null=True,
         help_text=_("Minimum detectable activity."),
     )
 
@@ -356,6 +376,7 @@ class NuclideActivity(models.Model):
 class LabAttachmentType(models.TextChoices):
     REPORT = "REPORT", _("Generated Report")
     SPECTRUM = "SPECTRUM", _("Spectrum")
+    FINAL_REPORT = "FINAL_REPORT", _("Final Report (PDF)")
     OTHER = "OTHER", _("Other")
 
 

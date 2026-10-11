@@ -1,5 +1,5 @@
 from functools import cached_property
-
+from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -615,21 +615,53 @@ class ConditioningIngredient(models.Model):
     def __str__(self):
         return self.material_other or self.get_material_display()
 
+    
     @property
     def resolved_mass_kg(self):
-        if self.mass_kg is not None:
-            return self.mass_kg
-        if self.volume_l is not None and self.density_kg_per_l:
-            return self.volume_l * self.density_kg_per_l
-        return None
+        if self.mass_kg not in (None, ""):
+            try:
+                return Decimal(str(self.mass_kg))
+            except (InvalidOperation, TypeError, ValueError):
+                return Decimal("0")
 
+        if (
+            self.volume_l not in (None, "")
+            and self.density_kg_per_l not in (None, "")
+        ):
+            try:
+                volume = Decimal(str(self.volume_l))
+                density = Decimal(str(self.density_kg_per_l))
+                return volume * density
+            except (InvalidOperation, TypeError, ValueError):
+                return Decimal("0")
+
+        return Decimal("0")
+
+    
     @property
     def resolved_volume_l(self):
-        if self.volume_l is not None:
-            return self.volume_l
-        if self.mass_kg is not None and self.density_kg_per_l:
-            return self.mass_kg / self.density_kg_per_l
-        return None
+        if self.volume_l not in (None, ""):
+            try:
+                return Decimal(str(self.volume_l))
+            except (InvalidOperation, TypeError, ValueError):
+                return Decimal("0")
+
+        if (
+            self.mass_kg not in (None, "")
+            and self.density_kg_per_l not in (None, "")
+        ):
+            try:
+                mass = Decimal(str(self.mass_kg))
+                density = Decimal(str(self.density_kg_per_l))
+
+                if density > 0:
+                    return mass / density
+
+            except (InvalidOperation, TypeError, ValueError):
+                return Decimal("0")
+
+        return Decimal("0")
+
 
 
 

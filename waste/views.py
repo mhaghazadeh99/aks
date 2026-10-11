@@ -553,27 +553,67 @@ def waste_release(request, pk):
     })
 
 
+"""
+waste/views.py -- replace the existing release_annual_report with this.
+
+Extra imports it needs (the rest are already in views.py):
+    from .services.release import (
+        display_totals, fmt_sci, release_totals, released_by_line, year_released_bq,
+    )
+    from .models import ReleaseRecord          # alongside ReleaseLimit, ReleaseRoute
+"""
+
+
 def release_annual_report(request):
 
-    year = int(request.GET.get("year") or timezone.now().year)
-    route = request.GET.get("route", "")
+    current_year = timezone.now().year
+    try:
+        year = int(request.GET.get("year") or current_year)
+    except ValueError:
+        year = current_year
 
-    limits = ReleaseLimit.objects.filter(effective_from__year__lte=year).select_related("radionuclide", "facility")
+    route = request.GET.get("route", "")
+    if route not in {value for value, _label in ReleaseRoute.choices}:
+        route = ""
+
+    # ---- limits that apply to this year (a limit that ended before it isn't shown) ----
+    limits = (
+        ReleaseLimit.objects
+        .filter(effective_from__year__lte=year)
+        .filter(Q(effective_to__isnull=True) | Q(effective_to__year__gte=year))
+        .select_related("radionuclide", "facility")
+    )
     if route:
         limits = limits.filter(route=route)
 
     rows = []
     for limit in limits:
-        released = year_released_bq(limit.category, limit.route, limit.facility, radionuclide=limit.radionuclide, year=year)
+        released = year_released_bq(
+            limit.category, limit.route, limit.facility, radionuclide=limit.radionuclide, year=year,
+        )
         percent = (released / float(limit.annual_limit_bq) * 100) if limit.annual_limit_bq else None
         rows.append({"limit": limit, "released_bq": released, "percent": percent})
 
-    current_year = timezone.now().year
-    year_choices = list(range(current_year - 5, current_year + 1))
+    # ---- totals: the selected year, and every year ----
+    this_year = display_totals(release_totals(year, route))
+    all_years = display_totals(release_totals(None, route))
+
+    # ---- everything released, by nuclide / category ----
+    route_labels = dict(ReleaseRoute.choices)
+    by_line = released_by_line(year, route)
+    for r in by_line:
+        r["route_label"] = route_labels.get(r["route"], r["route"])
+        r["year_text"] = fmt_sci(r["year_bq"])
+        r["all_text"] = fmt_sci(r["all_bq"])
+
+    # year dropdown: every year that has a release, plus this year and the one selected
+    years = {d.year for d in ReleaseRecord.objects.dates("release_date", "year")} | {current_year, year}
 
     return render(request, "waste/release_annual_report.html", {
-        "rows": rows, "year": year, "route": route,
-        "routes": ReleaseRoute.choices, "year_choices": year_choices,
+        "year": year, "route": route,
+        "routes": ReleaseRoute.choices, "year_choices": sorted(years, reverse=True),
+        "this_year": this_year, "all_years": all_years,
+        "rows": rows, "by_line": by_line,
     })
 
 

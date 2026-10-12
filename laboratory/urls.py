@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import csv_views
 
 urlpatterns = [
     path("", views.lab_home, name="lab_home"),
@@ -33,4 +34,7 @@ urlpatterns = [
     path("reports/finalized/", views.finalized_reports, name="finalized_reports"),
     path("counting-runs/<int:pk>/edit/", views.counting_run_edit, name="counting_run_edit"),
     path("reports/<str:kind>/<int:pk>/final-pdf/", views.lab_report_final_pdf, name="lab_report_final_pdf"), 
+    path("csv/import/", csv_views.lab_csv_import, name="lab_csv_import"),
+    path("csv/export/<str:dataset>/", csv_views.lab_csv_export, name="lab_csv_export"),
+    path("csv/template/<str:dataset>/", csv_views.lab_csv_template, name="lab_csv_template"),
 ]

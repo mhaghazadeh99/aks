@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-4" style="max-width: 980px;">
+  <h3 class="mb-3">Import / export lab records (CSV)</h3>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Export and templates</h5>
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Records</th><th>Export</th><th>Empty template</th></tr></thead>
+        <tbody>
+        {% for key, spec in datasets.items %}
+          <tr>
+            <td>{{ spec.label }}</td>
+            <td><a class="btn btn-sm btn-outline-primary" href="{% url 'lab_csv_export' key %}">Download all</a></td>
+            <td><a class="btn btn-sm btn-outline-secondary" href="{% url 'lab_csv_template' key %}">Template with an example row</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <p class="text-muted small mt-2 mb-0">
+        An export can be edited in Excel and imported back. Dates are exported as Jalali
+        (1405/07/18) with a Gregorian column next to them; either calendar is accepted on import.
+      </p>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Import</h5>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+          <div class="mb-3">
+            {% if field.field.widget.input_type == "checkbox" %}
+              <div class="form-check">{{ field }} <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>
+            {% else %}
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            {% endif %}
+            {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+        {% endfor %}
+        <button class="btn btn-primary" type="submit">Run</button>
+      </form>
+      <hr>
+      <ul class="small text-muted mb-0">
+        <li>Run it with <b>Check only</b> ticked first. It does exactly what the real import would, then undoes it, and lists every problem by line and column.</li>
+        <li>Import samples before their results. Results files refer to samples by <code>sample_id</code>.</li>
+        <li>Numbers are saved exactly as typed (no unit conversion, no rounding). Use <code>.</code> as the decimal point.</li>
+        <li>A blank cell means "not given": it stays empty on a new record and keeps the stored value on an update.</li>
+        <li>An analysis that is already in the signature chain is never changed by an import.</li>
+        <li>Gamma file: one row per nuclide; a sample can have up to 14. Nuclide rows that aren't in the file are left as they are.</li>
+      </ul>
+    </div>
+  </div>
+
+  {% if file_warnings %}
+    <div class="alert alert-warning">
+      {% for line, column, message in file_warnings %}<div>Column <b>{{ column }}</b>: {{ message }}</div>{% endfor %}
+    </div>
+  {% endif %}
+
+  {% if result %}
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">
+        Result
+        {% if result.committed %}<span class="badge bg-success">saved</span>
+        {% else %}<span class="badge bg-secondary">nothing saved</span>{% endif %}
+      </h5>
+      <p class="mb-2">
+        {{ result.created }} created, {{ result.updated }} updated, {{ result.skipped }} skipped,
+        {{ result.error_rows }} line{{ result.error_rows|pluralize }} with errors.
+        {% for n in result.notes %}{{ n }}.{% endfor %}
+        {% if not result.committed %}<span class="text-muted">(Counts show what would happen.)</span>{% endif %}
+      </p>
+
+      {% if errors %}
+      <h6 class="text-danger">Errors</h6>
+      <table class="table table-sm table-bordered">
+        <thead><tr><th style="width:80px">Line</th><th style="width:220px">Column</th><th>Problem</th></tr></thead>
+        <tbody>{% for line, column, message in errors %}<tr><td>{{ line }}</td><td>{{ column }}</td><td>{{ message }}</td></tr>{% endfor %}</tbody>
+      </table>
+      {% if more_errors %}<p class="text-muted small">…and {{ more_errors }} more.</p>{% endif %}
+      {% endif %}
+
+      {% if warnings %}
+      <h6 class="text-warning">Warnings</h6>
+      <table class="table table-sm table-bordered">
+        <thead><tr><th style="width:80px">Line</th><th style="width:220px">Column</th><th>Note</th></tr></thead>
+        <tbody>{% for line, column, message in warnings %}<tr><td>{{ line }}</td><td>{{ column }}</td><td>{{ message }}</td></tr>{% endfor %}</tbody>
+      </table>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

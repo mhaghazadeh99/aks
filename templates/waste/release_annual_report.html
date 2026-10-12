@@ -6,17 +6,15 @@
 {% block content %}
 <div class="content">
 
-
-
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">{% trans "Annual Release Report" %}</h3>
+    <h3 class="mb-0">{% trans "Annual Release Report" %} — {{ year }}</h3>
     <div class="d-flex gap-2">
+        <a href="{% url 'release_limit_list' %}" class="btn btn-outline-secondary btn-sm">{% trans "Release Limits" %}</a>
         <a href="{% url 'waste_home' %}" class="btn btn-outline-secondary btn-sm">{% trans "Waste Home" %}</a>
-        <a href="{% url  'release_limit_list' %}" class="btn btn-primary btn-sm">+ {% trans "Release Limits" %}</a>
     </div>
 </div>
 
-<form method="get" class="d-flex gap-2 mb-3">
+<form method="get" class="d-flex gap-2 mb-4">
     <select name="year" class="form-select" style="max-width:140px" onchange="this.form.submit()">
         {% for y in year_choices %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}
     </select>
@@ -26,7 +24,51 @@
     </select>
 </form>
 
-<div class="table-scroll">
+{# ================= 1. TOTALS ================= #}
+<h5 class="mb-2">{% trans "Totals released" %}</h5>
+<div class="table-scroll mb-2">
+<table class="table table-bordered align-middle" style="max-width:760px">
+<thead class="table-light">
+<tr><th>{% trans "Metric" %}</th><th>{{ year }}</th><th>{% trans "All years" %}</th></tr>
+</thead>
+<tbody>
+<tr><td>{% trans "Releases recorded" %}</td><td>{{ this_year.releases }}</td><td>{{ all_years.releases }}</td></tr>
+<tr><td>{% trans "Batches released" %}</td><td>{{ this_year.batches }}</td><td>{{ all_years.batches }}</td></tr>
+<tr><td>{% trans "Volume released (m³)" %}</td><td>{{ this_year.volume }}</td><td>{{ all_years.volume }}</td></tr>
+<tr><td>{% trans "Mass released (kg)" %}</td><td>{{ this_year.mass }}</td><td>{{ all_years.mass }}</td></tr>
+<tr>
+    <td>{% trans "Gamma — identified nuclides" %}</td>
+    <td>{{ this_year.gamma.gbq }} GBq<div class="small text-muted">{{ this_year.gamma.bq }} Bq</div></td>
+    <td>{{ all_years.gamma.gbq }} GBq<div class="small text-muted">{{ all_years.gamma.bq }} Bq</div></td>
+</tr>
+<tr>
+    <td>{% trans "Beta — unidentified" %}</td>
+    <td>{{ this_year.beta.gbq }} GBq<div class="small text-muted">{{ this_year.beta.bq }} Bq</div></td>
+    <td>{{ all_years.beta.gbq }} GBq<div class="small text-muted">{{ all_years.beta.bq }} Bq</div></td>
+</tr>
+<tr>
+    <td>{% trans "Alpha — unidentified" %}</td>
+    <td>{{ this_year.alpha.gbq }} GBq<div class="small text-muted">{{ this_year.alpha.bq }} Bq</div></td>
+    <td>{{ all_years.alpha.gbq }} GBq<div class="small text-muted">{{ all_years.alpha.bq }} Bq</div></td>
+</tr>
+<tr class="table-light fw-bold">
+    <td>{% trans "Total activity" %}</td>
+    <td>{{ this_year.total.gbq }} GBq<div class="small text-muted fw-normal">{{ this_year.total.bq }} Bq</div></td>
+    <td>{{ all_years.total.gbq }} GBq<div class="small text-muted fw-normal">{{ all_years.total.bq }} Bq</div></td>
+</tr>
+<tr class="{% if this_year.over_limit_releases or all_years.over_limit_releases %}table-danger{% endif %}">
+    <td>{% trans "Releases flagged over a limit" %}</td><td>{{ this_year.over_limit_releases }}</td><td>{{ all_years.over_limit_releases }}</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="text-muted small mb-4" style="max-width:760px">
+    {% trans "Gamma is the activity of nuclides identified by gamma spectrometry (each counted once, including any beta/alpha they also emit). Beta and alpha are the unidentified remainder of the gross counting after those nuclides are subtracted. Total is their sum — the same figure each batch page shows. Volume and mass are the batch's recorded size when it was released; a batch with none recorded adds nothing to those two rows. The route filter applies to every number on this page." %}
+</p>
+
+{# ================= 2. LIMITS ================= #}
+<h5 class="mb-2">{% trans "Released vs. annual limits" %}</h5>
+<div class="table-scroll mb-4">
 <table class="table table-bordered table-striped align-middle">
 <thead class="table-light">
 <tr>
@@ -45,7 +87,38 @@
     <td>{% if row.percent is not None %}{{ row.percent|floatformat:1 }}%{% else %}-{% endif %}</td>
 </tr>
 {% empty %}
-<tr><td colspan="6" class="text-center text-muted">{% trans "No release limits defined yet." %}</td></tr>
+<tr><td colspan="6" class="text-center text-muted">{% trans "No release limits apply to this year." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{# ================= 3. EVERYTHING RELEASED ================= #}
+<h5 class="mb-2">{% trans "Everything released, by nuclide" %}</h5>
+<div class="table-scroll">
+<table class="table table-bordered table-striped align-middle">
+<thead class="table-light">
+<tr>
+    <th>{% trans "Nuclide / category" %}</th><th>{% trans "Route" %}</th>
+    <th>{{ year }} (Bq)</th><th>{% trans "Share of year" %}</th><th>{% trans "All years (Bq)" %}</th><th>{% trans "Limit" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for r in by_line %}
+<tr>
+    <td>
+        {% if r.radionuclide %}{{ r.radionuclide }}
+        {% elif r.category == "GROSS_BETA" %}{% trans "Unidentified beta" %}
+        {% else %}{% trans "Unidentified alpha" %}{% endif %}
+    </td>
+    <td>{{ r.route_label }}</td>
+    <td>{{ r.year_text }}</td>
+    <td>{% if r.share is not None %}{{ r.share|floatformat:1 }}%{% else %}-{% endif %}</td>
+    <td>{{ r.all_text }}</td>
+    <td>{% if r.has_limit %}<span class="badge bg-success">{% trans "set" %}</span>{% else %}<span class="badge bg-warning text-dark">{% trans "no limit set" %}</span>{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center text-muted">{% trans "Nothing released yet." %}</td></tr>
 {% endfor %}
 </tbody>
 </table>

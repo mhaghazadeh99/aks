@@ -51,11 +51,18 @@ def _applicable_limit(category, route, facility, radionuclide=None, on_date=None
 
 
 def year_released_bq(category, route, facility, radionuclide=None, year=None):
+    """Activity released in `year` for one nuclide / gross category on one route.
+
+    `facility` is the SCOPE of the limit being checked: a facility-specific limit counts only
+    that facility's releases; `None` (a site-wide limit) counts every facility's. (Before this
+    was fixed, None became "facility IS NULL", which matches nothing, so every site-wide
+    limit showed 0 released.)"""
     year = year or timezone.now().year
     qs = ReleaseActivityLine.objects.filter(
-        category=category, release__route=route, release__batch__facility=facility,
-        release__release_date__year=year,
+        category=category, release__route=route, release__release_date__year=year,
     )
+    if facility is not None:
+        qs = qs.filter(release__batch__facility=facility)
     if category == ReleaseLimitCategory.NUCLIDE:
         qs = qs.filter(radionuclide=radionuclide)
     return float(qs.aggregate(total=Sum("activity_bq"))["total"] or 0)
@@ -94,7 +101,9 @@ def _check_lines(lines, route, facility, release_date):
     checks = []
     for ln in lines:
         limit = _applicable_limit(ln["category"], route, facility, radionuclide=ln["radionuclide"], on_date=release_date)
-        prior = year_released_bq(ln["category"], route, facility, radionuclide=ln["radionuclide"], year=release_date.year)
+        # count releases over the same scope the limit applies to (site-wide limit -> all facilities)
+        scope = limit.facility if limit else facility
+        prior = year_released_bq(ln["category"], route, scope, radionuclide=ln["radionuclide"], year=release_date.year)
         projected = prior + ln["activity_bq"]
         percent = (projected / float(limit.annual_limit_bq) * 100) if limit else None
         checks.append({
@@ -141,10 +150,7 @@ def register_release(batch, route, performed_by, remarks="", release_date=None):
         ReleaseActivityLine(release=record, category=ln["category"], radionuclide=ln["radionuclide"], activity_bq=ln["activity_bq"])
         for ln in lines
     ])
-    # The entire waste batch has now been discharged/released.
-    batch.status = BatchStatus.CONSUMED
-    batch.status_date = release_date
-    batch.save(update_fields=["status", "status_date"])
+
     # Re-check AFTER the lines are saved, so "released this year" includes this release.
     checks = _check_lines(lines, route, batch.facility, release_date)
     if any(c["over_limit"] for c in checks):
@@ -152,3 +158,120 @@ def register_release(batch, route, performed_by, remarks="", release_date=None):
         record.save(update_fields=["over_limit"])
 
     return record, breakdown, checks
+
+
+
+# =====================================================================
+# Annual release REPORT data -- totals and "everything released".
+#
+# What the three activity totals mean (the same split a batch's own page uses, so the numbers
+# agree with it):
+#   gamma = activity of nuclides identified by gamma spectrometry (NUCLIDE lines). Each is
+#           counted once, including any beta/alpha it also emits.
+#   beta  = the UNIDENTIFIED beta left after subtracting those nuclides from the gross beta
+#           count (GROSS_BETA lines);  alpha likewise (GROSS_ALPHA lines).
+#   total = gamma + beta + alpha  (the batch's total activity).
+# Volume and mass are the batch's recorded size at the moment of release (stored on the release's
+# movement), so batches with no recorded volume/mass simply add nothing to those two rows.
+# =====================================================================
+
+def _scoped(year, route):
+    records = ReleaseRecord.objects.all()
+    lines = ReleaseActivityLine.objects.all()
+    if year:
+        records = records.filter(release_date__year=year)
+        lines = lines.filter(release__release_date__year=year)
+    if route:
+        records = records.filter(route=route)
+        lines = lines.filter(release__route=route)
+    return records, lines
+
+
+def release_totals(year=None, route=""):
+    """Totals over every release (optionally one year and/or one route). Floats; None where unknown."""
+    records, lines = _scoped(year, route)
+
+    moved = records.aggregate(volume_m3=Sum("movement__volume_m3"), mass_kg=Sum("movement__mass_kg"))
+    by_category = {
+        row["category"]: float(row["total"] or 0)
+        for row in lines.values("category").annotate(total=Sum("activity_bq"))
+    }
+    gamma = by_category.get(ReleaseLimitCategory.NUCLIDE, 0.0)
+    beta = by_category.get(ReleaseLimitCategory.GROSS_BETA, 0.0)
+    alpha = by_category.get(ReleaseLimitCategory.GROSS_ALPHA, 0.0)
+
+    return {
+        "releases": records.count(),
+        "batches": records.values("batch").distinct().count(),
+        "over_limit_releases": records.filter(over_limit=True).count(),
+        "volume_m3": float(moved["volume_m3"]) if moved["volume_m3"] is not None else None,
+        "mass_kg": float(moved["mass_kg"]) if moved["mass_kg"] is not None else None,
+        "gamma_bq": gamma, "beta_bq": beta, "alpha_bq": alpha,
+        "total_bq": gamma + beta + alpha,
+    }
+
+
+def released_by_line(year, route=""):
+    """Everything released, one row per nuclide / gross category / route, with the selected
+    year's total, the all-years total, its share of that year's activity, and whether any limit
+    is defined for it. Sorted: identified nuclides first, biggest first."""
+    _, year_lines = _scoped(year, route)
+    _, all_lines = _scoped(None, route)
+
+    keys = ("category", "radionuclide", "radionuclide__name", "release__route")
+    year_rows = {
+        (r["category"], r["radionuclide"], r["release__route"]): (r["radionuclide__name"], float(r["total"] or 0))
+        for r in year_lines.values(*keys).annotate(total=Sum("activity_bq"))
+    }
+    all_rows = {
+        (r["category"], r["radionuclide"], r["release__route"]): (r["radionuclide__name"], float(r["total"] or 0))
+        for r in all_lines.values(*keys).annotate(total=Sum("activity_bq"))
+    }
+
+    year_total = sum(v[1] for v in year_rows.values())
+    rows = []
+    for key in set(year_rows) | set(all_rows):
+        category, nuclide_id, rt = key
+        name = (year_rows.get(key) or all_rows.get(key))[0]
+        year_bq = year_rows.get(key, (None, 0.0))[1]
+        limit_qs = ReleaseLimit.objects.filter(category=category, route=rt, effective_from__year__lte=year).filter(
+            Q(effective_to__isnull=True) | Q(effective_to__year__gte=year)
+        )
+        if category == ReleaseLimitCategory.NUCLIDE:
+            limit_qs = limit_qs.filter(radionuclide_id=nuclide_id)
+        rows.append({
+            "category": category, "radionuclide": name, "route": rt,
+            "year_bq": year_bq, "all_bq": all_rows.get(key, (None, 0.0))[1],
+            "share": (year_bq / year_total * 100) if year_total else None,
+            "has_limit": limit_qs.exists(),
+        })
+
+    order = {ReleaseLimitCategory.NUCLIDE: 0, ReleaseLimitCategory.GROSS_BETA: 1, ReleaseLimitCategory.GROSS_ALPHA: 2}
+    rows.sort(key=lambda r: (order.get(r["category"], 9), -r["year_bq"], r["radionuclide"] or ""))
+    return rows
+
+
+# ---- display helpers (kept in Python so the template needs no custom filters) ----
+
+def fmt_sci(value, sig=4):
+    if value is None:
+        return "-"
+    if value == 0:
+        return "0"
+    return f"{value:.{sig}g}"
+
+
+def fmt_activity(bq):
+    """{'gbq': '12.5', 'bq': '1.25e+10'} -- GBq is the readable one, Bq is what the limits are in."""
+    if bq is None:
+        return {"gbq": "-", "bq": "-"}
+    return {"gbq": fmt_sci(bq / 1e9), "bq": fmt_sci(bq)}
+
+
+def display_totals(t):
+    return {
+        "releases": t["releases"], "batches": t["batches"], "over_limit_releases": t["over_limit_releases"],
+        "volume": fmt_sci(t["volume_m3"]), "mass": fmt_sci(t["mass_kg"]),
+        "gamma": fmt_activity(t["gamma_bq"]), "beta": fmt_activity(t["beta_bq"]),
+        "alpha": fmt_activity(t["alpha_bq"]), "total": fmt_activity(t["total_bq"]),
+    }

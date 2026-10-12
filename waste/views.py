@@ -25,8 +25,9 @@ from .models import (
     WasteMovementAttachment, ConditioningIngredient, ReleaseLimit, ReleaseLimitCategory, ReleaseRoute,ConditioningMaterial
 )
 from .services.batch_ops import condition_batch, merge_batches, split_batch, compute_conditioning_totals
-from .services.release import preview_release, register_release, year_released_bq
-
+from .services.release import (preview_release, register_release, year_released_bq, display_totals, release_totals,
+ year_released_bq, released_by_line,fmt_sci,ReleaseRecord)
+from .services import release
 import datetime
 
 

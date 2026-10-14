@@ -503,7 +503,7 @@ def import_samples(rows, user, on_duplicate="skip"):
 # IMPORT -- gamma results (one row per nuclide)
 # ---------------------------------------------------------------------
 
-def import_gamma(rows, user):
+def import_gamma(rows, user, allow_no_duration=False):
     from django.core.exceptions import ValidationError
     from ..models import (
         Analysis, CounterType, NuclideActivity, RadiationType, ResultUnit, Sample, SampleStatus,
@@ -550,7 +550,7 @@ def import_gamma(rows, user):
                     c.add(col, f"line {line}: differs from line {first_line} -- one analysis has one {col}")
                 level.setdefault(col, v)
 
-        if not analysis and not level.get("counting_duration_seconds"):
+        if not analysis and not level.get("counting_duration_seconds") and not allow_no_duration:
             c.add("counting_duration_seconds", "required for a new gamma analysis")
         if len(items) > GAMMA_DATA_ROWS:
             c.add("nuclide", f"{len(items)} nuclide rows, but the Gamma report form only has {GAMMA_DATA_ROWS} rows")
@@ -741,6 +741,6 @@ def import_alphabeta(rows, user):
 
 IMPORTERS = {
     "samples": lambda rows, user, opts: import_samples(rows, user, opts.get("on_duplicate", "skip")),
-    "gamma": lambda rows, user, opts: import_gamma(rows, user),
+    "gamma": lambda rows, user, opts: import_gamma(rows, user, bool(opts.get("allow_no_duration"))),
     "alphabeta": lambda rows, user, opts: import_alphabeta(rows, user),
 }

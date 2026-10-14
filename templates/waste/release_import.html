@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Import Releases" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-8">
+
+  <nav class="mb-3"><a href="{% url 'release_annual_report' %}">&larr; {% trans "Annual Release Report" %}</a></nav>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header"><h3 class="mb-0">{% trans "Import Releases" %}</h3></div>
+    <div class="card-body">
+      <p class="small text-muted mb-2">
+        {% trans "One row per activity line: a release with five nuclides is five rows sharing waste_id, release_date and route. The file exported from the report page can be edited and imported back." %}
+      </p>
+      <ul class="small text-muted">
+        <li>{% trans "All or nothing per release: if any row of a release has a problem, none of that release is imported." %}</li>
+        <li>{% trans "The batch must already exist, and a batch that already has a release record is skipped, never doubled." %}</li>
+        <li><strong>{% trans "A successful import closes the batch (status Released), exactly as releasing it in the app does." %}</strong></li>
+        <li>{% trans "Imported releases are not flagged 'over limit' — the limits table on the report still shows the real yearly picture." %}</li>
+      </ul>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% crispy form %}
+        <button type="submit" class="btn btn-primary mt-2">{% trans "Import" %}</button>
+      </form>
+    </div>
+  </div>
+
+  {% if report %}
+  <div class="card shadow-sm">
+    <div class="card-header"><h5 class="mb-0">{% trans "Import Report" %}</h5></div>
+    <div class="card-body">
+      <ul>
+        <li>{% trans "Releases created" %}: {{ report.created }}</li>
+        <li>{% trans "Releases skipped" %}: {{ report.skipped }}</li>
+      </ul>
+      {% if report.errors %}
+      <h6 class="text-danger">{% trans "Problems" %}</h6>
+      <ul class="small">{% for error in report.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div></div></div>
+{% endblock %}

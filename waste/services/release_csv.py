@@ -139,8 +139,8 @@ def parse_release_rows(rows, valid_routes, valid_categories, nuclide_category="N
             else:
                 group["lines"].append(line)
 
-    for key in bad:
-        if key in groups:
+    for key in order:                      # file order, so the report reads the same every time
+        if key in bad:
             errors.append(
                 f"Release of {key[0]} on {key[1]} ({key[2] or 'no route'}) NOT imported: "
                 f"fix rows {groups[key]['rows']} and import again."

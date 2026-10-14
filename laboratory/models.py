@@ -343,6 +343,8 @@ class NuclideActivity(models.Model):
         half_life = self.radionuclide.half_life
         if not half_life:
             return float(self.activity_bq)
+        if not half_life or not self.analysis.analysis_date:
+            return float(self.activity_bq)
         as_of = as_of or timezone.now().date()
         elapsed_seconds = (as_of - self.analysis.analysis_date).days * 86400
         if elapsed_seconds <= 0:

@@ -46,6 +46,9 @@ class CsvImportForm(forms.Form):
             ("update", _("Update them (blank cells keep the current value)")),
         ],
     )
+    allow_no_duration = forms.BooleanField(
+        label=_("Gamma file: allow analyses without a counting duration (old records)"), required=False,
+    )
     dry_run = forms.BooleanField(
         label=_("Check only -- don't save anything"), required=False, initial=True,
     )
@@ -100,7 +103,10 @@ def lab_csv_import(request):
         else:
             dry_run = form.cleaned_data["dry_run"]
             only_valid = form.cleaned_data["only_valid"]
-            options = {"on_duplicate": form.cleaned_data["on_duplicate"] or "skip"}
+            options = {
+                "on_duplicate": form.cleaned_data["on_duplicate"] or "skip",
+                "allow_no_duration": form.cleaned_data["allow_no_duration"],
+            }
 
             with transaction.atomic():
                 result = csv_io.IMPORTERS[dataset](rows, request.user, options)

@@ -8,8 +8,11 @@ from .models import (
     WasteMovement,
     WasteState,
     WasteType,
-    ConditioningMaterial,
+    ConditioningMaterial,ChemicalPollutant, WasteMovementType
 )
+# waste/forms.py additions
+from django.forms import inlineformset_factory
+
 
 def _bootstrap(fields):
     for field in fields.values():
@@ -147,6 +150,8 @@ class WasteMovementForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["movement_type"].choices = [
+            c for c in self.fields["movement_type"].choices if c[0] != WasteMovementType.RELEASE    ]
         _bootstrap(self.fields)
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -268,3 +273,32 @@ class ReleaseLimitForm(forms.ModelForm):
             cleaned["radionuclide"] = None
 
         return cleaned
+
+
+    
+
+
+class ChemicalPollutantForm(forms.ModelForm):
+
+    class Meta:
+        model = ChemicalPollutant
+        fields = ["name", "concentration", "unit", "measured_on", "notes"]
+        widgets = {
+            "measured_on": forms.DateInput(attrs={"type": "text", "class": "form-control datepicker", "autocomplete": "off"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["measured_on"].required = False
+        self.fields["notes"].required = False
+        _bootstrap(self.fields)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+
+ChemicalPollutantFormSet = inlineformset_factory(
+    WasteBatch, ChemicalPollutant, form=ChemicalPollutantForm, extra=3, can_delete=True,
+)
+
+
+

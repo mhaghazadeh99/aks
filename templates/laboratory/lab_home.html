@@ -62,11 +62,13 @@
 
     <div class="home-section">{% trans "Import & export (CSV)" %}</div>
     <div class="home-grid">
+        {% if request.user.is_staff %}
         <a class="home-card" href="{% url 'lab_csv_import' %}">
             <div class="home-icon">📥</div>
             <h3>{% trans "Import CSV" %}</h3>
             <p>{% trans "Samples and results, with a check-only mode" %}</p>
         </a>
+        {% endif %}
         <a class="home-card" href="{% url 'lab_csv_export' 'samples' %}">
             <div class="home-icon">📤</div>
             <h3>{% trans "Export samples" %}</h3>

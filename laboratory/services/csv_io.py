@@ -71,6 +71,26 @@ DATASETS = {
             "activity": "12.4", "uncertainty": "1.1", "mda": "0.8",
         },
     },
+    "waste_movements": {
+        "label": "Waste movements (history of a batch)",
+        "columns": ["waste_id", "movement_type", "from_facility", "to_facility", "movement_date", "remarks"],
+        "export_only": ["movement_date_gregorian", "performed_by"],
+        "required": ["waste_id", "movement_type", "movement_date"],
+        "example": {
+            "waste_id": "BU1001392", "movement_type": "STORE", "from_facility": "", "to_facility": "Facility name as in the app",
+            "movement_date": "1397/04/12", "remarks": "legacy history ID 123",
+        },
+    },
+    "waste_lineage": {
+        "label": "Waste lineage (merge / split / conditioning links)",
+        "columns": ["parent_waste_id", "child_waste_id", "operation", "mass_kg", "volume_m3", "performed_on", "remarks"],
+        "export_only": ["performed_by"],
+        "required": ["parent_waste_id", "child_waste_id", "operation"],
+        "example": {
+            "parent_waste_id": "BU1001392", "child_waste_id": "BU1001393", "operation": "CONDITIONING",
+            "mass_kg": "382", "volume_m3": "0.2", "performed_on": "1397/04/12", "remarks": "",
+        },
+    },
     "alphabeta": {
         "label": "Alpha/Beta results",
         "columns": [
@@ -329,6 +349,30 @@ def export_rows(dataset, request_get=None):
                 fmt_date_gregorian(a.analysis_date), "yes" if a.approved else "no",
             ]
 
+    elif dataset == "waste_movements":
+        from waste.models import WasteMovement
+        qs = (WasteMovement.objects.select_related("batch", "from_facility", "to_facility", "performed_by")
+              .order_by("batch__waste_id", "movement_date", "id"))
+        for m in qs.iterator():
+            yield [
+                csv_escape(m.batch.waste_id), m.movement_type,
+                csv_escape(m.from_facility.name if m.from_facility else ""),
+                csv_escape(m.to_facility.name if m.to_facility else ""),
+                fmt_date_jalali(m.movement_date), csv_escape(m.remarks),
+                fmt_date_gregorian(m.movement_date),
+                csv_escape(m.performed_by.get_username() if m.performed_by else ""),
+            ]
+
+    elif dataset == "waste_lineage":
+        from waste.models import WasteBatchLineage
+        qs = WasteBatchLineage.objects.select_related("parent", "child", "performed_by").order_by("parent__waste_id", "child__waste_id")
+        for k in qs.iterator():
+            yield [
+                csv_escape(k.parent.waste_id), csv_escape(k.child.waste_id), k.operation,
+                fmt_number(k.mass_kg), fmt_number(k.volume_m3), fmt_date_jalali(k.performed_at),
+                csv_escape(k.remarks), csv_escape(k.performed_by.get_username() if k.performed_by else ""),
+            ]
+
     elif dataset == "alphabeta":
         from ..models import Analysis, CounterType
         qs = (
@@ -407,7 +451,7 @@ SAMPLE_FIELD_TO_COLUMN = {
 }
 
 
-def import_samples(rows, user, on_duplicate="skip"):
+def import_samples(rows, user, on_duplicate="skip", allow_consumed=False):
     from django.core.exceptions import ValidationError
     from django.utils import timezone
     from ..models import CounterType, Sample, SampleStage, SampleStatus
@@ -451,7 +495,7 @@ def import_samples(rows, user, on_duplicate="skip"):
             batch = WasteBatch.objects.filter(waste_id=r["waste_batch"]).first()
             if batch is None:
                 c.add("waste_batch", f"no waste batch with ID '{r['waste_batch']}'")
-            elif batch.status == "CONSUMED":
+            elif batch.status == "CONSUMED" and not allow_consumed:
                 c.add("waste_batch", "this batch is consumed and can't be sampled")
             else:
                 values["batch"] = batch
@@ -503,7 +547,7 @@ def import_samples(rows, user, on_duplicate="skip"):
 # IMPORT -- gamma results (one row per nuclide)
 # ---------------------------------------------------------------------
 
-def import_gamma(rows, user, allow_no_duration=False):
+def import_gamma(rows, user, allow_no_duration=False, allow_over_limit=False):
     from django.core.exceptions import ValidationError
     from ..models import (
         Analysis, CounterType, NuclideActivity, RadiationType, ResultUnit, Sample, SampleStatus,
@@ -552,7 +596,7 @@ def import_gamma(rows, user, allow_no_duration=False):
 
         if not analysis and not level.get("counting_duration_seconds") and not allow_no_duration:
             c.add("counting_duration_seconds", "required for a new gamma analysis")
-        if len(items) > GAMMA_DATA_ROWS:
+        if len(items) > GAMMA_DATA_ROWS and not allow_over_limit:
             c.add("nuclide", f"{len(items)} nuclide rows, but the Gamma report form only has {GAMMA_DATA_ROWS} rows")
 
         parsed = []
@@ -739,8 +783,138 @@ def import_alphabeta(rows, user):
     return res
 
 
+# ---------------------------------------------------------------------
+# IMPORT -- waste movements and lineage (history of waste batches)
+#
+# Both write the history rows DIRECTLY. They never call batch.register_movement(), so they do not
+# change the batch's current facility or status -- those come from the waste CSV. Re-running a file
+# is safe: rows that already exist are skipped.
+# ---------------------------------------------------------------------
+
+def _facility_by_name(c, column, name):
+    from facilities.models import FacilityModel
+    if not name:
+        return None
+    facility = FacilityModel.objects.filter(name=name).first()
+    if facility is None:
+        c.add(column, f"no facility named '{name}'")
+    return facility
+
+
+def import_waste_movements(rows, user):
+    from django.core.exceptions import ValidationError
+    from waste.models import WasteBatch, WasteMovement, WasteMovementType
+
+    res = ImportResult()
+
+    def handle(line, r):
+        c = _Collector()
+        wid = r.get("waste_id", "")
+        batch = WasteBatch.objects.filter(waste_id=wid).first() if wid else None
+        if not wid:
+            c.add("waste_id", "required")
+        elif batch is None:
+            c.add("waste_id", f"no waste batch '{wid}' -- import the batches first")
+        mtype = None
+        if r.get("movement_type"):
+            mtype = c.run("movement_type", match_choice, r["movement_type"], WasteMovementType.choices)
+        else:
+            c.add("movement_type", "required")
+        when = c.run("movement_date", parse_date, r["movement_date"]) if r.get("movement_date") else None
+        if not r.get("movement_date"):
+            c.add("movement_date", "required")
+        from_f = _facility_by_name(c, "from_facility", r.get("from_facility", ""))
+        to_f = _facility_by_name(c, "to_facility", r.get("to_facility", ""))
+        c.raise_if_any()
+
+        if WasteMovement.objects.filter(
+            batch=batch, movement_type=mtype, movement_date=when, from_facility=from_f, to_facility=to_f,
+        ).exists():
+            res.skipped += 1
+            res.warn(line, "waste_id", "this movement already exists -- skipped")
+            return
+        movement = WasteMovement(
+            batch=batch, movement_type=mtype, from_facility=from_f, to_facility=to_f,
+            movement_date=when, performed_by=user, remarks=r.get("remarks", ""),
+        )
+        try:
+            movement.full_clean(exclude=["performed_by"])
+        except ValidationError as exc:
+            raise RowErrors(_validation_errors(exc, {}))
+        movement.save()
+        res.created += 1
+
+    _run_rows(rows, handle, res)
+    return res
+
+
+def import_waste_lineage(rows, user):
+    from django.core.exceptions import ValidationError
+    from django.utils import timezone
+    from waste.models import LineageOperation, WasteBatch, WasteBatchLineage
+
+    res = ImportResult()
+
+    def handle(line, r):
+        c = _Collector()
+        parent = child = None
+        for col, attr in (("parent_waste_id", "parent"), ("child_waste_id", "child")):
+            wid = r.get(col, "")
+            if not wid:
+                c.add(col, "required")
+                continue
+            batch = WasteBatch.objects.filter(waste_id=wid).first()
+            if batch is None:
+                c.add(col, f"no waste batch '{wid}' -- import the batches first")
+            if attr == "parent":
+                parent = batch
+            else:
+                child = batch
+        op = None
+        if r.get("operation"):
+            op = c.run("operation", match_choice, r["operation"], LineageOperation.choices)
+        else:
+            c.add("operation", "required")
+        values = {}
+        for col in ("mass_kg", "volume_m3"):
+            if r.get(col):
+                v = c.run(col, parse_decimal, r[col], 3)
+                if v is not None:
+                    values[col] = v
+        performed_on = c.run("performed_on", parse_date, r["performed_on"]) if r.get("performed_on") else None
+        if parent is not None and child is not None and parent.pk == child.pk:
+            c.add("child_waste_id", "a batch can't be its own child")
+        c.raise_if_any()
+
+        if WasteBatchLineage.objects.filter(parent=parent, child=child).exists():
+            res.skipped += 1
+            res.warn(line, "parent_waste_id", "this link already exists -- skipped")
+            return
+        link = WasteBatchLineage(
+            parent=parent, child=child, operation=op, performed_by=user, remarks=r.get("remarks", ""), **values,
+        )
+        try:
+            link.full_clean(exclude=["performed_by"])
+        except ValidationError as exc:
+            raise RowErrors(_validation_errors(exc, {}))
+        link.save()
+        if performed_on:   # performed_at is auto_now_add, so the original date is written afterwards
+            WasteBatchLineage.objects.filter(pk=link.pk).update(
+                performed_at=timezone.make_aware(datetime.datetime.combine(performed_on, datetime.time.min))
+            )
+        res.created += 1
+
+    _run_rows(rows, handle, res)
+    return res
+
+
+
 IMPORTERS = {
-    "samples": lambda rows, user, opts: import_samples(rows, user, opts.get("on_duplicate", "skip")),
-    "gamma": lambda rows, user, opts: import_gamma(rows, user, bool(opts.get("allow_no_duration"))),
+    "samples": lambda rows, user, opts: import_samples(
+        rows, user, opts.get("on_duplicate", "skip"), bool(opts.get("allow_consumed"))),
+    "gamma": lambda rows, user, opts: import_gamma(
+        rows, user, bool(opts.get("allow_no_duration")), bool(opts.get("allow_over_limit"))),
     "alphabeta": lambda rows, user, opts: import_alphabeta(rows, user),
+    "waste_movements": lambda rows, user, opts: import_waste_movements(rows, user),
+    "waste_lineage": lambda rows, user, opts: import_waste_lineage(rows, user),
 }

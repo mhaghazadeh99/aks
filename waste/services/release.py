@@ -27,7 +27,8 @@ already shows an excess.
 """
 
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import DecimalField, Q, Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -35,7 +36,7 @@ from laboratory.services.activity import total_activity_breakdown
 
 from ..models import (
     BatchStatus, ReleaseActivityLine, ReleaseLimit, ReleaseLimitCategory,
-    ReleaseRecord, WasteMovementType,
+    ChemicalPollutant, ReleaseRecord, WasteMovementType,
 )
 
 
@@ -127,9 +128,13 @@ def preview_release(batch, route, release_date=None):
 
 
 @transaction.atomic
-def register_release(batch, route, performed_by, remarks="", release_date=None):
-    if batch.status == BatchStatus.CONSUMED:
-        raise ValueError(_("This batch has already been consumed and can't be released."))
+def register_release(batch, route, performed_by, remarks="", release_date=None, pollutants=None):
+    """Records the release and CLOSES the batch (status RELEASED -- from then on it accepts no
+    split / merge / condition / movement / edit / second release; see WasteBatch.ensure_open).
+
+    `pollutants`: optional list of {"name", "concentration", "unit"} measured AT RELEASE; they are
+    saved against this release record (and so also show on the batch)."""
+    batch.ensure_open()
 
     release_date = release_date or timezone.now().date()
     breakdown = batch.activity_breakdown(as_of=release_date)
@@ -144,7 +149,15 @@ def register_release(batch, route, performed_by, remarks="", release_date=None):
     record = ReleaseRecord.objects.create(
         batch=batch, movement=movement, route=route, release_date=release_date,
         performed_by=performed_by, remarks=remarks,
+        # snapshot: what was released is the batch AS IT WAS at this moment
+        volume_m3=batch.volume_m3, mass_kg=batch.mass_kg,
     )
+
+    for p in pollutants or []:
+        ChemicalPollutant.objects.create(
+            batch=batch, release=record, name=p["name"], concentration=p["concentration"],
+            unit=p["unit"], measured_on=release_date,
+        )
 
     ReleaseActivityLine.objects.bulk_create([
         ReleaseActivityLine(release=record, category=ln["category"], radionuclide=ln["radionuclide"], activity_bq=ln["activity_bq"])
@@ -191,7 +204,11 @@ def release_totals(year=None, route=""):
     """Totals over every release (optionally one year and/or one route). Floats; None where unknown."""
     records, lines = _scoped(year, route)
 
-    moved = records.aggregate(volume_m3=Sum("movement__volume_m3"), mass_kg=Sum("movement__mass_kg"))
+    dec = DecimalField(max_digits=14, decimal_places=3)
+    moved = records.aggregate(
+        volume_m3=Sum(Coalesce("volume_m3", "movement__volume_m3", output_field=dec)),
+        mass_kg=Sum(Coalesce("mass_kg", "movement__mass_kg", output_field=dec)),
+    )
     by_category = {
         row["category"]: float(row["total"] or 0)
         for row in lines.values("category").annotate(total=Sum("activity_bq"))
@@ -248,6 +265,28 @@ def released_by_line(year, route=""):
 
     order = {ReleaseLimitCategory.NUCLIDE: 0, ReleaseLimitCategory.GROSS_BETA: 1, ReleaseLimitCategory.GROSS_ALPHA: 2}
     rows.sort(key=lambda r: (order.get(r["category"], 9), -r["year_bq"], r["radionuclide"] or ""))
+    return rows
+
+
+def limit_rows(year, route=""):
+    """One row per release limit that applies to `year` (a limit that ended before it isn't included):
+    {"limit", "released_bq", "percent"}. A facility-specific limit counts that facility's releases;
+    a site-wide limit counts every facility's (see year_released_bq)."""
+    limits = (
+        ReleaseLimit.objects
+        .filter(effective_from__year__lte=year)
+        .filter(Q(effective_to__isnull=True) | Q(effective_to__year__gte=year))
+        .select_related("radionuclide", "facility")
+    )
+    if route:
+        limits = limits.filter(route=route)
+    rows = []
+    for limit in limits:
+        released = year_released_bq(
+            limit.category, limit.route, limit.facility, radionuclide=limit.radionuclide, year=year,
+        )
+        percent = (released / float(limit.annual_limit_bq) * 100) if limit.annual_limit_bq else None
+        rows.append({"limit": limit, "released_bq": released, "percent": percent})
     return rows
 
 

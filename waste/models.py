@@ -46,8 +46,9 @@ class BatchStatus(models.TextChoices):
     RELEASED = "RELEASED", _("Released")
     DISPOSED = "DISPOSED", _("Disposed")
     CONSUMED = "CONSUMED", _("Consumed (merged/split/conditioned into another batch)")
+   
 
-
+CLOSED_STATUSES = (BatchStatus.RELEASED, BatchStatus.CONSUMED)
 
 class MaterialType(models.TextChoices):
     LIQUID = "LIQUID", _("Liquid")
@@ -273,6 +274,18 @@ class WasteBatch(models.Model):
 
     history = HistoricalRecords()
 
+    @property
+    def is_closed(self):
+        return self.status in CLOSED_STATUSES
+
+    def ensure_open(self):
+        """Raises ValueError if this batch is closed. Called by every operation that changes a batch."""
+        if self.is_closed:
+            raise ValueError(
+                _("%(id)s is closed (%(status)s) — a closed batch accepts no further work.")
+                % {"id": self.waste_id, "status": str(self.get_status_display()).split(" (")[0]}
+            )
+
     class Meta:
         ordering = ("-created_at", "waste_id")
         verbose_name = _("Waste Batch")
@@ -437,6 +450,7 @@ class WasteBatch(models.Model):
 
     def register_movement(
         self,
+        
         movement_type,
         to_facility,
         from_facility=None,
@@ -444,8 +458,8 @@ class WasteBatch(models.Model):
         remarks="",
         movement_date=None,
         mass_kg=None,
-        volume_m3=None,
-    ):
+        volume_m3=None,):
+        self.ensure_open()
         """Mirrors DSRS.register_movement: records the movement AND applies
         its implied status/facility change in one place.
 
@@ -725,6 +739,8 @@ class ReleaseRecord(models.Model):
     movement = models.OneToOneField(WasteMovement, verbose_name=_("Movement"), on_delete=models.CASCADE, related_name="release_record", null=True, blank=True)
     route = models.CharField(_("Discharge Route"), max_length=10, choices=ReleaseRoute.choices)
     release_date = models.DateField(_("Release Date"))
+    volume_m3 = models.DecimalField(_("Volume Released (m³)"), max_digits=12, decimal_places=3, null=True, blank=True)
+    mass_kg = models.DecimalField(_("Mass Released (kg)"), max_digits=12, decimal_places=3, null=True, blank=True)
     performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("Performed By"), on_delete=models.SET_NULL, null=True)
     remarks = models.TextField(_("Remarks"), blank=True)
     over_limit = models.BooleanField(_("Exceeded an annual limit"), default=False)
@@ -739,6 +755,38 @@ class ReleaseRecord(models.Model):
         return f"{self.batch.waste_id} — {self.release_date}"
 
 
+class PollutantUnit(models.TextChoices):
+    MG_L = "MG_L", _("mg/L")
+    MG_KG = "MG_KG", _("mg/kg")
+    UG_L = "UG_L", _("µg/L")
+    G_L = "G_L", _("g/L")
+    G_KG = "G_KG", _("g/kg")
+    PERCENT = "PERCENT", _("% (w/w)")
+
+
+class ChemicalPollutant(models.Model):
+    """A non-radioactive pollutant in a waste batch. `release` is empty for pollutants recorded on the
+    batch ahead of time (e.g. during treatment) and set for ones measured at the moment of release."""
+    batch = models.ForeignKey(WasteBatch, verbose_name=_("Batch"), on_delete=models.CASCADE, related_name="pollutants")
+    release = models.ForeignKey(
+        "ReleaseRecord", verbose_name=_("Measured at release"), on_delete=models.CASCADE,
+        null=True, blank=True, related_name="pollutants",
+    )
+    name = models.CharField(_("Pollutant"), max_length=100)
+    concentration = models.DecimalField(_("Concentration"), max_digits=18, decimal_places=6)
+    unit = models.CharField(_("Unit"), max_length=10, choices=PollutantUnit.choices, default=PollutantUnit.MG_L)
+    measured_on = models.DateField(_("Measured on"), null=True, blank=True)
+    notes = models.CharField(_("Notes"), max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = _("Chemical Pollutant")
+        verbose_name_plural = _("Chemical Pollutants")
+
+    def __str__(self):
+        return f"{self.name}: {self.concentration} {self.get_unit_display()}"
+
+        
 class ReleaseActivityLine(models.Model):
     """Snapshot of one nuclide's (or gross category's) activity at release time —
     frozen so later decay/edits never change a past release's recorded figures."""

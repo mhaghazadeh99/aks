@@ -10,18 +10,18 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from laboratory.views import sample_edit
 from dashboard.models import HideShowFilterT
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import decimal
 from .forms import (
     ConditionBatchForm, ReleaseLimitForm,
     MergeBatchesForm,
     WasteBatchForm,
-    WasteMovementForm,
+    WasteMovementForm, ChemicalPollutantFormSet, WasteCSVImportForm,
 )
 from .models import (
     BatchStatus, OriginOfWaste, PreTreatmentOption, TreatmentOption,
     WasteBatch, WasteClass, WasteState, WasteType,
-    WasteBatchLineage,
+    WasteBatchLineage,PollutantUnit,
     WasteMovementAttachment, ConditioningIngredient, ReleaseLimit, ReleaseLimitCategory, ReleaseRoute,ConditioningMaterial
 )
 from .services.batch_ops import condition_batch, merge_batches, split_batch, compute_conditioning_totals
@@ -29,15 +29,15 @@ from .services.release import (preview_release, register_release, year_released_
  year_released_bq, released_by_line,fmt_sci,ReleaseRecord)
 from .services import release
 import datetime
-
-
 from reference.models import Nuclides
-
-
-
 from facilities.models import FacilityModel
-
 from .forms import WasteCSVImportForm
+from django.urls import reverse
+
+from .services.release_csv import (
+        import_release_groups, parse_release_rows, write_release_lines_csv, write_release_summary_csv,
+    )
+
 
 # Same idea as dashboard.views.FIELD_FILTER_MAP: maps each filter key to
 # a real Django lookup path, traversing FKs to their display field.
@@ -170,7 +170,9 @@ def waste_create(request):
 def waste_edit(request, pk):
 
     batch = get_object_or_404(WasteBatch, pk=pk)
-
+    if batch.is_closed:
+        messages.error(request, _("%(id)s is closed — no further work can be done on it.") % {"id": batch.waste_id})
+        return redirect("waste_detail", pk=pk)
     if request.method == "POST":
 
         if request.POST.get("action") == "add_movement":
@@ -259,7 +261,10 @@ def waste_merge(request):
 
     ids = request.POST.getlist("ids") or request.GET.getlist("ids")
     batches = list(WasteBatch.objects.filter(pk__in=ids))
-
+    closed = [b.waste_id for b in batches if b.is_closed]
+    if closed:
+        messages.error(request, _("Closed batches can't be used: %(ids)s") % {"ids": ", ".join(closed)})
+        return redirect("waste_table")
     if request.method == "POST" and request.POST.get("action") == "confirm":
 
         form = MergeBatchesForm(request.POST)
@@ -302,7 +307,9 @@ def waste_merge(request):
 def waste_split(request, pk):
 
     batch = get_object_or_404(WasteBatch, pk=pk)
-
+    if batch.is_closed:
+        messages.error(request, _("%(id)s is closed — no further work can be done on it.") % {"id": batch.waste_id})
+        return redirect("waste_detail", pk=pk)
     if request.method == "POST":
 
         # Portions come from a dynamic JS table (see template), posted as
@@ -339,7 +346,9 @@ def waste_split(request, pk):
 def waste_condition(request, pk):
 
     batch = get_object_or_404(WasteBatch, pk=pk)
-
+    if batch.is_closed:
+        messages.error(request, _("%(id)s is closed — no further work can be done on it.") % {"id": batch.waste_id})
+        return redirect("waste_detail", pk=pk)
     def _parse_ingredients(post):
         materials = post.getlist("ing_material")
         others = post.getlist("ing_material_other")
@@ -421,7 +430,10 @@ def waste_send_to_analysis(request):
 
     ids = request.POST.getlist("ids")
     batches = WasteBatch.objects.filter(pk__in=ids)
-    
+    closed = [b.waste_id for b in batches if b.is_closed]
+    if closed:
+        messages.error(request, _("Closed batches can't be used: %(ids)s") % {"ids": ", ".join(closed)})
+        return redirect("waste_table")
 
     if not batches:
         messages.error(request, _("Select at least one batch."))
@@ -526,31 +538,48 @@ def waste_export_csv(request):
 def waste_release(request, pk):
 
     batch = get_object_or_404(WasteBatch, pk=pk)
+
+    if batch.is_closed:
+        messages.error(request, _("%(id)s is already closed — it can't be released again.") % {"id": batch.waste_id})
+        return redirect("waste_detail", pk=pk)
+
     release_date = timezone.now().date()
+    valid_routes = {value for value, _label in ReleaseRoute.choices}
 
     if request.method == "POST" and request.POST.get("confirm") == "1":
         route = request.POST.get("route")
+        if route not in valid_routes:
+            messages.error(request, _("Choose a discharge route."))
+            return redirect("waste_release", pk=pk)
+
+        pollutants, problems = _parse_release_pollutants(request.POST)
+        if problems:
+            for problem in problems:
+                messages.error(request, problem)
+            return redirect(f"{reverse('waste_release', args=[pk])}?route={route}")
+
         try:
             record, breakdown, checks = register_release(
                 batch, route=route, performed_by=request.user,
-                remarks=request.POST.get("remarks", ""), release_date=release_date,
+                remarks=request.POST.get("remarks", ""), release_date=release_date, pollutants=pollutants,
             )
         except ValueError as exc:
             messages.error(request, str(exc))
             return redirect("waste_detail", pk=pk)
 
         if record.over_limit:
-            messages.warning(request, _("Release recorded — but it pushes one or more nuclides over their annual limit. See the release record."))
+            messages.warning(request, _("Release recorded and the batch is now closed — but it pushes one or more nuclides over their annual limit. See the release record."))
         else:
-            messages.success(request, _("Release recorded."))
+            messages.success(request, _("Release recorded. The batch is now closed."))
         return redirect("waste_detail", pk=pk)
 
-    route = request.GET.get("route") or ReleaseRoute.LIQUID
+    route = request.GET.get("route") if request.GET.get("route") in valid_routes else ReleaseRoute.LIQUID
     breakdown, checks = preview_release(batch, route=route, release_date=release_date)
 
     return render(request, "waste/waste_release.html", {
         "batch": batch, "breakdown": breakdown, "checks": checks,
         "route": route, "routes": ReleaseRoute.choices, "release_date": release_date,
+        "pollutants": batch.pollutants.filter(release__isnull=True), "units": PollutantUnit.choices,
     })
 
 
@@ -1091,3 +1120,114 @@ def waste_bulk_movement(request):
         form = WasteMovementForm(initial=initial)
 
     return render(request, "waste/waste_bulk_movement.html", {"batches": batches, "form": form, "ids": ids})
+
+
+
+
+def _parse_release_pollutants(post):
+    """Rows typed on the release page -> ([{"name", "concentration", "unit"}], [problems])."""
+    names = post.getlist("rel_pollutant_name")
+    concs = post.getlist("rel_pollutant_conc")
+    units = post.getlist("rel_pollutant_unit")
+    valid_units = {value for value, _label in PollutantUnit.choices}
+
+    rows, problems = [], []
+    for i, name in enumerate(names):
+        name = name.strip()
+        conc = concs[i].strip() if i < len(concs) else ""
+        if not name and not conc:
+            continue                                   # an untouched row
+        if not name or not conc:
+            problems.append(_("A pollutant needs both a name and a concentration."))
+            continue
+        try:
+            value = Decimal(conc)
+        except InvalidOperation:
+            problems.append(_("Invalid concentration for %(n)s: '%(c)s'") % {"n": name, "c": conc})
+            continue
+        if value < 0:
+            problems.append(_("Concentration of %(n)s can't be negative.") % {"n": name})
+            continue
+        unit = units[i] if i < len(units) and units[i] in valid_units else PollutantUnit.MG_L
+        rows.append({"name": name, "concentration": value, "unit": unit})
+    return rows, problems
+
+
+
+def waste_pollutants(request, pk):
+    """Chemical pollutants (name + concentration) recorded on a batch ahead of its release. Pollutants
+    measured at the moment of release live on the release record and aren't edited here."""
+    batch = get_object_or_404(WasteBatch, pk=pk)
+
+    if batch.is_closed:
+        messages.error(request, _("%(id)s is closed — its pollutant record can't be changed.") % {"id": batch.waste_id})
+        return redirect("waste_detail", pk=pk)
+
+    queryset = batch.pollutants.filter(release__isnull=True)
+
+    if request.method == "POST":
+        formset = ChemicalPollutantFormSet(request.POST, instance=batch, queryset=queryset)
+        if formset.is_valid():
+            formset.save()
+            messages.success(request, _("Chemical pollutants saved."))
+            return redirect("waste_detail", pk=pk)
+    else:
+        formset = ChemicalPollutantFormSet(instance=batch, queryset=queryset)
+
+    return render(request, "waste/waste_pollutants.html", {"batch": batch, "formset": formset})
+
+
+def release_export_csv(request):
+    """?year=2026 (omit for every year)  &route=LIQUID  &what=lines (default) | summary"""
+    year_text = request.GET.get("year", "")
+    year = int(year_text) if year_text.isdigit() else None
+    route = request.GET.get("route", "")
+    if route not in {value for value, _label in ReleaseRoute.choices}:
+        route = ""
+
+    suffix = str(year) if year else "all-years"
+    response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
+
+    if request.GET.get("what") == "summary":
+        response["Content-Disposition"] = f'attachment; filename="release-report-{suffix}.csv"'
+        write_release_summary_csv(response, year or timezone.now().year, route)
+    else:
+        response["Content-Disposition"] = f'attachment; filename="releases-{suffix}.csv"'
+        write_release_lines_csv(response, year=year, route=route)
+    return response
+
+
+def release_import_csv(request):
+    report = {"created": 0, "skipped": 0, "errors": []}
+
+    if request.method == "POST":
+        form = WasteCSVImportForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            try:
+                reader = csv.DictReader(request.FILES["file"].read().decode("utf-8-sig").splitlines())
+            except Exception:
+                report["errors"].append("File is not a valid UTF-8 CSV.")
+                return render(request, "waste/release_import.html", {"form": form, "report": report})
+
+            missing = {"waste_id", "release_date", "route"} - set(reader.fieldnames or [])
+            if missing:
+                report["errors"].append(f"Missing required columns: {sorted(missing)}")
+                return render(request, "waste/release_import.html", {"form": form, "report": report})
+
+            groups, parse_errors = parse_release_rows(
+                reader,
+                valid_routes={value for value, _label in ReleaseRoute.choices},
+                valid_categories={value for value, _label in ReleaseLimitCategory.choices},
+            )
+            report = import_release_groups(groups, request.user)
+            report["skipped"] += sum(1 for e in parse_errors if "NOT imported" in e)
+            report["errors"] = parse_errors + report["errors"]
+
+            messages.success(
+                request, f"Import complete: {report['created']} release(s) created, {report['skipped']} skipped",
+            )
+    else:
+        form = WasteCSVImportForm()
+
+    return render(request, "waste/release_import.html", {"form": form, "report": report})

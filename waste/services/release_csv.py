@@ -257,3 +257,48 @@ def import_release_groups(groups, user):
             report["skipped"] += 1
 
     return report
+
+
+def write_release_summary_csv(response, year, route=""):
+    """The annual release REPORT as a CSV: totals (selected year + all years), the limits table, and the
+    by-nuclide table, as three titled blocks separated by blank rows. Raw numbers (Bq), no rounding."""
+    from .release import limit_rows, release_totals, released_by_line
+
+    writer = csv.writer(response)
+    this_year = release_totals(year, route)
+    all_years = release_totals(None, route)
+
+    def cell(v):
+        return "" if v is None else v
+
+    writer.writerow(["Annual release report", year, "route", route or "all"])
+    writer.writerow([])
+    writer.writerow(["TOTALS RELEASED", year, "All years"])
+    for label, key in (
+        ("Releases recorded", "releases"), ("Batches released", "batches"),
+        ("Volume released (m3)", "volume_m3"), ("Mass released (kg)", "mass_kg"),
+        ("Gamma - identified nuclides (Bq)", "gamma_bq"), ("Beta - unidentified (Bq)", "beta_bq"),
+        ("Alpha - unidentified (Bq)", "alpha_bq"), ("Total activity (Bq)", "total_bq"),
+        ("Releases flagged over a limit", "over_limit_releases"),
+    ):
+        writer.writerow([label, cell(this_year[key]), cell(all_years[key])])
+
+    writer.writerow([])
+    writer.writerow(["RELEASED VS ANNUAL LIMITS"])
+    writer.writerow(["line", "category", "route", "facility", "released_bq", "annual_limit_bq", "percent_used"])
+    for r in limit_rows(year, route):
+        lim = r["limit"]
+        writer.writerow([
+            lim.radionuclide.name if lim.radionuclide_id else lim.get_category_display(), lim.category, lim.route,
+            lim.facility.name if lim.facility_id else "all facilities",
+            r["released_bq"], lim.annual_limit_bq, "" if r["percent"] is None else round(r["percent"], 3),
+        ])
+
+    writer.writerow([])
+    writer.writerow(["EVERYTHING RELEASED, BY NUCLIDE"])
+    writer.writerow(["category", "radionuclide", "route", f"released_{year}_bq", "share_of_year_percent", "released_all_years_bq", "limit_set"])
+    for r in released_by_line(year, route):
+        writer.writerow([
+            r["category"], r["radionuclide"] or "", r["route"], r["year_bq"],
+            "" if r["share"] is None else round(r["share"], 3), r["all_bq"], "yes" if r["has_limit"] else "no",
+        ])

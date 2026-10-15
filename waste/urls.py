@@ -26,6 +26,9 @@ urlpatterns = [
     path("release-limits/<int:pk>/delete/", views.release_limit_delete, name="release_limit_delete"),
     path("release-limits/import/", views.release_limit_import_csv, name="release_limit_import_csv"),
     path("bulk-movement/", views.waste_bulk_movement, name="waste_bulk_movement"),
+    path("<int:pk>/pollutants/", views.waste_pollutants, name="waste_pollutants"),
+    path("release-report/export/", views.release_export_csv, name="release_export_csv"),
+    path("release-report/import/", views.release_import_csv, name="release_import_csv"),
 ]
 
 urlpatterns += receipt_urlpatterns

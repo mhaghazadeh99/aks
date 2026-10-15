@@ -24,7 +24,10 @@ def _bootstrap(fields):
             field.widget.attrs["class"] = f"{existing} form-control".strip()
 
 
-
+#
+# ---- in SampleForm (laboratory/forms.py), the batch dropdown must not offer closed batches:
+#
+#     WasteBatch.objects.exclude(status__in=["CONSUMED", "RELEASED"]).order_by("waste_id")
 class SampleForm(forms.ModelForm):
     """
     Works for BOTH standalone samples and batch-linked ones. `batch` is
@@ -50,7 +53,7 @@ class SampleForm(forms.ModelForm):
 
         # Consumed batches can't be sampled — they no longer physically exist.
         self.fields["batch"].queryset = (
-            WasteBatch.objects.exclude(status="CONSUMED").order_by("waste_id")
+            WasteBatch.objects.exclude(status__in=["CONSUMED", "RELEASED"]).order_by("waste_id")
         )
         self.fields["batch"].required = False
         self.fields["batch"].empty_label = _("— Standalone sample (no waste batch) —")

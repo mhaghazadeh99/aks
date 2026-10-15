@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Chemical Pollutants" %} — {{ batch.waste_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+<div class="row justify-content-center">
+<div class="col-xl-9">
+
+  <nav class="mb-3"><a href="{% url 'waste_detail' batch.pk %}">&larr; {{ batch.waste_id }}</a></nav>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header"><h3 class="mb-0">{% trans "Chemical Pollutants" %} — {{ batch.waste_id }}</h3></div>
+    <div class="card-body">
+
+      <p class="text-muted small">
+        {% trans "Non-radioactive pollutants in this waste, with their concentration — recorded now (for example while it is in treatment) so they are on file when the batch is released. Pollutants measured at the moment of release are entered on the release page instead. Tick Delete to remove a row." %}
+      </p>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
+
+        <div class="table-responsive">
+        <table class="table table-bordered align-middle" id="pollutant-table">
+          <thead class="table-light">
+            <tr>
+              <th>{% trans "Pollutant" %}</th><th>{% trans "Concentration" %}</th><th>{% trans "Unit" %}</th>
+              <th>{% trans "Measured on" %}</th><th>{% trans "Notes" %}</th><th>{% trans "Delete" %}</th>
+            </tr>
+          </thead>
+          <tbody id="pollutant-body">
+          {% for f in formset %}
+            <tr>
+              {{ f.id }}
+              <td>{{ f.name }}{{ f.name.errors }}</td>
+              <td>{{ f.concentration }}{{ f.concentration.errors }}</td>
+              <td>{{ f.unit }}{{ f.unit.errors }}</td>
+              <td>{{ f.measured_on }}{{ f.measured_on.errors }}</td>
+              <td>{{ f.notes }}</td>
+              <td class="text-center">{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        </div>
+
+        <button type="button" class="btn btn-outline-primary btn-sm" id="add-pollutant">+ {% trans "Add pollutant" %}</button>
+
+        <template id="empty-pollutant-row">
+          <tr>
+            {{ formset.empty_form.id }}
+            <td>{{ formset.empty_form.name }}</td>
+            <td>{{ formset.empty_form.concentration }}</td>
+            <td>{{ formset.empty_form.unit }}</td>
+            <td>{{ formset.empty_form.measured_on }}</td>
+            <td>{{ formset.empty_form.notes }}</td>
+            <td></td>
+          </tr>
+        </template>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="{% url 'waste_detail' batch.pk %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
+          <button type="submit" class="btn btn-primary">{% trans "Save Pollutants" %}</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div></div></div>
+
+<script>
+(function () {
+    const total = document.getElementById("id_{{ formset.prefix }}-TOTAL_FORMS");
+    const body = document.getElementById("pollutant-body");
+    const tpl = document.getElementById("empty-pollutant-row");
+    document.getElementById("add-pollutant").addEventListener("click", function () {
+        const idx = parseInt(total.value, 10);
+        const tmp = document.createElement("tbody");
+        tmp.innerHTML = tpl.innerHTML.replace(/__prefix__/g, idx);
+        body.appendChild(tmp.querySelector("tr"));
+        total.value = idx + 1;
+    });
+})();
+</script>
+{% endblock %}

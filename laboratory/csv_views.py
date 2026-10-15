@@ -49,6 +49,13 @@ class CsvImportForm(forms.Form):
     allow_no_duration = forms.BooleanField(
         label=_("Gamma file: allow analyses without a counting duration (old records)"), required=False,
     )
+    allow_over_limit = forms.BooleanField(
+        label=_("Gamma file: allow more than 14 nuclides per sample (old records; the Gamma report form can't print them)"),
+        required=False,
+    )
+    allow_consumed = forms.BooleanField(
+        label=_("Samples file: allow samples on consumed waste batches (old records)"), required=False,
+    )
     dry_run = forms.BooleanField(
         label=_("Check only -- don't save anything"), required=False, initial=True,
     )
@@ -106,6 +113,8 @@ def lab_csv_import(request):
             options = {
                 "on_duplicate": form.cleaned_data["on_duplicate"] or "skip",
                 "allow_no_duration": form.cleaned_data["allow_no_duration"],
+                "allow_over_limit": form.cleaned_data["allow_over_limit"],
+                "allow_consumed": form.cleaned_data["allow_consumed"],
             }
 
             with transaction.atomic():

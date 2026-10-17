@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Inspection progress report" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+tr.r-overdue td{ background:#fff0f0; }
+tr.r-now td{ background:#fff8e1; }
+.bar{ background:#e9ecef; border-radius:6px; height:10px; min-width:90px; overflow:hidden; }
+.bar > i{ display:block; height:100%; background:#28a745; }
+.kpis{ display:flex; gap:16px; flex-wrap:wrap; margin:14px 0; }
+.kpi{ background:#fff; border-radius:12px; padding:12px 18px; box-shadow:0 3px 10px rgba(0,0,0,.06); }
+.kpi b{ font-size:22px; display:block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="table-header">
+    <form method="get" class="header-group">
+      <label>{% trans "Plan year" %}</label>
+      <select name="year" onchange="this.form.submit()">
+        {% for y in years %}<option value="{{ y.year }}" {% if y.pk == plan.pk %}selected{% endif %}>{{ y.year }}</option>{% endfor %}
+      </select>
+    </form>
+    <div class="header-group">
+      <a href="{% url 'oc_inspection_plan' %}?year={{ plan.year }}" class="btn-gray">{% trans "Back to plan" %}</a>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><b>{% if summary.percent is None %}-{% else %}{{ summary.percent }}%{% endif %}</b>{% trans "Completed so far" %} ({{ summary.done }}/{{ summary.due }})</div>
+    <div class="kpi"><b style="color:#dc3545;">{{ summary.overdue_items }}</b>{% trans "Items with overdue inspections" %}</div>
+    <div class="kpi"><b style="color:#b8860b;">{{ summary.pending_now }}</b>{% trans "Due this week" %}</div>
+  </div>
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr>
+      <th>{% trans "Inspection" %}</th><th>{% trans "Area" %}</th><th>{% trans "Responsible" %}</th><th>{% trans "Period" %}</th>
+      <th>{% trans "Due so far" %}</th><th>{% trans "Done" %}</th><th>{% trans "Progress" %}</th>
+      <th>{% trans "Overdue" %}</th><th>{% trans "Due this week" %}</th><th>{% trans "Note / reason for delay" %}</th>
+    </tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr class="{% if row.overdue %}r-overdue{% elif row.pending_now %}r-now{% endif %}">
+        <td>{{ row.item.title }}</td><td>{{ row.item.area }}</td>
+        <td>{{ row.item.responsible|default:"-" }}</td><td>{{ row.item.get_period_weeks_display }}</td>
+        <td>{{ row.due }}</td><td>{{ row.done }}</td>
+        <td>{% if row.percent is None %}-{% else %}
+          <div class="bar" title="{{ row.percent }}%"><i style="width:{{ row.percent }}%"></i></div>{{ row.percent }}%{% endif %}</td>
+        <td>{% if row.overdue %}<span class="badge bg-danger">{{ row.overdue }}</span>{% else %}0{% endif %}</td>
+        <td>{% if row.pending_now %}<span class="badge bg-warning text-dark">{% trans "Yes" %}</span>{% else %}-{% endif %}</td>
+        <td>{{ row.note|default:"-" }}</td>
+      </tr>
+    {% empty %}<tr><td colspan="10" class="text-center">{% trans "No inspection items yet." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

@@ -55,11 +55,7 @@
   </div>
 </div>
 
-<div class="filter-bar">
-  <div id="filterContainer"></div>
-  <button id="addFilter" class="btn-blue">{% trans "Add Filter" %}</button>
-  <button id="applyFilters" class="btn-info">{% trans "Apply" %}</button>
-</div>
+
 
 <div class="table-scroll">
 <table id="mainTable">
@@ -152,57 +148,6 @@ document.getElementById("searchBtn").addEventListener("click", e => { e.preventD
 document.getElementById("pageSize").addEventListener("change", function () {
   const p = params(); p.set("size", this.value); go(p);
 });
-
-// ---- filter builder (same key/value URL contract as the waste list) ----
-const DEFS = JSON.parse(document.getElementById("filterDefs").textContent);
-const container = document.getElementById("filterContainer");
-
-function valueControl(def, current) {
-  let el;
-  if (def.choices) {
-    el = document.createElement("select");
-    def.choices.forEach(([v, l]) => { const o = new Option(l, v); el.add(o); });
-  } else {
-    el = document.createElement("input");
-    el.placeholder = "{% trans 'Value' %}";
-  }
-  el.className = "form-control value";
-  if (current) el.value = current;
-  return el;
-}
-
-function addFilterRow(key, value) {
-  const row = document.createElement("div");
-  row.className = "filter-row";
-  const sel = document.createElement("select");
-  sel.className = "form-control key";
-  DEFS.forEach(d => sel.add(new Option(d.label, d.key)));
-  if (key) sel.value = key;
-  let ctrl = valueControl(DEFS.find(d => d.key === sel.value), value);
-  sel.addEventListener("change", () => {
-    const next = valueControl(DEFS.find(d => d.key === sel.value));
-    row.replaceChild(next, ctrl); ctrl = next;
-  });
-  const del = document.createElement("button");
-  del.type = "button"; del.className = "btn btn-danger"; del.textContent = "X";
-  del.onclick = () => row.remove();
-  row.append(sel, ctrl, del);
-  container.appendChild(row);
-}
-
-document.getElementById("addFilter").onclick = () => addFilterRow();
-document.getElementById("applyFilters").onclick = () => {
-  const p = new URLSearchParams();
-  const search = params().get("search"); if (search) p.set("search", search);
-  const size = params().get("size"); if (size) p.set("size", size);
-  container.querySelectorAll(".filter-row").forEach(row => {
-    const v = row.querySelector(".value").value;
-    if (v) { p.append("key", row.querySelector(".key").value); p.append("value", v); }
-  });
-  window.location.search = p.toString();
-};
-// restore filters from the URL
-(() => { const p = params(), k = p.getAll("key"), v = p.getAll("value"); k.forEach((key, i) => addFilterRow(key, v[i])); })();
 
 // ---- column show/hide (remembered per browser) ----
 const STORE = "oc_equipment_cols";

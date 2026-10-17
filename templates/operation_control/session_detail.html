@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load operation_control_extras %}
+{% block title %}{{ s }}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2>{{ s.operation_type }} <small style="color:#777;">{{ s.performed_date|jdate }}</small></h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{% url 'oc_session_edit' s.pk %}" class="btn-blue">{% trans "Edit" %}</a>
+      <form method="post" action="{% url 'oc_session_delete' s.pk %}" style="display:inline;"
+            onsubmit="return confirm('{% trans 'Are you sure?' %}');">
+        {% csrf_token %}<button type="submit" class="btn btn-danger">{% trans "Delete" %}</button>
+      </form>
+      <a href="{% url 'oc_session_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
+    </div>
+  </div>
+  <p style="color:#666;">
+    {% trans "Location" %}: {{ s.location|default:"-" }} ·
+    {% trans "Operation duration (min)" %}: {{ s.duration_minutes|default_if_none:"-" }} ·
+    {{ s.year }} {{ s.get_season_display }}
+  </p>
+  {% if s.description %}<p>{{ s.description }}</p>{% endif %}
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>{% trans "Worker" %}</th><th>{% trans "Device" %}</th><th>{% trans "Dose type" %}</th>
+      <th>{% trans "Recorded dose" %}</th><th>{% trans "Dose (mSv)" %}</th><th>{% trans "Received over (min)" %}</th></tr></thead>
+    <tbody>
+    {% for r in records %}
+      <tr>
+        <td><a href="{% url 'oc_worker_detail' r.worker_id %}">{{ r.worker.full_name }}</a></td>
+        <td><a href="{% url 'oc_equipment_detail' r.device_id %}">{{ r.device.equipment_id }}</a></td>
+        <td>{{ r.get_dose_type_display }}</td>
+        <td>{{ r.dose_value|floatformat:"-4" }} {{ r.get_dose_unit_display }}</td>
+        <td>{{ r.dose_msv|floatformat:"-6" }}</td>
+        <td>{{ r.exposure_minutes|default_if_none:"-" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

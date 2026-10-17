@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load operation_control_extras %}
+{% block title %}{{ report }}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2>{{ report }}</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{% url 'oc_tld_paste' report.pk %}" class="btn-blue">📋 {% trans "Paste readings" %}</a>
+      <a href="{% url 'oc_tld_readings_edit' report.pk %}" class="btn-blue">✏️ {% trans "Edit readings" %}</a>
+      <a href="{% url 'oc_tld_report_edit' report.pk %}" class="btn-gray">{% trans "Edit" %}</a>
+      <a href="{% url 'oc_tld_report_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
+    </div>
+  </div>
+  <p style="color:#666;">
+    {% trans "Date received" %}: {{ report.received_date|jdate|default:"-" }}
+    {% if report.attachment %} · <a href="{{ report.attachment.url }}" target="_blank">{% trans "Report file" %}</a>{% endif %}
+  </p>
+  {% if report.notes %}<p>{{ report.notes }}</p>{% endif %}
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>{% trans "TLD code" %}</th><th>{% trans "Wearing position" %}</th><th>{% trans "Worker" %} / {% trans "Environmental point" %}</th>
+      <th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th><th>{% trans "Remarks" %}</th></tr></thead>
+    <tbody>
+    {% for r in readings %}
+      <tr>
+        <td>{{ r.tld_code }}</td><td>{{ r.get_position_display }}</td>
+        <td>{% if r.worker %}<a href="{% url 'oc_worker_detail' r.worker_id %}">{{ r.worker.full_name }}</a>{% else %}{{ r.env_point }}{% endif %}</td>
+        <td>{{ r.gamma_msv|default_if_none:"-" }}</td><td>{{ r.neutron_msv|default_if_none:"-" }}</td><td>{{ r.remarks|default:"-" }}</td>
+      </tr>
+    {% empty %}<tr><td colspan="6" class="text-center">{% trans "No readings yet. Use “Paste readings” to add them in one go." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

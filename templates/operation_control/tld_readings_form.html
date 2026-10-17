@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Edit readings" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <h2>{% trans "Edit readings" %} — {{ report }}</h2>
+  <p style="color:#666;">{% trans "Pick a worker for body/hand TLDs, or an environmental point for environmental TLDs (not both)." %}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
+    <div class="table-scroll">
+    <table>
+      <thead><tr>
+        <th>{% trans "TLD code" %}</th><th>{% trans "Wearing position" %}</th><th>{% trans "Worker" %}</th>
+        <th>{% trans "Environmental point" %}</th><th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th>
+        <th>{% trans "Remarks" %}</th><th>{% trans "Delete" %}</th>
+      </tr></thead>
+      <tbody id="rows">
+      {% for f in formset %}
+        <tr>
+          {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+          <td>{{ f.tld_code }}{{ f.tld_code.errors }}</td><td>{{ f.position }}{{ f.position.errors }}</td>
+          <td>{{ f.worker }}{{ f.worker.errors }}</td><td>{{ f.env_point }}{{ f.env_point.errors }}</td>
+          <td>{{ f.gamma_msv }}{{ f.gamma_msv.errors }}</td><td>{{ f.neutron_msv }}{{ f.neutron_msv.errors }}</td>
+          <td>{{ f.remarks }}</td>
+          <td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}{{ f.non_field_errors }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <template id="emptyRow">
+      <tr>
+        {% for h in formset.empty_form.hidden_fields %}{{ h }}{% endfor %}
+        <td>{{ formset.empty_form.tld_code }}</td><td>{{ formset.empty_form.position }}</td>
+        <td>{{ formset.empty_form.worker }}</td><td>{{ formset.empty_form.env_point }}</td>
+        <td>{{ formset.empty_form.gamma_msv }}</td><td>{{ formset.empty_form.neutron_msv }}</td>
+        <td>{{ formset.empty_form.remarks }}</td><td></td>
+      </tr>
+    </template>
+    <div style="margin-top:14px; display:flex; gap:10px;">
+      <button type="button" id="addRow" class="btn-gray">+ {% trans "Add row" %}</button>
+      <button type="submit" class="btn-blue">{% trans "Save" %}</button>
+      <a href="{% url 'oc_tld_report_detail' report.pk %}" class="btn-gray">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById("addRow").addEventListener("click", function () {
+  const total = document.getElementById("id_readings-TOTAL_FORMS");
+  const idx = parseInt(total.value, 10);
+  const html = document.getElementById("emptyRow").innerHTML.replace(/__prefix__/g, idx);
+  document.getElementById("rows").insertAdjacentHTML("beforeend", html);
+  total.value = idx + 1;
+});
+</script>
+{% endblock %}

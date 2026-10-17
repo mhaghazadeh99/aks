@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Paste readings" %}{% endblock %}
+
+{% block content %}
+<div class="content" style="max-width:1000px;">
+  <h2>{% trans "Paste readings" %} — {{ report }}</h2>
+  <p style="color:#666;">
+    {% trans "One TLD per line, copied from the lab report or Excel (tab, comma or semicolon separated):" %}
+  </p>
+  <pre dir="ltr" style="background:#f5f6f8; padding:10px; border-radius:8px;">TLD code | worker code or name (or environmental point) | body / hand / environmental | gamma mSv | neutron mSv | remarks</pre>
+  <p style="color:#777; font-size:13px;">
+    {% trans "A header line is skipped. Blank, “-”, ND, MDL and BDL mean no value. Existing TLD codes in this report are updated. If any line has a problem nothing is saved." %}
+  </p>
+
+  {% if errors %}
+  <div class="alert alert-danger">
+    <strong>{% trans "Nothing was saved. Fix these lines:" %}</strong>
+    <ul style="margin:8px 0 0;">
+      {% for line, msg in errors %}<li>{% if line %}{% trans "Line" %} {{ line }}: {% endif %}{{ msg }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.pasted }}
+    <div style="margin-top:16px; display:flex; gap:10px;">
+      <button type="submit" class="btn-blue">{% trans "Import" %}</button>
+      <a href="{% url 'oc_tld_report_detail' report.pk %}" class="btn-gray">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

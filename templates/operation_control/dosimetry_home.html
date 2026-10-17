@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Dosimetry" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.operations-container{ padding:30px; }
+.operations-title{ font-size:28px; font-weight:700; margin-bottom:10px; }
+.operations-subtitle{ color:#777; margin-bottom:30px; }
+.operations-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:25px; }
+.operation-card{ background:#fff; border-radius:16px; padding:25px; text-decoration:none; color:inherit;
+    box-shadow:0 5px 15px rgba(0,0,0,.08); transition:.25s; display:flex; flex-direction:column; justify-content:center; min-height:140px; }
+.operation-card:hover{ transform:translateY(-5px); box-shadow:0 10px 25px rgba(0,0,0,.15); }
+.operation-icon{ font-size:36px; margin-bottom:18px; }
+.operation-card h3{ margin:0; font-size:20px; }
+.operation-card p{ margin-top:8px; color:#666; }
+.count-danger{ color:#dc3545; font-weight:700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="operations-container">
+  <h1 class="operations-title">{% trans "Dosimetry" %}</h1>
+  <p class="operations-subtitle">{{ year }} — {{ season_label }}</p>
+
+  <div class="operations-grid">
+    <a href="{% url 'oc_session_create' %}" class="operation-card">
+      <div class="operation-icon">📝</div>
+      <h3>{% trans "Record operation doses" %}</h3>
+      <p>{% trans "Online dosimeter readings after an operation." %}</p>
+    </a>
+    <a href="{% url 'oc_session_list' %}" class="operation-card">
+      <div class="operation-icon">📋</div>
+      <h3>{% trans "Operation dose records" %}</h3>
+      <p>{{ session_count }} {% trans "operations this season." %}</p>
+    </a>
+    <a href="{% url 'oc_tld_report_list' %}" class="operation-card">
+      <div class="operation-icon">📄</div>
+      <h3>{% trans "TLD reports" %}</h3>
+      <p>{% if last_report %}{% trans "Latest:" %} {{ last_report }}{% else %}{% trans "No report yet." %}{% endif %}</p>
+    </a>
+    <a href="{% url 'oc_dose_report' %}" class="operation-card">
+      <div class="operation-icon">📈</div>
+      <h3>{% trans "Dose reports" %}</h3>
+      <p>
+        {% if over_count %}<span class="count-danger">{{ over_count }}</span> {% trans "workers over" %} {{ limit }} mSv {% trans "this season" %}
+        {% else %}{% trans "Nobody over the season limit." %}{% endif %}
+      </p>
+    </a>
+    <a href="{% url 'oc_worker_list' %}" class="operation-card">
+      <div class="operation-icon">👷</div>
+      <h3>{% trans "Radiation workers" %}</h3>
+      <p>{{ worker_count }} {% trans "active workers." %}</p>
+    </a>
+    <a href="{% url 'oc_operation_type_list' %}" class="operation-card">
+      <div class="operation-icon">⚙️</div>
+      <h3>{% trans "Operation types" %}</h3>
+      <p>{% trans "Manage the pick-list used in dose records." %}</p>
+    </a>
+  </div>
+</div>
+{% endblock %}

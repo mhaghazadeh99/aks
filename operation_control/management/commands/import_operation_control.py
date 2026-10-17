@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from operation_control import importers
+from operation_control import jalali_utils as ju
 from operation_control.models import (
     CalibrationRecord, Equipment, EquipmentApplication, InspectionItem,
     InspectionPlanYear, InspectionRecord,
@@ -55,7 +56,7 @@ class Command(BaseCommand):
             created, updated = created + was_created, updated + (not was_created)
             if r["last_calibration"]:
                 _, rec_created = CalibrationRecord.objects.get_or_create(
-                    equipment=eq, calibration_date=_jdate(r["last_calibration"]),
+                    equipment=eq, calibration_date=ju.from_jalali(*r["last_calibration"]),
                     defaults={"certificate_number": r["certificate_number"], "laboratory": r["laboratory"]},
                 )
                 records += rec_created
@@ -81,7 +82,3 @@ class Command(BaseCommand):
             f"Inspection plan {year}: {n_items} new items, {n_records} done-marks imported."))
         self._warn(warnings)
 
-
-def _jdate(ymd):
-    import jdatetime
-    return jdatetime.date(*ymd)

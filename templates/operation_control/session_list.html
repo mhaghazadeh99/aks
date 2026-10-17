@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load operation_control_extras %}
+{% block title %}{% trans "Operation dose records" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="table-header">
+    <form method="get" class="header-group" style="flex-wrap:wrap;">
+      <input type="text" name="search" value="{{ f.search }}" placeholder="{% trans 'Search...' %}">
+      <input type="number" name="year" value="{{ f.year }}" placeholder="{% trans 'Jalali year' %}" style="width:110px;">
+      <select name="season">
+        <option value="">{% trans "All seasons" %}</option>
+        {% for v, l in seasons %}<option value="{{ v }}" {% if f.season == v|stringformat:"s" %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+      <select name="operation_type">
+        <option value="">{% trans "All operations" %}</option>
+        {% for t in operation_types %}<option value="{{ t.pk }}" {% if f.operation_type == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+      </select>
+      <button type="submit">🔍</button>
+    </form>
+    <div class="header-group">
+      <a href="{% url 'oc_session_create' %}" class="btn-blue">+ {% trans "Record operation doses" %}</a>
+      <a href="{% url 'oc_dosimetry_home' %}" class="btn-gray">{% trans "Dosimetry" %}</a>
+    </div>
+  </div>
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>{% trans "Operation date" %}</th><th>{% trans "Operation" %}</th><th>{% trans "Location" %}</th>
+      <th>{% trans "Operation duration (min)" %}</th><th>{% trans "Workers" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+    <tbody>
+    {% for s in page_obj %}
+      <tr>
+        <td>{{ s.performed_date|jdate }}</td><td>{{ s.operation_type }}</td><td>{{ s.location|default:"-" }}</td>
+        <td>{{ s.duration_minutes|default_if_none:"-" }}</td><td>{{ s.n_records }}</td>
+        <td><a href="{% url 'oc_session_detail' s.pk %}">👁</a> <a href="{% url 'oc_session_edit' s.pk %}">✏️</a></td>
+      </tr>
+    {% empty %}<tr><td colspan="6" class="text-center">{% trans "No records found." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:15px;">
+    {% if page_obj.has_previous %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
+    <span>{{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} {% trans "records" %})</span>
+    {% if page_obj.has_next %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

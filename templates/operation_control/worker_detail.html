@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load operation_control_extras %}
+{% block title %}{{ w.full_name }}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2>{{ w.full_name }} <small style="color:#777;">{{ w.personnel_code }}</small></h2>
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'oc_worker_edit' w.pk %}" class="btn-gray">{% trans "Edit" %}</a>
+      <a href="{% url 'oc_worker_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
+    </div>
+  </div>
+  <p style="color:#666;">{{ w.unit|default:"-" }} · {{ w.position|default:"-" }} · {{ w.get_status_display }}</p>
+
+  <form method="get" style="margin:14px 0; display:flex; gap:8px; align-items:center;">
+    <label for="year">{% trans "Show 3 years ending" %}</label>
+    <input type="number" id="year" name="year" value="{{ year }}" style="width:100px;">
+    <button type="submit" class="btn-blue">{% trans "Show" %}</button>
+  </form>
+
+  <div style="background:#fff; border-radius:12px; padding:16px; box-shadow:0 3px 10px rgba(0,0,0,.06); margin-bottom:24px;">
+    <canvas id="trendChart" height="90"></canvas>
+  </div>
+
+  <h3>{% trans "Season totals (mSv)" %}</h3>
+  <p style="color:#777; font-size:13px;">
+    {% trans "TLD body dose is the official record. Online (operational) dose is shown beside it, never added to it. Hand dose is separate and never added to the body dose." %}
+  </p>
+  <div class="table-scroll">
+  <table>
+    <thead><tr>
+      <th>{% trans "Period" %}</th><th>{% trans "TLD body" %}</th><th>{% trans "TLD hand" %}</th><th>{% trans "Online" %}</th>
+    </tr></thead>
+    <tbody>
+    {% for r in trend %}
+      <tr>
+        <td>{{ r.label }}</td>
+        <td>{{ r.tld_body|floatformat:"-4" }}{% if r.tld_body > limit %} <span class="badge bg-danger">{% trans "Over limit" %}</span>{% endif %}</td>
+        <td>{{ r.tld_hand|floatformat:"-4" }}</td>
+        <td>{{ r.online|floatformat:"-4" }}{% if r.online > limit %} <span class="badge bg-warning text-dark">{% trans "Over limit" %}</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="margin-top:28px;">{% trans "Latest TLD readings" %}</h3>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>{% trans "TLD report" %}</th><th>{% trans "TLD code" %}</th><th>{% trans "Wearing position" %}</th>
+      <th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th></tr></thead>
+    <tbody>
+    {% for r in tld_readings %}
+      <tr><td><a href="{% url 'oc_tld_report_detail' r.report_id %}">{{ r.report }}</a></td><td>{{ r.tld_code }}</td>
+        <td>{{ r.get_position_display }}</td><td>{{ r.gamma_msv|default_if_none:"-" }}</td><td>{{ r.neutron_msv|default_if_none:"-" }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="text-center">{% trans "No TLD readings." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="margin-top:28px;">{% trans "Latest online dose records" %}</h3>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>{% trans "Operation date" %}</th><th>{% trans "Operation" %}</th><th>{% trans "Device" %}</th>
+      <th>{% trans "Dose type" %}</th><th>{% trans "Recorded dose" %}</th><th>{% trans "Received over (min)" %}</th></tr></thead>
+    <tbody>
+    {% for r in online_records %}
+      <tr><td>{{ r.session.performed_date|jdate }}</td>
+        <td><a href="{% url 'oc_session_detail' r.session_id %}">{{ r.session.operation_type }}</a></td>
+        <td>{{ r.device.equipment_id }}</td><td>{{ r.get_dose_type_display }}</td>
+        <td>{{ r.dose_value|floatformat:"-4" }} {{ r.get_dose_unit_display }}</td>
+        <td>{{ r.exposure_minutes|default_if_none:"-" }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="text-center">{% trans "No online records." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+{{ chart|json_script:"chartData" }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof Chart === "undefined") return;
+  const d = JSON.parse(document.getElementById("chartData").textContent);
+  new Chart(document.getElementById("trendChart"), {
+    type: "bar",
+    data: { labels: d.labels, datasets: [
+      { label: "{% trans 'TLD body (mSv)' %}", data: d.tld, backgroundColor: "#0d6efd" },
+      { label: "{% trans 'Online (mSv)' %}", data: d.online, backgroundColor: "#6f42c1" },
+      { type: "line", label: "{% trans 'Season limit' %}", data: d.labels.map(() => d.limit),
+        borderColor: "#dc3545", borderDash: [6, 4], pointRadius: 0, fill: false }
+    ]},
+    options: { scales: { y: { beginAtZero: true } } }
+  });
+});
+</script>
+{% endblock %}

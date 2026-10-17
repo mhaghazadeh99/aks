@@ -2,14 +2,15 @@ from django import template
 
 from operation_control import conf
 from operation_control import jalali_utils as ju
-from operation_control.models import Equipment
+from operation_control import services
+from operation_control.models import Equipment, InspectionPlanYear
 
 register = template.Library()
 
 
 @register.simple_tag
 def calibration_counts():
-    """Counts for the hub card, among ACTIVE equipment only."""
+    """Hub-card counts, among ACTIVE equipment only."""
     today = ju.today()
     soon = ju.add_days(today, conf.CALIBRATION_WARNING_DAYS)
     active = Equipment.objects.filter(status=Equipment.Status.ACTIVE)
@@ -17,3 +18,26 @@ def calibration_counts():
         "expired": active.filter(due_date__lt=today).count(),
         "due_soon": active.filter(due_date__gte=today, due_date__lte=soon).count(),
     }
+
+
+@register.simple_tag
+def dosimetry_counts():
+    """Workers over the season whole-body limit (TLD) in the current Jalali season."""
+    year, season = services.current_year_season()
+    return {"over_limit": services.over_limit_count(year, season), "limit": conf.SEASON_DOSE_LIMIT_MSV}
+
+
+@register.simple_tag
+def inspection_counts():
+    """Items overdue / due this week for the current plan year (zeros if there is none)."""
+    plan = InspectionPlanYear.objects.filter(year=ju.jalali_today()[0]).first()
+    if not plan:
+        return {"overdue": 0, "this_week": 0, "has_plan": False}
+    s = services.plan_matrix(plan)["summary"]
+    return {"overdue": s["overdue_items"], "this_week": s["pending_now"], "has_plan": True}
+
+
+@register.filter
+def jdate(value):
+    """Jalali (1405/07/25) when the UI language is Persian, ISO otherwise. Empty for None."""
+    return ju.display(value) if value else ""

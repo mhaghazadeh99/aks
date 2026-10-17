@@ -16,18 +16,6 @@ from .models import Equipment, EquipmentApplication
 # TODO: swap login_required for your project's permission decorators.
 
 
-# ------------------------------------------------------------------ hub
-@login_required
-def hub(request):
-    today = ju.today()
-    active = Equipment.objects.filter(status=Equipment.Status.ACTIVE)
-    soon = ju.add_days(today, conf.CALIBRATION_WARNING_DAYS)
-    return render(request, "operation_control/hub.html", {
-        "calibration_expired": active.filter(due_date__lt=today).count(),
-        "calibration_due_soon": active.filter(due_date__gte=today, due_date__lte=soon).count(),
-    })
-
-
 # ------------------------------------------------------------------ equipment list
 TEXT_FILTERS = {
     "equipment_id": "equipment_id__icontains",

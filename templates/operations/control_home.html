@@ -146,9 +146,27 @@
         <span class="count-warn">{{ cal.due_soon }}</span> {% trans "due within 30 days" %}
     </p>
 </a>
+<a href="{% url 'oc_dosimetry_home' %}" class="operation-card">
+    {% dosimetry_counts as dose %}
+    <div class="operation-icon">☢️</div>
+    <h3>{% trans "Dosimetry" %}</h3>
+    <p>
+        {% if dose.over_limit %}<span class="count-danger">{{ dose.over_limit }}</span> {% trans "workers over the season limit" %}
+        {% else %}{% trans "TLD reports and online dose records." %}{% endif %}
+    </p>
+</a>
 
-
-
+<a href="{% url 'oc_inspection_plan' %}" class="operation-card">
+    {% inspection_counts as insp %}
+    <div class="operation-icon">📋</div>
+    <h3>{% trans "Inspection Plan" %}</h3>
+    <p>
+        {% if insp.has_plan %}
+            <span class="count-danger">{{ insp.overdue }}</span> {% trans "items overdue" %},
+            <span class="count-warn">{{ insp.this_week }}</span> {% trans "due this week" %}
+        {% else %}{% trans "Weekly inspection schedule and progress." %}{% endif %}
+    </p>
+</a>
 
 </div>
 

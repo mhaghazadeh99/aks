@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Dose reports" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+tr.row-over td{ background:#fff0f0; }
+td.cell-over{ background:#ffd9d9; font-weight:700; }
+.report-note{ color:#777; font-size:13px; margin:6px 0 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="table-header">
+    <form method="get" class="header-group">
+      <label>{% trans "Jalali year" %}</label>
+      <input type="number" name="year" value="{{ year }}" style="width:100px;">
+      <select name="season" onchange="this.form.submit()">
+        {% for v, l in seasons %}<option value="{{ v }}" {% if season == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+      <label><input type="checkbox" name="only_data" value="1" {% if only_data %}checked{% endif %} onchange="this.form.submit()"> {% trans "Only workers with data" %}</label>
+      <button type="submit" class="btn-blue">{% trans "Show" %}</button>
+    </form>
+    <div class="header-group">
+      <a class="btn-green" href="?year={{ year }}&season={{ season }}&export=csv">{% trans "Export CSV" %}</a>
+      <a href="{% url 'oc_dosimetry_home' %}" class="btn-gray">{% trans "Dosimetry" %}</a>
+    </div>
+  </div>
+
+  <h3>{{ year }} — {{ season_label }}</h3>
+  <p class="report-note">
+    {% trans "TLD (official record) and online (operational) doses are shown side by side and are never added together. The season limit applies to the whole-body TLD dose (gamma + neutron); hand dose is reported separately." %}
+    {% trans "Season limit" %}: {{ limit }} mSv.
+  </p>
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr><th rowspan="2">{% trans "Personnel code" %}</th><th rowspan="2">{% trans "Full name" %}</th>
+        <th colspan="3">{% trans "TLD body (mSv)" %}</th><th colspan="2">{% trans "TLD hand (mSv)" %}</th>
+        <th colspan="3">{% trans "Online (mSv)" %}</th></tr>
+      <tr><th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th><th>{% trans "Total" %}</th>
+        <th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th>
+        <th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th><th>{% trans "Total" %}</th></tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+      <tr class="{% if r.tld_over %}row-over{% endif %}">
+        <td>{{ r.worker.personnel_code }}</td>
+        <td><a href="{% url 'oc_worker_detail' r.worker.pk %}">{{ r.worker.full_name }}</a></td>
+        <td>{{ r.t.body_gamma|floatformat:"-3" }}</td><td>{{ r.t.body_neutron|floatformat:"-3" }}</td>
+        <td class="{% if r.tld_over %}cell-over{% endif %}">{{ r.body_total|floatformat:"-3" }}</td>
+        <td>{{ r.t.hand_gamma|floatformat:"-3" }}</td><td>{{ r.t.hand_neutron|floatformat:"-3" }}</td>
+        <td>{{ r.o.gamma|floatformat:"-3" }}</td><td>{{ r.o.neutron|floatformat:"-3" }}</td>
+        <td class="{% if r.online_over %}cell-over{% endif %}">{{ r.online_total|floatformat:"-3" }}</td>
+      </tr>
+    {% empty %}<tr><td colspan="10" class="text-center">{% trans "No workers found." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="margin-top:34px;">{% trans "Yearly summary" %} — {{ year }}</h3>
+  <p class="report-note">{% trans "Whole-body TLD dose per season. Yearly limit" %}: {{ annual_limit }} mSv.</p>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>{% trans "Full name" %}</th>
+      {% for v, l in seasons %}<th>{{ l }}</th>{% endfor %}
+      <th>{% trans "TLD body total (mSv)" %}</th><th>{% trans "Online total (mSv)" %}</th></tr></thead>
+    <tbody>
+    {% for r in year_rows %}
+      <tr class="{% if r.over %}row-over{% endif %}">
+        <td><a href="{% url 'oc_worker_detail' r.worker.pk %}">{{ r.worker.full_name }}</a></td>
+        {% for s in r.seasons %}<td class="{% if s.over %}cell-over{% endif %}">{{ s.value|floatformat:"-3" }}</td>{% endfor %}
+        <td class="{% if r.over %}cell-over{% endif %}"><strong>{{ r.tld_total|floatformat:"-3" }}</strong></td>
+        <td>{{ r.online_total|floatformat:"-3" }}</td>
+      </tr>
+    {% empty %}<tr><td colspan="7" class="text-center">{% trans "No data for this year." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="margin-top:34px;">{% trans "Environmental TLD points" %} — {{ year }}</h3>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>{% trans "Environmental point" %}</th>
+      {% for v, l in seasons %}<th>{{ l }} ({% trans "gamma" %} / {% trans "neutron" %})</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for r in env_rows %}
+      <tr><td>{{ r.point.name }}{% if r.point.location %} <small style="color:#777;">({{ r.point.location }})</small>{% endif %}</td>
+        {% for s in r.seasons %}<td>{{ s.gamma|floatformat:"-3" }} / {{ s.neutron|floatformat:"-3" }}</td>{% endfor %}</tr>
+    {% empty %}<tr><td colspan="5" class="text-center">{% trans "No environmental points defined yet (add them in the admin)." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

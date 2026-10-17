@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from django_jalali.db import models as jmodels
 
 from . import conf
 from . import jalali_utils as ju
@@ -113,8 +112,8 @@ class Equipment(TimeStamped):
     notes = models.TextField(_("Notes / action"), blank=True)
 
     # Derived from the newest CalibrationRecord (kept in the DB so lists can filter/sort on it).
-    last_calibration_date = jmodels.jDateField(_("Last calibration"), null=True, blank=True, editable=False)
-    due_date = jmodels.jDateField(_("Calibration due date"), null=True, blank=True, editable=False)
+    last_calibration_date = models.DateField(_("Last calibration"), null=True, blank=True, editable=False)
+    due_date = models.DateField(_("Calibration due date"), null=True, blank=True, editable=False)
 
     class Meta:
         ordering = ["equipment_id"]
@@ -162,11 +161,11 @@ class Equipment(TimeStamped):
 
     @property
     def last_calibration_display(self):
-        return ju.fmt(self.last_calibration_date)
+        return ju.display(self.last_calibration_date)
 
     @property
     def due_date_display(self):
-        return ju.fmt(self.due_date)
+        return ju.display(self.due_date)
 
 
 class CalibrationRecord(TimeStamped):
@@ -177,7 +176,7 @@ class CalibrationRecord(TimeStamped):
 
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name="calibrations",
                                   verbose_name=_("Equipment"))
-    calibration_date = jmodels.jDateField(_("Calibration date"))
+    calibration_date = models.DateField(_("Calibration date"))
     certificate_number = models.CharField(_("Certificate number"), max_length=80, blank=True)
     laboratory = models.CharField(_("Laboratory / reference"), max_length=150, blank=True)
     calibration_type = models.CharField(_("Calibration type"), max_length=10, choices=Type.choices, blank=True)
@@ -192,11 +191,11 @@ class CalibrationRecord(TimeStamped):
         verbose_name_plural = _("Calibration records")
 
     def __str__(self):
-        return f"{self.equipment_id} @ {ju.fmt(self.calibration_date)}"
+        return f"{self.equipment_id} @ {ju.display(self.calibration_date)}"
 
     @property
     def calibration_date_display(self):
-        return ju.fmt(self.calibration_date)
+        return ju.display(self.calibration_date)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -230,7 +229,7 @@ class RadiationWorker(TimeStamped):
     unit = models.CharField(_("Unit / section"), max_length=120, blank=True)
     position = models.CharField(_("Position"), max_length=120, blank=True)
     status = models.CharField(_("Status"), max_length=10, choices=Status.choices, default=Status.ACTIVE)
-    exit_date = jmodels.jDateField(_("Exit date"), null=True, blank=True)
+    exit_date = models.DateField(_("Exit date"), null=True, blank=True)
     notes = models.TextField(_("Notes"), blank=True)
 
     class Meta:
@@ -255,7 +254,7 @@ class TLDReport(TimeStamped):
     year = models.PositiveSmallIntegerField(_("Jalali year"))
     season = models.PositiveSmallIntegerField(_("Season"), choices=Season.choices)
     report_number = models.CharField(_("Report number"), max_length=60)
-    received_date = jmodels.jDateField(_("Date received"), null=True, blank=True)
+    received_date = models.DateField(_("Date received"), null=True, blank=True)
     attachment = models.FileField(_("Report file"), upload_to="operation_control/tld/%Y/", blank=True)
     notes = models.TextField(_("Notes"), blank=True)
 
@@ -292,7 +291,7 @@ class TLDReading(TimeStamped):
             models.UniqueConstraint(fields=["report", "tld_code"], name="uniq_tld_code_per_report"),
             # NOTE: on Django >= 5.1 you may rename `check=` to `condition=`.
             models.CheckConstraint(
-                condition =(Q(worker__isnull=False, env_point__isnull=True)
+                condition=(Q(worker__isnull=False, env_point__isnull=True)
                        | Q(worker__isnull=True, env_point__isnull=False)),
                 name="tld_worker_xor_env_point",
             ),
@@ -317,7 +316,7 @@ class OperationDoseSession(TimeStamped):
     """One operation (header). Each exposed worker is a line in OnlineDoseRecord."""
     operation_type = models.ForeignKey(OperationType, on_delete=models.PROTECT, related_name="sessions",
                                        verbose_name=_("Operation"))
-    performed_date = jmodels.jDateField(_("Operation date"))
+    performed_date = models.DateField(_("Operation date"))
     location = models.CharField(_("Location"), max_length=200, blank=True)
     duration_minutes = models.PositiveIntegerField(_("Operation duration (min)"), null=True, blank=True)
     description = models.TextField(_("Description"), blank=True)
@@ -330,12 +329,12 @@ class OperationDoseSession(TimeStamped):
         verbose_name_plural = _("Operation dose sessions")
 
     def save(self, *args, **kwargs):
-        self.year = self.performed_date.year
-        self.season = ju.season_of_month(self.performed_date.month)
+        jy, jm, _jd = ju.to_jalali(self.performed_date)   # reports group by Jalali year / season
+        self.year, self.season = jy, ju.season_of_month(jm)
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.operation_type} — {ju.fmt(self.performed_date)}"
+        return f"{self.operation_type} — {ju.display(self.performed_date)}"
 
 
 class OnlineDoseRecord(models.Model):
@@ -426,7 +425,9 @@ class InspectionRecord(TimeStamped):
     plan_year = models.ForeignKey(InspectionPlanYear, on_delete=models.CASCADE, related_name="records",
                                   verbose_name=_("Plan year"))
     week_index = models.PositiveSmallIntegerField(_("Plan week"))
-    done_date = jmodels.jDateField(_("Date done"), null=True, blank=True,
+    is_done = models.BooleanField(_("Done"), default=True,
+                                  help_text=_("Untick to only record a note / reason for delay."))
+    done_date = models.DateField(_("Date done"), null=True, blank=True,
                                    help_text=_("Empty for rows imported from Excel (it only stored a tick)."))
     done_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
                                 related_name="+", verbose_name=_("Done by"))

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <h2 style="margin-bottom:16px;">{{ title }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div style="max-width:1000px;">{% crispy form %}</div>
+
+    <h3 style="margin-top:24px;">{% trans "Doses received" %}</h3>
+    <p style="color:#777; font-size:13px;">
+      {% trans "One line per worker and dose type. “Received over” is how many minutes it took to receive that dose. Devices marked ⚠ have an expired or soon-to-expire calibration." %}
+    </p>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
+    <div class="table-scroll">
+    <table>
+      <thead><tr>
+        <th>{% trans "Worker" %}</th><th>{% trans "Device" %}</th><th>{% trans "Dose type" %}</th>
+        <th>{% trans "Recorded dose" %}</th><th>{% trans "Unit" %}</th><th>{% trans "Received over (min)" %}</th><th>{% trans "Delete" %}</th>
+      </tr></thead>
+      <tbody id="rows">
+      {% for f in formset %}
+        <tr>
+          {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+          <td>{{ f.worker }}{{ f.worker.errors }}</td><td>{{ f.device }}{{ f.device.errors }}</td>
+          <td>{{ f.dose_type }}{{ f.dose_type.errors }}</td><td>{{ f.dose_value }}{{ f.dose_value.errors }}</td>
+          <td>{{ f.dose_unit }}</td><td>{{ f.exposure_minutes }}{{ f.exposure_minutes.errors }}</td>
+          <td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}{{ f.non_field_errors }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <template id="emptyRow">
+      <tr>
+        {% for h in formset.empty_form.hidden_fields %}{{ h }}{% endfor %}
+        <td>{{ formset.empty_form.worker }}</td><td>{{ formset.empty_form.device }}</td>
+        <td>{{ formset.empty_form.dose_type }}</td><td>{{ formset.empty_form.dose_value }}</td>
+        <td>{{ formset.empty_form.dose_unit }}</td><td>{{ formset.empty_form.exposure_minutes }}</td><td></td>
+      </tr>
+    </template>
+
+    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button type="button" id="addRow" class="btn-gray">+ {% trans "Add worker" %}</button>
+      <button type="submit" class="btn-blue">{% trans "Save" %}</button>
+      <a href="{% if session %}{% url 'oc_session_detail' session.pk %}{% else %}{% url 'oc_session_list' %}{% endif %}" class="btn-gray">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById("addRow").addEventListener("click", function () {
+  const total = document.getElementById("id_records-TOTAL_FORMS");
+  const idx = parseInt(total.value, 10);
+  const html = document.getElementById("emptyRow").innerHTML.replace(/__prefix__/g, idx);
+  document.getElementById("rows").insertAdjacentHTML("beforeend", html);
+  total.value = idx + 1;
+});
+</script>
+{% endblock %}

@@ -64,6 +64,31 @@
         {% csrf_token %}
         <input type="hidden" name="confirm" value="1">
         <input type="hidden" name="route" value="{{ route }}">
+
+        <h6 class="mt-2">{% trans "Chemical pollutants" %}</h6>
+        {% if pollutants %}
+        <p class="small text-muted mb-1">{% trans "Already on file for this batch:" %}</p>
+        <ul class="small">
+          {% for p in pollutants %}<li>{{ p.name }} — {{ p.concentration|floatformat:"-6" }} {{ p.get_unit_display }}{% if p.measured_on %} ({{ p.measured_on }}){% endif %}</li>{% endfor %}
+        </ul>
+        {% endif %}
+        <p class="small text-muted mb-1">{% trans "Measured at release (optional) — saved on this release record:" %}</p>
+        <table class="table table-sm table-bordered mb-2" style="max-width:640px">
+          <thead class="table-light"><tr><th>{% trans "Pollutant" %}</th><th>{% trans "Concentration" %}</th><th>{% trans "Unit" %}</th><th></th></tr></thead>
+          <tbody id="rel-pollutant-body"></tbody>
+        </table>
+        <button type="button" class="btn btn-outline-primary btn-sm mb-3" id="rel-add-pollutant">+ {% trans "Add pollutant" %}</button>
+        <template id="rel-pollutant-row">
+          <tr>
+            <td><input type="text" name="rel_pollutant_name" class="form-control form-control-sm"></td>
+            <td><input type="number" step="any" min="0" name="rel_pollutant_conc" class="form-control form-control-sm"></td>
+            <td><select name="rel_pollutant_unit" class="form-select form-select-sm">
+              {% for value, label in units %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+            </select></td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger rel-remove">✕</button></td>
+          </tr>
+        </template>
+
         <label class="form-label">{% trans "Remarks" %}</label>
         <textarea name="remarks" rows="2" class="form-control mb-3"></textarea>
         <div class="d-flex justify-content-end gap-2">
@@ -78,4 +103,17 @@
   </div>
 
 </div></div></div>
+
+<script>
+(function () {
+    const body = document.getElementById("rel-pollutant-body");
+    const tpl = document.getElementById("rel-pollutant-row");
+    document.getElementById("rel-add-pollutant").addEventListener("click", function () {
+        const tmp = document.createElement("tbody");
+        tmp.innerHTML = tpl.innerHTML;
+        body.appendChild(tmp.querySelector("tr"));
+    });
+    body.addEventListener("click", e => { if (e.target.classList.contains("rel-remove")) e.target.closest("tr").remove(); });
+})();
+</script>
 {% endblock %}

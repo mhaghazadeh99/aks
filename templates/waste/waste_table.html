@@ -71,7 +71,6 @@
     <button class="btn-blue" id="newMovementBtn">{% trans "New Movement" %}</button>
     <button class="btn-blue" id="mergeBtn">{% trans "Merge" %}</button>
     <button class="btn-blue" id="sendToAnalysisBtn">{% trans "Send to Analysis" %}</button>
-    <a href="{% url 'waste_receipt_list' %}" class="btn-blue">{% trans "Received Waste" %}</a>
     <a href="{% url 'waste_create' %}" class="btn-blue">+ {% trans "Add Waste" %}</a>
     <a href="{% url 'waste_import_csv' %}" class="btn-blue">{% trans "Import CSV" %}</a>
   </div>
@@ -122,7 +121,6 @@
 <th data-col="beta_gamma_contamination">{% trans "Beta/Gamma Contamination" %}</th>
 <th data-col="ph">{% trans "pH" %}</th>
 <th data-col="density">{% trans "Density" %}</th>
-<th data-col="hardness">{% trans "Hardness" %}</th>
 <th data-col="total_solids">{% trans "Total Solids" %}</th>
 <th data-col="suspended_solids">{% trans "Suspended Solids" %}</th>
 <th data-col="soluble_solids">{% trans "Soluble Solids" %}</th>
@@ -165,7 +163,7 @@
 <td data-col="origin_facility">{{ b.origin_facility|default:"-" }}</td>
 <td data-col="origin_of_waste">{{ b.get_origin_of_waste_display }}</td>
 <td data-col="date_received">{{ b.date_received|default:"-" }}</td>
-<td data-col="material">{{ b.get_material_display|default:"-" }}</td>
+<td data-col="material">{{ b.material|default:"-" }}</td>
 <td data-col="waste_arising_from">{{ b.waste_arising_from|default:"-" }}</td>
 <td data-col="container_type">{{ b.container_type|default:"-" }}</td>
 <td data-col="waste_appearance">{{ b.waste_appearance|default:"-" }}</td>
@@ -191,7 +189,6 @@
 <td data-col="beta_gamma_contamination">{{ b.beta_gamma_contamination_bq_cm2|default:"-" }}</td>
 <td data-col="ph">{{ b.ph|default:"-" }}</td>
 <td data-col="density">{{ b.density|default:"-" }}</td>
-<td data-col="hardness">{{ b.hardness|default:"-" }}</td>
 <td data-col="total_solids">{{ b.total_solids|default:"-" }}</td>
 <td data-col="suspended_solids">{{ b.suspended_solids|default:"-" }}</td>
 <td data-col="soluble_solids">{{ b.soluble_solids|default:"-" }}</td>
@@ -199,7 +196,7 @@
 <td data-col="possible_treatment">{{ b.get_possible_treatment_display|default:"-" }}</td>
 <td data-col="pretreatment">{{ b.get_pretreatment_display|default:"-" }}</td>
 <td data-col="treatment">{{ b.get_treatment_display|default:"-" }}</td>
-<td data-col="package_type">{{ b.get_package_type_display|default:"-" }}</td>
+<td data-col="package_type">{{ b.package_type|default:"-" }}</td>
 <td data-col="waste_matrix">{{ b.waste_matrix|default:"-" }}</td>
 <td data-col="waste_to_matrix_ratio">{{ b.waste_to_matrix_ratio|default:"-" }}</td>
 <td data-col="waste_mass_kg">{{ b.waste_mass_kg|default:"-" }}</td>
@@ -222,14 +219,18 @@
 
 <td class="action-icons">
   <a href="{% url 'waste_detail' b.id %}" class="icon-btn" title="{% trans 'View' %}">👁</a>
+  {% if b.is_closed %}
+  <span class="icon-btn" style="opacity:.45;cursor:not-allowed" title="{% trans 'Closed — no further work on this batch' %}">🔒</span>
+  {% else %}
   <a href="{% url 'waste_edit' b.id %}" class="icon-btn edit" title="{% trans 'Edit' %}">✏️</a>
   <a href="{% url 'waste_split' b.id %}" class="icon-btn" title="{% trans 'Split' %}">✂️</a>
   <a href="{% url 'waste_condition' b.id %}" class="icon-btn" title="{% trans 'Condition' %}">🧱</a>
-  {% if b.status != "CONSUMED" %}<a href="{% url 'waste_release' b.id %}" class="icon-btn" title="{% trans 'Release' %}">💧</a>{% endif %}
+  <a href="{% url 'waste_release' b.id %}" class="icon-btn" title="{% trans 'Release' %}">💧</a>
+  {% endif %}
 </td>
 </tr>
 {% empty %}
-<tr><td colspan="50" class="text-center">{% trans "No waste batches found." %}</td></tr>
+<tr><td colspan="49" class="text-center">{% trans "No waste batches found." %}</td></tr>
 {% endfor %}
 </tbody>
 </table>

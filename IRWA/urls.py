@@ -39,6 +39,7 @@ path("reference/", include("reference.urls")),
 path("financial/", include("financial.urls")),
 path("receive-source/",include("receive_source.urls"),),
 path("sell_source/",include("sell_source.urls"),),
+path("operation-control/", include("operation_control.urls")),
 ]
 
 

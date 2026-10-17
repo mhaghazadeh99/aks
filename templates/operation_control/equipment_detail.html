@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ e.equipment_id }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px 28px; margin:18px 0 28px; }
+.detail-grid dt { color:#777; font-size:13px; }
+.detail-grid dd { margin:2px 0 0; font-weight:600; }
+.cal-summary { display:flex; gap:12px; align-items:center; margin-bottom:6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2>{{ e.name }} <small style="color:#777;">{{ e.equipment_id }}</small></h2>
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'oc_calibration_add' e.pk %}" class="btn-blue">+ {% trans "Add calibration" %}</a>
+      <a href="{% url 'oc_equipment_edit' e.pk %}" class="btn-gray">{% trans "Edit" %}</a>
+      <a href="{% url 'oc_equipment_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
+    </div>
+  </div>
+
+  <div class="cal-summary">
+    <span class="badge {{ e.calibration_badge_class }}">{{ e.calibration_status.label }}</span>
+    {% if e.days_remaining is not None %}
+      <span>{{ e.days_remaining }} {% trans "days remaining" %} — {% trans "due" %} {{ e.due_date_display }}</span>
+    {% endif %}
+  </div>
+
+  <dl class="detail-grid">
+    <div><dt>{% trans "Model" %}</dt><dd>{{ e.model_name|default:"-" }}</dd></div>
+    <div><dt>{% trans "Serial number" %}</dt><dd>{{ e.serial_number|default:"-" }}</dd></div>
+    <div><dt>{% trans "Manufacturer" %}</dt><dd>{{ e.manufacturer|default:"-" }}</dd></div>
+    <div><dt>{% trans "Application" %}</dt><dd>{{ e.application|default:"-" }}</dd></div>
+    <div><dt>{% trans "Status" %}</dt><dd>{{ e.get_status_display }}{% if e.loan_to %} ({{ e.loan_to }}){% endif %}</dd></div>
+    <div><dt>{% trans "Center" %}</dt><dd>{{ e.get_center_display|default:"-" }}</dd></div>
+    <div><dt>{% trans "Current location" %}</dt><dd>{{ e.current_location|default:"-" }}</dd></div>
+    <div><dt>{% trans "Current label" %}</dt><dd>{{ e.get_current_label_display|default:"-" }}</dd></div>
+    <div><dt>{% trans "Calibration period (months)" %}</dt><dd>{{ e.calibration_period_months }}</dd></div>
+    <div><dt>{% trans "Notes / action" %}</dt><dd>{{ e.notes|default:"-" }}</dd></div>
+  </dl>
+
+  <h3>{% trans "Calibration history" %}</h3>
+  <div class="table-scroll">
+  <table>
+    <thead><tr>
+      <th>{% trans "Calibration date" %}</th><th>{% trans "Certificate number" %}</th>
+      <th>{% trans "Laboratory / reference" %}</th><th>{% trans "Calibration type" %}</th>
+      <th>{% trans "Label after calibration" %}</th><th>{% trans "Certificate file" %}</th>
+    </tr></thead>
+    <tbody>
+    {% for c in calibrations %}
+      <tr>
+        <td>{{ c.calibration_date_display }}</td>
+        <td>{{ c.certificate_number|default:"-" }}</td>
+        <td>{{ c.laboratory|default:"-" }}</td>
+        <td>{{ c.get_calibration_type_display|default:"-" }}</td>
+        <td>{{ c.get_result_label_display|default:"-" }}</td>
+        <td>{% if c.attachment %}<a href="{{ c.attachment.url }}" target="_blank">{% trans "File" %}</a>{% else %}-{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-center">{% trans "No calibrations recorded yet." %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="content" style="max-width:1000px;">
+  <h2 style="margin-bottom:20px;">{{ title }}{% if equipment %} — {{ equipment.equipment_id }}{% endif %}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {% crispy form %}
+    <div style="margin-top:20px; display:flex; gap:10px;">
+      <button type="submit" class="btn-blue">{% trans "Save" %}</button>
+      <a href="{% if equipment %}{% url 'oc_equipment_detail' equipment.pk %}{% else %}{% url 'oc_equipment_list' %}{% endif %}" class="btn-gray">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Equipment Calibration" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.action-icons { display:flex; gap:8px; align-items:center; }
+.icon-btn {
+    display:inline-flex; justify-content:center; align-items:center; width:34px; height:34px; border-radius:8px;
+    text-decoration:none; font-size:16px; background:#f5f6f8; color:#444; transition:all .2s ease; border:1px solid transparent;
+}
+.icon-btn:hover { transform:translateY(-2px); background:#fff; border-color:#ddd; box-shadow:0 3px 10px rgba(0,0,0,.08); }
+.pagination { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:15px; }
+.pagination a, .pagination span { padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; }
+.pagination .current { background:#0d6efd; color:#fff; border-color:#0d6efd; }
+.page-info { text-align:center; margin-top:10px; color:#666; }
+.col-toggle { width:16px !important; height:16px !important; min-width:16px !important; min-height:16px !important;
+    flex:0 0 auto !important; opacity:1 !important; display:inline-block !important; appearance:auto !important; -webkit-appearance:checkbox !important; }
+.column-panel label { display:flex; align-items:center; justify-content:flex-start; gap:8px; white-space:nowrap; }
+.column-panel { display:flex; flex-direction:column; }
+.hidden { display:none !important; }
+#filterContainer { display:flex; flex-direction:row; flex-wrap:wrap; gap:10px; align-items:center; }
+.filter-row { display:inline-flex; align-items:center; gap:6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+
+<div class="table-header">
+  <div class="header-group">
+    <input type="text" id="searchInput" placeholder="{% trans 'Search...' %}" value="{{ search }}">
+    <button id="searchBtn">🔍</button>
+  </div>
+
+  <div class="column-bar">
+    <button class="btn-gray" onclick="toggleColumnPanel()">☰ {% trans "Show/Hide Columns" %}</button>
+    <div id="columnPanel" class="column-panel hidden"></div>
+  </div>
+
+  <div class="header-group">
+    <label for="pageSize">{% trans "Items:" %}</label>
+    <select id="pageSize">
+      <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
+      <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
+      <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
+      <option value="all" {% if page_size == "all" %}selected{% endif %}>{% trans "All" %}</option>
+    </select>
+  </div>
+
+  <div class="header-group">
+    <button class="btn-green" onclick="window.location.href='{% url 'oc_equipment_export_csv' %}' + window.location.search">{% trans "Export CSV" %}</button>
+    <a href="{% url 'oc_equipment_create' %}" class="btn-blue">+ {% trans "Add Equipment" %}</a>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <div id="filterContainer"></div>
+  <button id="addFilter" class="btn-blue">{% trans "Add Filter" %}</button>
+  <button id="applyFilters" class="btn-info">{% trans "Apply" %}</button>
+</div>
+
+<div class="table-scroll">
+<table id="mainTable">
+<thead>
+<tr>
+<th data-col="equipment_id">{% trans "Equipment ID" %}</th>
+<th data-col="name">{% trans "Device name" %}</th>
+<th data-col="model_name">{% trans "Model" %}</th>
+<th data-col="serial_number">{% trans "Serial number" %}</th>
+<th data-col="manufacturer">{% trans "Manufacturer" %}</th>
+<th data-col="application">{% trans "Application" %}</th>
+<th data-col="status">{% trans "Status" %}</th>
+<th data-col="center">{% trans "Center" %}</th>
+<th data-col="current_location">{% trans "Current location" %}</th>
+<th data-col="last_calibration">{% trans "Last calibration" %}</th>
+<th data-col="period">{% trans "Period (months)" %}</th>
+<th data-col="due_date">{% trans "Due date" %}</th>
+<th data-col="days_remaining">{% trans "Days remaining" %}</th>
+<th data-col="calibration_status">{% trans "Calibration status" %}</th>
+<th data-col="current_label">{% trans "Current label" %}</th>
+<th data-col="notes">{% trans "Notes / action" %}</th>
+<th>{% trans "Actions" %}</th>
+</tr>
+</thead>
+<tbody>
+{% for e in equipment_list %}
+<tr>
+<td data-col="equipment_id">{{ e.equipment_id }}</td>
+<td data-col="name">{{ e.name }}</td>
+<td data-col="model_name">{{ e.model_name|default:"-" }}</td>
+<td data-col="serial_number">{{ e.serial_number|default:"-" }}</td>
+<td data-col="manufacturer">{{ e.manufacturer|default:"-" }}</td>
+<td data-col="application">{{ e.application|default:"-" }}</td>
+<td data-col="status">{{ e.get_status_display }}{% if e.loan_to %} ({{ e.loan_to }}){% endif %}</td>
+<td data-col="center">{{ e.get_center_display|default:"-" }}</td>
+<td data-col="current_location">{{ e.current_location|default:"-" }}</td>
+<td data-col="last_calibration">{{ e.last_calibration_display|default:"-" }}</td>
+<td data-col="period">{{ e.calibration_period_months }}</td>
+<td data-col="due_date">{{ e.due_date_display|default:"-" }}</td>
+<td data-col="days_remaining">{{ e.days_remaining|default_if_none:"-" }}</td>
+<td data-col="calibration_status"><span class="badge {{ e.calibration_badge_class }}">{{ e.calibration_status.label }}</span></td>
+<td data-col="current_label">{{ e.get_current_label_display|default:"-" }}</td>
+<td data-col="notes">{{ e.notes|default:"-" }}</td>
+<td class="action-icons">
+  <a href="{% url 'oc_equipment_detail' e.id %}" class="icon-btn" title="{% trans 'View' %}">👁</a>
+  <a href="{% url 'oc_equipment_edit' e.id %}" class="icon-btn" title="{% trans 'Edit' %}">✏️</a>
+  <a href="{% url 'oc_calibration_add' e.id %}" class="icon-btn" title="{% trans 'Add calibration' %}">🎚️</a>
+</td>
+</tr>
+{% empty %}
+<tr><td colspan="17" class="text-center">{% trans "No equipment found." %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="pagination">
+  {% if page_obj.has_previous %}
+    <a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>
+  {% endif %}
+  {% for num in page_obj.paginator.page_range %}
+    {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+      {% if page_obj.number == num %}<span class="current">{{ num }}</span>
+      {% else %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ num }}">{{ num }}</a>{% endif %}
+    {% endif %}
+  {% endfor %}
+  {% if page_obj.has_next %}
+    <a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>
+  {% endif %}
+</div>
+<div class="page-info">
+  {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+  ({{ page_obj.paginator.count }} {% trans "records" %})
+</div>
+
+{{ filter_defs|json_script:"filterDefs" }}
+<script>
+const params = () => new URLSearchParams(window.location.search);
+
+// ---- search + page size (both keep the active filters) ----
+function go(p) { p.delete("page"); window.location.search = p.toString(); }
+function runSearch() {
+  const p = params(), term = document.getElementById("searchInput").value.trim();
+  term ? p.set("search", term) : p.delete("search");
+  go(p);
+}
+document.getElementById("searchInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runSearch(); } });
+document.getElementById("searchBtn").addEventListener("click", e => { e.preventDefault(); runSearch(); });
+document.getElementById("pageSize").addEventListener("change", function () {
+  const p = params(); p.set("size", this.value); go(p);
+});
+
+// ---- filter builder (same key/value URL contract as the waste list) ----
+const DEFS = JSON.parse(document.getElementById("filterDefs").textContent);
+const container = document.getElementById("filterContainer");
+
+function valueControl(def, current) {
+  let el;
+  if (def.choices) {
+    el = document.createElement("select");
+    def.choices.forEach(([v, l]) => { const o = new Option(l, v); el.add(o); });
+  } else {
+    el = document.createElement("input");
+    el.placeholder = "{% trans 'Value' %}";
+  }
+  el.className = "form-control value";
+  if (current) el.value = current;
+  return el;
+}
+
+function addFilterRow(key, value) {
+  const row = document.createElement("div");
+  row.className = "filter-row";
+  const sel = document.createElement("select");
+  sel.className = "form-control key";
+  DEFS.forEach(d => sel.add(new Option(d.label, d.key)));
+  if (key) sel.value = key;
+  let ctrl = valueControl(DEFS.find(d => d.key === sel.value), value);
+  sel.addEventListener("change", () => {
+    const next = valueControl(DEFS.find(d => d.key === sel.value));
+    row.replaceChild(next, ctrl); ctrl = next;
+  });
+  const del = document.createElement("button");
+  del.type = "button"; del.className = "btn btn-danger"; del.textContent = "X";
+  del.onclick = () => row.remove();
+  row.append(sel, ctrl, del);
+  container.appendChild(row);
+}
+
+document.getElementById("addFilter").onclick = () => addFilterRow();
+document.getElementById("applyFilters").onclick = () => {
+  const p = new URLSearchParams();
+  const search = params().get("search"); if (search) p.set("search", search);
+  const size = params().get("size"); if (size) p.set("size", size);
+  container.querySelectorAll(".filter-row").forEach(row => {
+    const v = row.querySelector(".value").value;
+    if (v) { p.append("key", row.querySelector(".key").value); p.append("value", v); }
+  });
+  window.location.search = p.toString();
+};
+// restore filters from the URL
+(() => { const p = params(), k = p.getAll("key"), v = p.getAll("value"); k.forEach((key, i) => addFilterRow(key, v[i])); })();
+
+// ---- column show/hide (remembered per browser) ----
+const STORE = "oc_equipment_cols";
+const panel = document.getElementById("columnPanel");
+let hiddenCols = [];
+try { hiddenCols = JSON.parse(localStorage.getItem(STORE) || "[]"); } catch (e) {}
+
+function applyCol(col, show) {
+  document.querySelectorAll(`[data-col="${col}"]`).forEach(el => { el.style.display = show ? "" : "none"; });
+}
+document.querySelectorAll("#mainTable thead th[data-col]").forEach(th => {
+  const col = th.dataset.col, show = !hiddenCols.includes(col);
+  const label = document.createElement("label");
+  label.innerHTML = `<input type="checkbox" class="col-toggle" data-col="${col}" ${show ? "checked" : ""}> `;
+  label.append(th.innerText);
+  panel.appendChild(label);
+  applyCol(col, show);
+});
+function toggleColumnPanel() { panel.classList.toggle("hidden"); }
+document.addEventListener("change", e => {
+  if (!e.target.classList.contains("col-toggle")) return;
+  const col = e.target.dataset.col, show = e.target.checked;
+  applyCol(col, show);
+  hiddenCols = show ? hiddenCols.filter(c => c !== col) : [...new Set([...hiddenCols, col])];
+  try { localStorage.setItem(STORE, JSON.stringify(hiddenCols)); } catch (err) {}
+});
+</script>
+{% endblock %}

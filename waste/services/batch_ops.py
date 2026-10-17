@@ -72,10 +72,7 @@ def merge_batches(parents, new_waste_id, performed_by, remarks="", **child_overr
         raise ValueError(_("Cannot merge batches held at different facilities."))
 
     for p in parents:
-        if p.status == BatchStatus.CONSUMED:
-            raise ValueError(
-                _("Batch %(id)s has already been consumed by another operation.") % {"id": p.waste_id}
-            )
+        p.ensure_open()      # released or consumed batches are closed
 
     reference = parents[0]
 
@@ -140,10 +137,7 @@ def split_batch(parent, portions, performed_by, remarks=""):
     if len(portions) < 1:
         raise ValueError(_("Provide at least one portion to split off."))
 
-    if parent.status == BatchStatus.CONSUMED:
-        raise ValueError(
-            _("Batch %(id)s has already been fully consumed.") % {"id": parent.waste_id}
-        )
+    parent.ensure_open()      # released or consumed batches are closed
 
     requested_mass = sum((p.get("mass_kg") or 0) for p in portions)
     requested_volume = sum((p.get("volume_m3") or 0) for p in portions)
@@ -311,10 +305,7 @@ def condition_batch(parent, new_waste_id, performed_by, ingredients=None, remark
     is created.
     """
 
-    if parent.status == BatchStatus.CONSUMED:
-        raise ValueError(
-            _("Batch %(id)s has already been consumed by another operation.") % {"id": parent.waste_id}
-        )
+    parent.ensure_open()      # released or consumed batches are closed
 
     computed = {}
     if ingredients:

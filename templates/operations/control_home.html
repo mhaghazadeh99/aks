@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load receiving_extras %}
-
+{% load operation_control_extras %}
 {% block title %}
 {% trans "Operations Control Manager" %}
 {% endblock %}
@@ -9,6 +9,9 @@
 {% block extrastyle %}
 
 <style>
+
+.operation-card .count-danger{ color:#dc3545; font-weight:700; }
+.operation-card .count-warn{ color:#b8860b; font-weight:700; }
 
 .operations-container{
     padding:30px;
@@ -134,6 +137,15 @@
         </p>
 
     </a>
+    <a href="{% url 'oc_equipment_list' %}" class="operation-card">
+    {% calibration_counts as cal %}
+    <div class="operation-icon">🎚️</div>
+    <h3>{% trans "Equipment Calibration" %}</h3>
+    <p>
+        <span class="count-danger">{{ cal.expired }}</span> {% trans "expired" %},
+        <span class="count-warn">{{ cal.due_soon }}</span> {% trans "due within 30 days" %}
+    </p>
+</a>
 
 
 

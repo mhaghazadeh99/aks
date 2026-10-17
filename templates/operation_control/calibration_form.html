@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Add calibration" %}{% endblock %}
+
+{% block content %}
+<div class="content" style="max-width:1000px;">
+  <h2 style="margin-bottom:6px;">{% trans "Add calibration" %}</h2>
+  <p style="color:#666; margin-bottom:20px;">
+    {{ equipment.equipment_id }} — {{ equipment.name }}
+    ({% trans "period" %}: {{ equipment.calibration_period_months }} {% trans "months" %};
+    {% trans "the due date is calculated from the newest calibration" %})
+  </p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% crispy form %}
+    <div style="margin-top:20px; display:flex; gap:10px;">
+      <button type="submit" class="btn-blue">{% trans "Save" %}</button>
+      <a href="{% url 'oc_equipment_detail' equipment.pk %}" class="btn-gray">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

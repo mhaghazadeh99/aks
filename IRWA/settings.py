@@ -65,7 +65,8 @@ INSTALLED_APPS = [
     "financial",
     "receive_source",
     "sell_source",
-    
+    "django_jalali",
+     "operation_control",
 
 ]
 

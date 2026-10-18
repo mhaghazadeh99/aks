@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from . import conf, logic
 from . import jalali_utils as ju
 from .models import (
-    EnvironmentalPoint, InspectionItem, InspectionRecord, OnlineDoseRecord,
+    Equipment, EnvironmentalPoint, InspectionItem, InspectionRecord, OnlineDoseRecord,
     RadiationWorker, Season, TLDReading,
 )
 
@@ -24,6 +24,24 @@ MONTH_NAMES = [_("Farvardin"), _("Ordibehesht"), _("Khordad"), _("Tir"), _("Mord
 def current_year_season():
     jy, jm, _jd = ju.jalali_today()
     return jy, ju.season_of_month(jm)
+
+
+# ============================================================ calibration alerts
+def calibration_alerts(limit=8):
+    """
+    Devices whose calibration has expired or expires within CALIBRATION_WARNING_DAYS.
+    Inactive devices and devices already sent for calibration are not counted.
+    """
+    today = ju.today()
+    soon = ju.add_days(today, conf.CALIBRATION_WARNING_DAYS)
+    watched = Equipment.objects.filter(status__in=[Equipment.Status.ACTIVE, Equipment.Status.ON_LOAN])
+    expired = watched.filter(due_date__lt=today).order_by("due_date")
+    due_soon = watched.filter(due_date__gte=today, due_date__lte=soon).order_by("due_date")
+    return {
+        "expired_count": expired.count(), "due_soon_count": due_soon.count(),
+        "expired": list(expired[:limit]), "due_soon": list(due_soon[:limit]),
+        "days": conf.CALIBRATION_WARNING_DAYS,
+    }
 
 
 # ============================================================ dosimetry
@@ -131,9 +149,14 @@ def plan_matrix(plan):
     current = logic.current_week(plan.year, plan.first_month, ty, tm, td)
     total = plan.total_weeks
 
-    records = defaultdict(dict)
-    for r in InspectionRecord.objects.filter(plan_year=plan):
+    records, record_info = defaultdict(dict), {}
+    for r in InspectionRecord.objects.filter(plan_year=plan).prefetch_related("performed_by", "attachments"):
         records[r.item_id][r.week_index] = r
+        record_info[f"{r.item_id}-{r.week_index}"] = {
+            "done": r.is_done, "date": ju.display(r.done_date), "note": r.note,
+            "workers": [w.full_name for w in r.performed_by.all()],
+            "files": [{"name": a.filename, "url": a.file.url} for a in r.attachments.all()],
+        }
 
     rows = []
     summary = {"due": 0, "done": 0, "overdue_items": 0, "pending_now": 0}
@@ -153,7 +176,8 @@ def plan_matrix(plan):
             month, slot = logic.week_to_month_slot(w, plan.first_month)
             cells.append({"week": w, "state": state, "scheduled": scheduled,
                           "tip": f"{MONTH_NAMES[month - 1]} #{slot}" + (f" — {ju.display(rec.done_date)}" if rec and rec.done_date else ""),
-                          "has_note": bool(rec and rec.note)})
+                          "has_note": bool(rec and rec.note),
+                          "has_files": bool(rec and is_done and len(rec.attachments.all()))})   # prefetched: no extra queries
         notes = [r.note for _w, r in sorted(recs.items(), reverse=True) if r.note]
         rows.append({"item": item, "cells": cells, "due": due, "done": done, "overdue": overdue,
                      "percent": round(done * 100 / due) if due else None,
@@ -164,4 +188,5 @@ def plan_matrix(plan):
         summary["pending_now"] += pending_now
     summary["percent"] = round(summary["done"] * 100 / summary["due"]) if summary["due"] else None
     months = [{"name": MONTH_NAMES[m - 1], "span": 4} for m in range(plan.first_month, 13)]
-    return {"rows": rows, "months": months, "current": current, "total": total, "summary": summary}
+    return {"rows": rows, "months": months, "current": current, "total": total, "summary": summary,
+            "records": record_info}

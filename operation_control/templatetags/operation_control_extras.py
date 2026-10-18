@@ -10,14 +10,18 @@ register = template.Library()
 
 @register.simple_tag
 def calibration_counts():
-    """Hub-card counts, among ACTIVE equipment only."""
-    today = ju.today()
-    soon = ju.add_days(today, conf.CALIBRATION_WARNING_DAYS)
-    active = Equipment.objects.filter(status=Equipment.Status.ACTIVE)
-    return {
-        "expired": active.filter(due_date__lt=today).count(),
-        "due_soon": active.filter(due_date__gte=today, due_date__lte=soon).count(),
-    }
+    """Hub-card counts (same rule as the alert: active / loaned devices only)."""
+    a = services.calibration_alerts(limit=0)
+    return {"expired": a["expired_count"], "due_soon": a["due_soon_count"]}
+
+
+@register.inclusion_tag("operation_control/_calibration_alert.html")
+def calibration_alert():
+    """
+    Notification banner: devices whose calibration has expired or expires within the warning window.
+    Put {% calibration_alert %} at the top of the Operation Control home and the calibration pages.
+    """
+    return services.calibration_alerts()
 
 
 @register.simple_tag

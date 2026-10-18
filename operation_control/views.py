@@ -2,6 +2,8 @@ import csv
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import ProtectedError
+from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import F, Q
 from django.http import HttpResponse
@@ -11,7 +13,7 @@ from django.utils.translation import gettext as _
 from . import conf
 from . import jalali_utils as ju
 from .forms import CalibrationRecordForm, EquipmentForm
-from .models import Equipment, EquipmentApplication
+from .models import CalibrationRecord, Equipment, EquipmentApplication
 
 # TODO: swap login_required for your project's permission decorators.
 
@@ -23,7 +25,6 @@ TEXT_FILTERS = {
     "model_name": "model_name__icontains",
     "serial_number": "serial_number__icontains",
     "manufacturer": "manufacturer__icontains",
-    "application": "application__name__icontains",
     "current_location": "current_location__icontains",
 }
 CHOICE_FILTERS = {"status": "status", "center": "center", "current_label": "current_label"}
@@ -52,6 +53,8 @@ def _filtered_equipment(request):
             continue
         if key in TEXT_FILTERS:
             qs = qs.filter(**{TEXT_FILTERS[key]: value})
+        elif key == "application":                       # id (from the Applications screen / dropdown) or a name
+            qs = qs.filter(application_id=int(value)) if value.isdigit() else qs.filter(application__name__icontains=value)
         elif key in CHOICE_FILTERS:
             qs = qs.filter(**{CHOICE_FILTERS[key]: value})
         elif key == "calibration_status":
@@ -66,7 +69,8 @@ def _filter_defs():
     return [
         text("equipment_id", _("Equipment ID")), text("name", _("Device name")),
         text("model_name", _("Model")), text("serial_number", _("Serial number")),
-        text("manufacturer", _("Manufacturer")), text("application", _("Application")),
+        text("manufacturer", _("Manufacturer")),
+        choice("application", _("Application"), [(a.pk, a.name) for a in EquipmentApplication.objects.all()]),
         choice("status", _("Status"), Equipment.Status.choices),
         choice("center", _("Center"), Equipment.Center.choices),
         text("current_location", _("Current location")),
@@ -142,8 +146,9 @@ def equipment_edit(request, pk):
 @login_required
 def equipment_detail(request, pk):
     obj = get_object_or_404(Equipment.objects.select_related("application"), pk=pk)
-    return render(request, "operation_control/equipment_detail.html",
-                  {"e": obj, "calibrations": obj.calibrations.all()})
+    return render(request, "operation_control/equipment_detail.html", {
+        "e": obj, "calibrations": obj.calibrations.all(),
+        "assessment": obj.latest_assessment, "assessment_count": obj.assessments.count()})
 
 
 @login_required
@@ -157,3 +162,38 @@ def calibration_add(request, pk):
         messages.success(request, _("Calibration recorded. Due date updated."))
         return redirect("oc_equipment_detail", pk=equipment.pk)
     return render(request, "operation_control/calibration_form.html", {"form": form, "equipment": equipment})
+
+
+@login_required
+def calibration_edit(request, pk):
+    rec = get_object_or_404(CalibrationRecord.objects.select_related("equipment"), pk=pk)
+    form = CalibrationRecordForm(request.POST or None, request.FILES or None, instance=rec)
+    if request.method == "POST" and form.is_valid():
+        form.save()                      # model.save() refreshes the equipment's last date / due date
+        messages.success(request, _("Calibration updated. Due date recalculated."))
+        return redirect("oc_equipment_detail", pk=rec.equipment_id)
+    return render(request, "operation_control/calibration_form.html",
+                  {"form": form, "equipment": rec.equipment, "editing": True})
+
+
+@login_required
+@require_POST
+def calibration_delete(request, pk):
+    rec = get_object_or_404(CalibrationRecord, pk=pk)
+    equipment_id = rec.equipment_id
+    rec.delete()                         # model.delete() recalculates the equipment's due date
+    messages.success(request, _("Calibration record deleted. Due date recalculated."))
+    return redirect("oc_equipment_detail", pk=equipment_id)
+
+
+@login_required
+@require_POST
+def equipment_delete(request, pk):
+    obj = get_object_or_404(Equipment, pk=pk)
+    try:
+        obj.delete()
+    except ProtectedError:
+        messages.error(request, _("This equipment has dose records and cannot be deleted. Set its status to Inactive instead."))
+        return redirect("oc_equipment_detail", pk=pk)
+    messages.success(request, _("Equipment deleted."))
+    return redirect("oc_equipment_list")

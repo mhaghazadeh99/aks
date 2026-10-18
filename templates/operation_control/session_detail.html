@@ -31,7 +31,8 @@
     {% for r in records %}
       <tr>
         <td><a href="{% url 'oc_worker_detail' r.worker_id %}">{{ r.worker.full_name }}</a></td>
-        <td><a href="{% url 'oc_equipment_detail' r.device_id %}">{{ r.device.equipment_id }}</a></td>
+        <td><a href="{% url 'oc_equipment_detail' r.device_id %}">{{ r.device.equipment_id }}</a>
+          {% if r.device.application %}<small style="color:#777;">[{{ r.device.application }}]</small>{% endif %}</td>
         <td>{{ r.get_dose_type_display }}</td>
         <td>{{ r.dose_value|floatformat:"-4" }} {{ r.get_dose_unit_display }}</td>
         <td>{{ r.dose_msv|floatformat:"-6" }}</td>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.preview{ position:sticky; top:10px; background:#fff; border-radius:12px; padding:16px; box-shadow:0 3px 14px rgba(0,0,0,.1); }
+.preview .big{ font-size:34px; font-weight:700; line-height:1.1; }
+.lvl-1{ color:#dc3545; } .lvl-2{ color:#b8860b; } .lvl-3{ color:#0d6efd; } .lvl-4{ color:#28a745; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  <h2 style="margin-bottom:4px;">{{ title }}</h2>
+  <p style="color:#666;">{{ equipment.equipment_id }} — {{ equipment.name }}
+     ({% trans "current period" %}: {{ equipment.calibration_period_months }} {% trans "months" %})</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-lg-8">{% crispy form %}</div>
+      <div class="col-lg-4">
+        <div class="preview">
+          <div style="color:#777; font-size:13px;">{% trans "Live result (the saved result is calculated by the server)" %}</div>
+          <div class="big" id="pvTotal">–</div>
+          <div id="pvLevel" style="margin-top:6px; font-size:18px;"></div>
+          <div id="pvNote" style="margin-top:8px; color:#777; font-size:13px;"></div>
+          <hr>
+          <div style="font-size:12px; color:#777;">
+            {% for minimum, level, months in levels %}
+              <div>≥ {{ minimum }} → {% trans "level" %} {{ level }} → {{ months }} {% trans "months" %}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px; display:flex; gap:10px;">
+      <button type="submit" class="btn-blue">{% trans "Save" %}</button>
+      <a href="{% url 'oc_equipment_detail' equipment.pk %}" class="btn-gray">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+
+{{ score_table|json_script:"scoreTable" }}
+{{ levels|json_script:"levelTable" }}
+<script>
+(function () {
+  const T = JSON.parse(document.getElementById("scoreTable").textContent);
+  const L = JSON.parse(document.getElementById("levelTable").textContent);
+  const ids = { device_type: "id_device_type", maker: "id_maker_recommendation", accuracy: "id_accuracy",
+                environment: "id_environment", importance: "id_importance", wear: "id_wear", cost: "id_cost" };
+  const has = document.getElementById("id_has_maker_recommendation");
+  const wrap = el => el.closest(".mb-3, .form-group, [id^=div_id_]") || el.parentElement;
+
+  function update() {
+    const withMaker = has.checked;
+    wrap(document.getElementById(ids.maker)).style.display = withMaker ? "" : "none";
+    let total = 0, missing = 0;
+    for (const [factor, id] of Object.entries(ids)) {
+      if (factor === "maker" && !withMaker) continue;
+      const v = document.getElementById(id).value;
+      if (!v || !T[factor][v]) { missing++; continue; }
+      total += T[factor][v][withMaker ? 0 : 1];
+    }
+    const row = L.find(r => total >= r[0]);
+    document.getElementById("pvTotal").textContent = total + " / 100";
+    const lv = document.getElementById("pvLevel");
+    lv.className = "lvl-" + row[1];
+    lv.textContent = "{% trans 'Level' %} " + row[1] + " → " + row[2] + " {% trans 'months' %}";
+    document.getElementById("pvNote").textContent = missing ? "{% trans 'Answer all factors to get the final result.' %} (" + missing + ")" : "";
+  }
+  document.querySelectorAll("select, input[type=checkbox]").forEach(el => el.addEventListener("change", update));
+  update();
+})();
+</script>
+{% endblock %}

@@ -21,7 +21,14 @@ th.now, td.now{ box-shadow:inset 0 0 0 2px #ffc107; }
 .kpis{ display:flex; gap:16px; flex-wrap:wrap; margin:14px 0; }
 .kpi{ background:#fff; border-radius:12px; padding:12px 18px; box-shadow:0 3px 10px rgba(0,0,0,.06); }
 .kpi b{ font-size:22px; display:block; }
-.note-dot{ color:#d39e00; }
+ .note-dot{ color:#d39e00; }
+a.cell{ cursor:pointer; } a.cell:hover{ outline:2px solid #0d6efd; outline-offset:1px; }
+#tickOverlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:2000; display:none; align-items:center; justify-content:center; padding:16px; }
+#tickOverlay.open{ display:flex; }
+.tick-box{ background:#fff; border-radius:14px; padding:22px; width:min(560px,100%); max-height:92vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.3); }
+.tick-box h5{ margin:0 0 4px; } .tick-box .sub{ color:#777; font-size:13px; margin-bottom:14px; }
+.tick-box label{ display:block; font-weight:600; margin:12px 0 4px; }
+.tick-box .hint{ color:#777; font-size:12px; font-weight:400; }
 </style>
 {% endblock %}
 
@@ -31,6 +38,7 @@ th.now, td.now{ box-shadow:inset 0 0 0 2px #ffc107; }
   <h2>{% trans "Inspection Plan" %}</h2>
   <p>{% trans "No plan year exists yet." %}</p>
   <a href="{% url 'oc_inspection_year_create' %}" class="btn-blue">+ {% trans "New plan year" %}</a>
+  <a href="{% url 'oc_import' 'inspection' %}" class="btn-blue">{% trans "Import CSV" %}</a>
   <p style="margin-top:14px; color:#777;">{% trans "Tip: import the Excel plan first with the import_operation_control command, then create the year here if needed." %}</p>
 {% else %}
   <div class="table-header">
@@ -43,6 +51,8 @@ th.now, td.now{ box-shadow:inset 0 0 0 2px #ffc107; }
     <div class="header-group">
       <a href="{% url 'oc_inspection_report' %}?year={{ plan.year }}" class="btn-info">{% trans "Progress report" %}</a>
       <a href="{% url 'oc_inspection_item_create' %}" class="btn-blue">+ {% trans "Add inspection item" %}</a>
+      <a href="{% url 'oc_import' 'inspection' %}" class="btn-blue">{% trans "Import CSV" %}</a>
+      <a href="{% url 'oc_inspection_export_csv' %}?year={{ plan.year }}" class="btn-green">{% trans "Export CSV" %}</a>
       <a href="{% url 'oc_inspection_year_create' %}" class="btn-gray">{% trans "New plan year" %}</a>
     </div>
   </div>
@@ -89,8 +99,9 @@ th.now, td.now{ box-shadow:inset 0 0 0 2px #ffc107; }
         {% for c in row.cells %}
           <td class="{% if c.week == current %}now{% endif %}">
             {% if c.scheduled or c.state == "done" %}
-              <a class="cell {{ c.state }}" title="{{ c.tip }}"
-                 href="{% url 'oc_inspection_record_edit' row.item.pk plan.year c.week %}">{% if c.state == "done" %}✓{% elif c.has_note %}●{% endif %}</a>
+              <a class="cell {{ c.state }}" title="{{ c.tip }}" data-key="{{ row.item.pk }}-{{ c.week }}"
+                 data-label="{{ row.item.title }} — {{ c.tip }}"
+                 href="{% url 'oc_inspection_record_edit' row.item.pk plan.year c.week %}">{% if c.state == "done" %}{% if c.has_files %}📎{% else %}✓{% endif %}{% elif c.has_note %}●{% endif %}</a>
             {% else %}<span class="cell off"></span>{% endif %}
           </td>
         {% endfor %}
@@ -101,6 +112,116 @@ th.now, td.now{ box-shadow:inset 0 0 0 2px #ffc107; }
     </tbody>
   </table>
   </div>
+
+  {{ records|json_script:"recordData" }}
+  <div id="tickOverlay" role="dialog" aria-modal="true">
+    <div class="tick-box">
+
+      <!-- tick as done -->
+      <form id="tickForm" method="post" enctype="multipart/form-data" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" name="is_done" value="on">
+        <h5>✓ {% trans "Mark inspection as done" %}</h5>
+        <div class="sub" id="tickFormTitle"></div>
+
+        <label for="tickWorkers">{% trans "Done by" %} <span class="hint">({% trans "hold Ctrl / ⌘ to select several" %})</span></label>
+        <select name="performed_by" id="tickWorkers" multiple size="6" class="form-control" required>
+          {% for w in workers %}<option value="{{ w.pk }}">{{ w.full_name }} ({{ w.personnel_code }})</option>{% endfor %}
+        </select>
+
+        <label for="tickFiles">{% trans "Evidence files" %}
+          <span class="hint">{% if require_attachment %}({% trans "required" %}){% endif %} — {% trans "photos, the filled form, measurement sheets: show that it was done and how" %}</span></label>
+        <input type="file" name="attachments" id="tickFiles" class="form-control" multiple {% if require_attachment %}required{% endif %}>
+
+        <label for="tickNote">{% trans "Note" %}</label>
+        <textarea name="note" id="tickNote" rows="2" class="form-control"></textarea>
+
+        <p class="hint" style="margin-top:10px;">{% trans "The date is today. To use another date, use" %} <a id="tickMore" href="#">{% trans "more options" %}</a>.</p>
+        <div style="display:flex; gap:10px; margin-top:12px;">
+          <button type="submit" class="btn-blue">{% trans "Save" %}</button>
+          <button type="button" class="btn-gray" data-close>{% trans "Cancel" %}</button>
+        </div>
+      </form>
+
+      <!-- details of an existing record -->
+      <div id="tickView" style="display:none;">
+        <h5 id="tickViewHead"></h5>
+        <div class="sub" id="tickViewTitle"></div>
+        <div id="tickViewBody"></div>
+        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+          <a id="tickEdit" href="#" class="btn-blue">✏️ {% trans "Edit details / add files" %}</a>
+          <button type="button" id="tickToDone" class="btn-blue" style="display:none;">✓ {% trans "Mark as done" %}</button>
+          <form id="tickRemove" method="post" style="display:inline;" onsubmit="return confirm('{% trans 'Are you sure?' %}');">
+            {% csrf_token %}<input type="hidden" name="delete" value="1">
+            <button type="submit" class="btn btn-danger">{% trans "Remove tick" %}</button></form>
+          <button type="button" class="btn-gray" data-close>{% trans "Close" %}</button>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endif %}
 </div>
+{% endblock %}
+
+{% block extrascript %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const dataEl = document.getElementById("recordData");
+  if (!dataEl) return;
+  const RECORDS = JSON.parse(dataEl.textContent);
+  const overlay = document.getElementById("tickOverlay");
+  const form = document.getElementById("tickForm"), view = document.getElementById("tickView");
+  let current = null;
+
+  const close = () => overlay.classList.remove("open");
+  overlay.addEventListener("click", e => { if (e.target === overlay || e.target.hasAttribute("data-close")) close(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+
+  function showForm(a, note) {
+    view.style.display = "none"; form.style.display = "";
+    form.action = a.href; form.reset();
+    document.getElementById("tickNote").value = note || "";
+    document.getElementById("tickFormTitle").textContent = a.dataset.label;
+    document.getElementById("tickMore").href = a.href;
+    overlay.classList.add("open");
+  }
+  function line(parent, label, text) {
+    const p = document.createElement("p"); p.style.margin = "4px 0";
+    const b = document.createElement("strong"); b.textContent = label + ": ";
+    p.append(b, document.createTextNode(text)); parent.appendChild(p);
+  }
+  function showView(a, rec) {
+    form.style.display = "none"; view.style.display = "";
+    document.getElementById("tickViewHead").textContent = rec.done ? "✅ {% trans 'Done' %}" : "● {% trans 'Not done — note only' %}";
+    document.getElementById("tickViewTitle").textContent = a.dataset.label;
+    const body = document.getElementById("tickViewBody"); body.innerHTML = "";
+    if (rec.done) {
+      line(body, "{% trans 'Date' %}", rec.date || "-");
+      line(body, "{% trans 'Done by' %}", rec.workers.length ? rec.workers.join("، ") : "-");
+    }
+    if (rec.note) line(body, "{% trans 'Note' %}", rec.note);
+    const files = document.createElement("p"); files.style.margin = "4px 0";
+    const fb = document.createElement("strong"); fb.textContent = "{% trans 'Evidence' %}: "; files.appendChild(fb);
+    if (rec.files.length) {
+      rec.files.forEach((f, i) => { if (i) files.append(" · "); const l = document.createElement("a"); l.href = f.url; l.target = "_blank"; l.textContent = f.name; files.appendChild(l); });
+    } else { files.append("{% trans 'none recorded' %}"); }
+    body.appendChild(files);
+    document.getElementById("tickEdit").href = a.href;
+    document.getElementById("tickRemove").action = a.href;
+    const toDone = document.getElementById("tickToDone");
+    toDone.style.display = rec.done ? "none" : "";
+    toDone.onclick = () => showForm(a, rec.note);
+    overlay.classList.add("open");
+  }
+
+  document.querySelectorAll("table.plan a.cell").forEach(a => {
+    a.addEventListener("click", function (e) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;      // let "open in new tab" work
+      e.preventDefault();
+      const rec = RECORDS[a.dataset.key];
+      rec ? showView(a, rec) : showForm(a, "");
+    });
+  });
+});
+</script>
 {% endblock %}

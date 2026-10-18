@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="content" style="max-width:1000px;">
-  <h2 style="margin-bottom:6px;">{% trans "Add calibration" %}</h2>
+  <h2 style="margin-bottom:6px;">{% if editing %}{% trans "Edit calibration" %}{% else %}{% trans "Add calibration" %}{% endif %}</h2>
   <p style="color:#666; margin-bottom:20px;">
     {{ equipment.equipment_id }} — {{ equipment.name }}
     ({% trans "period" %}: {{ equipment.calibration_period_months }} {% trans "months" %};

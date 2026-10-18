@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Calibration interval assessments" %}{% endblock %}
+
+{% block content %}
+<div class="content">
+  <div class="table-header">
+    <form method="get" class="header-group" style="flex-wrap:wrap;">
+      <input type="text" name="search" value="{{ search }}" placeholder="{% trans 'Search...' %}">
+      <select name="level" onchange="this.form.submit()">
+        <option value="">{% trans "All levels" %}</option>
+        {% for n in "1234" %}<option value="{{ n }}" {% if level == n %}selected{% endif %}>{% trans "Level" %} {{ n }}</option>{% endfor %}
+      </select>
+      <label><input type="checkbox" name="all" value="1" {% if show_all %}checked{% endif %} onchange="this.form.submit()"> {% trans "Show history (all assessments)" %}</label>
+      <button type="submit">🔍</button>
+    </form>
+    <div class="header-group">
+      <a href="{% url 'oc_import' 'assessments' %}" class="btn-blue">{% trans "Import CSV" %}</a>
+      <a href="{% url 'oc_assessment_export_csv' %}?{{ qs }}" class="btn-green">{% trans "Export CSV" %}</a>
+      <a href="{% url 'oc_equipment_list' %}" class="btn-gray">{% trans "Equipment" %}</a>
+    </div>
+  </div>
+
+  {% if unassessed %}
+    <p style="color:#777;">{{ unassessed }} {% trans "non-inactive devices have no assessment yet. Open a device and press “New assessment”." %}</p>
+  {% endif %}
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr>
+      <th>{% trans "Equipment ID" %}</th><th>{% trans "Device name" %}</th><th>{% trans "Assessment date" %}</th>
+      <th>{% trans "Total score" %}</th><th>{% trans "Calibration level" %}</th><th>{% trans "Recommended interval (months)" %}</th>
+      <th>{% trans "Current period (months)" %}</th><th>{% trans "Assessed by" %}</th><th>{% trans "Actions" %}</th>
+    </tr></thead>
+    <tbody>
+    {% for a in page_obj %}
+      <tr>
+        <td><a href="{% url 'oc_equipment_detail' a.equipment_id %}">{{ a.equipment.equipment_id }}</a></td>
+        <td>{{ a.equipment.name }}</td><td>{{ a.assessment_date }}</td>
+        <td>{{ a.total_score }}</td><td>{{ a.level }}</td><td>{{ a.interval_months }}</td>
+        <td>{{ a.equipment.calibration_period_months }}
+          {% if a.is_applied %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-warning text-dark">{% trans "differs" %}</span>{% endif %}</td>
+        <td>{{ a.assessed_by.full_name|default:"-" }}</td>
+        <td><a href="{% url 'oc_assessment_detail' a.pk %}">👁</a> <a href="{% url 'oc_assessment_edit' a.pk %}">✏️</a></td>
+      </tr>
+    {% empty %}<tr><td colspan="9" class="text-center">{% trans "No assessments yet." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:15px;">
+    {% if page_obj.has_previous %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
+    <span>{{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} {% trans "records" %})</span>
+    {% if page_obj.has_next %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

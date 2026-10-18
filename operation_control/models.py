@@ -4,9 +4,13 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from simple_history.models import HistoricalRecords
 
-from . import conf
+from common.utils.fileValidator import validate_attachment   # same validator your waste app uses
+
+from . import assessment, conf
 from . import jalali_utils as ju
 
 User = settings.AUTH_USER_MODEL
@@ -115,6 +119,8 @@ class Equipment(TimeStamped):
     last_calibration_date = models.DateField(_("Last calibration"), null=True, blank=True, editable=False)
     due_date = models.DateField(_("Calibration due date"), null=True, blank=True, editable=False)
 
+    history = HistoricalRecords()   # audit trail (who changed what, when)
+
     class Meta:
         ordering = ["equipment_id"]
         verbose_name = _("Equipment")
@@ -160,6 +166,10 @@ class Equipment(TimeStamped):
         }.get(self.calibration_status, "bg-secondary")
 
     @property
+    def latest_assessment(self):
+        return self.assessments.order_by("-assessment_date", "-id").first()
+
+    @property
     def last_calibration_display(self):
         return ju.display(self.last_calibration_date)
 
@@ -184,6 +194,8 @@ class CalibrationRecord(TimeStamped):
                                     choices=Equipment.Label.choices, blank=True)
     attachment = models.FileField(_("Certificate file"), upload_to="operation_control/calibration/%Y/", blank=True)
     notes = models.TextField(_("Notes"), blank=True)
+
+    history = HistoricalRecords()   # audit trail (who changed what, when)
 
     class Meta:
         ordering = ["-calibration_date", "-id"]
@@ -210,6 +222,122 @@ class CalibrationRecord(TimeStamped):
         equipment.refresh_calibration()
 
 
+class CalibrationAssessment(TimeStamped):
+    """
+    Calibration-interval assessment (OIML D10 scoring) - the "برگه ارزیابی" sheet, one row per assessment.
+    Seven factors are answered; points, total, level, interval and the audit justification are computed
+    from them on every save (see assessment.py). "Apply" copies the interval to the equipment.
+    """
+
+    class DeviceType(models.TextChoices):
+        PORTABLE = "PORTABLE", _("Portable")
+        FIXED = "FIXED", _("Fixed (non-portable)")
+
+    class MakerRecommendation(models.TextChoices):
+        SIX_MONTHS = "SIX_MONTHS", _("Six months")
+        ONE_YEAR = "ONE_YEAR", _("One year")
+        TWO_YEARS = "TWO_YEARS", _("Two years")
+        THREE_YEARS = "THREE_YEARS", _("Three years")
+
+    class Accuracy(models.TextChoices):
+        LOW = "LOW", _("Low")
+        MEDIUM = "MEDIUM", _("Medium")
+        HIGH = "HIGH", _("High")
+        VERY_HIGH = "VERY_HIGH", _("Very high")
+
+    class Environment(models.TextChoices):
+        VERY_GOOD = "VERY_GOOD", _("Very good")
+        GOOD = "GOOD", _("Good")
+        MEDIUM = "MEDIUM", _("Medium")
+        BAD = "BAD", _("Bad")
+
+    class Level(models.TextChoices):   # shared by importance / wear / cost (same four options)
+        VERY_HIGH = "VERY_HIGH", _("Very high")
+        HIGH = "HIGH", _("High")
+        MEDIUM = "MEDIUM", _("Medium")
+        LOW = "LOW", _("Low")
+
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name="assessments",
+                                  verbose_name=_("Equipment"))
+    assessment_date = models.DateField(_("Assessment date"), default=ju.today)
+    assessed_by = models.ForeignKey("RadiationWorker", null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name="assessments", verbose_name=_("Assessed by"))
+
+    device_type = models.CharField(_("Device type"), max_length=12, choices=DeviceType.choices)
+    has_maker_recommendation = models.BooleanField(_("Manufacturer recommendation available"), default=False)
+    maker_recommendation = models.CharField(_("Manufacturer recommendation"), max_length=12,
+                                            choices=MakerRecommendation.choices, blank=True)
+    accuracy = models.CharField(_("Measurement accuracy / MSA results"), max_length=12, choices=Accuracy.choices)
+    environment = models.CharField(_("Environmental influence"), max_length=12, choices=Environment.choices)
+    importance = models.CharField(_("Field of use and importance"), max_length=12, choices=Level.choices)
+    wear = models.CharField(_("Wear / exposure to damaging factors"), max_length=12, choices=Level.choices)
+    cost = models.CharField(_("Calibration cost"), max_length=12, choices=Level.choices)
+
+    # computed on save
+    score_device_type = models.PositiveSmallIntegerField(editable=False, default=0)
+    score_maker = models.PositiveSmallIntegerField(editable=False, default=0)
+    score_accuracy = models.PositiveSmallIntegerField(editable=False, default=0)
+    score_environment = models.PositiveSmallIntegerField(editable=False, default=0)
+    score_importance = models.PositiveSmallIntegerField(editable=False, default=0)
+    score_wear = models.PositiveSmallIntegerField(editable=False, default=0)
+    score_cost = models.PositiveSmallIntegerField(editable=False, default=0)
+    total_score = models.PositiveSmallIntegerField(_("Total score"), editable=False, default=0)
+    level = models.PositiveSmallIntegerField(_("Calibration level"), editable=False, default=1)
+    interval_months = models.PositiveSmallIntegerField(_("Recommended interval (months)"), editable=False, default=6)
+    justification = models.TextField(_("Justification for audit"), editable=False, blank=True)
+
+    notes = models.TextField(_("Notes"), blank=True)
+    applied_at = models.DateTimeField(_("Interval applied to equipment at"), null=True, blank=True, editable=False)
+
+    history = HistoricalRecords()   # audit trail (who changed what, when)
+
+    class Meta:
+        ordering = ["-assessment_date", "-id"]
+        verbose_name = _("Calibration assessment")
+        verbose_name_plural = _("Calibration assessments")
+
+    def __str__(self):
+        return f"{self.equipment.equipment_id} — {self.total_score} ({self.interval_months} mo)"
+
+    def save(self, *args, **kwargs):
+        r = assessment.compute(
+            self.has_maker_recommendation, self.device_type, self.maker_recommendation or None,
+            self.accuracy, self.environment, self.importance, self.wear, self.cost)
+        s = r["scores"]
+        self.score_device_type, self.score_maker, self.score_accuracy = s["device_type"], s["maker"], s["accuracy"]
+        self.score_environment, self.score_importance = s["environment"], s["importance"]
+        self.score_wear, self.score_cost = s["wear"], s["cost"]
+        self.total_score, self.level, self.interval_months = r["total"], r["level"], r["months"]
+        self.justification = r["justification"]
+        super().save(*args, **kwargs)
+
+    @property
+    def score_rows(self):
+        """[(factor label, chosen answer, points)] for the detail page."""
+        return [
+            (_("Device type"), self.get_device_type_display(), self.score_device_type),
+            (_("Manufacturer recommendation"),
+             self.get_maker_recommendation_display() if self.has_maker_recommendation else _("Not available"),
+             self.score_maker),
+            (_("Measurement accuracy / MSA results"), self.get_accuracy_display(), self.score_accuracy),
+            (_("Environmental influence"), self.get_environment_display(), self.score_environment),
+            (_("Field of use and importance"), self.get_importance_display(), self.score_importance),
+            (_("Wear / exposure to damaging factors"), self.get_wear_display(), self.score_wear),
+            (_("Calibration cost"), self.get_cost_display(), self.score_cost),
+        ]
+
+    @property
+    def is_applied(self):
+        return self.equipment.calibration_period_months == self.interval_months
+
+    def apply_to_equipment(self):
+        eq = self.equipment
+        eq.calibration_period_months = self.interval_months
+        eq.save()                                   # recalculates the due date
+        self.applied_at = timezone.now()
+        self.save(update_fields=["applied_at"])
+
+
 # ============================================================ 2) DOSIMETRY
 class OperationType(Lookup):
     """Pick-list of operations (source receiving, waste conditioning, sampling, ...)."""
@@ -231,6 +359,8 @@ class RadiationWorker(TimeStamped):
     status = models.CharField(_("Status"), max_length=10, choices=Status.choices, default=Status.ACTIVE)
     exit_date = models.DateField(_("Exit date"), null=True, blank=True)
     notes = models.TextField(_("Notes"), blank=True)
+
+    history = HistoricalRecords()   # audit trail (who changed what, when)
 
     class Meta:
         ordering = ["full_name"]
@@ -258,6 +388,8 @@ class TLDReport(TimeStamped):
     attachment = models.FileField(_("Report file"), upload_to="operation_control/tld/%Y/", blank=True)
     notes = models.TextField(_("Notes"), blank=True)
 
+    history = HistoricalRecords()   # audit trail (who changed what, when)
+
     class Meta:
         ordering = ["-year", "-season"]
         constraints = [models.UniqueConstraint(fields=["year", "season"], name="uniq_tld_report_per_season")]
@@ -284,6 +416,8 @@ class TLDReading(TimeStamped):
     gamma_msv = models.DecimalField(_("Gamma dose (mSv)"), max_digits=12, decimal_places=4, null=True, blank=True)
     neutron_msv = models.DecimalField(_("Neutron dose (mSv)"), max_digits=12, decimal_places=4, null=True, blank=True)
     remarks = models.CharField(_("Remarks"), max_length=250, blank=True)
+
+    history = HistoricalRecords()   # audit trail (who changed what, when)
 
     class Meta:
         ordering = ["report", "tld_code"]
@@ -323,6 +457,8 @@ class OperationDoseSession(TimeStamped):
     year = models.PositiveSmallIntegerField(editable=False, db_index=True)
     season = models.PositiveSmallIntegerField(editable=False, choices=Season.choices, db_index=True)
 
+    history = HistoricalRecords()   # audit trail (who changed what, when)
+
     class Meta:
         ordering = ["-performed_date", "-id"]
         verbose_name = _("Operation dose session")
@@ -354,6 +490,8 @@ class OnlineDoseRecord(models.Model):
     dose_unit = models.CharField(_("Unit"), max_length=3, choices=DoseUnit.choices, default=DoseUnit.USV)
     exposure_minutes = models.PositiveIntegerField(_("Received over (min)"), null=True, blank=True)
     dose_msv = models.DecimalField(max_digits=14, decimal_places=6, editable=False)
+
+    history = HistoricalRecords()   # audit trail (who changed what, when)
 
     class Meta:
         ordering = ["session", "worker"]
@@ -402,10 +540,12 @@ class InspectionItem(TimeStamped):
     form_title = models.CharField(_("Checklist / form"), max_length=250, blank=True)
     form_code = models.CharField(_("Form code"), max_length=40, blank=True)
     area = models.CharField(_("Area"), max_length=200)
-    responsible = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
-                                    related_name="+", verbose_name=_("Responsible"))
+    responsible = models.ForeignKey("RadiationWorker", null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name="responsible_inspections", verbose_name=_("Responsible"))
     period_weeks = models.PositiveSmallIntegerField(_("Period"), choices=Period.choices)
     is_active = models.BooleanField(_("Active"), default=True)
+
+    history = HistoricalRecords()   # audit trail (who changed what, when)
 
     class Meta:
         ordering = ["title", "area"]
@@ -429,10 +569,11 @@ class InspectionRecord(TimeStamped):
                                   help_text=_("Untick to only record a note / reason for delay."))
     done_date = models.DateField(_("Date done"), null=True, blank=True,
                                    help_text=_("Empty for rows imported from Excel (it only stored a tick)."))
-    done_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL,
-                                related_name="+", verbose_name=_("Done by"))
+    performed_by = models.ManyToManyField("RadiationWorker", blank=True, related_name="inspections_done",
+                                          verbose_name=_("Done by"))
     note = models.TextField(_("Note / reason for delay"), blank=True)
-    attachment = models.FileField(_("Attachment"), upload_to="operation_control/inspection/%Y/", blank=True)
+
+    history = HistoricalRecords()   # audit trail (who changed what, when)
 
     class Meta:
         ordering = ["plan_year", "week_index"]
@@ -443,3 +584,26 @@ class InspectionRecord(TimeStamped):
 
     def __str__(self):
         return f"{self.item} — {self.plan_year}/W{self.week_index}"
+
+
+class InspectionAttachment(models.Model):
+    """Evidence that an inspection was done and how (photos, filled forms, measurements ...)."""
+    record = models.ForeignKey(InspectionRecord, on_delete=models.CASCADE, related_name="attachments",
+                               verbose_name=_("Inspection record"))
+    file = models.FileField(_("Evidence file"), upload_to="operation_control/inspection/%Y/",
+                            validators=[validate_attachment])
+    uploaded_at = models.DateTimeField(_("Uploaded At"), auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = _("Inspection attachment")
+        verbose_name_plural = _("Inspection attachments")
+
+    @property
+    def filename(self):
+        import os
+        return os.path.basename(self.file.name)
+
+    def __str__(self):
+        return self.filename

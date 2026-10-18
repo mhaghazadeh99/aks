@@ -10,6 +10,14 @@
     {% csrf_token %}
     <div style="max-width:1000px;">{% crispy form %}</div>
 
+    {% if no_dosimeter_application %}
+      <div class="alert alert-warning" style="margin-top:20px;">
+        {% trans "No equipment application is marked as a personal dosimeter yet, so ALL active devices are listed." %}
+        <a href="{% url 'oc_application_list' %}">{% trans "Mark the dosimeter application" %}</a>
+        {% trans "(tick “personal dosimeter”) to list only those devices." %}
+      </div>
+    {% endif %}
+
     <h3 style="margin-top:24px;">{% trans "Doses received" %}</h3>
     <p style="color:#777; font-size:13px;">
       {% trans "One line per worker and dose type. “Received over” is how many minutes it took to receive that dose. Devices marked ⚠ have an expired or soon-to-expire calibration." %}

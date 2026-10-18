@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ spec.title }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.import-card{ background:#fff; border-radius:12px; padding:20px; box-shadow:0 3px 10px rgba(0,0,0,.06); margin-bottom:20px; }
+.req{ color:#dc3545; font-weight:700; }
+.result-ok{ border-inline-start:5px solid #28a745; }
+.result-preview{ border-inline-start:5px solid #0d6efd; }
+.result-bad{ border-inline-start:5px solid #dc3545; }
+.stat{ display:inline-block; margin:6px 22px 6px 0; } .stat b{ font-size:22px; display:block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content" style="max-width:1100px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2>{{ spec.title }}</h2>
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'oc_import_template' kind %}" class="btn-green">⬇ {% trans "Download CSV template" %}</a>
+      <a href="{% url spec.back %}" class="btn-gray">{% trans "Back" %}</a>
+    </div>
+  </div>
+
+  <div class="import-card">
+    <p>{{ spec.intro }}</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>{% trans "Column" %}</th><th></th><th>{% trans "Meaning" %}</th></tr></thead>
+      <tbody>
+      {% for name, required, text in spec.columns %}
+        <tr><td dir="ltr"><code>{{ name }}</code></td><td>{% if required %}<span class="req">*</span>{% endif %}</td><td>{{ text }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    <p style="color:#777; font-size:13px; margin:10px 0 0;">
+      {% trans "Headers can be English (as in the template) or the Persian headers from your Excel files. Dates: Jalali (1405/04/24) or Gregorian; Persian digits are fine. CSV from Excel (UTF-8 or the older Windows encoding) is supported." %}
+    </p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="import-card">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}
+      <div class="mb-3">
+        {% if field.field.widget.input_type == "checkbox" %}
+          <div class="form-check">{{ field }} <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>
+        {% else %}
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+        {% endif %}
+        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+        {% for e in field.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn-blue">{% trans "Import" %}</button>
+  </form>
+
+  {% if result %}
+  <div class="import-card {% if result.blocked %}result-bad{% elif result.saved %}result-ok{% else %}result-preview{% endif %}">
+    <h4>
+      {% if result.blocked %}❌ {% trans "Nothing was saved: “all or nothing” is on and some rows have errors." %}
+      {% elif result.saved %}✅ {% trans "Imported and saved." %}
+      {% else %}🔍 {% trans "Preview — nothing was saved. Untick “Preview only” and import again to save." %}{% endif %}
+    </h4>
+    <div>{% for label, n in result.stats %}<span class="stat"><b>{{ n }}</b>{{ label }}</span>{% endfor %}</div>
+
+    {% if errors_shown %}
+      <h5 style="margin-top:18px; color:#dc3545;">{% trans "Rows with errors (these rows were skipped)" %} — {{ result.errors|length }}</h5>
+      <div class="table-scroll"><table>
+        <thead><tr><th>{% trans "Row" %}</th><th>{% trans "Problem" %}</th></tr></thead>
+        <tbody>{% for row, msg in errors_shown %}<tr><td>{% if row %}{{ row }}{% else %}-{% endif %}</td><td>{{ msg }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    {% endif %}
+
+    {% if warnings_shown %}
+      <h5 style="margin-top:18px; color:#b8860b;">{% trans "Warnings" %} — {{ result.warnings|length }}</h5>
+      <div class="table-scroll"><table>
+        <thead><tr><th>{% trans "Row" %}</th><th>{% trans "Note" %}</th></tr></thead>
+        <tbody>{% for row, msg in warnings_shown %}<tr><td>{% if row %}{{ row }}{% else %}-{% endif %}</td><td>{{ msg }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

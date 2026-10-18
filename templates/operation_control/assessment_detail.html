@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Calibration interval assessment" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.just{ background:#f8f9fa; border-radius:10px; padding:14px 16px; line-height:2; }
+.result{ display:flex; gap:28px; flex-wrap:wrap; margin:14px 0 22px; }
+.result div b{ font-size:28px; display:block; }
+@media print { .no-print, .sidebar, .menu-btn, .overlay { display:none !important; } .main{ margin:0 !important; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content" style="max-width:1000px;">
+  <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2>{% trans "Calibration interval assessment" %}</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button type="button" class="btn-gray" onclick="window.print()">🖨 {% trans "Print" %}</button>
+      <a href="{% url 'oc_assessment_edit' a.pk %}" class="btn-gray">{% trans "Edit" %}</a>
+      <form method="post" action="{% url 'oc_assessment_delete' a.pk %}" style="display:inline;"
+            onsubmit="return confirm('{% trans 'Are you sure?' %}');">{% csrf_token %}
+        <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button></form>
+      <a href="{% url 'oc_equipment_detail' e.pk %}" class="btn-gray">{% trans "Back to device" %}</a>
+    </div>
+  </div>
+
+  <p style="color:#666;">
+    <a href="{% url 'oc_equipment_detail' e.pk %}">{{ e.equipment_id }} — {{ e.name }}</a>
+    · {{ a.assessment_date }}{% if a.assessed_by %} · {% trans "Assessed by" %}: {{ a.assessed_by.full_name }}{% endif %}
+  </p>
+
+  <div class="result">
+    <div><b>{{ a.total_score }}<small>/{{ max_score }}</small></b>{% trans "Total score" %}</div>
+    <div><b>{{ a.level }}</b>{% trans "Calibration level" %}</div>
+    <div><b>{{ a.interval_months }}</b>{% trans "Recommended interval (months)" %}</div>
+    <div><b>{{ e.calibration_period_months }}</b>{% trans "Current period (months)" %}</div>
+  </div>
+
+  {% if a.is_applied %}
+    <div class="alert alert-success">✅ {% trans "This interval is the equipment's current calibration period." %}</div>
+  {% else %}
+    <div class="alert alert-warning no-print" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+      <span>{% trans "The equipment's current period differs from this recommendation." %}</span>
+      <form method="post" action="{% url 'oc_assessment_apply' a.pk %}">{% csrf_token %}
+        <button type="submit" class="btn-blue">{% trans "Apply" %} {{ a.interval_months }} {% trans "months to the equipment" %}</button></form>
+    </div>
+  {% endif %}
+
+  <table>
+    <thead><tr><th>{% trans "Factor" %}</th><th>{% trans "Answer" %}</th><th>{% trans "Points" %}</th></tr></thead>
+    <tbody>
+    {% for factor, answer, points in a.score_rows %}
+      <tr><td>{{ factor }}</td><td>{{ answer }}</td><td>{{ points }}</td></tr>
+    {% endfor %}
+      <tr><td colspan="2"><strong>{% trans "Total score" %}</strong></td><td><strong>{{ a.total_score }}</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h4 style="margin-top:24px;">{% trans "Justification for audit" %}</h4>
+  <div class="just" dir="rtl">{{ a.justification }}</div>
+  {% if a.notes %}<p style="margin-top:12px;"><strong>{% trans "Notes" %}:</strong> {{ a.notes }}</p>{% endif %}
+
+  <p style="color:#777; font-size:13px; margin-top:18px;">
+    {% trans "This is a calculation tool only. The calibration officer must also record the result in the company's official “Determination of calibration intervals” form." %}
+  </p>
+</div>
+{% endblock %}

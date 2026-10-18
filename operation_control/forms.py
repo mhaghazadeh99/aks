@@ -1,14 +1,17 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Field, Layout, Row
 from django import forms
-from django.contrib.auth import get_user_model
+from django.core.validators import FileExtensionValidator
 from django.db.models import Q
 from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
+from common.utils.fileValidator import validate_attachment
+
+from . import conf
 from . import jalali_utils as ju
 from .models import (
-    CalibrationRecord, Equipment, InspectionItem, InspectionPlanYear, InspectionRecord,
+    CalibrationAssessment, CalibrationRecord, Equipment, InspectionItem, InspectionPlanYear, InspectionRecord,
     OnlineDoseRecord, OperationDoseSession, OperationType, RadiationWorker, TLDReading, TLDReport,
 )
 
@@ -146,11 +149,32 @@ class OperationDoseSessionForm(BaseModelForm):
         self.fields["operation_type"].queryset = qs
 
 
+def personal_dosimeters_defined():
+    """True when at least one device belongs to an application ticked as 'personal dosimeter'."""
+    return Equipment.objects.filter(application__is_personal_dosimetry=True).exists()
+
+
+def eligible_devices(include_pk=None):
+    """
+    Devices offered in operation dose records: active devices whose application is ticked as a personal
+    dosimeter. If NO application has been ticked yet, every non-inactive device is offered (the page warns about it)
+    instead of showing an empty list.
+    """
+    usable = Equipment.objects.exclude(status=Equipment.Status.INACTIVE)
+    flagged = usable.filter(application__is_personal_dosimetry=True)
+    qs = flagged if personal_dosimeters_defined() else usable
+    if include_pk:
+        qs = Equipment.objects.filter(Q(pk__in=qs.values("pk")) | Q(pk=include_pk))
+    return qs.select_related("application").order_by("equipment_id")
+
+
 class DeviceChoiceField(forms.ModelChoiceField):
-    """Shows a warning next to devices whose calibration is expired / about to expire."""
+    """'PH-0007E21 — SmartRad [Personnel dosimetry]', with a warning if the calibration is expired / expiring."""
 
     def label_from_instance(self, obj):
         label = f"{obj.equipment_id} — {obj.name}"
+        if obj.application_id:
+            label += f" [{obj.application}]"
         status = obj.calibration_status
         if status in (Equipment.CalStatus.EXPIRED, Equipment.CalStatus.DUE_SOON):
             label += f"  ⚠ {status.label}"
@@ -167,12 +191,10 @@ class OnlineDoseRecordForm(BaseModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         workers = Q(status=RadiationWorker.Status.ACTIVE)
-        devices = Q(application__is_personal_dosimetry=True) & ~Q(status=Equipment.Status.INACTIVE)
         if self.instance.pk:
             workers |= Q(pk=self.instance.worker_id)
-            devices |= Q(pk=self.instance.device_id)
         self.fields["worker"].queryset = RadiationWorker.objects.filter(workers).order_by("full_name")
-        self.fields["device"].queryset = Equipment.objects.filter(devices).order_by("equipment_id")
+        self.fields["device"].queryset = eligible_devices(self.instance.device_id if self.instance.pk else None)
         self.fields["dose_value"].widget.attrs.update({"step": "any", "min": "0"})
 
     def clean_dose_value(self):
@@ -213,15 +235,110 @@ class InspectionItemForm(BaseModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["responsible"].queryset = get_user_model().objects.filter(is_active=True)
+        workers = Q(status=RadiationWorker.Status.ACTIVE)
+        if self.instance.pk and self.instance.responsible_id:
+            workers |= Q(pk=self.instance.responsible_id)
+        self.fields["responsible"].queryset = RadiationWorker.objects.filter(workers).order_by("full_name")
 
 
 class InspectionRecordForm(BaseModelForm):
+    """
+    Tick an inspection as done: who did it (workers), when, a note, and - checked in clean() - at least one
+    evidence file. The files themselves are uploaded as <input name="attachments" multiple> and handled by the view,
+    which passes them in as `new_files` (and how many existing files are kept as `kept_attachments`).
+    """
+
     class Meta:
         model = InspectionRecord
-        fields = ["is_done", "done_date", "done_by", "note", "attachment"]
-        widgets = {"done_date": date_widget(), "note": forms.Textarea(attrs={"rows": 3})}
+        fields = ["is_done", "done_date", "performed_by", "note"]
+        widgets = {"done_date": date_widget(), "note": forms.Textarea(attrs={"rows": 3}),
+                   "performed_by": forms.SelectMultiple(attrs={"size": 7})}
+
+    def __init__(self, *args, new_files=(), kept_attachments=0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._new_files, self._kept = list(new_files), kept_attachments
+        workers = Q(status=RadiationWorker.Status.ACTIVE)
+        if self.instance.pk:
+            workers |= Q(inspections_done=self.instance)
+        self.fields["performed_by"].queryset = RadiationWorker.objects.filter(workers).distinct().order_by("full_name")
+        self.fields["done_date"].help_text = _("Leave empty to use today's date.")
+
+    def clean(self):
+        data = super().clean()
+        for f in self._new_files:
+            try:
+                validate_attachment(f)
+            except forms.ValidationError as e:
+                raise forms.ValidationError([f"{f.name}: {m}" for m in e.messages])
+        if data.get("is_done"):
+            if not data.get("performed_by"):
+                self.add_error("performed_by", _("Select who did the inspection."))
+            if conf.INSPECTION_REQUIRE_ATTACHMENT and not (self._new_files or self._kept):
+                raise forms.ValidationError(
+                    _("Attach at least one evidence file (photo, filled form ...) to show the inspection was done."))
+        return data
+
+
+# ============================================================ calibration assessment (scoring)
+class CalibrationAssessmentForm(BaseModelForm):
+    apply_now = forms.BooleanField(
+        required=False, label=_("Apply the recommended interval to the equipment now"),
+        help_text=_("Changes the equipment's calibration period and recalculates its due date."))
+
+    class Meta:
+        model = CalibrationAssessment
+        fields = ["assessment_date", "assessed_by", "device_type", "has_maker_recommendation", "maker_recommendation",
+                  "accuracy", "environment", "importance", "wear", "cost", "notes"]
+        widgets = {"assessment_date": date_widget(), "notes": forms.Textarea(attrs={"rows": 2})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["done_by"].queryset = get_user_model().objects.filter(is_active=True)
+        workers = Q(status=RadiationWorker.Status.ACTIVE)
+        if self.instance.pk and self.instance.assessed_by_id:
+            workers |= Q(pk=self.instance.assessed_by_id)
+        self.fields["assessed_by"].queryset = RadiationWorker.objects.filter(workers).order_by("full_name")
+        self.fields["maker_recommendation"].required = False
+
+    def clean(self):
+        data = super().clean()
+        if data.get("has_maker_recommendation") and not data.get("maker_recommendation"):
+            self.add_error("maker_recommendation", _("Select the manufacturer's recommendation."))
+        if not data.get("has_maker_recommendation"):
+            data["maker_recommendation"] = ""
+        return data
+
+
+# ============================================================ CSV / Excel import
+class ImportForm(forms.Form):
+    file = forms.FileField(
+        label=_("File (.xlsx or .csv)"),
+        validators=[FileExtensionValidator(["xlsx", "xlsm", "csv", "txt"])])
+    dry_run = forms.BooleanField(
+        required=False, initial=True, label=_("Preview only — check the file without saving anything"))
+    strict = forms.BooleanField(
+        required=False, label=_("All or nothing — save nothing if any row has an error"))
+    create_missing = forms.BooleanField(
+        required=False, initial=True, label=_("Create missing workers / environmental points / operation types"))
+    apply_all = forms.BooleanField(
+        required=False, label=_("If a device name/code matches several devices, apply the assessment to all of them"))
+    plan_year = forms.IntegerField(
+        required=False, label=_("Plan year (Jalali) for the done-marks"),
+        help_text=_("Leave empty to use the year found in the file."))
+
+    def __init__(self, *args, kind="equipment", **kwargs):
+        super().__init__(*args, **kwargs)
+        if kind not in ("tld", "online_doses"):
+            del self.fields["create_missing"]
+        if kind != "assessments":
+            del self.fields["apply_all"]
+        if kind != "inspection":
+            del self.fields["plan_year"]
+        elif not self.is_bound:
+            self.fields["plan_year"].initial = ju.jalali_today()[0]
+        self.fields["file"].widget.attrs["accept"] = ".xlsx,.xlsm,.csv,.txt"
+        for name in ("dry_run", "strict", "create_missing", "apply_all"):
+            if name in self.fields:
+                self.fields[name].widget.attrs["class"] = "form-check-input"
+        for name in ("file", "plan_year"):
+            if name in self.fields:
+                self.fields[name].widget.attrs["class"] = "form-control"

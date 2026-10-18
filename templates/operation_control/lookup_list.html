@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="content" style="max-width:850px;">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>{{ title }}</h2>
+    <a href="{% url back %}" class="btn-gray">{% trans "Back" %}</a>
+  </div>
+  <p style="color:#666;">{{ help_text }}</p>
+
+  <form method="post" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px;">
+    {% csrf_token %}
+    {% for field in form %}
+      <div style="flex:1; min-width:200px;">
+        {% if field.field.widget.input_type == "checkbox" %}
+          <div class="form-check" style="padding-bottom:8px;">{{ field }} <label class="form-check-label">{{ field.label }}</label></div>
+        {% else %}
+          <label class="form-label">{{ field.label }}</label>{{ field }}
+        {% endif %}
+        {% for e in field.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn-blue" style="margin-bottom:4px;">+ {% trans "Add" %}</button>
+  </form>
+
+  <table>
+    <thead><tr><th>{% trans "Name" %}</th>{% if extra %}<th>{{ extra_label }}</th>{% endif %}<th>{% trans "Used by" %}</th><th>{% trans "Active" %}</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.name }}</td>
+        {% if extra %}<td>{% if extra == "is_personal_dosimetry" %}{% if r.is_personal_dosimetry %}✅{% else %}-{% endif %}{% else %}{{ r.location|default:"-" }}{% endif %}</td>{% endif %}
+        <td>{% if kind == "applications" and r.n %}<a href="{% url 'oc_equipment_list' %}?key=application&value={{ r.pk }}">{{ r.n }} {% trans "device(s)" %}</a>{% else %}{{ r.n }}{% endif %}</td>
+        <td>{% if r.is_active %}✅{% else %}⛔{% endif %}</td>
+        <td>
+          <form method="post" style="display:inline;">{% csrf_token %}
+            <button type="submit" name="toggle" value="{{ r.pk }}" class="btn-gray">{% if r.is_active %}{% trans "Deactivate" %}{% else %}{% trans "Activate" %}{% endif %}</button>
+          </form>
+        </td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="text-center">{% trans "Nothing here yet. Add the first one above." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

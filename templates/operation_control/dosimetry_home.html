@@ -53,6 +53,16 @@
       <h3>{% trans "Radiation workers" %}</h3>
       <p>{{ worker_count }} {% trans "active workers." %}</p>
     </a>
+    <a href="{% url 'oc_import' 'tld' %}" class="operation-card">
+      <div class="operation-icon">📥</div>
+      <h3>{% trans "Import from Excel / CSV" %}</h3>
+      <p>{% trans "Workers, TLD readings and online dose records." %}</p>
+    </a>
+    <a href="{% url 'oc_env_point_list' %}" class="operation-card">
+      <div class="operation-icon">📍</div>
+      <h3>{% trans "Environmental TLD points" %}</h3>
+      <p>{% trans "The fixed check points used by TLD reports." %}</p>
+    </a>
     <a href="{% url 'oc_operation_type_list' %}" class="operation-card">
       <div class="operation-icon">⚙️</div>
       <h3>{% trans "Operation types" %}</h3>

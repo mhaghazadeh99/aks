@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load operation_control_extras %}
 
 {% block title %}{% trans "Equipment Calibration" %}{% endblock %}
 
@@ -28,6 +29,8 @@
 {% block content %}
 <div class="content">
 
+{% calibration_alert %}
+
 <div class="table-header">
   <div class="header-group">
     <input type="text" id="searchInput" placeholder="{% trans 'Search...' %}" value="{{ search }}">
@@ -52,6 +55,9 @@
   <div class="header-group">
     <button class="btn-green" onclick="window.location.href='{% url 'oc_equipment_export_csv' %}' + window.location.search">{% trans "Export CSV" %}</button>
     <a href="{% url 'oc_equipment_create' %}" class="btn-blue">+ {% trans "Add Equipment" %}</a>
+    <a href="{% url 'oc_import' 'equipment' %}" class="btn-blue">{% trans "Import CSV" %}</a>
+    <a href="{% url 'oc_assessment_list' %}" class="btn-gray">{% trans "Interval assessments" %}</a>
+    <a href="{% url 'oc_application_list' %}" class="btn-gray">{% trans "Applications" %}</a>
   </div>
 </div>
 
@@ -148,6 +154,8 @@ document.getElementById("searchBtn").addEventListener("click", e => { e.preventD
 document.getElementById("pageSize").addEventListener("change", function () {
   const p = params(); p.set("size", this.value); go(p);
 });
+
+// ---- filter builder (same key/value URL contract as the waste list) ----
 
 // ---- column show/hide (remembered per browser) ----
 const STORE = "oc_equipment_cols";

@@ -15,6 +15,8 @@
     </form>
     <div class="header-group">
       <a href="{% url 'oc_worker_create' %}" class="btn-blue">+ {% trans "Add Worker" %}</a>
+      <a href="{% url 'oc_import' 'workers' %}" class="btn-blue">{% trans "Import CSV" %}</a>
+      <a href="{% url 'oc_worker_export_csv' %}" class="btn-green">{% trans "Export CSV" %}</a>
       <a href="{% url 'oc_dosimetry_home' %}" class="btn-gray">{% trans "Dosimetry" %}</a>
     </div>
   </div>

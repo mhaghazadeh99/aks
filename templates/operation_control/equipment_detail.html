@@ -19,9 +19,18 @@
     <div style="display:flex; gap:10px;">
       <a href="{% url 'oc_calibration_add' e.pk %}" class="btn-blue">+ {% trans "Add calibration" %}</a>
       <a href="{% url 'oc_equipment_edit' e.pk %}" class="btn-gray">{% trans "Edit" %}</a>
+      <form method="post" action="{% url 'oc_equipment_delete' e.pk %}" style="display:inline;"
+            onsubmit="return confirm('{% trans 'Are you sure?' %}');">{% csrf_token %}
+        <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button></form>
       <a href="{% url 'oc_equipment_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
     </div>
   </div>
+
+  {% if e.calibration_status == "expired" %}
+    <div class="alert alert-danger">⛔ {% trans "The calibration of this device has EXPIRED." %}</div>
+  {% elif e.calibration_status == "due_soon" %}
+    <div class="alert alert-warning">⏳ {% trans "The calibration of this device expires soon." %}</div>
+  {% endif %}
 
   <div class="cal-summary">
     <span class="badge {{ e.calibration_badge_class }}">{{ e.calibration_status.label }}</span>
@@ -43,13 +52,31 @@
     <div><dt>{% trans "Notes / action" %}</dt><dd>{{ e.notes|default:"-" }}</dd></div>
   </dl>
 
+  <h3>{% trans "Calibration interval assessment" %}</h3>
+  <div style="background:#fff; border-radius:12px; padding:16px; box-shadow:0 3px 10px rgba(0,0,0,.06); margin-bottom:28px;">
+    {% if assessment %}
+      <p style="margin:0 0 8px;">
+        <strong>{{ assessment.total_score }}/100</strong> · {% trans "level" %} {{ assessment.level }} ·
+        <strong>{{ assessment.interval_months }} {% trans "months" %}</strong>
+        <span style="color:#777;">({{ assessment.assessment_date }})</span>
+        {% if assessment.is_applied %}<span class="badge bg-success">{% trans "Applied" %}</span>
+        {% else %}<span class="badge bg-warning text-dark">{% trans "Not applied — current period is" %} {{ e.calibration_period_months }} {% trans "months" %}</span>{% endif %}
+      </p>
+      <a href="{% url 'oc_assessment_detail' assessment.pk %}" class="btn-gray">{% trans "View" %}</a>
+    {% else %}
+      <p style="color:#777; margin:0 0 8px;">{% trans "No assessment yet." %}</p>
+    {% endif %}
+    <a href="{% url 'oc_assessment_create' e.pk %}" class="btn-blue">+ {% trans "New assessment" %}</a>
+    {% if assessment_count > 1 %}<a href="{% url 'oc_assessment_list' %}?all=1&search={{ e.equipment_id }}" class="btn-gray">{% trans "History" %} ({{ assessment_count }})</a>{% endif %}
+  </div>
+
   <h3>{% trans "Calibration history" %}</h3>
   <div class="table-scroll">
   <table>
     <thead><tr>
       <th>{% trans "Calibration date" %}</th><th>{% trans "Certificate number" %}</th>
       <th>{% trans "Laboratory / reference" %}</th><th>{% trans "Calibration type" %}</th>
-      <th>{% trans "Label after calibration" %}</th><th>{% trans "Certificate file" %}</th>
+      <th>{% trans "Label after calibration" %}</th><th>{% trans "Certificate file" %}</th><th>{% trans "Actions" %}</th>
     </tr></thead>
     <tbody>
     {% for c in calibrations %}
@@ -60,9 +87,15 @@
         <td>{{ c.get_calibration_type_display|default:"-" }}</td>
         <td>{{ c.get_result_label_display|default:"-" }}</td>
         <td>{% if c.attachment %}<a href="{{ c.attachment.url }}" target="_blank">{% trans "File" %}</a>{% else %}-{% endif %}</td>
+        <td style="white-space:nowrap;">
+          <a href="{% url 'oc_calibration_edit' c.pk %}" title="{% trans 'Edit' %}">✏️</a>
+          <form method="post" action="{% url 'oc_calibration_delete' c.pk %}" style="display:inline;"
+                onsubmit="return confirm('{% trans 'Are you sure?' %}');">{% csrf_token %}
+            <button type="submit" style="border:0; background:none; cursor:pointer;" title="{% trans 'Delete' %}">🗑</button></form>
+        </td>
       </tr>
     {% empty %}
-      <tr><td colspan="6" class="text-center">{% trans "No calibrations recorded yet." %}</td></tr>
+      <tr><td colspan="7" class="text-center">{% trans "No calibrations recorded yet." %}</td></tr>
     {% endfor %}
     </tbody>
   </table>

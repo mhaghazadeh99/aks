@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import ProtectedError
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -12,7 +13,7 @@ from django.views.decorators.http import require_POST
 
 from . import conf, logic, services
 from .forms import (
-    OnlineDoseFormSet, OperationDoseSessionForm, OperationTypeForm, RadiationWorkerForm,
+    OnlineDoseFormSet, personal_dosimeters_defined, OperationDoseSessionForm, RadiationWorkerForm,
     TLDPasteForm, TLDReadingFormSet, TLDReportForm,
 )
 from .models import (
@@ -243,7 +244,8 @@ def _session_form_view(request, session, title):
         messages.success(request, _("Operation and doses saved."))
         return redirect("oc_session_detail", pk=obj.pk)
     return render(request, "operation_control/session_form.html", {
-        "form": form, "formset": formset, "title": title, "session": session if session.pk else None})
+        "form": form, "formset": formset, "title": title, "session": session if session.pk else None,
+        "no_dosimeter_application": not personal_dosimeters_defined()})
 
 
 @login_required
@@ -269,24 +271,6 @@ def session_delete(request, pk):
     get_object_or_404(OperationDoseSession, pk=pk).delete()
     messages.success(request, _("Operation record deleted."))
     return redirect("oc_session_list")
-
-
-# ------------------------------------------------------------------ operation types (pick-list)
-@login_required
-def operation_type_list(request):
-    form = OperationTypeForm(request.POST or None)
-    if request.method == "POST":
-        if "toggle" in request.POST:
-            obj = get_object_or_404(OperationType, pk=request.POST["toggle"])
-            obj.is_active = not obj.is_active
-            obj.save(update_fields=["is_active"])
-            return redirect("oc_operation_type_list")
-        if form.is_valid():
-            form.save()
-            messages.success(request, _("Operation type added."))
-            return redirect("oc_operation_type_list")
-    return render(request, "operation_control/operation_type_list.html", {
-        "form": form, "types": OperationType.objects.annotate(n=Count("sessions"))})
 
 
 # ------------------------------------------------------------------ reports
@@ -326,3 +310,84 @@ def dose_report(request):
         "year_rows": services.year_report(year), "env_rows": services.env_report(year),
         "limit": conf.SEASON_DOSE_LIMIT_MSV, "annual_limit": conf.ANNUAL_DOSE_LIMIT_MSV,
     })
+
+
+# ------------------------------------------------------------------ deletes
+@login_required
+@require_POST
+def worker_delete(request, pk):
+    obj = get_object_or_404(RadiationWorker, pk=pk)
+    try:
+        obj.delete()
+    except ProtectedError:
+        messages.error(request, _("This worker has dose records and cannot be deleted. Set the status to Left instead."))
+        return redirect("oc_worker_detail", pk=pk)
+    messages.success(request, _("Worker deleted."))
+    return redirect("oc_worker_list")
+
+
+@login_required
+@require_POST
+def tld_report_delete(request, pk):
+    get_object_or_404(TLDReport, pk=pk).delete()          # its readings go with it
+    messages.success(request, _("TLD report and its readings deleted."))
+    return redirect("oc_tld_report_list")
+
+
+# ------------------------------------------------------------------ CSV exports
+def _csv_response(filename):
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response.write("\ufeff")
+    return response, csv.writer(response)
+
+
+@login_required
+def worker_export_csv(request):
+    response, w = _csv_response("radiation_workers.csv")
+    w.writerow(["personnel_code", "full_name", "unit", "position", "status", "exit_date", "notes"])
+    for x in RadiationWorker.objects.all():
+        w.writerow([x.personnel_code, x.full_name, x.unit, x.position, x.status, x.exit_date or "", x.notes])
+    return response
+
+
+@login_required
+def tld_export_csv(request):
+    """Same columns as the TLD import template, so an export can be edited and re-imported."""
+    qs = TLDReading.objects.select_related("report", "worker", "env_point").order_by(
+        "report__year", "report__season", "position", "tld_code")
+    if request.GET.get("report", "").isdigit():
+        qs = qs.filter(report_id=int(request.GET["report"]))
+    if request.GET.get("year", "").isdigit():
+        qs = qs.filter(report__year=int(request.GET["year"]))
+    response, w = _csv_response("tld_readings.csv")
+    w.writerow(["year", "season", "report_number", "received_date", "tld_code", "personnel_code", "full_name",
+                "env_point", "position", "gamma_msv", "neutron_msv", "unit", "remarks"])
+    for r in qs:
+        w.writerow([r.report.year, r.report.season, r.report.report_number, r.report.received_date or "", r.tld_code,
+                    r.worker.personnel_code if r.worker else "", r.worker.full_name if r.worker else "",
+                    r.env_point.name if r.env_point else "", r.get_position_display(),
+                    "" if r.gamma_msv is None else r.gamma_msv, "" if r.neutron_msv is None else r.neutron_msv,
+                    "mSv", r.remarks])
+    return response
+
+
+@login_required
+def session_export_csv(request):
+    """Same columns as the online-dose import template."""
+    from .models import OnlineDoseRecord
+    qs = OnlineDoseRecord.objects.select_related("session__operation_type", "worker", "device").order_by(
+        "session__performed_date", "session_id", "worker__full_name")
+    if request.GET.get("year", "").isdigit():
+        qs = qs.filter(session__year=int(request.GET["year"]))
+    if request.GET.get("season", "").isdigit():
+        qs = qs.filter(session__season=int(request.GET["season"]))
+    response, w = _csv_response("online_doses.csv")
+    w.writerow(["date", "operation", "location", "operation_duration_min", "description", "personnel_code",
+                "device", "dose_type", "dose_value", "unit", "exposure_minutes"])
+    for r in qs:
+        s = r.session
+        w.writerow([s.performed_date, s.operation_type.name, s.location, s.duration_minutes or "", s.description,
+                    r.worker.personnel_code, r.device.equipment_id, r.dose_type.lower(), r.dose_value,
+                    r.get_dose_unit_display(), r.exposure_minutes or ""])
+    return response

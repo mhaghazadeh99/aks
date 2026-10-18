@@ -10,6 +10,8 @@
   <form method="post">
     {% csrf_token %}
     {% crispy form %}
+    <p style="color:#777; font-size:13px;">{% trans "The application is chosen from a list." %}
+      <a href="{% url 'oc_application_list' %}" target="_blank">{% trans "Manage applications" %}</a></p>
     <div style="margin-top:20px; display:flex; gap:10px;">
       <button type="submit" class="btn-blue">{% trans "Save" %}</button>
       <a href="{% if equipment %}{% url 'oc_equipment_detail' equipment.pk %}{% else %}{% url 'oc_equipment_list' %}{% endif %}" class="btn-gray">{% trans "Cancel" %}</a>

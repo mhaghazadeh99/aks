@@ -9,6 +9,9 @@
     <h2>{{ w.full_name }} <small style="color:#777;">{{ w.personnel_code }}</small></h2>
     <div style="display:flex; gap:10px;">
       <a href="{% url 'oc_worker_edit' w.pk %}" class="btn-gray">{% trans "Edit" %}</a>
+      <form method="post" action="{% url 'oc_worker_delete' w.pk %}" style="display:inline;"
+            onsubmit="return confirm('{% trans 'Are you sure?' %}');">{% csrf_token %}
+        <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button></form>
       <a href="{% url 'oc_worker_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
     </div>
   </div>

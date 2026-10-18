@@ -11,6 +11,10 @@
       <a href="{% url 'oc_tld_paste' report.pk %}" class="btn-blue">📋 {% trans "Paste readings" %}</a>
       <a href="{% url 'oc_tld_readings_edit' report.pk %}" class="btn-blue">✏️ {% trans "Edit readings" %}</a>
       <a href="{% url 'oc_tld_report_edit' report.pk %}" class="btn-gray">{% trans "Edit" %}</a>
+      <a href="{% url 'oc_tld_export_csv' %}?report={{ report.pk }}" class="btn-green">{% trans "Export CSV" %}</a>
+      <form method="post" action="{% url 'oc_tld_report_delete' report.pk %}" style="display:inline;"
+            onsubmit="return confirm('{% trans 'Delete this report and all its readings?' %}');">{% csrf_token %}
+        <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button></form>
       <a href="{% url 'oc_tld_report_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
     </div>
   </div>

@@ -1,0 +1,42 @@
+{% load i18n %}
+{% if expired_count or due_soon_count %}
+<div class="oc-alerts" style="margin-bottom:18px;">
+  {% if expired_count %}
+  <div class="alert alert-danger" role="alert" style="margin-bottom:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+      <strong>⛔ {{ expired_count }} {% trans "device(s) have an EXPIRED calibration" %}</strong>
+      <span>
+        <a href="{% url 'oc_equipment_list' %}?key=calibration_status&value=expired" class="btn btn-sm btn-danger">{% trans "View" %}</a>
+        <a class="btn btn-sm btn-outline-danger" data-bs-toggle="collapse" href="#ocExpired" role="button">{% trans "Details" %}</a>
+      </span>
+    </div>
+    <ul id="ocExpired" class="collapse" style="margin:10px 0 0; padding-inline-start:20px;">
+      {% for e in expired %}
+        <li><a href="{% url 'oc_equipment_detail' e.pk %}">{{ e.equipment_id }} — {{ e.name }}</a>
+            · {% trans "expired" %} {{ e.days_remaining|cut:"-" }} {% trans "days ago" %} ({{ e.due_date_display }})</li>
+      {% endfor %}
+      {% if expired_count > expired|length %}<li>… {% trans "and more — use View to see them all" %}</li>{% endif %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if due_soon_count %}
+  <div class="alert alert-warning" role="alert" style="margin-bottom:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+      <strong>⏳ {{ due_soon_count }} {% trans "device(s) will expire within" %} {{ days }} {% trans "days" %}</strong>
+      <span>
+        <a href="{% url 'oc_equipment_list' %}?key=calibration_status&value=due_soon" class="btn btn-sm btn-warning">{% trans "View" %}</a>
+        <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#ocDueSoon" role="button">{% trans "Details" %}</a>
+      </span>
+    </div>
+    <ul id="ocDueSoon" class="collapse" style="margin:10px 0 0; padding-inline-start:20px;">
+      {% for e in due_soon %}
+        <li><a href="{% url 'oc_equipment_detail' e.pk %}">{{ e.equipment_id }} — {{ e.name }}</a>
+            · {{ e.days_remaining }} {% trans "days left" %} ({{ e.due_date_display }})</li>
+      {% endfor %}
+      {% if due_soon_count > due_soon|length %}<li>… {% trans "and more — use View to see them all" %}</li>{% endif %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endif %}

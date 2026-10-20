@@ -11,6 +11,8 @@ from .models import (
     SOURCE_STATUS,
     SOURCE_TYPE,
 )
+import io 
+from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
@@ -40,7 +42,105 @@ def home(request):
         request,
         "home.html"
     )
-    
+
+FIELD_FILTER_MAP = {
+    "Source_Type": "Source_Type",
+    "Sso_Code": "Sso_Code",
+    "Contract_Number": "contract__contract_number",
+    "source_count": "source_count",
+    "available_count": "available_count",
+    "Facility": "Facility__name",
+    "Origin_Type": "Origin_Type",
+    "Date_received": "Date_received",
+    "Origin_Facility": "movements__from_facility__name",
+    "Location": "Location",
+    "Status": "Status",
+    "Status_Date": "Status_Date",
+    "Responsible_Person": "Responsible_Person",
+    "Nuclide": "Nuclide__name",
+    "activity_input": "activity_input",
+    "activity_unit": "activity_unit",
+    "Activity_reference_date": "Activity_reference_date",
+    "serial_number": "serial_number",
+    "Dose_rate_surface_uSv": "Dose_rate_surface_uSv",
+    "Dose_rate_1m_uSv": "Dose_rate_1m_uSv",
+    "Dose_rate_measurement_date": "Dose_rate_measurement_date",
+    "source_state": "source_state",
+    "contamination_bq_cm2": "contamination_bq_cm2",
+    "Source_Physical_Form": "Source_Physical_Form",
+    "Source_Manufacturer": "Source_Manufacturer",
+    "Source_Model": "Source_Model",
+    "Source_Practice": "Source_Practice",
+    "Device_Manufacturer": "Device_Manufacturer",
+    "Device_Model": "Device_Model",
+    "Device_Serial_Number": "Device_Serial_Number",
+    "Container_Type": "Container_Type",
+    "Dimension": "Dimension",
+    "Comment": "Comment",
+    "created_by": "created_by__username",
+    "created_at": "created_at",
+}
+
+# Counts are numeric, so a global text search over them only adds noise.
+SEARCH_LOOKUPS = set(FIELD_FILTER_MAP.values()) - {"source_count", "available_count"}
+
+
+def _float_or_none(v):
+    try:
+        return float(v) if v not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
+def filter_dsrs_queryset(request, queryset):
+    """Single source of truth for search + filters + activity range.
+    Used by both tables_view and export_csv."""
+
+    search = (request.GET.get("search") or "").strip()
+    if search:
+        q = Q()
+        for lookup in SEARCH_LOOKUPS:
+            q |= Q(**{f"{lookup}__icontains": search})
+        queryset = queryset.filter(q)
+
+    act_min = _float_or_none(request.GET.get("activity_min"))
+    act_max = _float_or_none(request.GET.get("activity_max"))
+
+    filtered = False
+    for k, v in zip(request.GET.getlist("key"), request.GET.getlist("value")):
+        v = v.strip()
+        if k == "current_activity":
+            lo = _float_or_none(v)
+            hi = _float_or_none(request.GET.get("value_max"))
+            if lo is not None:
+                act_min = lo
+            if hi is not None:
+                act_max = hi
+            continue
+        lookup = FIELD_FILTER_MAP.get(k)
+        if not v or not lookup:
+            continue
+        queryset = queryset.filter(**{f"{lookup}__icontains": v})
+        filtered = True
+
+    if search or filtered:
+        queryset = queryset.distinct()
+
+    # Current activity is computed in Python (decay), so it can't be filtered in SQL.
+    if act_min is not None or act_max is not None:
+        ids = []
+        for s in queryset.prefetch_related(None).select_related("Nuclide"):
+            a = s.current_activity_mci()
+            if a is None:
+                continue
+            if act_min is not None and a < act_min:
+                continue
+            if act_max is not None and a > act_max:
+                continue
+            ids.append(s.pk)
+        queryset = queryset.filter(pk__in=ids)
+
+    return queryset
 def dsrs_history(request, pk):
     dsrs = get_object_or_404(DSRS, pk=pk)
 
@@ -303,190 +403,34 @@ def source_list(request):
 
 
 def tables_view(request):
-
-    # Maps each filterable dropdown key to the ACTUAL Django lookup path.
-    # Foreign keys are traversed to their display field (name/username)
-    # instead of being filtered directly, which isn't valid. "Activity",
-    # "Category", and "Attachments" are deliberately left OUT — they're
-    # either Python-computed properties or come from related tables, not
-    # real columns, so they can never be filtered at the database level.
-    FIELD_FILTER_MAP = {
-        "Source_Type": "Source_Type",
-        "Sso_Code": "Sso_Code",
-        "Facility": "Facility__name",
-        "Origin_Type": "Origin_Type",
-        "Date_received": "Date_received",
-        "Origin_Facility": "movements__from_facility__name",
-        "Location": "Location",
-        "Status": "Status",
-        "Status_Date": "Status_Date",
-        "Responsible_Person": "Responsible_Person",
-        "Nuclide": "Nuclide__name",
-        "activity_input": "activity_input",
-        "activity_unit": "activity_unit",
-        "Activity_reference_date": "Activity_reference_date",
-        "serial_number": "serial_number",
-        "Dose_rate_surface_uSv": "Dose_rate_surface_uSv",
-        "Dose_rate_1m_uSv": "Dose_rate_1m_uSv",
-        "Dose_rate_measurement_date": "Dose_rate_measurement_date",
-        "source_state": "source_state",
-        "contamination_bq_cm2": "contamination_bq_cm2",
-        "Source_Physical_Form": "Source_Physical_Form",
-        "Source_Manufacturer": "Source_Manufacturer",
-        "Source_Model": "Source_Model",
-        "Source_Practice": "Source_Practice",
-        "Device_Manufacturer": "Device_Manufacturer",
-        "Device_Model": "Device_Model",
-        "Device_Serial_Number": "Device_Serial_Number",
-        "Container_Type": "Container_Type",
-        "Dimension": "Dimension",
-        "Comment": "Comment",
-        "created_by": "created_by__username",
-        "created_at": "created_at",
-    }
-
     queryset = DSRS.objects.select_related(
-                'Nuclide',
-                'created_by',
-                'Facility'
-            ).prefetch_related(
-                'dsrs_images',
-                'movements__from_facility',
-                'movements__to_facility',
-                'movements__attachments',
-            ).order_by("-created_at")
+        "Nuclide", "created_by", "Facility"
+    ).prefetch_related(
+        "dsrs_images",
+        "movements__from_facility",
+        "movements__to_facility",
+        "movements__attachments",
+    ).order_by("-created_at")
 
-    # 🔍 GLOBAL SEARCH — now actually queries the whole database (via a real
-    # page reload, see tables.html), across every mapped field, correctly
-    # traversing foreign keys instead of matching their raw ID.
-    search = request.GET.get("search")
-    if search:
-        search_q = Q()
-        for lookup in set(FIELD_FILTER_MAP.values()):
-            search_q |= Q(**{f"{lookup}__icontains": search})
-        queryset = queryset.filter(search_q)
+    queryset = filter_dsrs_queryset(request, queryset)
 
-    # 🎯 FILTERS — routed through the same map, so foreign-key fields no
-    # longer crash and unknown/unsupported keys are silently ignored
-    # instead of raising FieldError.
-    keys = request.GET.getlist("key")
-    values = request.GET.getlist("value")
-
-    for k, v in zip(keys, values):
-        if k == "current_activity":
-
-            activity_min = float(v)
-
-            activity_max = request.GET.get("value_max")
-
-            filtered_ids = []
-
-
-            for source in queryset:
-
-                activity = source.current_activity_mci()
-
-                if activity is None:
-                    continue
-
-
-                if activity < activity_min:
-                    continue
-
-
-                if activity_max:
-                    if activity > float(activity_max):
-                        continue
-
-
-                filtered_ids.append(source.pk)
-
-
-            queryset = queryset.filter(
-                pk__in=filtered_ids
-            )
-
-            continue
-        if not v:
-            continue
-        lookup = FIELD_FILTER_MAP.get(k)
-        if not lookup:
-            continue
-        queryset = queryset.filter(**{f"{lookup}__icontains": v})
-
-    if search or keys:
-        # Traversing movements__from_facility (a reverse FK, one-to-many)
-        # can duplicate rows when a DSRS has multiple matching movements —
-        # this collapses those back down to one row per DSRS.
-        queryset = queryset.distinct()
-        # ⚛️ CURRENT ACTIVITY RANGE FILTER
-    # Calculated value, therefore cannot be filtered in SQL
-
-    activity_min = request.GET.get("activity_min")
-    activity_max = request.GET.get("activity_max")
-
-    if activity_min or activity_max:
-
-        filtered_ids = []
-
-        try:
-            activity_min = float(activity_min) if activity_min else None
-            activity_max = float(activity_max) if activity_max else None
-        except ValueError:
-            activity_min = None
-            activity_max = None
-
-
-        for source in queryset:
-
-            current_activity = source.current_activity_mci()
-
-            if current_activity is None:
-                continue
-
-
-            if activity_min is not None:
-                if current_activity < activity_min:
-                    continue
-
-
-            if activity_max is not None:
-                if current_activity > activity_max:
-                    continue
-
-
-            filtered_ids.append(source.pk)
-
-
-        queryset = queryset.filter(pk__in=filtered_ids)
-    # 📄 PAGE SIZE
     size = request.GET.get("size", "10")
-
     if size == "all":
-        page_size = max(queryset.count(), 1)   # show everything in one page
+        page_size = max(queryset.count(), 1)
     else:
         try:
             page_size = max(1, int(size))
         except (ValueError, TypeError):
-            page_size = 10
+            page_size, size = 10, "10"
 
-    # 📌 PAGINATION
     paginator = Paginator(queryset, page_size)
-    page = request.GET.get("page")
-    page_obj = paginator.get_page(page)
+    page_obj = paginator.get_page(request.GET.get("page"))
 
-    return render(request, "dashboard/tables.html", context = {
-    "sources": page_obj,
-    "page_obj": page_obj,
-    "page_size": size,
-    "search": search,
-    "keys": keys,
-    "values": values,
-     "activity_min": activity_min,
-    "activity_max": activity_max,
+    return render(request, "dashboard/tables.html", {
+        "sources": page_obj,
+        "page_obj": page_obj,
+        "page_size": size,
     })
-
-
 
 def save_filter(request):
     if request.method == "POST":
@@ -599,21 +543,16 @@ def get_hide_show(request, model_name):
 
 
 def export_csv(request):
-
     queryset = (
         DSRS.objects
         .select_related("Nuclide", "created_by", "Facility", "contract")
         .prefetch_related("movements__from_facility")
+        .order_by("-created_at")
     )
+    queryset = filter_dsrs_queryset(request, queryset)
 
-    keys = request.GET.getlist("key")
-    values = request.GET.getlist("value")
-    for k, v in zip(keys, values):
-        queryset = queryset.filter(**{f"{k}__icontains": v})
-
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = 'attachment; filename="dsrs.csv"'
-
+    response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
+    response["Content-Disposition"] = 'attachment; filename="dsrs.csv"'
     writer = csv.writer(response)
 
     writer.writerow([
@@ -629,9 +568,8 @@ def export_csv(request):
     ])
 
     for obj in queryset:
-
-        first_movement = obj.movements.order_by("movement_date", "id").first()
-        origin_facility = first_movement.from_facility if first_movement else None
+        movements = list(obj.movements.all())   # prefetched; Meta ordering = date, id
+        origin_facility = movements[0].from_facility if movements else None
 
         writer.writerow([
             obj.id, obj.contract_number, obj.Source_Type, obj.Sso_Code,
@@ -639,7 +577,8 @@ def export_csv(request):
             origin_facility.name if origin_facility else None,
             obj.Origin_Type, obj.Date_received, obj.is_divisible, obj.source_count,
             obj.available_count, obj.Location, obj.Status, obj.Status_Date,
-            obj.Responsible_Person, str(obj.Nuclide) if obj.Nuclide else None,
+            obj.Responsible_Person,
+            obj.Nuclide.name if obj.Nuclide else None,
             obj.activity_input, obj.activity_unit, obj.initial_activity_bq,
             obj.current_activity_mci_value, obj.category_value, obj.Activity_reference_date,
             obj.serial_number, obj.Dose_rate_surface_uSv, obj.Dose_rate_1m_uSv,
@@ -652,9 +591,9 @@ def export_csv(request):
 
     return response
 
-
 def import_csv(request):
-    """Server-side CSV import. Accepts a multipart file upload directly."""
+    """Upsert by (Facility, Nuclide, serial_number). Blank CSV cells never
+    overwrite existing values."""
 
     if request.method != "POST":
         return JsonResponse({"error": _("POST required")}, status=400)
@@ -664,9 +603,9 @@ def import_csv(request):
         return JsonResponse({"error": _("No file uploaded")}, status=400)
 
     decoded = uploaded_file.read().decode("utf-8-sig")
-    reader = csv.DictReader(decoded.splitlines())
+    reader = csv.DictReader(io.StringIO(decoded))
 
-    created = 0
+    created = updated = unchanged = 0
     errors = []
 
     def normalize_key(k):
@@ -678,144 +617,191 @@ def import_csv(request):
         for key in keys:
             key = normalize_key(key)
             if key in normalized and normalized[key] not in [None, ""]:
-                return str(normalized[key]).strip()
+                return str(normalized[key]).strip() or None
         return None
+
+    def get_date(normalized, *keys):
+        raw = get(normalized, *keys)
+        if raw is None:
+            return None
+        d = parse_date(raw)
+        if d is None:
+            raise ValueError(f"{keys[0]}: invalid date '{raw}' (use YYYY-MM-DD)")
+        return d
+
+    def get_float(normalized, *keys):
+        raw = get(normalized, *keys)
+        if raw is None:
+            return None
+        try:
+            return float(raw.replace(",", ""))
+        except ValueError:
+            raise ValueError(f"{keys[0]}: invalid number '{raw}'")
+
+    def get_int(normalized, *keys):
+        raw = get(normalized, *keys)
+        return int(float(raw)) if raw is not None else None
 
     def match_choice(value, choices, field_name):
         if value is None:
-            raise ValueError(f"{field_name}: empty value")
-        value = str(value).strip().lower()
+            return None
+        v = str(value).strip().lower()
         for key, label in choices:
-            if value in [str(key).lower(), str(label).lower()]:
+            if v in [str(key).lower(), str(label).lower()]:
                 return key
         raise ValueError(f"{field_name}: invalid value '{value}'")
 
     for i, row in enumerate(reader, start=1):
         try:
-            normalized = {normalize_key(k): v for k, v in row.items()}
+            n = {normalize_key(k): v for k, v in row.items() if k}
 
-            source_type = get(normalized, "source_type")
-            serial = get(normalized, "serial_number")
-            facility_name = get(normalized, "facility")
-            origin_facility_name = get(normalized, "origin_facility")
-            origin_type = get(normalized, "origin_type")
-            status = get(normalized, "status")
-            location = get(normalized, "location")
-            responsible = get(normalized, "responsible_person")
-            date_received = parse_date(get(normalized, "date_received"))
-            ref_date = parse_date(get(normalized, "activity_reference_date"))
-            status_date = parse_date(get(normalized, "status_date"))
+            serial = get(n, "serial_number")
+            facility_name = get(n, "facility")
+            nuclide_name = get(n, "nuclide")
 
-            missing = []
-            if not source_type: missing.append("source_type")
-            if not serial: missing.append("serial_number")
-            if not facility_name: missing.append("facility")
-            if not origin_type: missing.append("origin_type")
-            if not status: missing.append("status")
-
+            missing = [name for name, val in
+                       (("serial_number", serial), ("facility", facility_name)) if not val]
             if missing:
                 raise ValueError(f"Missing fields: {', '.join(missing)}")
-
-            origin_type = match_choice(origin_type, OriginType.choices, "Origin_Type")
-            status = match_choice(status, SOURCE_STATUS.choices, "Status")
-            source_type = match_choice(source_type, SOURCE_TYPE.choices, "Source_Type")
 
             facility_obj = FacilityModel.objects.filter(name__iexact=facility_name).first()
             if not facility_obj:
                 raise ValueError(_("Facility '%(name)s' not found") % {"name": facility_name})
 
-            origin_facility_obj = None
-            if origin_facility_name:
-                origin_facility_obj = FacilityModel.objects.filter(
-                    name__iexact=origin_facility_name
-                ).first()
-                if not origin_facility_obj:
-                    raise ValueError(_("Origin Facility '%(name)s' not found") % {"name": origin_facility_name})
-
-            nuclide_name = get(normalized, "nuclide")
             nuclide = None
             if nuclide_name:
                 nuclide = Nuclides.objects.filter(name__iexact=nuclide_name).first()
                 if not nuclide:
                     raise ValueError(_("Nuclide '%(name)s' not found") % {"name": nuclide_name})
 
-            contract_number = get(normalized, "contract_number")
+            origin_facility_obj = None
+            origin_facility_name = get(n, "origin_facility")
+            if origin_facility_name:
+                origin_facility_obj = FacilityModel.objects.filter(
+                    name__iexact=origin_facility_name).first()
+                if not origin_facility_obj:
+                    raise ValueError(_("Origin Facility '%(name)s' not found")
+                                     % {"name": origin_facility_name})
+
             contract_obj = None
+            contract_number = get(n, "contract_number")
             if contract_number:
                 contract_obj = LicenseContract.objects.filter(
-                    contract_number__iexact=contract_number
-                ).first()
+                    contract_number__iexact=contract_number).first()
                 if not contract_obj:
-                    raise ValueError(_("Contract '%(number)s' not found") % {"number": contract_number})
+                    raise ValueError(_("Contract '%(number)s' not found")
+                                     % {"number": contract_number})
 
-            activity_input_raw = get(normalized, "activity_input")
-            activity_input = float(activity_input_raw.replace(",", "")) if activity_input_raw else None
+            is_div_raw = get(n, "is_divisible")
 
-            source_count_raw = get(normalized, "source_count")
-            available_count_raw = get(normalized, "available_count")
-            is_divisible_raw = get(normalized, "is_divisible")
+            fields = {
+                "Source_Type": match_choice(get(n, "source_type"), SOURCE_TYPE.choices, "Source_Type"),
+                "Origin_Type": match_choice(get(n, "origin_type"), OriginType.choices, "Origin_Type"),
+                "Status": match_choice(get(n, "status"), SOURCE_STATUS.choices, "Status"),
+                "Sso_Code": get(n, "sso_code"),
+                "Date_received": get_date(n, "date_received"),
+                "Location": get(n, "location"),
+                "Status_Date": get_date(n, "status_date"),
+                "Responsible_Person": get(n, "responsible_person"),
+                "activity_input": get_float(n, "activity_input"),
+                "activity_unit": get(n, "activity_unit"),
+                "Activity_reference_date": get_date(n, "activity_reference_date"),
+                "is_divisible": (is_div_raw.lower() in ("true", "1", "yes")) if is_div_raw else None,
+                "source_count": get_int(n, "source_count"),
+                "available_count": get_int(n, "available_count"),
+                "Dose_rate_surface_uSv": get(n, "dose_rate_surface_usv"),
+                "Dose_rate_1m_uSv": get(n, "dose_rate_1m_usv"),
+                "Dose_rate_measurement_date": get_date(
+                    n, "dose_rate_measurement_date", "dose_rate_date"),
+                "source_state": get(n, "source_state"),
+                "contamination_bq_cm2": get(n, "contamination_bq_cm2"),
+                "Source_Physical_Form": get(n, "source_physical_form"),
+                "Source_Manufacturer": get(n, "source_manufacturer"),
+                "Source_Model": get(n, "source_model"),
+                "Source_Practice": get(n, "source_practice"),
+                "Device_Manufacturer": get(n, "device_manufacturer"),
+                "Device_Model": get(n, "device_model"),
+                "Device_Serial_Number": get(n, "device_serial_number"),
+                "Container_Type": get(n, "container_type"),
+                "Dimension": get(n, "dimension"),
+                "Comment": get(n, "comment"),
+            }
+            # Blank cells are "no change", never "erase". Convert to proper types
+            # up front so comparison and validation work for both paths.
+            fields = {
+                k: DSRS._meta.get_field(k).to_python(v)
+                for k, v in fields.items() if v is not None
+            }
 
-            obj = DSRS(
-                contract=contract_obj,
-                Source_Type=source_type,
-                Sso_Code=get(normalized, "sso_code"),
-                Origin_Type=origin_type,
-                Date_received=date_received,
-                Facility=facility_obj,
-                Location=location,
-                Status=status,
-                Status_Date=status_date,
-                Responsible_Person=responsible,
-                Nuclide=nuclide,
-                activity_input=activity_input,
-                activity_unit=get(normalized, "activity_unit") or "Bq",
-                Activity_reference_date=ref_date,
-                serial_number=serial,
-                is_divisible=(is_divisible_raw or "").lower() in ("true", "1", "yes"),
-                source_count=int(source_count_raw) if source_count_raw else 1,
-                available_count=int(available_count_raw) if available_count_raw else 1,
-                Dose_rate_surface_uSv=get(normalized, "dose_rate_surface_usv"),
-                Dose_rate_1m_uSv=get(normalized, "dose_rate_1m_usv"),
-                Dose_rate_measurement_date=parse_date(get(normalized, "dose_rate_measurement_date")),
-                source_state=get(normalized, "source_state"),
-                contamination_bq_cm2=get(normalized, "contamination_bq_cm2"),
-                Source_Physical_Form=get(normalized, "source_physical_form"),
-                Source_Manufacturer=get(normalized, "source_manufacturer"),
-                Source_Model=get(normalized, "source_model"),
-                Source_Practice=get(normalized, "source_practice"),
-                Device_Manufacturer=get(normalized, "device_manufacturer"),
-                Device_Model=get(normalized, "device_model"),
-                Device_Serial_Number=get(normalized, "device_serial_number"),
-                Container_Type=get(normalized, "container_type"),
-                Dimension=get(normalized, "dimension"),
-                Comment=get(normalized, "comment"),
-                created_by=request.user,
-            )
-            obj.save()
+            with transaction.atomic():
+                matches = list(DSRS.objects.filter(
+                    Facility=facility_obj,
+                    Nuclide=nuclide,                      # None -> IS NULL
+                    serial_number__iexact=serial,
+                )[:2])
 
-            # Backfill an origin movement for history/export purposes only —
-            # NOT via register_movement(), since that would overwrite the
-            # Status/Facility we just explicitly imported above.
-            if origin_facility_obj:
-                SourceMovement.objects.create(
-                    source=obj,
-                    movement_type=MovementType.RECEIVE,
-                    from_facility=origin_facility_obj,
-                    to_facility=facility_obj,
-                    movement_date=date_received or timezone.now().date(),
-                    source_count=1,
-                    performed_by=request.user,
-                    remarks="Imported origin record",
-                )
+                if len(matches) > 1:
+                    raise ValueError(
+                        f"More than one existing record for {facility_name} / "
+                        f"{nuclide_name or '-'} / {serial}")
 
-            created += 1
+                if matches:
+                    obj = matches[0]
+                    changed = False
+                    for name, new in fields.items():
+                        if getattr(obj, name) != new:
+                            setattr(obj, name, new)
+                            changed = True
+                    if contract_obj and obj.contract_id != contract_obj.pk:
+                        obj.contract = contract_obj
+                        changed = True
+                    if changed:
+                        obj.save()
+                        updated += 1
+                    else:
+                        unchanged += 1
+                else:
+                    required = [k for k in ("Source_Type", "Origin_Type", "Status")
+                                if k not in fields]
+                    if required:
+                        raise ValueError(
+                            f"New record needs: {', '.join(required)}")
+                    obj = DSRS(
+                        Facility=facility_obj,
+                        Nuclide=nuclide,
+                        serial_number=serial,
+                        contract=contract_obj,
+                        created_by=request.user,
+                        **fields,
+                    )
+                    obj.save()
+                    created += 1
+
+                # Origin movement for history/export only, and only when the
+                # record has none yet (so re-imports don't duplicate it).
+                # Not via register_movement(): that would overwrite the
+                # imported Status/Facility.
+                if origin_facility_obj and not obj.movements.exists():
+                    SourceMovement.objects.create(
+                        source=obj,
+                        movement_type=MovementType.RECEIVE,
+                        from_facility=origin_facility_obj,
+                        to_facility=facility_obj,
+                        movement_date=fields.get("Date_received") or timezone.now().date(),
+                        source_count=1,
+                        performed_by=request.user,
+                        remarks="Imported origin record",
+                    )
 
         except Exception as e:
-            errors.append(f"Row {i}: {str(e)}")
+            errors.append(f"Row {i}: {e}")
 
-    return JsonResponse({"created": created, "errors": errors})
-
-
+    return JsonResponse({
+        "created": created,
+        "updated": updated,
+        "unchanged": unchanged,
+        "errors": errors,
+    })
 
 
 def delete_dsrs_image(request, pk):

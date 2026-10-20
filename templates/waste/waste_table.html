@@ -54,17 +54,15 @@
     <div id="columnPanel" class="column-panel hidden"></div>
   </div>
 
-  <form method="get">
   <div class="header-group">
-    <label for="pageSize">{% trans "Items:" %}</label>
-    <select id="pageSize" name="size" onchange="this.form.submit()">
-        <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
-        <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
-        <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
-        <option value="all" {% if page_size == "all" %}selected{% endif %}>{% trans "All" %}</option>
-    </select>
-  </div>
-  </form>
+  <label for="pageSize">{% trans "Items:" %}</label>
+  <select id="pageSize" name="size">
+      <option value="10" {% if page_size == "10" %}selected{% endif %}>10</option>
+      <option value="25" {% if page_size == "25" %}selected{% endif %}>25</option>
+      <option value="50" {% if page_size == "50" %}selected{% endif %}>50</option>
+      <option value="all" {% if page_size == "all" %}selected{% endif %}>{% trans "All" %}</option>
+  </select>
+</div>
 
   <div class="header-group">
     <button class="btn-green" onclick="exportCSV()">{% trans "Export CSV" %}</button>
@@ -239,19 +237,19 @@
 
 <div class="pagination">
     {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">{% trans "Previous" %}</a>
+        <a href="?page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>
     {% endif %}
     {% for num in page_obj.paginator.page_range %}
         {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
             {% if page_obj.number == num %}
                 <span class="current">{{ num }}</span>
             {% else %}
-                <a href="?page={{ num }}{% if page_size %}&size={{ page_size }}{% endif %}">{{ num }}</a>
+                <a href="?page={{ num }}" data-page="{{ num }}">{{ num }}</a>
             {% endif %}
         {% endif %}
     {% endfor %}
     {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if page_size %}&size={{ page_size }}{% endif %}">{% trans "Next" %}</a>
+        <a href="?page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">{% trans "Next" %}</a>
     {% endif %}
 </div>
 
@@ -267,14 +265,20 @@
 </form>
 
 <script>
+
 function currentParams() { return new URLSearchParams(window.location.search); }
+
+function go(p) {
+    const qs = p.toString();
+    window.location.href = window.location.pathname + (qs ? "?" + qs : "");
+}
 
 function runSearch() {
     const p = currentParams();
     const term = document.getElementById("searchInput").value.trim();
     if (term) { p.set("search", term); } else { p.delete("search"); }
     p.delete("page");
-    window.location.search = p.toString();
+    go(p);
 }
 
 document.getElementById("searchInput").addEventListener("keydown", function (e) {
@@ -283,16 +287,34 @@ document.getElementById("searchInput").addEventListener("keydown", function (e) 
 document.getElementById("searchBtn").addEventListener("click", function (e) {
     e.preventDefault(); runSearch();
 });
-document.addEventListener("DOMContentLoaded", function () {
-    const existing = currentParams().get("search");
-    if (existing) { document.getElementById("searchInput").value = existing; }
+
+document.getElementById("pageSize").addEventListener("change", function () {
+    const p = currentParams();
+    p.set("size", this.value);
+    p.delete("page");
+    go(p);
 });
 
 document.getElementById("showConsumed").addEventListener("change", function () {
     const p = currentParams();
     if (this.checked) { p.set("show_consumed", "1"); } else { p.delete("show_consumed"); }
     p.delete("page");
-    window.location.search = p.toString();
+    go(p);
+});
+
+// Pagination keeps every other param
+document.querySelectorAll(".pagination a[data-page]").forEach(a => {
+    a.addEventListener("click", function (e) {
+        e.preventDefault();
+        const p = currentParams();
+        p.set("page", this.dataset.page);
+        go(p);
+    });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const existing = currentParams().get("search");
+    if (existing) { document.getElementById("searchInput").value = existing; }
 });
 
 function getCookie(name) {
@@ -309,55 +331,68 @@ window.exportCSV = function () {
 };
 
 // ---- FILTERS ----
-document.getElementById("addFilter").onclick = function () {
-    let row = document.createElement("div");
+// ---- FILTERS ----
+const FILTER_OPTIONS = `
+    <option value="waste_id">{% trans "Waste ID" %}</option>
+    <option value="waste_type">{% trans "Waste Type" %}</option>
+    <option value="waste_class">{% trans "Waste Class" %}</option>
+    <option value="waste_state">{% trans "State" %}</option>
+    <option value="facility">{% trans "Facility" %}</option>
+    <option value="origin_facility">{% trans "Origin Facility" %}</option>
+    <option value="origin_of_waste">{% trans "Origin of Waste" %}</option>
+    <option value="date_received">{% trans "Date Received" %}</option>
+    <option value="material">{% trans "Material" %}</option>
+    <option value="waste_arising_from">{% trans "Arising From" %}</option>
+    <option value="container_type">{% trans "Container Type" %}</option>
+    <option value="waste_appearance">{% trans "Appearance" %}</option>
+    <option value="package_type">{% trans "Package Type" %}</option>
+    <option value="waste_matrix">{% trans "Waste Matrix" %}</option>
+    <option value="mass_kg">{% trans "Mass" %}</option>
+    <option value="volume_m3">{% trans "Volume" %}</option>
+    <option value="location">{% trans "Location" %}</option>
+    <option value="status">{% trans "Status" %}</option>
+    <option value="status_date">{% trans "Status Date" %}</option>
+    <option value="pretreatment">{% trans "Pre-Treatment" %}</option>
+    <option value="treatment">{% trans "Treatment" %}</option>
+    <option value="possible_pretreatment">{% trans "Possible Pre-Treatment" %}</option>
+    <option value="possible_treatment">{% trans "Possible Treatment" %}</option>
+    <option value="source_nuclide">{% trans "Nuclide" %}</option>
+    <option value="created_by">{% trans "Created By" %}</option>
+    <option value="created_at">{% trans "Created" %}</option>`;
+
+function addFilterRow(key, value) {
+    const row = document.createElement("div");
     row.className = "d-flex mb-2";
     row.innerHTML = `
-       <select class="form-control mr-2 key">
-        <option value="waste_id">{% trans "Waste ID" %}</option>
-        <option value="waste_type">{% trans "Waste Type" %}</option>
-        <option value="waste_class">{% trans "Waste Class" %}</option>
-        <option value="waste_state">{% trans "State" %}</option>
-        <option value="facility">{% trans "Facility" %}</option>
-        <option value="origin_facility">{% trans "Origin Facility" %}</option>
-        <option value="origin_of_waste">{% trans "Origin of Waste" %}</option>
-        <option value="date_received">{% trans "Date Received" %}</option>
-        <option value="material">{% trans "Material" %}</option>
-        <option value="waste_arising_from">{% trans "Arising From" %}</option>
-        <option value="container_type">{% trans "Container Type" %}</option>
-        <option value="waste_appearance">{% trans "Appearance" %}</option>
-        <option value="package_type">{% trans "Package Type" %}</option>
-        <option value="waste_matrix">{% trans "Waste Matrix" %}</option>
-        <option value="mass_kg">{% trans "Mass" %}</option>
-        <option value="volume_m3">{% trans "Volume" %}</option>
-        <option value="location">{% trans "Location" %}</option>
-        <option value="status">{% trans "Status" %}</option>
-        <option value="status_date">{% trans "Status Date" %}</option>
-        <option value="pretreatment">{% trans "Pre-Treatment" %}</option>
-        <option value="treatment">{% trans "Treatment" %}</option>
-        <option value="possible_pretreatment">{% trans "Possible Pre-Treatment" %}</option>
-        <option value="possible_treatment">{% trans "Possible Treatment" %}</option>
-        <option value="source_nuclide">{% trans "Nuclide" %}</option>
-        <option value="created_by">{% trans "Created By" %}</option>
-        <option value="created_at">{% trans "Created" %}</option>
-       </select>
+        <select class="form-control mr-2 key">${FILTER_OPTIONS}</select>
         <input class="form-control mr-2 value" placeholder="{% trans 'Value' %}">
-        <button class="btn btn-danger">X</button>
-    `;
+        <button class="btn btn-danger">X</button>`;
+    if (key) { row.querySelector(".key").value = key; }
+    if (value) { row.querySelector(".value").value = value; }
     row.querySelector("button").onclick = () => row.remove();
     document.getElementById("filterContainer").appendChild(row);
-};
+}
+
+document.getElementById("addFilter").onclick = () => addFilterRow();
+
+// Rebuild the filter rows from the URL so they survive reloads
+(function restoreFilters() {
+    const p = currentParams();
+    const keys = p.getAll("key"), values = p.getAll("value");
+    keys.forEach((k, i) => addFilterRow(k, values[i]));
+})();
 
 document.getElementById("applyFilters").onclick = function () {
-    let k = document.querySelectorAll(".key");
-    let v = document.querySelectorAll(".value");
-    let p = new URLSearchParams();
+    const p = currentParams();               // keep search, size, show_consumed
+    p.delete("key"); p.delete("value");      // replace only the filters
+    p.delete("page");
+    const k = document.querySelectorAll("#filterContainer .key");
+    const v = document.querySelectorAll("#filterContainer .value");
     k.forEach((x, i) => {
-        if (v[i].value) { p.append("key", x.value); p.append("value", v[i].value); }
+        if (v[i].value.trim()) { p.append("key", x.value); p.append("value", v[i].value.trim()); }
     });
-    window.location.href = "?" + p.toString();
+    go(p);
 };
-
 // ---- COLUMN SHOW/HIDE ----
 const panel = document.getElementById("columnPanel");
 document.querySelectorAll("#mainTable thead th[data-col]").forEach(th => {

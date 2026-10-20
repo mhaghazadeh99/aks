@@ -85,8 +85,32 @@ def waste_home(request):
     })
 
 
+def filter_waste_queryset(request, queryset):
+    search = (request.GET.get("search") or "").strip()
+    if search:
+        search_q = Q()
+        for lookup in set(FIELD_FILTER_MAP.values()):
+            search_q |= Q(**{f"{lookup}__icontains": search})
+        queryset = queryset.filter(search_q)
+
+    filtered = False
+    for k, v in zip(request.GET.getlist("key"), request.GET.getlist("value")):
+        v = v.strip()
+        lookup = FIELD_FILTER_MAP.get(k)
+        if not v or not lookup:
+            continue
+        queryset = queryset.filter(**{f"{lookup}__icontains": v})
+        filtered = True
+
+    if request.GET.get("show_consumed") != "1":
+        queryset = queryset.exclude(status=BatchStatus.CONSUMED)
+
+    if search or filtered:
+        queryset = queryset.distinct()
+    return queryset
+
 def waste_table(request):
-    """Mirrors dashboard.views.tables_view — same search/filter/page-size/
+    """Mirrors dashboard.views.tables_view: same search/filter/page-size/
     column-visibility behaviour, so the two inventory pages feel identical."""
 
     queryset = (
@@ -101,31 +125,7 @@ def waste_table(request):
         .order_by("-created_at")
     )
 
-    search = request.GET.get("search")
-    if search:
-        search_q = Q()
-        for lookup in set(FIELD_FILTER_MAP.values()):
-            search_q |= Q(**{f"{lookup}__icontains": search})
-        queryset = queryset.filter(search_q)
-
-    keys = request.GET.getlist("key")
-    values = request.GET.getlist("value")
-
-    for k, v in zip(keys, values):
-        if not v:
-            continue
-        lookup = FIELD_FILTER_MAP.get(k)
-        if not lookup:
-            continue
-        queryset = queryset.filter(**{f"{lookup}__icontains": v})
-
-    # Hide batches already consumed by a merge/split/conditioning unless
-    # explicitly asked for — they're history, not current inventory.
-    if request.GET.get("show_consumed") != "1":
-        queryset = queryset.exclude(status=BatchStatus.CONSUMED)
-
-    if search or keys:
-        queryset = queryset.distinct()
+    queryset = filter_waste_queryset(request, queryset)
 
     size = request.GET.get("size", "10")
     if size == "all":
@@ -134,7 +134,7 @@ def waste_table(request):
         try:
             page_size = max(1, int(size))
         except (ValueError, TypeError):
-            page_size = 10
+            page_size, size = 10, "10"
 
     paginator = Paginator(queryset, page_size)
     page_obj = paginator.get_page(request.GET.get("page"))
@@ -143,12 +143,8 @@ def waste_table(request):
         "batches": page_obj,
         "page_obj": page_obj,
         "page_size": size,
-        "search": search,
-        "keys": keys,
-        "values": values,
         "show_consumed": request.GET.get("show_consumed") == "1",
     })
-
 
 def waste_create(request):
 
@@ -489,14 +485,10 @@ def waste_export_csv(request):
         WasteBatch.objects
         .select_related("facility", "origin_facility", "created_by")
         .prefetch_related("samples__analysis__nuclide_activities__radionuclide")
+        .order_by("-created_at")
     )
 
-    keys = request.GET.getlist("key")
-    values = request.GET.getlist("value")
-    for k, v in zip(keys, values):
-        lookup = FIELD_FILTER_MAP.get(k)
-        if lookup:
-            queryset = queryset.filter(**{f"{lookup}__icontains": v})
+    queryset = filter_waste_queryset(request, queryset)
 
     response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
     response["Content-Disposition"] = 'attachment; filename="waste.csv"'
@@ -510,9 +502,13 @@ def waste_export_csv(request):
         "Dose_Surface_uSv", "Dose_1m_uSv", "Dose_Date",
         "pH", "Density", "Total_Solids", "Suspended_Solids", "Soluble_Solids",
         "Waste_To_Matrix_Ratio", "Waste_Mass_kg", "Package_Mass_kg", "Package_Volume_m3",
-        "Total_Alpha_GBq_Pkge", "Total_Beta_GBq_Pkge", "Current_Gamma_GBq_Pkge", "Current_Total_Activity_GBq_Pkge",
+        "Total_Alpha_GBq_Pkge", "Total_Beta_GBq_Pkge", "Current_Gamma_GBq_Pkge",
+        "Current_Total_Activity_GBq_Pkge",
         "Nuclides", "Created_By", "Created_At",
     ])
+
+    def gbq(bq):
+        return bq / 1_000_000_000 if bq is not None else None
 
     for b in queryset:
         writer.writerow([
@@ -525,11 +521,13 @@ def waste_export_csv(request):
             b.dose_rate_surface_uSv, b.dose_rate_1m_uSv, b.dose_rate_date,
             b.ph, b.density, b.total_solids, b.suspended_solids, b.soluble_solids,
             b.waste_to_matrix_ratio, b.waste_mass_kg, b.package_mass_kg, b.package_volume_m3,
-           (b.total_alpha_bq / 1_000_000_000) if b.total_alpha_bq is not None else None,
-(b.total_beta_bq / 1_000_000_000) if b.total_beta_bq is not None else None,
-(b.current_gamma_bq_value / 1_000_000_000) if b.current_gamma_bq_value is not None else None,
-(b.current_total_activity_bq_value / 1_000_000_000) if b.current_total_activity_bq_value is not None else None, b.nuclide_summary,
-            b.created_by.username if b.created_by else None, b.created_at,
+            gbq(b.total_alpha_bq),
+            gbq(b.total_beta_bq),
+            gbq(b.current_gamma_bq_value),
+            gbq(b.current_total_activity_bq_value),
+            b.nuclide_summary,
+            b.created_by.username if b.created_by else None,
+            b.created_at,
         ])
 
     return response

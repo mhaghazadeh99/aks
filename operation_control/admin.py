@@ -44,7 +44,7 @@ class TLDReadingInline(admin.TabularInline):
 
 @admin.register(m.TLDReport)
 class TLDReportAdmin(SimpleHistoryAdmin):
-    list_display = ("report_number", "year", "season", "received_date")
+    list_display = ("report_number", "year", "season", "period_start", "period_end", "received_date")
     inlines = [TLDReadingInline]
 
 

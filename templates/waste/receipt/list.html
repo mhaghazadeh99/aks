@@ -80,10 +80,15 @@
       {% if r.status == S.MINUTES_READY %}
       <a href="{% url 'waste_receipt_finalize' r.pk %}" class="icon-btn" title="{% trans 'Upload signed copy and finalize' %}">✅</a>
       {% endif %}
-    {% endif %}
-    {% if r.status == S.MINUTES_READY or r.status == S.FINALIZED %}
-    <a href="{% url 'waste_receipt_print' r.pk %}" class="icon-btn" title="{% trans 'Download the form (Word)' %}">🖨</a>
-    {% endif %}
+      {% if r.status == S.MINUTES_READY or r.status == S.FINALIZED %}
+          {% if r.signed_minutes_file %}
+              <a href="{{ r.signed_minutes_file.url }}"
+                class="icon-btn"
+                title="{% trans 'View signed minutes' %}"
+                target="_blank"
+                rel="noopener noreferrer">📄</a>
+          {% endif %}
+      {% endif %}
   </td>
 </tr>
 {% empty %}

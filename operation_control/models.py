@@ -10,7 +10,7 @@ from simple_history.models import HistoricalRecords
 
 from common.utils.fileValidator import validate_attachment   # same validator your waste app uses
 
-from . import assessment, conf
+from . import assessment, conf, logic
 from . import jalali_utils as ju
 
 User = settings.AUTH_USER_MODEL
@@ -385,14 +385,18 @@ class TLDReport(TimeStamped):
     season = models.PositiveSmallIntegerField(_("Season"), choices=Season.choices)
     report_number = models.CharField(_("Report number"), max_length=60)
     received_date = models.DateField(_("Date received"), null=True, blank=True)
+    period_start = models.DateField(_("Measurement period start"), null=True, blank=True)
+    period_end = models.DateField(_("Measurement period end"), null=True, blank=True)
     attachment = models.FileField(_("Report file"), upload_to="operation_control/tld/%Y/", blank=True)
     notes = models.TextField(_("Notes"), blank=True)
 
     history = HistoricalRecords()   # audit trail (who changed what, when)
 
     class Meta:
-        ordering = ["-year", "-season"]
-        constraints = [models.UniqueConstraint(fields=["year", "season"], name="uniq_tld_report_per_season")]
+        ordering = ["-year", "-season", "-period_start"]
+        # Several lab reports can fall in the same season (their periods do not line up with seasons).
+        constraints = [models.UniqueConstraint(fields=["year", "season", "report_number"],
+                                               name="uniq_tld_report_season_number")]
         verbose_name = _("TLD report")
         verbose_name_plural = _("TLD reports")
 
@@ -425,13 +429,23 @@ class TLDReading(TimeStamped):
             models.UniqueConstraint(fields=["report", "tld_code"], name="uniq_tld_code_per_report"),
             # NOTE: on Django >= 5.1 you may rename `check=` to `condition=`.
             models.CheckConstraint(
-                condition=(Q(worker__isnull=False, env_point__isnull=True)
+                check=(Q(worker__isnull=False, env_point__isnull=True)
                        | Q(worker__isnull=True, env_point__isnull=False)),
                 name="tld_worker_xor_env_point",
             ),
         ]
         verbose_name = _("TLD reading")
         verbose_name_plural = _("TLD readings")
+
+    @property
+    def total_effective_msv(self):
+        """
+        Gamma + neutron (mSv). Hand TLDs are extremity doses: they are never totalled with anything, so None.
+        For environmental TLDs this is the gamma + neutron total of the point.
+        """
+        if self.position == self.Position.HAND:
+            return None
+        return logic.total_dose(self.gamma_msv, self.neutron_msv)
 
     def clean(self):
         is_env = self.position == self.Position.ENVIRONMENT
@@ -482,7 +496,8 @@ class OnlineDoseRecord(models.Model):
                                 verbose_name=_("Operation"))
     worker = models.ForeignKey(RadiationWorker, on_delete=models.PROTECT, related_name="online_doses",
                                verbose_name=_("Worker"))
-    device = models.ForeignKey(Equipment, on_delete=models.PROTECT, related_name="online_doses",
+    # Required when entering new doses (the form insists), but doses imported from the old system have no device.
+    device = models.ForeignKey(Equipment, null=True, blank=True, on_delete=models.PROTECT, related_name="online_doses",
                                limit_choices_to={"application__is_personal_dosimetry": True},
                                verbose_name=_("Device"))
     dose_type = models.CharField(_("Dose type"), max_length=8, choices=DoseType.choices)
@@ -490,6 +505,8 @@ class OnlineDoseRecord(models.Model):
     dose_unit = models.CharField(_("Unit"), max_length=3, choices=DoseUnit.choices, default=DoseUnit.USV)
     exposure_minutes = models.PositiveIntegerField(_("Received over (min)"), null=True, blank=True)
     dose_msv = models.DecimalField(max_digits=14, decimal_places=6, editable=False)
+    legacy_ref = models.CharField(_("Old system reference"), max_length=40, blank=True, db_index=True, editable=False,
+                                  help_text=_("Set for doses imported from the old database (e.g. OnDoseID:12); makes re-importing safe."))
 
     history = HistoricalRecords()   # audit trail (who changed what, when)
 

@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 
 from . import jalali_utils as ju
+from . import legacy_online, legacy_tld
 from .models import (
     CalibrationAssessment, CalibrationRecord, Equipment, EquipmentApplication, EnvironmentalPoint, InspectionItem,
     InspectionPlanYear, InspectionRecord, OnlineDoseRecord, OperationDoseSession, OperationType,
@@ -94,33 +95,45 @@ class _Workers:
         return w
 
 
-# ------------------------------------------------------------------ TLD readings
+# ------------------------------------------------------------------ TLD reports + readings
+def _get_report(cache, year, season, number, *, user, defaults):
+    """
+    One TLD report = one lab report (year + season + report number). Several lab reports may share a season.
+    A report created earlier WITHOUT a number is adopted when the same season arrives with one. Returns (report, created).
+    """
+    key = (year, season, number)
+    if key in cache:
+        return cache[key], False
+    season_reports = TLDReport.objects.filter(year=year, season=season)
+    report, created = season_reports.filter(report_number=number).first(), False
+    if report is None and number:
+        report = season_reports.filter(report_number="").first()
+        if report:
+            report.report_number = number
+            report.save()
+    if report is None:
+        report, created = TLDReport.objects.create(year=year, season=season, report_number=number, created_by=user, **defaults), True
+    else:
+        changed = False
+        for field, value in defaults.items():
+            if value and not getattr(report, field):
+                setattr(report, field, value)
+                changed = True
+        if changed:
+            report.save()
+    cache[key] = report
+    return report, created
+
+
 def save_tld(items, *, user, create_missing, **_kw):
-    errors, warnings, reports, noted = [], [], {}, set()
+    errors, warnings, reports = [], [], {}
     workers = _Workers()
     points = {p.name.casefold(): p for p in EnvironmentalPoint.objects.all()}
     r_created = created = updated = p_created = 0
     for it in items:
-        key = (it["year"], it["season"])
-        report = reports.get(key)
-        if report is None:
-            report, was = TLDReport.objects.get_or_create(
-                year=it["year"], season=it["season"],
-                defaults={"report_number": it["report_number"], "received_date": it["received_date"], "created_by": user})
-            r_created += was
-            if not was:
-                changed = False
-                if it["report_number"] and not report.report_number:
-                    report.report_number, changed = it["report_number"], True
-                if it["received_date"] and not report.received_date:
-                    report.received_date, changed = it["received_date"], True
-                if changed:
-                    report.save()
-            reports[key] = report
-        if it["report_number"] and report.report_number and it["report_number"] != report.report_number and key not in noted:
-            noted.add(key)
-            warnings.append((it["row"], _("%(y)s/%(s)s already has report %(a)s; rows with report %(b)s are added to it")
-                             % {"y": key[0], "s": key[1], "a": report.report_number, "b": it["report_number"]}))
+        report, was = _get_report(reports, it["year"], it["season"], it["report_number"], user=user,
+                                  defaults={"received_date": it["received_date"]})
+        r_created += was
         worker = point = None
         if it["position"] == "ENV":
             point = points.get(it["env"].casefold())
@@ -145,6 +158,47 @@ def save_tld(items, *, user, create_missing, **_kw):
     stats = [(_("TLD reports created"), r_created), (_("Readings added"), created), (_("Readings updated"), updated),
              (_("Workers created"), workers.created), (_("Environmental points created"), p_created)]
     return stats, errors, warnings
+
+
+def save_legacy_tld(items, *, user, create_missing, **_kw):
+    """Rows of the old SQL database (see legacy_tld.py for the rules)."""
+    workers = {w.personnel_code: w for w in RadiationWorker.objects.all()}
+    index = legacy_tld.build_worker_index((w.personnel_code, w.full_name) for w in workers.values())
+    result = legacy_tld.transform(items, index, unmatched="env" if create_missing else "skip")
+    errors, warnings, info = list(result["errors"]), list(result["warnings"]), list(result["info"])
+
+    points = {p.name.casefold(): p for p in EnvironmentalPoint.objects.all()}
+    cache, report_ids = {}, {}
+    r_created = created = updated = p_created = 0
+    for dateid, r in result["reports"].items():
+        report, was = _get_report(cache, r["year"], r["season"], r["report_number"], user=user, defaults={
+            "period_start": r["period_start"], "period_end": r["period_end"],
+            "notes": _("Imported from the old system: DateID %(d)s, LabID %(l)s") % {"d": dateid, "l": r["lab_id"] or "-"}})
+        r_created += was
+        report_ids[dateid] = report
+    for rd in result["readings"]:
+        report = report_ids[rd["date_id"]]
+        worker = point = None
+        if rd["kind"] == "env":
+            point = points.get(rd["env_name"].casefold())
+            if point is None:
+                point = points[rd["env_name"].casefold()] = EnvironmentalPoint.objects.create(
+                    name=rd["env_name"], location=_("Created from the old system's case studies"))
+                p_created += 1
+        else:
+            worker = workers[rd["worker_code"]]
+        _obj, was = TLDReading.objects.update_or_create(
+            report=report, tld_code=rd["tld_code"],
+            defaults={"position": rd["position"], "worker": worker, "env_point": point, "gamma_msv": rd["gamma"],
+                      "neutron_msv": rd["neutron"], "remarks": rd["remarks"], "created_by": user})
+        created += was
+        updated += not was
+    if result["env_names"]:
+        info.append(_("Treated as environmental points (“case studies”) because they match no worker: %(n)s")
+                    % {"n": "، ".join(result["env_names"])})
+    stats = [(_("TLD reports created"), r_created), (_("Readings added"), created), (_("Readings updated"), updated),
+             (_("Workers matched"), result["workers_matched"]), (_("Environmental points created"), p_created)]
+    return stats, errors, warnings, info
 
 
 # ------------------------------------------------------------------ online doses
@@ -204,6 +258,54 @@ def save_online_doses(items, *, user, create_missing, **_kw):
     stats = [(_("Operations created"), s_created), (_("Dose lines added"), r_created),
              (_("Operation types created"), o_created), (_("Lines skipped"), skipped)]
     return stats, errors, warnings
+
+
+def save_legacy_online(items, *, user, create_missing, legacy_unit="USV", **_kw):
+    """Rows of the old OnlineDose table (see legacy_online.py). Re-importing updates the doses it already created."""
+    workers = {w.personnel_code: w for w in RadiationWorker.objects.all()}
+    index = legacy_tld.build_worker_index((w.personnel_code, w.full_name) for w in workers.values())
+    result = legacy_online.transform(items, index, unit=legacy_unit or "USV", dose_type="GAMMA")
+    errors, warnings, info = list(result["errors"]), list(result["warnings"]), list(result["info"])
+
+    ops = {legacy_tld.norm_name(o.name): o for o in OperationType.objects.all()}
+    refs = [ln["legacy_ref"] for s in result["sessions"] for ln in s["lines"]]
+    existing = {r.legacy_ref: r for r in OnlineDoseRecord.objects.filter(legacy_ref__in=refs).select_related("session")}
+    s_created = r_created = r_updated = o_created = skipped = 0
+    for s in result["sessions"]:
+        op = ops.get(legacy_tld.norm_name(s["place_name"]))
+        if op is None:
+            if not create_missing:
+                errors.append((s["lines"][0]["row"], _("Unknown operation type '%(n)s'") % {"n": s["place_name"]}))
+                skipped += len(s["lines"])
+                continue
+            op = ops[legacy_tld.norm_name(s["place_name"])] = OperationType.objects.create(name=s["place_name"])
+            o_created += 1
+        known = next((existing[ln["legacy_ref"]] for ln in s["lines"] if ln["legacy_ref"] in existing), None)
+        if known is not None:
+            session = known.session                         # imported before: keep its operation, update the lines
+        else:
+            session = OperationDoseSession.objects.create(
+                operation_type=op, performed_date=s["date"], location=s["location"], duration_minutes=s["duration"],
+                description=_("Imported from the old system"), created_by=user)
+            s_created += 1
+        for ln in s["lines"]:
+            values = {"worker": workers[ln["worker_code"]], "dose_type": ln["dose_type"], "dose_value": ln["dose"],
+                      "dose_unit": ln["unit"], "exposure_minutes": ln["exposure"]}
+            rec = existing.get(ln["legacy_ref"])
+            if rec is None:
+                OnlineDoseRecord.objects.create(session=session, legacy_ref=ln["legacy_ref"], device=None, **values)
+                r_created += 1
+            else:
+                for k, v in values.items():
+                    setattr(rec, k, v)
+                rec.save()
+                r_updated += 1
+    info.append(_("Imported doses have no device (the old database does not record it), type gamma and unit %(u)s.")
+                % {"u": "µSv" if (legacy_unit or "USV") == "USV" else "mSv"})
+    stats = [(_("Operations created"), s_created), (_("Dose lines added"), r_created), (_("Dose lines updated"), r_updated),
+             (_("Workers matched"), result["workers_matched"]), (_("Operation types created"), o_created),
+             (_("Lines skipped"), skipped)]
+    return stats, errors, warnings, info
 
 
 # ------------------------------------------------------------------ inspection plan
@@ -296,14 +398,17 @@ def save_assessments(items, *, user, apply_all=False, **_kw):
 
 SAVERS = {"equipment": save_equipment, "workers": save_workers, "tld": save_tld,
           "online_doses": save_online_doses, "inspection": save_inspection,
-          "assessments": save_assessments}
+          "assessments": save_assessments, "legacy_tld": save_legacy_tld,
+          "legacy_online": save_legacy_online}
 
 
-def run(kind, parsed, *, user, dry_run, strict, create_missing, plan_year=None, apply_all=False):
+def run(kind, parsed, *, user, dry_run, strict, create_missing, plan_year=None, apply_all=False, legacy_unit=None):
     errors, warnings = list(parsed["errors"]), list(parsed["warnings"])
     with transaction.atomic():
-        stats, row_errors, row_warnings = SAVERS[kind](
-            parsed["items"], user=user, create_missing=create_missing, plan_year=plan_year, apply_all=apply_all)
+        out = SAVERS[kind](parsed["items"], user=user, create_missing=create_missing, plan_year=plan_year,
+                           apply_all=apply_all, legacy_unit=legacy_unit)
+        stats, row_errors, row_warnings = out[:3]
+        info = list(out[3]) if len(out) > 3 else []
         errors += row_errors
         warnings += row_warnings
         blocked = strict and bool(errors)
@@ -311,4 +416,5 @@ def run(kind, parsed, *, user, dry_run, strict, create_missing, plan_year=None, 
         if not saved:
             transaction.set_rollback(True)
     return {"saved": saved, "dry_run": dry_run, "blocked": blocked and not dry_run,
-            "stats": stats, "errors": sorted(errors, key=lambda e: e[0]), "warnings": sorted(warnings, key=lambda e: e[0])}
+            "stats": stats, "info": info,
+            "errors": sorted(errors, key=lambda e: e[0]), "warnings": sorted(warnings, key=lambda e: e[0])}

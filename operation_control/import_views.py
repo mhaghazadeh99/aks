@@ -32,7 +32,8 @@ def csv_import_view(request, kind):
                 kind, parsed, user=request.user, plan_year=year,
                 dry_run=form.cleaned_data["dry_run"], strict=form.cleaned_data["strict"],
                 create_missing=form.cleaned_data.get("create_missing", False),
-                apply_all=form.cleaned_data.get("apply_all", False))
+                apply_all=form.cleaned_data.get("apply_all", False),
+                legacy_unit=form.cleaned_data.get("legacy_unit") or None)
             if result["saved"]:
                 messages.success(request, _("Import finished."))
     return render(request, "operation_control/csv_import.html", {

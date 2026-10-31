@@ -74,6 +74,39 @@ SPECS = {
             ("exposure_minutes", O, _("Minutes in which the dose was received")),
         ],
     },
+    "legacy_tld": {
+        "title": _("Import TLD data from the old system"),
+        "back": "oc_tld_report_list",
+        "intro": _("The flat export of the old SQL Server database (query in legacy_tld_query.sql, or use the import_legacy_dosimetry command to read the database directly). "
+                   "Each DateD period becomes a TLD report; its season is the season of the MIDDLE of Date1–Date2, the year is that Jalali year. "
+                   "DoseID 4 (photon) and 10 (neutron) become gamma and neutron of ONE body reading, 5 (hand) a hand reading, "
+                   "and if only 3 (total effective dose) exists it is imported as gamma. Personnel are matched to workers by first + last name "
+                   "(then PNumber = personnel code); those matching nobody are the old “case studies” and become environmental points. "
+                   "Values are taken as mSv. Importing again updates the same readings."),
+        "columns": [
+            ("PersonnelID, firstName, LastName, PNumber", R, _("Personnel of the old system (used to find the worker)")),
+            ("DoseID, MeasureD", R, _("3 total effective · 4 photon · 5 hand · 10 neutron — and the value")),
+            ("DateID, Date1, Date2, NumberofTest, LabID", R, _("The measurement period (Jalali dates) and the lab report number")),
+            ("TLDID, Uncertinty, Descriptions, JobType", O, _("Kept in the reading's remarks")),
+        ],
+    },
+    "legacy_online": {
+        "title": _("Import online doses from the old system"),
+        "back": "oc_session_list",
+        "intro": _("The flat export of the old SQL Server database (query in legacy_online_query.sql, or use the import_legacy_dosimetry command). "
+                   "Place name → the operation, centre name + address → the location, DateTime → the operation date (Jalali), "
+                   "DureofTime → the operation duration (and the time in which each person received the dose). "
+                   "Rows with the same date + place + duration are ONE operation. Personnel are matched to workers by first + last name "
+                   "(then PNumber); people matching nobody are skipped and listed. The old table has no device and no dose type or unit: "
+                   "doses are imported without a device, as gamma, in the unit you choose. Importing again updates the same doses."),
+        "columns": [
+            ("OnDoseID, PersonnelID, firstName, LastName, PNumber", R, _("The old dose row and the person (used to find the worker)")),
+            ("DateTime, DureofTime", R, _("Operation date (Jalali) and duration (hh:mm:ss)")),
+            ("Dose", R, _("The dose")),
+            ("PlaceName", R, _("The place of activity → operation type")),
+            ("PlaceID, CenterName, CenterAddress", O, _("Place id and the centre (→ location)")),
+        ],
+    },
     "assessments": {
         "title": _("Import calibration assessments"),
         "back": "oc_assessment_list",

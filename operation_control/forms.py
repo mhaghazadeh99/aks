@@ -112,8 +112,9 @@ class OperationTypeForm(BaseModelForm):
 class TLDReportForm(BaseModelForm):
     class Meta:
         model = TLDReport
-        fields = ["year", "season", "report_number", "received_date", "attachment", "notes"]
-        widgets = {"received_date": date_widget(), "notes": forms.Textarea(attrs={"rows": 2})}
+        fields = ["year", "season", "report_number", "received_date", "period_start", "period_end", "attachment", "notes"]
+        widgets = {"received_date": date_widget(), "period_start": date_widget(), "period_end": date_widget(),
+                   "notes": forms.Textarea(attrs={"rows": 2})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -195,6 +196,8 @@ class OnlineDoseRecordForm(BaseModelForm):
             workers |= Q(pk=self.instance.worker_id)
         self.fields["worker"].queryset = RadiationWorker.objects.filter(workers).order_by("full_name")
         self.fields["device"].queryset = eligible_devices(self.instance.device_id if self.instance.pk else None)
+        if self.instance.pk and not self.instance.device_id:
+            self.fields["device"].required = False              # doses imported from the old system have no device
         self.fields["dose_value"].widget.attrs.update({"step": "any", "min": "0"})
 
     def clean_dose_value(self):
@@ -321,14 +324,24 @@ class ImportForm(forms.Form):
         required=False, initial=True, label=_("Create missing workers / environmental points / operation types"))
     apply_all = forms.BooleanField(
         required=False, label=_("If a device name/code matches several devices, apply the assessment to all of them"))
+    legacy_unit = forms.ChoiceField(
+        required=False, label=_("Unit of the old online doses"),
+        choices=[("USV", "µSv"), ("MSV", "mSv")], initial="USV",
+        help_text=_("The old table does not record the unit. Values like 1.00 / 7.00 suggest µSv."))
     plan_year = forms.IntegerField(
         required=False, label=_("Plan year (Jalali) for the done-marks"),
         help_text=_("Leave empty to use the year found in the file."))
 
     def __init__(self, *args, kind="equipment", **kwargs):
         super().__init__(*args, **kwargs)
-        if kind not in ("tld", "online_doses"):
+        if kind not in ("tld", "online_doses", "legacy_tld", "legacy_online"):
             del self.fields["create_missing"]
+        if kind == "legacy_tld":
+            self.fields["create_missing"].label = _("Personnel that match no worker are the old “case studies”: create them as environmental points")
+        if kind == "legacy_online":
+            self.fields["create_missing"].label = _("Create the operation types (places) that do not exist yet")
+        if kind != "legacy_online":
+            del self.fields["legacy_unit"]
         if kind != "assessments":
             del self.fields["apply_all"]
         if kind != "inspection":
@@ -339,6 +352,6 @@ class ImportForm(forms.Form):
         for name in ("dry_run", "strict", "create_missing", "apply_all"):
             if name in self.fields:
                 self.fields[name].widget.attrs["class"] = "form-check-input"
-        for name in ("file", "plan_year"):
+        for name in ("file", "plan_year", "legacy_unit"):
             if name in self.fields:
                 self.fields[name].widget.attrs["class"] = "form-control"

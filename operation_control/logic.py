@@ -40,6 +40,14 @@ def week_to_month_slot(week, first_month):
     return first_month + (week - 1) // 4, (week - 1) % 4 + 1
 
 
+# ------------------------------------------------------------------ doses
+def total_dose(gamma, neutron):
+    """Total effective dose = gamma + neutron. None only when both are None (no measurement at all)."""
+    if gamma is None and neutron is None:
+        return None
+    return (gamma or 0) + (neutron or 0)
+
+
 # ------------------------------------------------------------------ TLD paste import
 def to_decimal(text):
     """None = 'no value' (blank, -, ND, MDL...). Raises ValueError for anything else."""

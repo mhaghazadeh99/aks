@@ -23,6 +23,23 @@
   </p>
   {% if s.description %}<p>{{ s.description }}</p>{% endif %}
 
+  <h4 style="margin-top:8px;">{% trans "Total effective dose per worker" %}</h4>
+  <p style="color:#777; font-size:13px;">{% trans "Gamma + neutron, in mSv (doses entered in µSv are converted)." %}</p>
+  <div class="table-scroll">
+  <table style="margin-bottom:26px;">
+    <thead><tr><th>{% trans "Worker" %}</th><th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th><th>{% trans "Total effective dose (mSv)" %}</th></tr></thead>
+    <tbody>
+    {% for g in worker_totals %}
+      <tr><td><a href="{% url 'oc_worker_detail' g.first.worker_id %}">{{ g.first.worker.full_name }}</a></td>
+        <td>{{ g.gamma|floatformat:"-6" }}</td><td>{{ g.neutron|floatformat:"-6" }}</td><td><strong>{{ g.total|floatformat:"-6" }}</strong></td></tr>
+    {% endfor %}
+      <tr style="background:#f5f6f8;"><td><strong>{% trans "Operation total" %}</strong></td>
+        <td><strong>{{ grand.gamma|floatformat:"-6" }}</strong></td><td><strong>{{ grand.neutron|floatformat:"-6" }}</strong></td><td><strong>{{ grand.total|floatformat:"-6" }}</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>{% trans "Dose lines" %}</h4>
   <div class="table-scroll">
   <table>
     <thead><tr><th>{% trans "Worker" %}</th><th>{% trans "Device" %}</th><th>{% trans "Dose type" %}</th>
@@ -31,8 +48,9 @@
     {% for r in records %}
       <tr>
         <td><a href="{% url 'oc_worker_detail' r.worker_id %}">{{ r.worker.full_name }}</a></td>
-        <td><a href="{% url 'oc_equipment_detail' r.device_id %}">{{ r.device.equipment_id }}</a>
-          {% if r.device.application %}<small style="color:#777;">[{{ r.device.application }}]</small>{% endif %}</td>
+        <td>{% if r.device_id %}<a href="{% url 'oc_equipment_detail' r.device_id %}">{{ r.device.equipment_id }}</a>
+          {% if r.device.application %}<small style="color:#777;">[{{ r.device.application }}]</small>{% endif %}
+          {% else %}<span style="color:#999;">{% trans "not recorded" %}</span>{% endif %}</td>
         <td>{{ r.get_dose_type_display }}</td>
         <td>{{ r.dose_value|floatformat:"-4" }} {{ r.get_dose_unit_display }}</td>
         <td>{{ r.dose_msv|floatformat:"-6" }}</td>

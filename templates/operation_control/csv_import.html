@@ -65,6 +65,11 @@
     </h4>
     <div>{% for label, n in result.stats %}<span class="stat"><b>{{ n }}</b>{{ label }}</span>{% endfor %}</div>
 
+    {% if result.info %}
+      <h5 style="margin-top:18px;">{% trans "Details" %}</h5>
+      <ul style="line-height:1.9;">{% for line in result.info %}<li>{{ line }}</li>{% endfor %}</ul>
+    {% endif %}
+
     {% if errors_shown %}
       <h5 style="margin-top:18px; color:#dc3545;">{% trans "Rows with errors (these rows were skipped)" %} — {{ result.errors|length }}</h5>
       <div class="table-scroll"><table>

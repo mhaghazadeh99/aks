@@ -53,29 +53,33 @@
   <div class="table-scroll">
   <table>
     <thead><tr><th>{% trans "TLD report" %}</th><th>{% trans "TLD code" %}</th><th>{% trans "Wearing position" %}</th>
-      <th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th></tr></thead>
+      <th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th><th>{% trans "Total effective dose (mSv)" %}</th></tr></thead>
     <tbody>
     {% for r in tld_readings %}
       <tr><td><a href="{% url 'oc_tld_report_detail' r.report_id %}">{{ r.report }}</a></td><td>{{ r.tld_code }}</td>
-        <td>{{ r.get_position_display }}</td><td>{{ r.gamma_msv|default_if_none:"-" }}</td><td>{{ r.neutron_msv|default_if_none:"-" }}</td></tr>
-    {% empty %}<tr><td colspan="5" class="text-center">{% trans "No TLD readings." %}</td></tr>{% endfor %}
+        <td>{{ r.get_position_display }}</td><td>{{ r.gamma_msv|floatformat:"-4"|default:"-" }}</td><td>{{ r.neutron_msv|floatformat:"-4"|default:"-" }}</td>
+        <td><strong>{{ r.total_effective_msv|floatformat:"-4"|default:"-" }}</strong></td></tr>
+    {% empty %}<tr><td colspan="6" class="text-center">{% trans "No TLD readings." %}</td></tr>{% endfor %}
     </tbody>
   </table>
   </div>
 
   <h3 style="margin-top:28px;">{% trans "Latest online dose records" %}</h3>
+  <p style="color:#777; font-size:13px;">{% trans "One row per operation. Total effective dose = gamma + neutron (mSv)." %}</p>
   <div class="table-scroll">
   <table>
     <thead><tr><th>{% trans "Operation date" %}</th><th>{% trans "Operation" %}</th><th>{% trans "Device" %}</th>
-      <th>{% trans "Dose type" %}</th><th>{% trans "Recorded dose" %}</th><th>{% trans "Received over (min)" %}</th></tr></thead>
+      <th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th>
+      <th>{% trans "Total effective dose (mSv)" %}</th><th>{% trans "Received over (min)" %}</th></tr></thead>
     <tbody>
-    {% for r in online_records %}
-      <tr><td>{{ r.session.performed_date|jdate }}</td>
-        <td><a href="{% url 'oc_session_detail' r.session_id %}">{{ r.session.operation_type }}</a></td>
-        <td>{{ r.device.equipment_id }}</td><td>{{ r.get_dose_type_display }}</td>
-        <td>{{ r.dose_value|floatformat:"-4" }} {{ r.get_dose_unit_display }}</td>
-        <td>{{ r.exposure_minutes|default_if_none:"-" }}</td></tr>
-    {% empty %}<tr><td colspan="6" class="text-center">{% trans "No online records." %}</td></tr>{% endfor %}
+    {% for g in online_sessions %}
+      <tr><td>{{ g.first.session.performed_date|jdate }}</td>
+        <td><a href="{% url 'oc_session_detail' g.first.session_id %}">{{ g.first.session.operation_type }}</a></td>
+        <td>{{ g.devices|join:", " }}</td>
+        <td>{{ g.gamma|floatformat:"-4" }}</td><td>{{ g.neutron|floatformat:"-4" }}</td>
+        <td><strong>{{ g.total|floatformat:"-4" }}</strong></td>
+        <td>{{ g.minutes|default_if_none:"-" }}</td></tr>
+    {% empty %}<tr><td colspan="7" class="text-center">{% trans "No online records." %}</td></tr>{% endfor %}
     </tbody>
   </table>
   </div>

@@ -101,7 +101,10 @@
 <td data-col="last_calibration">{{ e.last_calibration_display|default:"-" }}</td>
 <td data-col="period">{{ e.calibration_period_months }}</td>
 <td data-col="due_date">{{ e.due_date_display|default:"-" }}</td>
-<td data-col="days_remaining">{{ e.days_remaining|default_if_none:"-" }}</td>
+<td data-col="days_remaining">
+  {% if e.days_overdue %}<span class="text-danger">{{ e.days_overdue }} {% trans "days passed" %}</span>
+  {% elif e.days_remaining is None %}-{% else %}{{ e.days_remaining }}{% endif %}
+</td>
 <td data-col="calibration_status"><span class="badge {{ e.calibration_badge_class }}">{{ e.calibration_status.label }}</span></td>
 <td data-col="current_label">{{ e.get_current_label_display|default:"-" }}</td>
 <td data-col="notes">{{ e.notes|default:"-" }}</td>

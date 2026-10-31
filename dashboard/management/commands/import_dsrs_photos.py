@@ -6,7 +6,8 @@ from django.core.files import File
 from django.core.management.base import BaseCommand, CommandError
 
 from dashboard.models import DSRS, DSRSImage
-
+# python manage.py import_dsrs_photos "D:\Photos" --dry-run
+# python manage.py import_dsrs_photos "D:\Photos"
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 
 

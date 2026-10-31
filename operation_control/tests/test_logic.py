@@ -51,3 +51,12 @@ class TLDPasteTests(SimpleTestCase):
     def test_negative_dose_rejected(self):
         _rows, errors = logic.parse_tld_paste("TL-1,1001,body,-0.5,")
         self.assertEqual(len(errors), 1)
+
+
+class TotalDoseTests(SimpleTestCase):
+    def test_total_effective_dose(self):
+        self.assertEqual(logic.total_dose(Decimal("0.35"), Decimal("0.02")), Decimal("0.37"))
+        self.assertEqual(logic.total_dose(Decimal("0.35"), None), Decimal("0.35"))
+        self.assertEqual(logic.total_dose(None, Decimal("0.02")), Decimal("0.02"))
+        self.assertEqual(logic.total_dose(Decimal("0"), Decimal("0")), Decimal("0"))
+        self.assertIsNone(logic.total_dose(None, None))

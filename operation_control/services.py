@@ -108,10 +108,11 @@ def year_report(year):
 
 
 def env_report(year):
-    data = defaultdict(lambda: {s: {"gamma": ZERO, "neutron": ZERO} for s in SEASONS})
+    data = defaultdict(lambda: {s: {"gamma": ZERO, "neutron": ZERO, "total": ZERO} for s in SEASONS})
     qs = TLDReading.objects.filter(report__year=year, env_point__isnull=False)
     for r in qs.values("env_point_id", "report__season").annotate(g=Sum("gamma_msv"), n=Sum("neutron_msv")):
-        data[r["env_point_id"]][r["report__season"]] = {"gamma": r["g"] or ZERO, "neutron": r["n"] or ZERO}
+        g, n = r["g"] or ZERO, r["n"] or ZERO
+        data[r["env_point_id"]][r["report__season"]] = {"gamma": g, "neutron": n, "total": g + n}
     rows = []
     for p in EnvironmentalPoint.objects.filter(Q(is_active=True) | Q(pk__in=list(data))):
         seasons = data[p.pk]
@@ -136,6 +137,24 @@ def worker_trend(worker, from_year, to_year):
                          "tld_body": tld[(y, s)]["body"], "tld_hand": tld[(y, s)]["hand"],
                          "online": online[(y, s)]})
     return rows
+
+
+def group_online_doses(records, key):
+    """
+    Online dose lines carry ONE dose type each (gamma or neutron). Group them by `key(record)` and sum
+    gamma, neutron and the total effective dose (mSv) for each group.
+    """
+    groups = {}
+    for r in records:
+        g = groups.setdefault(key(r), {"first": r, "gamma": ZERO, "neutron": ZERO, "devices": [], "minutes": None})
+        g["gamma" if r.dose_type == OnlineDoseRecord.DoseType.GAMMA else "neutron"] += r.dose_msv
+        if r.device_id and r.device.equipment_id not in g["devices"]:
+            g["devices"].append(r.device.equipment_id)
+        if r.exposure_minutes:
+            g["minutes"] = max(g["minutes"] or 0, r.exposure_minutes)
+    for g in groups.values():
+        g["total"] = g["gamma"] + g["neutron"]
+    return list(groups.values())
 
 
 def over_limit_count(year, season):

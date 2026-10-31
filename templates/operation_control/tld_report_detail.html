@@ -20,22 +20,25 @@
   </div>
   <p style="color:#666;">
     {% trans "Date received" %}: {{ report.received_date|jdate|default:"-" }}
+    {% if report.period_start %} · {% trans "Measurement period" %}: {{ report.period_start|jdate }} → {{ report.period_end|jdate }}{% endif %}
     {% if report.attachment %} · <a href="{{ report.attachment.url }}" target="_blank">{% trans "Report file" %}</a>{% endif %}
   </p>
   {% if report.notes %}<p>{{ report.notes }}</p>{% endif %}
 
+  <p style="color:#777; font-size:13px;">{% trans "Total effective dose = gamma + neutron. Hand TLDs are extremity doses and are not totalled." %}</p>
   <div class="table-scroll">
   <table>
     <thead><tr><th>{% trans "TLD code" %}</th><th>{% trans "Wearing position" %}</th><th>{% trans "Worker" %} / {% trans "Environmental point" %}</th>
-      <th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th><th>{% trans "Remarks" %}</th></tr></thead>
+      <th>{% trans "Gamma dose (mSv)" %}</th><th>{% trans "Neutron dose (mSv)" %}</th><th>{% trans "Total effective dose (mSv)" %}</th><th>{% trans "Remarks" %}</th></tr></thead>
     <tbody>
     {% for r in readings %}
       <tr>
         <td>{{ r.tld_code }}</td><td>{{ r.get_position_display }}</td>
         <td>{% if r.worker %}<a href="{% url 'oc_worker_detail' r.worker_id %}">{{ r.worker.full_name }}</a>{% else %}{{ r.env_point }}{% endif %}</td>
-        <td>{{ r.gamma_msv|default_if_none:"-" }}</td><td>{{ r.neutron_msv|default_if_none:"-" }}</td><td>{{ r.remarks|default:"-" }}</td>
+        <td>{{ r.gamma_msv|floatformat:"-4"|default:"-" }}</td><td>{{ r.neutron_msv|floatformat:"-4"|default:"-" }}</td>
+        <td><strong>{{ r.total_effective_msv|floatformat:"-4"|default:"-" }}</strong></td><td>{{ r.remarks|default:"-" }}</td>
       </tr>
-    {% empty %}<tr><td colspan="6" class="text-center">{% trans "No readings yet. Use “Paste readings” to add them in one go." %}</td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="7" class="text-center">{% trans "No readings yet. Use “Paste readings” to add them in one go." %}</td></tr>{% endfor %}
     </tbody>
   </table>
   </div>

@@ -19,7 +19,8 @@ from .logic import _POSITIONS, to_decimal
 
 SHEETS = {
     "equipment": ["لیست تجهیزات"], "workers": ["پرسنل"], "tld": ["ثبت دز"],
-    "online_doses": [], "inspection": ["برنامه سالانه"], "assessments": ["برگه ارزیابی"],
+    "online_doses": [], "inspection": ["برنامه سالانه"], "assessments": ["برگه ارزیابی"], "legacy_tld": [],
+    "legacy_online": [],
 }
 
 # canonical column -> accepted header spellings (Persian ones come from your workbooks)
@@ -83,6 +84,15 @@ ALIASES = {
         "unit": ["واحد"],
         "exposure_minutes": ["received over min", "مدت دریافت دقیقه"],
     },
+    "legacy_tld": {                      # the columns of legacy_sql.TLD_QUERY (norm_header lower-cases them)
+        "tldid": [], "personnelid": [], "doseid": [], "measured": [], "uncertinty": ["uncertainty"],
+        "dateid": [], "descriptions": [], "jobtype": [], "date1": [], "date2": [], "numberoftest": [], "labid": [],
+        "firstname": [], "lastname": [], "pnumber": [],
+    },
+    "legacy_online": {                   # the columns of legacy_sql.ONLINE_QUERY
+        "ondoseid": [], "personnelid": [], "datetime": [], "dureoftime": [], "dose": [], "placeid": [], "placename": [],
+        "centername": [], "centeraddress": [], "firstname": [], "lastname": [], "pnumber": [],
+    },
     "assessments": {
         "equipment_id": ["equipment id", "id", "device", "نام کد تجهیز حفاظت پرتوی"],
         "assessment_date": ["date", "تاریخ ارزیابی"],
@@ -117,6 +127,8 @@ REQUIRED = {
     "online_doses": ["date", "operation", "device", "dose_type", "dose_value"],
     "inspection": ["title", "area", "period"],
     "assessments": ["equipment_id", "device_type", "accuracy", "environment", "importance", "wear", "cost"],
+    "legacy_tld": ["personnelid", "doseid", "measured", "dateid", "date1", "date2", "firstname", "lastname"],
+    "legacy_online": ["ondoseid", "personnelid", "datetime", "dose", "placename", "firstname", "lastname"],
 }
 
 TEMPLATES = {
@@ -139,6 +151,16 @@ TEMPLATES = {
          "dose_type", "dose_value", "unit", "exposure_minutes"],
         [["1405/07/20", "Waste conditioning", "Tehran hall", "90", "", "2050625911", "PH-0007E21", "gamma", "35", "uSv", "60"],
          ["1405/07/20", "Waste conditioning", "Tehran hall", "90", "", "1590195329", "PH-0007E22", "neutron", "4", "uSv", "60"]]),
+    "legacy_tld": (
+        ["TLDID", "PersonnelID", "DoseID", "MeasureD", "Uncertinty", "DateID", "Descriptions", "JobType",
+         "Date1", "Date2", "NumberofTest", "LabID", "firstName", "LastName", "PNumber"],
+        [["21", "8", "4", "0.050", "18", "14", "", "", "1396-09-14", "1396-11-21", "EPL/TLD/96/007", "2", "Ali", "Asghari", ""],
+         ["22", "8", "10", "0.010", "18", "14", "", "", "1396-09-14", "1396-11-21", "EPL/TLD/96/007", "2", "Ali", "Asghari", ""]]),
+    "legacy_online": (
+        ["OnDoseID", "PersonnelID", "DateTime", "DureofTime", "Dose", "PlaceID", "PlaceName", "CenterName",
+         "CenterAddress", "firstName", "LastName", "PNumber"],
+        [["1", "1", "1397-02-04", "01:04:00", "1.00", "1", "Health physics", "Tehran center", "Azadi St.", "Ali", "Asghari", ""],
+         ["4", "14", "1397-05-06", "01:45:00", "4.00", "7", "Sources room", "Tehran center", "Azadi St.", "Reza", "Karimi", ""]]),
     "assessments": (
         ["equipment_id", "assessment_date", "assessed_by", "has_maker_recommendation", "device_type",
          "maker_recommendation", "accuracy", "environment", "importance", "wear", "cost", "notes"],
@@ -652,9 +674,21 @@ def parse_assessments(table):
     return {"items": items, "errors": errors, "warnings": warnings}
 
 
+def parse_legacy_tld(table):
+    """Rows are passed on as they are; legacy_tld.transform() reads, converts and checks them (it needs the workers)."""
+    items = [{**{k: v for k, v in row.items() if k != "_row"}, "row": row["_row"]} for row in table["rows"]]
+    return {"items": items, "errors": [], "warnings": []}
+
+
+def parse_legacy_online(table):
+    """Rows are passed on as they are; legacy_online.transform() converts and checks them (it needs the workers)."""
+    return parse_legacy_tld(table)
+
+
 PARSERS = {"equipment": parse_equipment, "workers": parse_workers, "tld": parse_tld,
            "online_doses": parse_online_doses, "inspection": parse_inspection,
-           "assessments": parse_assessments}
+           "assessments": parse_assessments, "legacy_tld": parse_legacy_tld,
+           "legacy_online": parse_legacy_online}
 
 
 def _plan_from_legacy_xlsx(data):

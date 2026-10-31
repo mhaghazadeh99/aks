@@ -34,7 +34,9 @@
 
   <div class="cal-summary">
     <span class="badge {{ e.calibration_badge_class }}">{{ e.calibration_status.label }}</span>
-    {% if e.days_remaining is not None %}
+        {% if e.days_overdue %}
+      <span class="text-danger">{{ e.days_overdue }} {% trans "days passed since the due date" %} ({{ e.due_date_display }})</span>
+    {% elif e.days_remaining is not None %}
       <span>{{ e.days_remaining }} {% trans "days remaining" %} — {% trans "due" %} {{ e.due_date_display }}</span>
     {% endif %}
   </div>

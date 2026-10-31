@@ -9,6 +9,7 @@
     <div class="header-group">
       <a href="{% url 'oc_tld_report_create' %}" class="btn-blue">+ {% trans "New TLD report" %}</a>
       <a href="{% url 'oc_import' 'tld' %}" class="btn-blue">{% trans "Import CSV" %}</a>
+      <a href="{% url 'oc_import' 'legacy_tld' %}" class="btn-blue">{% trans "Import from the old system" %}</a>
       <a href="{% url 'oc_tld_export_csv' %}" class="btn-green">{% trans "Export CSV" %}</a>
       <a href="{% url 'oc_dosimetry_home' %}" class="btn-gray">{% trans "Dosimetry" %}</a>
     </div>
@@ -16,16 +17,17 @@
   <div class="table-scroll">
   <table>
     <thead><tr><th>{% trans "Jalali year" %}</th><th>{% trans "Season" %}</th><th>{% trans "Report number" %}</th>
-      <th>{% trans "Date received" %}</th><th>{% trans "Readings" %}</th><th>{% trans "Report file" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+      <th>{% trans "Measurement period" %}</th><th>{% trans "Date received" %}</th><th>{% trans "Readings" %}</th><th>{% trans "Report file" %}</th><th>{% trans "Actions" %}</th></tr></thead>
     <tbody>
     {% for r in page_obj %}
       <tr>
         <td>{{ r.year }}</td><td>{{ r.get_season_display }}</td><td>{{ r.report_number }}</td>
+        <td>{% if r.period_start %}{{ r.period_start|jdate }} → {{ r.period_end|jdate }}{% else %}-{% endif %}</td>
         <td>{{ r.received_date|jdate|default:"-" }}</td><td>{{ r.n_readings }}</td>
         <td>{% if r.attachment %}<a href="{{ r.attachment.url }}" target="_blank">{% trans "File" %}</a>{% else %}-{% endif %}</td>
         <td><a href="{% url 'oc_tld_report_detail' r.pk %}">👁</a> <a href="{% url 'oc_tld_report_edit' r.pk %}">✏️</a></td>
       </tr>
-    {% empty %}<tr><td colspan="7" class="text-center">{% trans "No TLD reports yet." %}</td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="8" class="text-center">{% trans "No TLD reports yet." %}</td></tr>{% endfor %}
     </tbody>
   </table>
   </div>

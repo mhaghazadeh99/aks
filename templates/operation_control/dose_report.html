@@ -39,9 +39,9 @@ td.cell-over{ background:#ffd9d9; font-weight:700; }
       <tr><th rowspan="2">{% trans "Personnel code" %}</th><th rowspan="2">{% trans "Full name" %}</th>
         <th colspan="3">{% trans "TLD body (mSv)" %}</th><th colspan="2">{% trans "TLD hand (mSv)" %}</th>
         <th colspan="3">{% trans "Online (mSv)" %}</th></tr>
-      <tr><th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th><th>{% trans "Total" %}</th>
+      <tr><th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th><th>{% trans "Total effective dose" %}</th>
         <th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th>
-        <th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th><th>{% trans "Total" %}</th></tr>
+        <th>{% trans "Gamma" %}</th><th>{% trans "Neutron" %}</th><th>{% trans "Total effective dose" %}</th></tr>
     </thead>
     <tbody>
     {% for r in rows %}
@@ -83,11 +83,11 @@ td.cell-over{ background:#ffd9d9; font-weight:700; }
   <div class="table-scroll">
   <table>
     <thead><tr><th>{% trans "Environmental point" %}</th>
-      {% for v, l in seasons %}<th>{{ l }} ({% trans "gamma" %} / {% trans "neutron" %})</th>{% endfor %}</tr></thead>
+      {% for v, l in seasons %}<th>{{ l }} ({% trans "gamma" %} + {% trans "neutron" %} = {% trans "total" %})</th>{% endfor %}</tr></thead>
     <tbody>
     {% for r in env_rows %}
       <tr><td>{{ r.point.name }}{% if r.point.location %} <small style="color:#777;">({{ r.point.location }})</small>{% endif %}</td>
-        {% for s in r.seasons %}<td>{{ s.gamma|floatformat:"-3" }} / {{ s.neutron|floatformat:"-3" }}</td>{% endfor %}</tr>
+        {% for s in r.seasons %}<td>{{ s.gamma|floatformat:"-3" }} + {{ s.neutron|floatformat:"-3" }} = <strong>{{ s.total|floatformat:"-3" }}</strong></td>{% endfor %}</tr>
     {% empty %}<tr><td colspan="5" class="text-center">{% trans "No environmental points defined yet (add them in the admin)." %}</td></tr>{% endfor %}
     </tbody>
   </table>

@@ -106,8 +106,10 @@ def worker_detail(request, pk):
     return render(request, "operation_control/worker_detail.html", {
         "w": worker, "year": year, "trend": trend, "chart": chart, "limit": conf.SEASON_DOSE_LIMIT_MSV,
         "tld_readings": worker.tld_readings.select_related("report").order_by("-report__year", "-report__season")[:30],
-        "online_records": worker.online_doses.select_related("session__operation_type", "device")
-                                .order_by("-session__performed_date")[:30],
+        "online_sessions": services.group_online_doses(
+            worker.online_doses.select_related("session__operation_type", "device")
+                  .order_by("-session__performed_date", "-session_id")[:120],
+            key=lambda r: r.session_id)[:30],
     })
 
 
@@ -261,8 +263,11 @@ def session_edit(request, pk):
 @login_required
 def session_detail(request, pk):
     s = get_object_or_404(OperationDoseSession.objects.select_related("operation_type"), pk=pk)
+    records = list(s.records.select_related("worker", "device__application"))
+    worker_totals = services.group_online_doses(records, key=lambda r: r.worker_id)
+    grand = {k: sum((g[k] for g in worker_totals), services.ZERO) for k in ("gamma", "neutron", "total")}
     return render(request, "operation_control/session_detail.html", {
-        "s": s, "records": s.records.select_related("worker", "device")})
+        "s": s, "records": records, "worker_totals": worker_totals, "grand": grand})
 
 
 @login_required
@@ -292,9 +297,9 @@ def dose_report(request):
         response.write("\ufeff")
         w = csv.writer(response)
         w.writerow([_("Personnel code"), _("Full name"),
-                    _("TLD body gamma (mSv)"), _("TLD body neutron (mSv)"), _("TLD body total (mSv)"),
+                    _("TLD body gamma (mSv)"), _("TLD body neutron (mSv)"), _("TLD body total effective dose (mSv)"),
                     _("TLD hand gamma (mSv)"), _("TLD hand neutron (mSv)"),
-                    _("Online gamma (mSv)"), _("Online neutron (mSv)"), _("Online total (mSv)")])
+                    _("Online gamma (mSv)"), _("Online neutron (mSv)"), _("Online total effective dose (mSv)")])
         for r in rows:
             w.writerow([r["worker"].personnel_code, r["worker"].full_name,
                         r["t"]["body_gamma"], r["t"]["body_neutron"], r["body_total"],
@@ -362,13 +367,13 @@ def tld_export_csv(request):
         qs = qs.filter(report__year=int(request.GET["year"]))
     response, w = _csv_response("tld_readings.csv")
     w.writerow(["year", "season", "report_number", "received_date", "tld_code", "personnel_code", "full_name",
-                "env_point", "position", "gamma_msv", "neutron_msv", "unit", "remarks"])
+                "env_point", "position", "gamma_msv", "neutron_msv", "unit", "remarks", "total_effective_msv"])
     for r in qs:
         w.writerow([r.report.year, r.report.season, r.report.report_number, r.report.received_date or "", r.tld_code,
                     r.worker.personnel_code if r.worker else "", r.worker.full_name if r.worker else "",
                     r.env_point.name if r.env_point else "", r.get_position_display(),
                     "" if r.gamma_msv is None else r.gamma_msv, "" if r.neutron_msv is None else r.neutron_msv,
-                    "mSv", r.remarks])
+                    "mSv", r.remarks, "" if r.total_effective_msv is None else r.total_effective_msv])
     return response
 
 
@@ -388,6 +393,6 @@ def session_export_csv(request):
     for r in qs:
         s = r.session
         w.writerow([s.performed_date, s.operation_type.name, s.location, s.duration_minutes or "", s.description,
-                    r.worker.personnel_code, r.device.equipment_id, r.dose_type.lower(), r.dose_value,
+                    r.worker.personnel_code, r.device.equipment_id if r.device_id else "", r.dose_type.lower(), r.dose_value,
                     r.get_dose_unit_display(), r.exposure_minutes or ""])
     return response

@@ -53,6 +53,8 @@
   </div>
 
   <div class="header-group">
+    <button class="btn-blue" id="prepareBtn" type="button">📝 {% trans "Prepare for calibration" %}</button>
+    <button class="btn-blue" id="sendBtn" type="button">🚚 {% trans "Send to calibration" %}</button>
     <button class="btn-green" onclick="window.location.href='{% url 'oc_equipment_export_csv' %}' + window.location.search">{% trans "Export CSV" %}</button>
     <a href="{% url 'oc_equipment_create' %}" class="btn-blue">+ {% trans "Add Equipment" %}</a>
     <a href="{% url 'oc_import' 'equipment' %}" class="btn-blue">{% trans "Import CSV" %}</a>
@@ -61,12 +63,17 @@
   </div>
 </div>
 
-
+<div class="filter-bar">
+  <div id="filterContainer"></div>
+  <button id="addFilter" class="btn-blue">{% trans "Add Filter" %}</button>
+  <button id="applyFilters" class="btn-info">{% trans "Apply" %}</button>
+</div>
 
 <div class="table-scroll">
 <table id="mainTable">
 <thead>
 <tr>
+<th style="width:34px;"><input type="checkbox" id="selectAll" title="{% trans 'Select all on this page' %}"></th>
 <th data-col="equipment_id">{% trans "Equipment ID" %}</th>
 <th data-col="name">{% trans "Device name" %}</th>
 <th data-col="model_name">{% trans "Model" %}</th>
@@ -89,6 +96,7 @@
 <tbody>
 {% for e in equipment_list %}
 <tr>
+<td><input type="checkbox" class="eq-checkbox" value="{{ e.id }}"></td>
 <td data-col="equipment_id">{{ e.equipment_id }}</td>
 <td data-col="name">{{ e.name }}</td>
 <td data-col="model_name">{{ e.model_name|default:"-" }}</td>
@@ -101,10 +109,7 @@
 <td data-col="last_calibration">{{ e.last_calibration_display|default:"-" }}</td>
 <td data-col="period">{{ e.calibration_period_months }}</td>
 <td data-col="due_date">{{ e.due_date_display|default:"-" }}</td>
-<td data-col="days_remaining">
-  {% if e.days_overdue %}<span class="text-danger">{{ e.days_overdue }} {% trans "days passed" %}</span>
-  {% elif e.days_remaining is None %}-{% else %}{{ e.days_remaining }}{% endif %}
-</td>
+<td data-col="days_remaining">{{ e.days_remaining|default_if_none:"-" }}</td>
 <td data-col="calibration_status"><span class="badge {{ e.calibration_badge_class }}">{{ e.calibration_status.label }}</span></td>
 <td data-col="current_label">{{ e.get_current_label_display|default:"-" }}</td>
 <td data-col="notes">{{ e.notes|default:"-" }}</td>
@@ -115,7 +120,7 @@
 </td>
 </tr>
 {% empty %}
-<tr><td colspan="17" class="text-center">{% trans "No equipment found." %}</td></tr>
+<tr><td colspan="18" class="text-center">{% trans "No equipment found." %}</td></tr>
 {% endfor %}
 </tbody>
 </table>
@@ -141,6 +146,12 @@
   ({{ page_obj.paginator.count }} {% trans "records" %})
 </div>
 
+<!-- Hidden POST form used by the calibration buttons -->
+<form id="bulkForm" method="post" style="display:none;">
+  {% csrf_token %}
+  <div id="bulkIds"></div>
+</form>
+
 {{ filter_defs|json_script:"filterDefs" }}
 <script>
 const params = () => new URLSearchParams(window.location.search);
@@ -159,6 +170,55 @@ document.getElementById("pageSize").addEventListener("change", function () {
 });
 
 // ---- filter builder (same key/value URL contract as the waste list) ----
+const DEFS = JSON.parse(document.getElementById("filterDefs").textContent);
+const container = document.getElementById("filterContainer");
+
+function valueControl(def, current) {
+  let el;
+  if (def.choices) {
+    el = document.createElement("select");
+    def.choices.forEach(([v, l]) => { const o = new Option(l, v); el.add(o); });
+  } else {
+    el = document.createElement("input");
+    el.placeholder = "{% trans 'Value' %}";
+  }
+  el.className = "form-control value";
+  if (current) el.value = current;
+  return el;
+}
+
+function addFilterRow(key, value) {
+  const row = document.createElement("div");
+  row.className = "filter-row";
+  const sel = document.createElement("select");
+  sel.className = "form-control key";
+  DEFS.forEach(d => sel.add(new Option(d.label, d.key)));
+  if (key) sel.value = key;
+  let ctrl = valueControl(DEFS.find(d => d.key === sel.value), value);
+  sel.addEventListener("change", () => {
+    const next = valueControl(DEFS.find(d => d.key === sel.value));
+    row.replaceChild(next, ctrl); ctrl = next;
+  });
+  const del = document.createElement("button");
+  del.type = "button"; del.className = "btn btn-danger"; del.textContent = "X";
+  del.onclick = () => row.remove();
+  row.append(sel, ctrl, del);
+  container.appendChild(row);
+}
+
+document.getElementById("addFilter").onclick = () => addFilterRow();
+document.getElementById("applyFilters").onclick = () => {
+  const p = new URLSearchParams();
+  const search = params().get("search"); if (search) p.set("search", search);
+  const size = params().get("size"); if (size) p.set("size", size);
+  container.querySelectorAll(".filter-row").forEach(row => {
+    const v = row.querySelector(".value").value;
+    if (v) { p.append("key", row.querySelector(".key").value); p.append("value", v); }
+  });
+  window.location.search = p.toString();
+};
+// restore filters from the URL
+(() => { const p = params(), k = p.getAll("key"), v = p.getAll("value"); k.forEach((key, i) => addFilterRow(key, v[i])); })();
 
 // ---- column show/hide (remembered per browser) ----
 const STORE = "oc_equipment_cols";
@@ -185,5 +245,34 @@ document.addEventListener("change", e => {
   hiddenCols = show ? hiddenCols.filter(c => c !== col) : [...new Set([...hiddenCols, col])];
   try { localStorage.setItem(STORE, JSON.stringify(hiddenCols)); } catch (err) {}
 });
+
+// ---- choose devices -> prepare for calibration / send to calibration ----
+const selectAll = document.getElementById("selectAll");
+selectAll.addEventListener("change", () => {
+  document.querySelectorAll(".eq-checkbox").forEach(cb => { cb.checked = selectAll.checked; });
+});
+function selectedIds() { return [...document.querySelectorAll(".eq-checkbox:checked")].map(cb => cb.value); }
+function submitBulk(action, ids) {
+  const form = document.getElementById("bulkForm"), holder = document.getElementById("bulkIds");
+  holder.innerHTML = "";
+  ids.forEach(id => {
+    const input = document.createElement("input");
+    input.type = "hidden"; input.name = "ids"; input.value = id;
+    holder.appendChild(input);
+  });
+  form.action = action;
+  form.submit();
+}
+document.getElementById("prepareBtn").onclick = function () {
+  const ids = selectedIds();
+  if (!ids.length) { alert("{% trans 'Select at least one device.' %}"); return; }
+  submitBulk("{% url 'oc_calibration_prepare' %}", ids);
+};
+document.getElementById("sendBtn").onclick = function () {
+  const ids = selectedIds();
+  if (!ids.length) { alert("{% trans 'Select at least one device.' %}"); return; }
+  if (!confirm(ids.length + " {% trans 'device(s) will be marked as In calibration. Continue?' %}")) return;
+  submitBulk("{% url 'oc_calibration_send' %}", ids);
+};
 </script>
 {% endblock %}

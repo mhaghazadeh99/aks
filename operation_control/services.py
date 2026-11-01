@@ -34,7 +34,8 @@ def calibration_alerts(limit=8):
     """
     today = ju.today()
     soon = ju.add_days(today, conf.CALIBRATION_WARNING_DAYS)
-    watched = Equipment.objects.filter(status__in=[Equipment.Status.ACTIVE, Equipment.Status.ON_LOAN])
+    watched = Equipment.objects.filter(status__in=[Equipment.Status.ACTIVE, Equipment.Status.ON_LOAN,
+                                                   Equipment.Status.WAITING_FOR_CALIBRATION])
     expired = watched.filter(due_date__lt=today).order_by("due_date")
     due_soon = watched.filter(due_date__gte=today, due_date__lte=soon).order_by("due_date")
     return {

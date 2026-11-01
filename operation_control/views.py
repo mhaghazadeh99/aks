@@ -3,6 +3,8 @@ import csv
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import ProtectedError
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import F, Q
@@ -10,7 +12,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 
-from . import conf
+from . import conf, logic
 from . import jalali_utils as ju
 from .forms import CalibrationRecordForm, EquipmentForm
 from .models import CalibrationRecord, Equipment, EquipmentApplication
@@ -160,6 +162,11 @@ def calibration_add(request, pk):
         rec.equipment, rec.created_by = equipment, request.user
         rec.save()
         messages.success(request, _("Calibration recorded. Due date updated."))
+        fresh = Equipment.objects.get(pk=equipment.pk)
+        if fresh.status in (Equipment.Status.WAITING_FOR_CALIBRATION, Equipment.Status.SENT_FOR_CALIBRATION):
+            fresh.status = Equipment.Status.ACTIVE            # calibrated: it is back in service
+            fresh.save()
+            messages.info(request, _("The device was waiting / in calibration and is now Active again."))
         return redirect("oc_equipment_detail", pk=equipment.pk)
     return render(request, "operation_control/calibration_form.html", {"form": form, "equipment": equipment})
 
@@ -197,3 +204,92 @@ def equipment_delete(request, pk):
         return redirect("oc_equipment_detail", pk=pk)
     messages.success(request, _("Equipment deleted."))
     return redirect("oc_equipment_list")
+
+
+# ------------------------------------------------------------------ calibration workflow
+# Active -> (Prepare) Waiting for calibration -> (Send) In calibration -> (a calibration record is added) Active
+def _split_eligible(ids):
+    ok, blocked = [], []
+    for d in Equipment.objects.filter(pk__in=ids).order_by("name", "serial_number", "equipment_id"):
+        reason = logic.calibration_block_reason(d.status)
+        (blocked.append((d, reason)) if reason else ok.append(d))
+    return ok, blocked
+
+
+def _tell_about_blocked(request, blocked):
+    if blocked:
+        text = {"inactive": _("inactive"), "loan": _("on loan"), "in_calibration": _("already in calibration")}   # translated per request
+        messages.warning(request, _("Skipped: %(list)s") % {"list": "، ".join(
+            f"{d.equipment_id} ({text[reason]})" for d, reason in blocked)})
+
+
+def _posted_ids(request):
+    return [int(x) for x in request.POST.getlist("ids") if x.isdigit()]
+
+
+@login_required
+@require_POST
+def calibration_prepare(request):
+    """Selected devices -> 'Waiting for calibration', then show the request letter for them."""
+    ids = _posted_ids(request)
+    if not ids:
+        messages.warning(request, _("Select at least one device."))
+        return redirect("oc_equipment_list")
+    ok, blocked = _split_eligible(ids)
+    for d in ok:
+        if d.status != Equipment.Status.WAITING_FOR_CALIBRATION:
+            d.status = Equipment.Status.WAITING_FOR_CALIBRATION
+            d.save()
+    _tell_about_blocked(request, blocked)
+    if not ok:
+        return redirect("oc_equipment_list")
+    messages.success(request, _("%(n)s device(s) are now “Waiting for calibration”.") % {"n": len(ok)})
+    return redirect(f"{reverse('oc_calibration_request')}?ids={','.join(str(d.pk) for d in ok)}")
+
+
+@login_required
+@require_POST
+def calibration_send(request):
+    """Selected devices -> 'In calibration'."""
+    ids = _posted_ids(request)
+    if not ids:
+        messages.warning(request, _("Select at least one device."))
+        return redirect("oc_equipment_list")
+    ok, blocked = _split_eligible(ids)
+    for d in ok:
+        d.status = Equipment.Status.SENT_FOR_CALIBRATION
+        d.save()
+    _tell_about_blocked(request, blocked)
+    if ok:
+        messages.success(request, _("%(n)s device(s) are now “In calibration”.") % {"n": len(ok)})
+    return redirect("oc_equipment_list")
+
+
+def _request_devices(request):
+    ids = [int(x) for x in request.GET.get("ids", "").split(",") if x.strip().isdigit()]
+    return Equipment.objects.filter(pk__in=ids).order_by("name", "serial_number", "equipment_id")
+
+
+@login_required
+def calibration_request(request):
+    """The letter: a sentence, then a table (row, device, serial number) - to copy into Word."""
+    devices = list(_request_devices(request))
+    if not devices:
+        messages.warning(request, _("Select at least one device."))
+        return redirect("oc_equipment_list")
+    return render(request, "operation_control/calibration_request.html", {
+        "devices": devices, "text": conf.CALIBRATION_REQUEST_TEXT,
+        "ids": ",".join(str(d.pk) for d in devices)})
+
+
+@login_required
+def calibration_request_doc(request):
+    """The same letter as a file Word opens (HTML saved as .doc), right-to-left."""
+    devices = list(_request_devices(request))
+    if not devices:
+        return redirect("oc_equipment_list")
+    html = render_to_string("operation_control/calibration_request_doc.html",
+                            {"devices": devices, "text": conf.CALIBRATION_REQUEST_TEXT}, request=request)
+    response = HttpResponse("\ufeff" + html, content_type="application/msword; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="calibration_request.doc"'
+    return response

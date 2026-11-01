@@ -40,6 +40,12 @@ def week_to_month_slot(week, first_month):
     return first_month + (week - 1) // 4, (week - 1) % 4 + 1
 
 
+# ------------------------------------------------------------------ calibration workflow
+def calibration_block_reason(status):
+    """Why a device cannot be prepared / sent for calibration (None = it can). Active and waiting devices can."""
+    return {"INACTIVE": "inactive", "LOAN": "loan", "SENT": "in_calibration"}.get(status)
+
+
 # ------------------------------------------------------------------ doses
 def total_dose(gamma, neutron):
     """Total effective dose = gamma + neutron. None only when both are None (no measurement at all)."""

@@ -112,3 +112,11 @@ class TemplateTests(SimpleTestCase):
         self.assertIsNone(ci.parse_date(""))
         with self.assertRaises(ValueError):
             ci.parse_date("1404/12/30")
+
+
+class CalibrationStatusWordsTests(SimpleTestCase):
+    def test_workflow_statuses_are_understood(self):
+        text = ("equipment_id,name,status\nA,x,Waiting for calibration\nB,x,در انتظار کالیبراسیون\n"
+                "C,x,In calibration\nD,x,ارسال به کالیبراسیون\nE,x,Active\n")
+        r = parse("equipment", text)
+        self.assertEqual([i["fields"]["status"] for i in r["items"]], ["WAITING", "WAITING", "SENT", "SENT", "ACTIVE"])

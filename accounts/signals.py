@@ -13,3 +13,4 @@ def create_profile(sender, instance, created, **kwargs):
         UserProfile.objects.create(
             user=instance
         )
+

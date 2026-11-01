@@ -336,6 +336,9 @@ def _t(row, key):
 
 STATUS_EQ = {"فعال": "ACTIVE", "active": "ACTIVE", "غیرفعال": "INACTIVE", "inactive": "INACTIVE",
              "ارسال به کالیبراسیون": "SENT", "sent": "SENT", "sent for calibration": "SENT",
+             "در حال کالیبراسیون": "SENT", "در کالیبراسیون": "SENT", "in calibration": "SENT",
+             "در انتظار کالیبراسیون": "WAITING", "منتظر کالیبراسیون": "WAITING", "waiting": "WAITING",
+             "waiting for calibration": "WAITING",
              "on loan": "LOAN", "loan": "LOAN"}
 CENTER = {"تهران": "TEHRAN", "tehran": "TEHRAN", "کرج": "KARAJ", "karaj": "KARAJ", "انارک": "ANARAK", "anarak": "ANARAK"}
 LABEL = {"calibrated": "CALIBRATED", "rejected": "REJECTED", "out of service": "OUT_OF_SERVICE", "cbu": "CBU",

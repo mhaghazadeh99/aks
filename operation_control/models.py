@@ -77,7 +77,8 @@ class Equipment(TimeStamped):
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", _("Active")
         INACTIVE = "INACTIVE", _("Inactive")
-        SENT_FOR_CALIBRATION = "SENT", _("Sent for calibration")
+        WAITING_FOR_CALIBRATION = "WAITING", _("Waiting for calibration")
+        SENT_FOR_CALIBRATION = "SENT", _("In calibration")
         ON_LOAN = "LOAN", _("On loan")
 
     class Center(models.TextChoices):

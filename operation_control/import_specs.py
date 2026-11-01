@@ -15,7 +15,7 @@ SPECS = {
             ("name", R, _("Device name (نام دستگاه)")),
             ("model_name / serial_number / manufacturer", O, _("مدل / شماره سریال / سازنده")),
             ("application", O, _("Application, created if new (کاربرد دستگاه)")),
-            ("status", O, _("Active / Inactive / Sent for calibration / “امانت به …” (on loan)")),
+            ("status", O, _("Active / Inactive / Waiting for calibration / In calibration / “امانت به …” (on loan)")),
             ("center", O, _("Tehran / Karaj / Anarak")),
             ("current_location", O, _("Where the device is now")),
             ("calibration_period_months", O, _("Months; 0, empty or text becomes 12 with a warning")),

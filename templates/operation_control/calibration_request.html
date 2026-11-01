@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Calibration request" %}{% endblock %}
+
+{% block extrastyle %}
+<style>
+.letter-card{ background:#fff; border-radius:12px; padding:26px; box-shadow:0 3px 14px rgba(0,0,0,.08); }
+.copied{ color:#198754; font-weight:600; margin-inline-start:10px; }
+@media print { .no-print, .sidebar, .menu-btn, .overlay { display:none !important; } .main{ margin:0 !important; } .letter-card{ box-shadow:none; padding:0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content" style="max-width:900px;">
+  <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2>{% trans "Calibration request" %}</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <button type="button" id="copyBtn" class="btn-blue">📋 {% trans "Copy for Word" %}</button>
+      <a href="{% url 'oc_calibration_request_doc' %}?ids={{ ids }}" class="btn-green">⬇ {% trans "Download Word file" %}</a>
+      <button type="button" class="btn-gray" onclick="window.print()">🖨 {% trans "Print" %}</button>
+      <form method="post" action="{% url 'oc_calibration_send' %}" style="display:inline;"
+            onsubmit="return confirm('{% trans 'Mark these devices as In calibration?' %}');">
+        {% csrf_token %}
+        {% for e in devices %}<input type="hidden" name="ids" value="{{ e.pk }}">{% endfor %}
+        <button type="submit" class="btn-blue">🚚 {% trans "Send to calibration" %}</button>
+      </form>
+      <a href="{% url 'oc_equipment_list' %}" class="btn-gray">{% trans "Back to list" %}</a>
+      <span id="copyMsg" class="copied"></span>
+    </div>
+  </div>
+
+  <p class="no-print" style="color:#666; margin:12px 0 18px;">
+    {% trans "These devices are now “Waiting for calibration”. Copy the letter and paste it into Word, or download it as a Word file. After you send the devices, press “Send to calibration”." %}
+  </p>
+
+  <div class="letter-card">
+    {% include "operation_control/_calibration_letter.html" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extrascript %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const letter = document.getElementById("letter"), msg = document.getElementById("copyMsg");
+  function done(ok) {
+    msg.textContent = ok ? "✓ {% trans 'Copied — paste it into Word' %}" : "{% trans 'Could not copy: select the text and press Ctrl+C' %}";
+    setTimeout(() => { msg.textContent = ""; }, 4000);
+  }
+  function fallbackCopy() {                       // works without HTTPS too
+    const range = document.createRange(), sel = window.getSelection();
+    range.selectNodeContents(letter); sel.removeAllRanges(); sel.addRange(range);
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) {}
+    sel.removeAllRanges();
+    done(ok);
+  }
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    if (navigator.clipboard && window.ClipboardItem) {
+      const html = new Blob([letter.outerHTML], { type: "text/html" });
+      const text = new Blob([letter.innerText], { type: "text/plain" });
+      navigator.clipboard.write([new ClipboardItem({ "text/html": html, "text/plain": text })])
+        .then(() => done(true)).catch(fallbackCopy);
+    } else { fallbackCopy(); }
+  });
+});
+</script>
+{% endblock %}

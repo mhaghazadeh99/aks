@@ -1,0 +1,22 @@
+{# The letter: kept as plain inline-styled HTML so it keeps its borders and right-to-left layout when pasted into Word. #}
+<div id="letter" dir="rtl" style="font-family: Tahoma, 'B Nazanin', Arial, sans-serif; font-size: 13pt; line-height: 2; text-align: right;">
+  <p style="margin: 0 0 14px 0;">{{ text }}</p>
+  <table dir="rtl" border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; width: 100%; border: 1px solid #000;">
+    <thead>
+      <tr style="background: #e9ecef;">
+        <th style="border: 1px solid #000; padding: 6px 10px; width: 60px; text-align: center;">ردیف</th>
+        <th style="border: 1px solid #000; padding: 6px 10px; text-align: center;">نوع دستگاه</th>
+        <th style="border: 1px solid #000; padding: 6px 10px; text-align: center;">شماره سریال</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in devices %}
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px 10px; text-align: center;">{{ forloop.counter }}</td>
+        <td style="border: 1px solid #000; padding: 6px 10px; text-align: center;">{{ e.name }}</td>
+        <td dir="ltr" style="border: 1px solid #000; padding: 6px 10px; text-align: center;">{{ e.serial_number|default:"-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

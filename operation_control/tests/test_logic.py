@@ -60,3 +60,12 @@ class TotalDoseTests(SimpleTestCase):
         self.assertEqual(logic.total_dose(None, Decimal("0.02")), Decimal("0.02"))
         self.assertEqual(logic.total_dose(Decimal("0"), Decimal("0")), Decimal("0"))
         self.assertIsNone(logic.total_dose(None, None))
+
+
+class CalibrationWorkflowTests(SimpleTestCase):
+    def test_who_can_enter_the_workflow(self):
+        self.assertIsNone(logic.calibration_block_reason("ACTIVE"))
+        self.assertIsNone(logic.calibration_block_reason("WAITING"))        # preparing the letter again is fine
+        self.assertEqual(logic.calibration_block_reason("INACTIVE"), "inactive")
+        self.assertEqual(logic.calibration_block_reason("LOAN"), "loan")
+        self.assertEqual(logic.calibration_block_reason("SENT"), "in_calibration")

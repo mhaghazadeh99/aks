@@ -430,7 +430,7 @@ class TLDReading(TimeStamped):
             models.UniqueConstraint(fields=["report", "tld_code"], name="uniq_tld_code_per_report"),
             # NOTE: on Django >= 5.1 you may rename `check=` to `condition=`.
             models.CheckConstraint(
-                check=(Q(worker__isnull=False, env_point__isnull=True)
+                condition=(Q(worker__isnull=False, env_point__isnull=True)
                        | Q(worker__isnull=True, env_point__isnull=False)),
                 name="tld_worker_xor_env_point",
             ),

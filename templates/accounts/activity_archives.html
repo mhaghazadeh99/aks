@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Activity archives</h2>
+<p><a href="{% url 'activity_log' %}">&laquo; Back to log</a></p>
+
+{% if messages %}{% for m in messages %}<p>{{ m }}</p>{% endfor %}{% endif %}
+
+<table>
+  <thead><tr><th>Month</th><th>Rows</th><th>Size</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for a in archives %}
+    <tr>
+      <td>{{ a.month|date:"F Y" }}</td>
+      <td>{{ a.row_count }}</td>
+      <td>{{ a.size_bytes|filesizeformat }}</td>
+      <td>{% if a.expired %}Older than 1 year{% else %}Kept{% endif %}</td>
+      <td>
+        <a href="{% url 'activity_archive_download' a.pk %}">Download</a>
+        {% if a.expired %}
+          <form method="post" action="{% url 'activity_archive_delete' a.pk %}" style="display:inline"
+                onsubmit="return confirm('Permanently delete the {{ a.month|date:"F Y" }} archive? This cannot be undone.');">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">No archives yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

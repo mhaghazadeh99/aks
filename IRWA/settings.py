@@ -90,6 +90,18 @@ MIDDLEWARE = [
     
 ]
 
+MIDDLEWARE += ["accounts.activity.ActivityMiddleware"]  # after AuthenticationMiddleware
+ACTIVITY_IGNORE_FIELDS = ["signature_clean"]
+
+ACTIVITY_EXCLUDE_MODELS = [
+    # "inventory.SomeNoisyModel",
+]
+ACTIVITY_ARCHIVE_DIR = BASE_DIR / "activity_archive"     # keep outside MEDIA/static
+ACTIVITY_ARCHIVE_AFTER_DAYS = 30
+
+
+# Optional: fields whose change alone is not worth a log entry (last_login is already ignored)
+
 
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 

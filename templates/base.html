@@ -108,6 +108,10 @@ class="{% if request.resolver_match.url_name == 'lab_home' %}active{% endif %}">
    class="{% if request.resolver_match.url_name == 'view_permission_list' %}active{% endif %}">
     🔒 {% trans "Access Control" %}
 </a>
+
+  <a href="{% url 'activity_log' %}">Activity log</a>
+  <a href="{% url 'activity_archives' %}">Activity archives</a>
+
 {% endif %}
 
 {% if request.user.is_authenticated %}

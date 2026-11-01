@@ -14,3 +14,5 @@ def create_profile(sender, instance, created, **kwargs):
             user=instance
         )
 
+
+from . import activity_signals  # noqa: E402,F401

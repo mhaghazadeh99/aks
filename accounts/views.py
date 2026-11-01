@@ -113,3 +113,5 @@ def profile(request):
         form = UserProfileForm(instance=user_profile)
 
     return render(request, "accounts/profile.html", {"form": form, "next": next_url})
+
+

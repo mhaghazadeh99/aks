@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Activity log</h2>
+<p><a href="{% url 'activity_archives' %}">Archives</a></p>
+
+<form method="get">
+  <select name="user" multiple size="5">
+    {% for u in users %}
+      <option value="{{ u.pk }}" {% if u.pk|stringformat:"s" in selected_users %}selected{% endif %}>{{ u.get_username }}</option>
+    {% endfor %}
+  </select>
+  <select name="action">
+    <option value="">All actions</option>
+    {% for value, label in actions %}
+      <option value="{{ value }}" {% if request.GET.action == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="model">
+    <option value="">All tables</option>
+    {% for m in models %}
+      <option value="{{ m.pk }}" {% if request.GET.model == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.app_label }}.{{ m.model }}</option>
+    {% endfor %}
+  </select>
+  From <input type="date" name="from" value="{{ request.GET.from }}">
+  To <input type="date" name="to" value="{{ request.GET.to }}">
+  <input type="text" name="q" placeholder="Search record" value="{{ request.GET.q }}">
+  <button type="submit">Filter</button>
+  <a href="{% url 'activity_log' %}">Reset</a>
+</form>
+
+<table>
+  <thead>
+    <tr><th>Time</th><th>User</th><th>Action</th><th>Table</th><th>Record</th><th>Details</th><th>IP</th></tr>
+  </thead>
+  <tbody>
+  {% for log in page %}
+    <tr>
+      <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+      <td>{{ log.username }}</td>
+      <td>{{ log.get_action_display }}</td>
+      <td>{{ log.content_type.model|default:"-" }}</td>
+      <td>{{ log.object_repr }} <small>(#{{ log.object_id }})</small></td>
+      <td>
+        {% if log.changes %}
+          <ul>
+          {% for field, pair in log.changes.items %}
+            <li><b>{{ field }}</b>: {{ pair.0|default:"(empty)" }} &rarr; {{ pair.1|default:"(empty)" }}</li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+        {% if log.data_before %}
+          <details>
+            <summary>{% if log.action == "delete" %}Deleted record{% else %}Old version{% endif %}</summary>
+            <table>
+              {% for field, value in log.data_before.items %}
+                <tr><td>{{ field }}</td><td>{{ value }}</td></tr>
+              {% endfor %}
+            </table>
+          </details>
+        {% endif %}
+      </td>
+      <td>{{ log.ip_address|default:"" }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7">No activity found.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div>
+  {% if page.has_previous %}<a href="?{{ querystring }}&page={{ page.previous_page_number }}">&laquo; Previous</a>{% endif %}
+  Page {{ page.number }} of {{ page.paginator.num_pages }}
+  {% if page.has_next %}<a href="?{{ querystring }}&page={{ page.next_page_number }}">Next &raquo;</a>{% endif %}
+</div>
+{% endblock %}

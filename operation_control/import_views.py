@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
@@ -19,23 +20,31 @@ def csv_import_view(request, kind):
     form = ImportForm(request.POST or None, request.FILES or None, kind=kind)
     result = None
     if request.method == "POST" and form.is_valid():
-        upload = form.cleaned_data["file"]
+        upload, pasted = form.cleaned_data.get("file"), (form.cleaned_data.get("pasted") or "").strip()
+        name, data = (upload.name, upload.read()) if upload else ("pasted.csv", pasted.encode("utf-8"))
         try:
-            parsed = csv_import.parse_file(kind, upload.name, upload.read())
+            parsed = csv_import.parse_file(kind, name, data)
         except csv_import.ImportFormatError as e:
-            form.add_error("file", str(e))
+            form.add_error(None, str(e))
         except Exception as e:                                    # corrupt xlsx etc.
-            form.add_error("file", _("The file could not be read (%(e)s).") % {"e": e.__class__.__name__})
+            form.add_error(None, _("The data could not be read (%(e)s).") % {"e": e.__class__.__name__})
         else:
             year = form.cleaned_data.get("plan_year") or parsed.get("detected_year")
-            result = import_services.run(
-                kind, parsed, user=request.user, plan_year=year,
-                dry_run=form.cleaned_data["dry_run"], strict=form.cleaned_data["strict"],
-                create_missing=form.cleaned_data.get("create_missing", False),
-                apply_all=form.cleaned_data.get("apply_all", False),
-                legacy_unit=form.cleaned_data.get("legacy_unit") or None)
-            if result["saved"]:
-                messages.success(request, _("Import finished."))
+            try:
+                result = import_services.run(
+                    kind, parsed, user=request.user, plan_year=year,
+                    dry_run=form.cleaned_data["dry_run"], strict=form.cleaned_data["strict"],
+                    create_missing=form.cleaned_data.get("create_missing", False),
+                    apply_all=form.cleaned_data.get("apply_all", False),
+                    legacy_unit=form.cleaned_data.get("legacy_unit") or None)
+            except IntegrityError as e:                           # nothing was saved: the import runs in one transaction
+                form.add_error(None, _(
+                    "The database refused the data (%(e)s). If the message mentions a UNIQUE constraint on tldreport, "
+                    "your database is missing the latest migration: run  python manage.py makemigrations operation_control  "
+                    "and  python manage.py migrate  and import again.") % {"e": e})
+            else:
+                if result["saved"]:
+                    messages.success(request, _("Import finished."))
     return render(request, "operation_control/csv_import.html", {
         "kind": kind, "spec": spec, "form": form, "result": result,
         "errors_shown": result["errors"][:300] if result else [],

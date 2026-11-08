@@ -21,7 +21,7 @@ from .legacy_tld import match_person, to_decimal, to_int, to_jalali_ymd
 
 def parse_duration(value):
     """'01:04:00.0000000' / time / timedelta -> whole minutes. None for empty or zero."""
-    if value is None or str(value).strip() == "":
+    if value is None or str(value).strip() == "" or str(value).strip().upper() == "NULL":
         return None
     if isinstance(value, datetime.timedelta):
         seconds = value.total_seconds()

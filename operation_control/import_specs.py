@@ -77,6 +77,8 @@ SPECS = {
     "legacy_tld": {
         "title": _("Import TLD data from the old system"),
         "back": "oc_tld_report_list",
+        "paste_hint": _("Easiest way: run legacy_tld_query.sql in SSMS, select the result rows, press Ctrl+C and paste them below — no header row is needed. "
+                        "Or run the legacy_export.py script to get a ready CSV file."),
         "intro": _("The flat export of the old SQL Server database (query in legacy_tld_query.sql, or use the import_legacy_dosimetry command to read the database directly). "
                    "Each DateD period becomes a TLD report; its season is the season of the MIDDLE of Date1–Date2, the year is that Jalali year. "
                    "DoseID 4 (photon) and 10 (neutron) become gamma and neutron of ONE body reading, 5 (hand) a hand reading, "
@@ -93,6 +95,8 @@ SPECS = {
     "legacy_online": {
         "title": _("Import online doses from the old system"),
         "back": "oc_session_list",
+        "paste_hint": _("Easiest way: run legacy_online_query.sql in SSMS, select the result rows, press Ctrl+C and paste them below — no header row is needed. "
+                        "Or run the legacy_export.py script to get a ready CSV file."),
         "intro": _("The flat export of the old SQL Server database (query in legacy_online_query.sql, or use the import_legacy_dosimetry command). "
                    "Place name → the operation, centre name + address → the location, DateTime → the operation date (Jalali), "
                    "DureofTime → the operation duration (and the time in which each person received the dose). "

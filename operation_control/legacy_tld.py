@@ -34,8 +34,14 @@ def norm_name(text):
     return _NOISE.sub("", str(text or "").translate(_LETTERS)).casefold()
 
 
+def clean_text(value):
+    """'' for None and for the text 'NULL' that SSMS puts in copied cells."""
+    text = "" if value is None else str(value).strip()
+    return "" if text.upper() == "NULL" else text
+
+
 def to_decimal(value):
-    if value is None or str(value).strip() == "":
+    if value is None or clean_text(value) == "":
         return None
     try:
         return Decimal(str(value).translate(_DIGITS).strip().replace(",", "."))
@@ -143,9 +149,9 @@ def transform(rows, index, *, unmatched="env", tolerance=Decimal("0.0015")):
                 bad_dates.add(date_id)
                 errors.append((label(row), f"DateID {date_id}: unreadable period ({e}) - all its rows are skipped"))
                 continue
-            number = str(row.get("numberoftest") or "").strip()
+            number = clean_text(row.get("numberoftest"))
             reports[date_id] = {"date_id": date_id, "year": y, "season": s, "report_number": number,
-                                "period_start": start, "period_end": end, "lab_id": str(row.get("labid") or "").strip()}
+                                "period_start": start, "period_end": end, "lab_id": clean_text(row.get("labid"))}
             if swapped:
                 warnings.append((label(row), f"DateID {date_id}: Date1 is after Date2 - swapped"))
         try:
@@ -161,8 +167,8 @@ def transform(rows, index, *, unmatched="env", tolerance=Decimal("0.0015")):
             continue
 
         if person_id not in persons:
-            first, last = str(row.get("firstname") or "").strip(), str(row.get("lastname") or "").strip()
-            kind, key = match_person(index, first, last, row.get("pnumber"))
+            first, last = clean_text(row.get("firstname")), clean_text(row.get("lastname"))
+            kind, key = match_person(index, first, last, clean_text(row.get("pnumber")))
             name = f"{first} {last}".strip()
             if kind == "worker":
                 persons[person_id] = {"kind": "worker", "code": key, "name": name}
@@ -188,8 +194,8 @@ def transform(rows, index, *, unmatched="env", tolerance=Decimal("0.0015")):
             raw = row.get(field)
             if raw is None and field == "uncertinty":
                 raw = row.get("uncertainty")                  # accept the correct spelling too
-            text = "" if raw is None else str(raw).strip()
-            if text and text.upper() != "NULL" and text not in g[key]:
+            text = clean_text(raw)
+            if text and text not in g[key]:
                 g[key].append(text)
         g.setdefault("first_row", label(row))
 

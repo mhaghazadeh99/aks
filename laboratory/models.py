@@ -64,7 +64,7 @@ class LabApprovalStatus(models.TextChoices):
 
 class Sample(models.Model):
 
-    sample_id = models.CharField(_("Sample ID"), max_length=50, unique=True)
+    sample_id = models.CharField(_("Sample ID"), max_length=50)
 
     batch = models.ForeignKey(
         WasteBatch, verbose_name=_("Waste Batch"), on_delete=models.PROTECT,
@@ -120,6 +120,10 @@ class Sample(models.Model):
         ordering = ["-urgent", "sampling_date"]
         verbose_name = _("Sample")
         verbose_name_plural = _("Samples")
+        constraints = [
+            models.UniqueConstraint(
+                fields = ['sample_id', 'analysis_type'],
+                name = 'unique_sample_analysis_type')]
 
     def __str__(self):
         return self.sample_id

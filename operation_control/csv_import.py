@@ -175,6 +175,15 @@ TEMPLATES = {
 _DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789")
 
 
+# Column order of legacy_sql.TLD_QUERY / ONLINE_QUERY: lets rows copied from the SSMS grid (no header) be read as they are.
+HEADERLESS_ORDER = {
+    "legacy_tld": ["tldid", "personnelid", "doseid", "measured", "uncertinty", "dateid", "descriptions", "jobtype",
+                   "date1", "date2", "numberoftest", "labid", "firstname", "lastname", "pnumber"],
+    "legacy_online": ["ondoseid", "personnelid", "datetime", "dureoftime", "dose", "placeid", "placename",
+                      "centername", "centeraddress", "firstname", "lastname", "pnumber"],
+}
+
+
 class ImportFormatError(Exception):
     """The file cannot be read at all (bad format / unrecognised columns)."""
 
@@ -264,12 +273,19 @@ def load_table(filename, data, kind):
         n = len({c for c in canon if c})
         if n > best_n:
             best_i, best, best_n = i, canon, n
+    first_data = (best_i + 1) if best_i is not None else 0
+    if best_n < 2 and kind in HEADERLESS_ORDER and raw:
+        order = HEADERLESS_ORDER[kind]
+        widths = [len(values) for _n, values in raw[:5]]
+        if min(widths) >= len(order) - 1:                  # looks like the query's columns, just without the header row
+            best, best_i, first_data = order, -1, 0
+            best_n = len(order)
     if best_n < 2:
         raise ImportFormatError("Could not find the header row. Expected columns like: "
                                 + ", ".join(TEMPLATES[kind][0]))
 
     rows, present = [], {c for c in best if c}
-    for n, values in raw[best_i + 1:]:
+    for n, values in raw[first_data:]:
         row, seen = {"_row": n}, set()
         for canon, v in zip(best, values):
             if canon and canon not in seen:

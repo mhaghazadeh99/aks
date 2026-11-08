@@ -314,8 +314,13 @@ class CalibrationAssessmentForm(BaseModelForm):
 # ============================================================ CSV / Excel import
 class ImportForm(forms.Form):
     file = forms.FileField(
-        label=_("File (.xlsx or .csv)"),
+        required=False, label=_("File (.xlsx or .csv)"),
         validators=[FileExtensionValidator(["xlsx", "xlsm", "csv", "txt"])])
+    pasted = forms.CharField(
+        required=False, label=_("…or paste the rows here"),
+        widget=forms.Textarea(attrs={"rows": 6, "dir": "ltr", "class": "form-control",
+                                     "placeholder": "Ctrl+V — rows copied from SSMS, Excel or a CSV"}),
+        help_text=_("For the old-system imports no header row is needed: select the result rows in SSMS, press Ctrl+C and paste."))
     dry_run = forms.BooleanField(
         required=False, initial=True, label=_("Preview only — check the file without saving anything"))
     strict = forms.BooleanField(
@@ -349,9 +354,16 @@ class ImportForm(forms.Form):
         elif not self.is_bound:
             self.fields["plan_year"].initial = ju.jalali_today()[0]
         self.fields["file"].widget.attrs["accept"] = ".xlsx,.xlsm,.csv,.txt"
+        self.kind = kind
         for name in ("dry_run", "strict", "create_missing", "apply_all"):
             if name in self.fields:
                 self.fields[name].widget.attrs["class"] = "form-check-input"
         for name in ("file", "plan_year", "legacy_unit"):
             if name in self.fields:
                 self.fields[name].widget.attrs["class"] = "form-control"
+
+    def clean(self):
+        data = super().clean()
+        if not data.get("file") and not (data.get("pasted") or "").strip():
+            raise forms.ValidationError(_("Choose a file or paste the rows."))
+        return data

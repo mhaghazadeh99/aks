@@ -10,6 +10,11 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--connection", help="pyodbc connection string. Default: settings.OPERATION_CONTROL_LEGACY_SQL")
+        parser.add_argument("--server", help="SQL Server name, e.g. localhost or .\\SQLEXPRESS (alternative to --connection)")
+        parser.add_argument("--database", default="HealthPhysics")
+        parser.add_argument("--user", help="SQL login (omit to use the Windows account)")
+        parser.add_argument("--password")
+        parser.add_argument("--driver", help="ODBC driver name (default: the best installed one is found automatically)")
         parser.add_argument("--tld", action="store_true", help="import TLD readings (TLD + DateD + Personnels tables)")
         parser.add_argument("--online", action="store_true",
                             help="import online doses (OnlineDose + PlaceofActivity + Center + Personnels tables)")
@@ -29,15 +34,19 @@ class Command(BaseCommand):
                 self.stdout.write(legacy_sql.QUERIES[k])
             return
         connection = opts["connection"] or getattr(settings, "OPERATION_CONTROL_LEGACY_SQL", None)
-        if not connection:
+        if not connection and not opts["server"]:
             raise CommandError(
-                "No connection. Pass --connection or set OPERATION_CONTROL_LEGACY_SQL in settings, e.g.\n"
+                "No connection. Pass --server NAME (the easy way), or --connection, or set OPERATION_CONTROL_LEGACY_SQL in settings, e.g.\n"
                 "  DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=HealthPhysics;Trusted_Connection=yes;\n"
                 "  DRIVER={ODBC Driver 17 for SQL Server};SERVER=host;DATABASE=HealthPhysics;UID=user;PWD=secret;")
         for kind in kinds:
             self.stdout.write(self.style.MIGRATE_HEADING(f"\n{kind}: reading the old database ..."))
             try:
-                rows = legacy_sql.fetch(connection, legacy_sql.QUERIES[kind])
+                if opts["server"]:
+                    rows = legacy_sql.fetch_auto(opts["server"], legacy_sql.QUERIES[kind], opts["database"],
+                                                 opts["user"], opts["password"], opts["driver"])
+                else:
+                    rows = legacy_sql.fetch(connection, legacy_sql.QUERIES[kind])
             except Exception as e:                                     # driver / login / network problems
                 raise CommandError(f"Could not read the old database: {e}")
             self.stdout.write(f"  {len(rows)} rows read")

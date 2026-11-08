@@ -32,6 +32,37 @@ ORDER BY o.[DateTime], o.PlaceID, o.OnDoseID;
 QUERIES = {"tld": TLD_QUERY, "online": ONLINE_QUERY}
 
 
+# Newest first. The plain "SQL Server" driver ships with every Windows, so it is the last resort that nearly always exists.
+PREFERRED_DRIVERS = ["ODBC Driver 18 for SQL Server", "ODBC Driver 17 for SQL Server", "ODBC Driver 13 for SQL Server",
+                     "ODBC Driver 11 for SQL Server", "SQL Server Native Client 11.0", "SQL Server Native Client 10.0",
+                     "SQL Server"]
+
+
+def build_connection_string(server, database="HealthPhysics", user=None, password=None, driver="SQL Server"):
+    parts = [f"DRIVER={{{driver}}}", f"SERVER={server}", f"DATABASE={database}"]
+    parts += [f"UID={user}", f"PWD={password or ''}"] if user else ["Trusted_Connection=yes"]
+    if driver.startswith("ODBC Driver"):
+        parts.append("TrustServerCertificate=yes")            # driver 18 encrypts by default and rejects self-signed servers
+    return ";".join(parts) + ";"
+
+
+def installed_drivers():
+    import pyodbc
+    found = [d for d in pyodbc.drivers() if "SQL Server" in d]
+    return sorted(found, key=lambda d: PREFERRED_DRIVERS.index(d) if d in PREFERRED_DRIVERS else len(PREFERRED_DRIVERS))
+
+
+def fetch_auto(server, query, database="HealthPhysics", user=None, password=None, driver=None, timeout=30):
+    """Like fetch(), but tries every installed SQL Server driver until one connects."""
+    last = None
+    for name in ([driver] if driver else installed_drivers()):
+        try:
+            return fetch(build_connection_string(server, database, user, password, name), query, timeout)
+        except Exception as e:                                  # wrong driver / login / server name
+            last = f"{name}: {e}"
+    raise RuntimeError(last or "No SQL Server ODBC driver is installed (install 'ODBC Driver 17 for SQL Server').")
+
+
 def fetch(connection_string, query, timeout=30):
     """Run one SELECT and return a list of dicts with lower-case column names plus a 1-based 'row' number."""
     try:

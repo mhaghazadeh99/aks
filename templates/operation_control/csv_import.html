@@ -26,6 +26,7 @@
 
   <div class="import-card">
     <p>{{ spec.intro }}</p>
+    {% if spec.paste_hint %}<div class="alert alert-info">💡 {{ spec.paste_hint }}</div>{% endif %}
     <div class="table-scroll"><table>
       <thead><tr><th>{% trans "Column" %}</th><th></th><th>{% trans "Meaning" %}</th></tr></thead>
       <tbody>

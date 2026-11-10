@@ -37,7 +37,9 @@ from django.urls import reverse
 from .services.release_csv import (
         import_release_groups, parse_release_rows, write_release_lines_csv, write_release_summary_csv,
     )
-
+from io import BytesIO
+from django.conf import settings
+from .services import passport as passport_service
 
 # Same idea as dashboard.views.FIELD_FILTER_MAP: maps each filter key to
 # a real Django lookup path, traversing FKs to their display field.
@@ -478,59 +480,120 @@ def waste_get_column(request):
     data = list(HideShowFilterT.objects.filter(parent="waste").values("key", "value"))
     return JsonResponse(data, safe=False)
 
+EXPORT_HEADERS = [
+    "Waste_ID", "Waste_Type", "Waste_Class", "Waste_State", "Facility", "Origin_Facility",
+    "Origin_Of_Waste", "Date_Received", "Material", "Container_Type", "Package_Type",
+    "Waste_Matrix", "Mass_kg", "Volume_m3", "Location", "Status", "Status_Date",
+    "Pretreatment", "Treatment", "Possible_Pretreatment", "Possible_Treatment",
+    "Dose_Surface_uSv", "Dose_1m_uSv", "Dose_Date",
+    "pH", "Density", "Total_Solids", "Suspended_Solids", "Soluble_Solids",
+    "Waste_To_Matrix_Ratio", "Waste_Mass_kg", "Package_Mass_kg", "Package_Volume_m3",
+    "Total_Alpha_GBq_Pkge", "Total_Beta_GBq_Pkge", "Current_Gamma_GBq_Pkge",
+    "Current_Total_Activity_GBq_Pkge",
+    "Nuclides", "Nuclide_Current_Activity_GBq_Pkge", "Created_By", "Created_At",
+]
 
-def waste_export_csv(request):
 
-    queryset = (
+def _gbq(bq):
+    return bq / 1_000_000_000 if bq is not None else None
+
+
+def _export_row(b, for_excel=False):
+    created = b.created_at
+    if for_excel and created:
+        created = timezone.localtime(created).replace(tzinfo=None)   # openpyxl rejects tz-aware
+    return [
+        b.waste_id, b.waste_type, b.waste_class, b.waste_state,
+        b.facility.name if b.facility else None,
+        b.origin_facility.name if b.origin_facility else None,
+        b.origin_of_waste, b.date_received, b.material, b.container_type, b.package_type,
+        b.waste_matrix, b.mass_kg, b.volume_m3, b.location, b.status, b.status_date,
+        b.pretreatment, b.treatment, b.possible_pretreatment, b.possible_treatment,
+        b.dose_rate_surface_uSv, b.dose_rate_1m_uSv, b.dose_rate_date,
+        b.ph, b.density, b.total_solids, b.suspended_solids, b.soluble_solids,
+        b.waste_to_matrix_ratio, b.waste_mass_kg, b.package_mass_kg, b.package_volume_m3,
+        _gbq(b.total_alpha_bq), _gbq(b.total_beta_bq),
+        _gbq(b.current_gamma_bq_value), _gbq(b.current_total_activity_bq_value),
+        b.nuclide_summary,
+        passport_service.nuclide_export_text(b, "GBq"),
+        b.created_by.username if b.created_by else None,
+        created,
+    ]
+
+
+def _export_queryset(request):
+    qs = (
         WasteBatch.objects
         .select_related("facility", "origin_facility", "created_by")
         .prefetch_related("samples__analysis__nuclide_activities__radionuclide")
         .order_by("-created_at")
     )
+    return filter_waste_queryset(request, qs)
 
-    queryset = filter_waste_queryset(request, queryset)
 
+def waste_export_csv(request):
     response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
     response["Content-Disposition"] = 'attachment; filename="waste.csv"'
     writer = csv.writer(response)
-
-    writer.writerow([
-        "Waste_ID", "Waste_Type", "Waste_Class", "Waste_State", "Facility", "Origin_Facility",
-        "Origin_Of_Waste", "Date_Received", "Material", "Container_Type", "Package_Type",
-        "Waste_Matrix", "Mass_kg", "Volume_m3", "Location", "Status", "Status_Date",
-        "Pretreatment", "Treatment", "Possible_Pretreatment", "Possible_Treatment",
-        "Dose_Surface_uSv", "Dose_1m_uSv", "Dose_Date",
-        "pH", "Density", "Total_Solids", "Suspended_Solids", "Soluble_Solids",
-        "Waste_To_Matrix_Ratio", "Waste_Mass_kg", "Package_Mass_kg", "Package_Volume_m3",
-        "Total_Alpha_GBq_Pkge", "Total_Beta_GBq_Pkge", "Current_Gamma_GBq_Pkge",
-        "Current_Total_Activity_GBq_Pkge",
-        "Nuclides", "Created_By", "Created_At",
-    ])
-
-    def gbq(bq):
-        return bq / 1_000_000_000 if bq is not None else None
-
-    for b in queryset:
-        writer.writerow([
-            b.waste_id, b.waste_type, b.waste_class, b.waste_state,
-            b.facility.name if b.facility else None,
-            b.origin_facility.name if b.origin_facility else None,
-            b.origin_of_waste, b.date_received, b.material, b.container_type, b.package_type,
-            b.waste_matrix, b.mass_kg, b.volume_m3, b.location, b.status, b.status_date,
-            b.pretreatment, b.treatment, b.possible_pretreatment, b.possible_treatment,
-            b.dose_rate_surface_uSv, b.dose_rate_1m_uSv, b.dose_rate_date,
-            b.ph, b.density, b.total_solids, b.suspended_solids, b.soluble_solids,
-            b.waste_to_matrix_ratio, b.waste_mass_kg, b.package_mass_kg, b.package_volume_m3,
-            gbq(b.total_alpha_bq),
-            gbq(b.total_beta_bq),
-            gbq(b.current_gamma_bq_value),
-            gbq(b.current_total_activity_bq_value),
-            b.nuclide_summary,
-            b.created_by.username if b.created_by else None,
-            b.created_at,
-        ])
-
+    writer.writerow(EXPORT_HEADERS)
+    for b in _export_queryset(request):
+        writer.writerow(_export_row(b))
     return response
+
+
+def waste_export_xlsx(request):
+    from openpyxl import Workbook
+    from openpyxl.styles import Font
+    from openpyxl.utils import get_column_letter
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Waste"
+    ws.append(EXPORT_HEADERS)
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+    for b in _export_queryset(request):
+        ws.append(_export_row(b, for_excel=True))
+    ws.freeze_panes = "B2"
+    ws.auto_filter.ref = ws.dimensions
+    for i, h in enumerate(EXPORT_HEADERS, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = max(12, len(h) + 2)
+
+    out = BytesIO()
+    wb.save(out)
+    response = HttpResponse(
+        out.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = 'attachment; filename="waste.xlsx"'
+    return response
+
+
+def waste_passport(request):
+    """Step 1 (POST ids from the table): choose units. Step 2 (action=generate): PDF."""
+    ids = request.POST.getlist("ids") or request.GET.getlist("ids")
+    batches = list(
+        WasteBatch.objects.filter(pk__in=ids)
+        .select_related("facility", "origin_facility")
+        .order_by("waste_id")
+    )
+    if not batches:
+        messages.error(request, _("Select at least one batch."))
+        return redirect("waste_table")
+
+    if request.method == "POST" and request.POST.get("action") == "generate":
+        units = passport_service.units_from_request(request.POST)
+        pdf = passport_service.build_passport_pdf(
+            batches, units, logo_path=getattr(settings, "PASSPORT_LOGO", None),
+        )
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = 'inline; filename="waste-passport.pdf"'
+        return response
+
+    return render(request, "waste/waste_passport_options.html", {
+        "batches": batches, "ids": [b.pk for b in batches],
+        "unit_groups": passport_service.unit_groups_for_template(),
+    })
 
 
 def waste_release(request, pk):

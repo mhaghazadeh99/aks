@@ -173,18 +173,28 @@ document.getElementById("pageSize").addEventListener("change", function () {
 const DEFS = JSON.parse(document.getElementById("filterDefs").textContent);
 const container = document.getElementById("filterContainer");
 
-function valueControl(def, current) {
-  let el;
-  if (def.choices) {
-    el = document.createElement("select");
-    def.choices.forEach(([v, l]) => { const o = new Option(l, v); el.add(o); });
-  } else {
-    el = document.createElement("input");
-    el.placeholder = "{% trans 'Value' %}";
-  }
-  el.className = "form-control value";
-  if (current) el.value = current;
-  return el;
+function valueControl(def, current = "") {
+    let el;
+
+    if (def && Array.isArray(def.choices) && def.choices.length) {
+        el = document.createElement("select");
+
+        def.choices.forEach(([v, l]) => {
+            const option = document.createElement("option");
+            option.value = v;
+            option.textContent = l;
+            el.appendChild(option);
+        });
+    } else {
+        el = document.createElement("input");
+        el.type = "text";
+        el.placeholder = "Value";
+    }
+
+    el.className = "form-control value";
+    el.value = current ?? "";
+
+    return el;
 }
 
 function addFilterRow(key, value) {
@@ -194,11 +204,13 @@ function addFilterRow(key, value) {
   sel.className = "form-control key";
   DEFS.forEach(d => sel.add(new Option(d.label, d.key)));
   if (key) sel.value = key;
-  let ctrl = valueControl(DEFS.find(d => d.key === sel.value), value);
+  const getDefinition = () => DEFS.find(d => d.key === sel.value);
+  let ctrl = valueControl(getDefinition(), value);
   sel.addEventListener("change", () => {
-    const next = valueControl(DEFS.find(d => d.key === sel.value));
-    row.replaceChild(next, ctrl); ctrl = next;
-  });
+    const next = valueControl(getDefinition());
+    row.replaceChild(next, ctrl);
+    ctrl = next;
+});
   const del = document.createElement("button");
   del.type = "button"; del.className = "btn btn-danger"; del.textContent = "X";
   del.onclick = () => row.remove();

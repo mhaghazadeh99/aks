@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Waste Passport" %}{% endblock %}
+{% block content %}
+<div class="content">
+  <h3>{% trans "Waste Passport" %} — {{ batches|length }} {% trans "batch(es)" %}</h3>
+  <p>{% for b in batches %}{{ b.waste_id }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+
+  <form method="post" target="_blank">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="generate">
+    {% for i in ids %}<input type="hidden" name="ids" value="{{ i }}">{% endfor %}
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;max-width:900px;">
+      {% for field, title, default, choices in unit_groups %}
+      <label>{{ title }}
+        <select name="{{ field }}" class="form-control">
+          {% for key, label in choices %}
+          <option value="{{ key }}" {% if key == default %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      {% endfor %}
+    </div>
+
+    <p style="margin-top:16px;">
+      <button type="submit" class="btn-green">{% trans "Generate PDF" %}</button>
+      <a href="{% url 'waste_table' %}" class="btn-gray">{% trans "Back" %}</a>
+    </p>
+  </form>
+</div>
+{% endblock %}

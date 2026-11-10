@@ -66,6 +66,8 @@
 
   <div class="header-group">
     <button class="btn-green" onclick="exportCSV()">{% trans "Export CSV" %}</button>
+    <button class="btn-green" onclick="exportXLSX()">{% trans "Export Excel" %}</button>
+    <button class="btn-blue" id="passportBtn">{% trans "Passport PDF" %}</button>
     <button class="btn-blue" id="newMovementBtn">{% trans "New Movement" %}</button>
     <button class="btn-blue" id="mergeBtn">{% trans "Merge" %}</button>
     <button class="btn-blue" id="sendToAnalysisBtn">{% trans "Send to Analysis" %}</button>
@@ -470,6 +472,15 @@ document.getElementById("newMovementBtn").onclick = function () {
     // 1 batch or many -- same bulk-movement screen either way, so there's no
     // special-case single-batch path to keep in sync with the bulk one.
     submitBulk("{% url 'waste_bulk_movement' %}", ids);
+};
+    window.exportXLSX = function () {
+    window.location.href = "{% url 'waste_export_xlsx' %}" + window.location.search;
+};
+
+document.getElementById("passportBtn").onclick = function () {
+    const ids = selectedIds();
+    if (ids.length === 0) { alert("{% trans 'Select at least one batch.' %}"); return; }
+    submitBulk("{% url 'waste_passport' %}", ids);
 };
 </script>
 

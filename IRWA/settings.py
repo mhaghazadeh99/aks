@@ -239,3 +239,5 @@ SELL_SOURCE_PERSIAN_FONT_PATH = os.path.join(
     "vazirmatn",
     "Vazirmatn-Regular.ttf"
 )
+
+PASSPORT_LOGO = BASE_DIR / "static" / "img" / "irwa_logo.png"   # your logo file
